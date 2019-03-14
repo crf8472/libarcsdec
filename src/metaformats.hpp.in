@@ -1,0 +1,133 @@
+#ifndef __LIBARCSDEC_METAFORMATS_HPP__
+#define __LIBARCSDEC_METAFORMATS_HPP__
+
+/**
+ * \file metaformats.hpp.in Provide built-in metadata file format support classes.
+ *
+ * This information is controlled by cmake. It is made accessible at build time
+ * for program scope.
+ */
+
+#include <memory>
+#include <vector>
+
+#include "@PROJECT_SOURCE_DIR@/parsercue.hpp"
+
+
+// Configure available features
+
+
+// Device (via libcdio)
+
+#cmakedefine WITH_LIBCDIO  // will be defined iff compiled with libcdio support
+
+#ifdef WITH_LIBCDIO
+	#include "@PROJECT_SOURCE_DIR@/parserdev.hpp"
+#endif
+
+
+namespace arcs
+{
+
+/**
+ * List of supported audio file formats.
+ *
+ * The actual list entries are controlled by CMake at buildtime.
+ *
+ * \internal
+ * \ingroup metaparser
+ */
+class FileFormatsMetadata final
+{
+	using container_type = std::vector<std::unique_ptr<FileFormat>>;
+
+
+public:
+
+	using iterator = container_type::iterator;
+
+	using const_iterator = container_type::const_iterator;
+
+	/**
+	 * Default constructor. Adds all available formats to the instance.
+	 */
+	FileFormatsMetadata()
+		: formats_()
+	{
+		formats_.reserve(2);
+
+		formats_.push_back(std::make_unique<FileFormatCUE>());
+
+#ifdef WITH_LIBCDIO
+		formats_.push_back(std::make_unique<FileFormatDev>());
+#endif
+	}
+
+	/**
+	 * Iterator pointing to the first format
+	 */
+	iterator begin()
+	{
+		return formats_.begin();
+	}
+
+	/**
+	 * Iterator pointing behind the last format
+	 */
+	iterator end()
+	{
+		return formats_.end();
+	}
+
+	/**
+	 * Iterator pointing to the first format
+	 */
+	const_iterator begin() const
+	{
+		return formats_.begin();
+	}
+
+	/**
+	 * Iterator pointing behind the last format
+	 */
+	const_iterator end() const
+	{
+		return formats_.end();
+	}
+
+	/**
+	 * Iterator pointing to the first format
+	 */
+	const_iterator cbegin() const
+	{
+		return formats_.cbegin();
+	}
+
+	/**
+	 * Iterator pointing behind the last format
+	 */
+	const_iterator cend() const
+	{
+		return formats_.cend();
+	}
+
+
+private:
+
+	/**
+	 * List of available file formats
+	 */
+	container_type formats_;
+};
+
+} // namespace arcs
+
+
+// Restrict scope of cmake-controlled variables to this file
+
+#ifdef WITH_LIBCDIO
+	#undef WITH_LIBCDIO
+#endif
+
+#endif
+

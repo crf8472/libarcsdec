@@ -1,0 +1,187 @@
+#ifndef __LIBARCSDEC_AUDIOFORMATS_HPP__
+#define __LIBARCSDEC_AUDIOFORMATS_HPP__
+
+/**
+ * \file audioformats.h.in Provide built-in file format support classes.
+ *
+ * This information is controlled by cmake. It is made accessible at build time
+ * for program scope.
+ *
+ */
+
+#include <memory>
+#include <vector>
+
+#include "@PROJECT_SOURCE_DIR@/readerwav.hpp"
+
+
+// Configure available features
+
+
+// FLAC
+
+#cmakedefine WITH_FLAC     // will be defined iff compiled with FLAC support
+
+#ifdef WITH_FLAC
+	#include "@PROJECT_SOURCE_DIR@/readerflac.hpp"
+#endif
+
+
+// WAVPACK
+
+#cmakedefine WITH_WAVPACK  // will be defined iff compiled with WAVPACK support
+
+#ifdef WITH_WAVPACK
+	#include "@PROJECT_SOURCE_DIR@/readerwvpk.hpp"
+#endif
+
+
+// FFMPEG Generic Reader
+
+#cmakedefine WITH_FFMPEG
+
+#ifdef WITH_FFMPEG
+	#include "@PROJECT_SOURCE_DIR@/readerffmpeg.hpp"
+#endif
+
+
+// libsndfile Generic Reader
+
+#cmakedefine WITH_LIBSNDFILE
+
+#ifdef WITH_LIBSNDFILE
+	#include "@PROJECT_SOURCE_DIR@/readersndfile.hpp"
+#endif
+
+
+namespace arcs
+{
+
+/**
+ * List of supported audio file formats.
+ *
+ * The actual list entries are controlled by CMake at buildtime.
+ *
+ * \internal
+ * \ingroup filereader
+ */
+class FileFormatsAudio final
+{
+	using container_type = std::vector<std::unique_ptr<FileFormat>>;
+
+
+public:
+
+	using iterator = container_type::iterator;
+
+	using const_iterator = container_type::const_iterator;
+
+	/**
+	 * Default constructor.
+	 *
+	 * Adds all available <tt>FileFormat</tt>s to the instance.
+	 */
+	FileFormatsAudio()
+		: formats_()
+	{
+		formats_.reserve(5);
+
+		formats_.push_back(std::make_unique<FileFormatWavPCM>());
+
+#ifdef WITH_FLAC
+		formats_.push_back(std::make_unique<FileFormatFlac>());
+#endif
+
+#ifdef WITH_WAVPACK
+		formats_.push_back(std::make_unique<FileFormatWavpack>());
+#endif
+
+#ifdef WITH_FFMPEG
+		formats_.push_back(std::make_unique<FileFormatFFmpeg>());
+#endif
+
+#ifdef WITH_LIBSNDFILE
+		formats_.push_back(std::make_unique<FileFormatSndfile>());
+#endif
+	}
+
+	/**
+	 * Iterator pointing to the first format
+	 */
+	iterator begin()
+	{
+		return formats_.begin();
+	}
+
+	/**
+	 * Iterator pointing behind the last format
+	 */
+	iterator end()
+	{
+		return formats_.end();
+	}
+
+	/**
+	 * Iterator pointing to the first format
+	 */
+	const_iterator begin() const
+	{
+		return formats_.begin();
+	}
+
+	/**
+	 * Iterator pointing behind the last format
+	 */
+	const_iterator end() const
+	{
+		return formats_.end();
+	}
+
+	/**
+	 * Iterator pointing to the first format
+	 */
+	const_iterator cbegin() const
+	{
+		return formats_.cbegin();
+	}
+
+	/**
+	 * Iterator pointing behind the last format
+	 */
+	const_iterator cend() const
+	{
+		return formats_.cend();
+	}
+
+
+private:
+
+	/**
+	 * List of available file formats
+	 */
+	container_type formats_;
+};
+
+} // namespace arcs
+
+
+// Restrict scope of cmake-controlled variables to this file
+
+#ifdef WITH_FLAC
+	#undef WITH_FLAC
+#endif
+
+#ifdef WITH_WAVPACK
+	#undef WITH_WAVPACK
+#endif
+
+#ifdef WITH_FFMPEG
+	#undef WITH_FFMPEG
+#endif
+
+#ifdef WITH_LIBSNDFILE
+	#undef WITH_LIBSNDFILE
+#endif
+
+#endif
+

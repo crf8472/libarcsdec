@@ -1,0 +1,91 @@
+/**
+ * \file readerwvpk.hpp Audio reader for Wavpack audio files
+ *
+ */
+
+
+#ifndef __LIBARCSDEC_READERWVPK_HPP__
+#define __LIBARCSDEC_READERWVPK_HPP__
+
+#include <memory>
+#include <string>
+#include <vector>
+
+#ifndef __LIBARCSDEC_FILEFORMATS_HPP__
+#include "fileformats.hpp"
+#endif
+
+
+namespace arcs
+{
+
+/**
+ * \internal \defgroup readerwvpk Audio: Wavpack (Lossless)
+ *
+ * \brief An AudioReader for losslessly encoded Wavpack/Wv files.
+ *
+ * The Wavpack AudioReader will only read Wavpack files containing losslessly
+ * compressed samples in integer format. Float samples are not supported.
+ * Validation requires CDDA conform samples. Original file formats other than
+ * WAV are not supported.
+ *
+ * @{
+ */
+
+
+/**
+ * Represents the Wavpack file format.
+ *
+ * Represents a Wavpack container holding losslessly encoded samples conforming
+ * to CDDA. That is 16 bit, 2 channels, 44100 samples/sec as integer
+ * representation exclusively.
+ */
+class FileFormatWavpack : public FileFormat
+{
+
+public:
+
+
+	/**
+	 * Virtual default destructor
+	 */
+	~FileFormatWavpack() noexcept override;
+
+
+private:
+
+	/**
+	 * Returns "Wavpack"
+	 *
+	 * \return "Wavpack"
+	 */
+	std::string do_name() const override;
+
+	/**
+	 * Test if this format is recognized on the given input bytes.
+	 *
+	 * The test is made against a slice of at least 4 bytes with offset 0
+	 * (from the beginning of the file). The following test is performed:
+	 * Are bytes 0-3 of value 0x7776706B (== "wvpk" in ASCII)?
+	 *
+	 * \param[in] bytes  The byte sequence to check
+	 * \param[in] offset The offset to byte 0 in the file
+	 *
+	 * \return TRUE if the bytes match the FileFormatWavpack, otherwise FALSE
+	 */
+	bool do_can_have_bytes(const std::vector<char> &bytes,
+			const uint64_t &offset) const override;
+
+	bool do_can_have_suffix(const std::string &suffix) const override;
+
+	std::unique_ptr<FileReader> do_create_reader() const override;
+
+	std::unique_ptr<FileFormat> do_clone() const override;
+};
+
+/// @}
+
+} // namespace arcs
+
+#endif
+

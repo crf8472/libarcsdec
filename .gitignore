@@ -1,0 +1,18 @@
+*.so
+*.o
+*.log
+build/*
+compile_commands.json
+
+# vim intermediate files
+*.swp
+*.swo
+
+# kdevelop metafiles
+libarcsdec.kdev4
+kdev4/*
+
+# valgrind report files
+cachegrind.*
+callgrind.*
+

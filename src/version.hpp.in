@@ -1,0 +1,73 @@
+/**
+ * \file version.hpp.in Provide version and name information for libarcsdec.
+ *
+ * This file is used as a blueprint for cmake to generate a header file
+ * containing the cmake-controlled version and name information for the project.
+ * It is made accessible at build time for program scope.
+ *
+ */
+
+
+#ifndef __LIBARCSDEC_VERSION_HPP__
+#define __LIBARCSDEC_VERSION_HPP__
+
+#include <string>
+
+
+namespace arcs
+{
+
+// Version info
+
+/**
+ * Major version number
+ */
+constexpr int LIBARCSDEC_VERSION_MAJOR = @PROJECT_VERSION_MAJOR@;
+
+/**
+ * Minor version number
+ */
+constexpr int LIBARCSDEC_VERSION_MINOR = @PROJECT_VERSION_MINOR@;
+
+/**
+ * Patch level.
+ */
+constexpr int LIBARCSDEC_VERSION_PATCH = @PROJECT_VERSION_PATCH@;
+
+/**
+ * Version suffix (e.g. 'alpha.1', 'beta.6', 'rc.3' etc.)
+ */
+constexpr auto LIBARCSDEC_VERSION_SUFFIX = "@PROJECT_VERSION_SUFFIX@";
+
+/**
+ * Version suffix as std::string
+ */
+const std::string LIBARCSDEC_VERSION_SUFFIX_STRING ( LIBARCSDEC_VERSION_SUFFIX );
+
+/**
+ * Textual version info.
+ */
+constexpr auto LIBARCSDEC_VERSION_INFO = "@PROJECT_VERSION_STRING@";
+
+/**
+ * Textual version info as std::string
+ */
+const std::string LIBARCSDEC_VERSION_INFO_STRING ( LIBARCSDEC_VERSION_INFO );
+
+
+// Name info
+
+/**
+ * Library name
+ */
+constexpr auto LIBARCSDEC_NAME = "@PROJECT_NAME@";
+
+/**
+ * Library name as a std::string
+ */
+constexpr std::string LIBARCSDEC_NAME_STRING ( LIBARCSDEC_NAME );
+
+} // namespace arcs
+
+#endif
+
