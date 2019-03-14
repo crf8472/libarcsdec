@@ -37,16 +37,16 @@ namespace details
 {
 
 /**
- * Extract the offsets from a \ref TOC to an iterable container
+ * Extract the filenames from a \ref TOC to an iterable container
  *
  * \param[in] toc The TOC to get the offsets from
  *
  * \return The offsets of this TOC as an iterable container
  */
-std::vector<std::string> get_files(const TOC &toc);
+std::vector<std::string> get_filenames(const TOC &toc);
 
 
-std::vector<std::string> get_files(const TOC &toc)
+std::vector<std::string> get_filenames(const TOC &toc)
 {
 	std::size_t size = toc.track_count();
 
@@ -89,7 +89,7 @@ std::pair<bool,bool> audiofile_layout(const TOC &toc);
 
 std::pair<bool,bool> audiofile_layout(const TOC &toc)
 {
-	std::vector<std::string> files  = get_files(toc);
+	std::vector<std::string> files  = get_filenames(toc);
 	bool is_single_file             = true;
 	bool is_pairwise_distinct_files = true;
 
@@ -141,13 +141,13 @@ TOC TOCParser::parse(const std::string &metafilename)
 
 	ARCS_LOG_INFO << "Start to parse metadata input";
 
-	std::unique_ptr<TOC> toc = parser->parse(metafilename);
+	std::unique_ptr<TOC> toc { parser->parse(metafilename) };
 
 	if (!toc)
 	{
 		ARCS_LOG_ERROR << "Parser did not provide a TOC";
 
-		// TODO Throw Exception
+		// TODO Throw Exception? If parse() did not throw, toc won't be null
 	}
 
 	return *toc;
@@ -213,7 +213,7 @@ std::unique_ptr<ARId> ARIdCalculator::Impl::calculate(
 		toc = std::make_unique<TOC>(parser.parse(metafilename));
 	}
 
-	if (toc->leadout() == 0) // TODO Better: toc.incomplete()
+	if (not toc->complete())
 	{
 		ARCS_LOG_ERROR <<
 			"Incomplete TOC and no audio file provided. Bail out.";
@@ -238,7 +238,7 @@ std::unique_ptr<ARId> ARIdCalculator::Impl::calculate(
 
 	uint32_t leadout = toc->leadout();
 
-	if (leadout == 0)
+	if (not toc->complete())
 	{
 		// A complete multitrack configuration of the \ref Calculation requires
 		// two informations:
@@ -312,23 +312,6 @@ public:
 		const std::string &audiofilename, const TOC &toc);
 
 	/**
-	 * Calculate a \ref arcs::ChecksumSet for the given audio file
-	 *
-	 * The flags skip_front and skip_back control whether the track is processed
-	 * as first or last track of an album. If skip_front is set to TRUE, the
-	 * first 2939 samples are skipped in the calculation. If skip_back
-	 * is set to TRUE, the last 5 frames of are skipped in the calculation.
-	 *
-	 * \param[in] audiofilename  Name  of the audiofile
-	 * \param[in] skip_front     Skip front samples of first track
-	 * \param[in] skip_back      Skip back samples of last track
-	 *
-	 * \return The AccurateRip checksum of this track
-	 */
-	std::unique_ptr<ChecksumSet> calculate(const std::string &audiofilename,
-		const bool &skip_front, const bool &skip_back);
-
-	/**
 	 * Calculate <tt>ChecksumSet</tt>s for the given audio files.
 	 *
 	 * The ARCSs in the result will have the same order as the input files,
@@ -345,6 +328,23 @@ public:
 	Checksums calculate(const std::vector<std::string> &audiofilenames,
 		const bool &first_track_with_skip,
 		const bool &last_track_with_skip);
+
+	/**
+	 * Calculate a \ref arcs::ChecksumSet for the given audio file
+	 *
+	 * The flags skip_front and skip_back control whether the track is processed
+	 * as first or last track of an album. If skip_front is set to TRUE, the
+	 * first 2939 samples are skipped in the calculation. If skip_back
+	 * is set to TRUE, the last 5 frames of are skipped in the calculation.
+	 *
+	 * \param[in] audiofilename  Name  of the audiofile
+	 * \param[in] skip_front     Skip front samples of first track
+	 * \param[in] skip_back      Skip back samples of last track
+	 *
+	 * \return The AccurateRip checksum of this track
+	 */
+	std::unique_ptr<ChecksumSet> calculate(const std::string &audiofilename,
+		const bool &skip_front, const bool &skip_back);
 
 
 protected:
@@ -405,15 +405,6 @@ std::pair<Checksums, ARId> ARCSCalculator::Impl::calculate(
 	auto id = reader->calc().context().id();
 
 	return std::make_pair(checksums, id);
-}
-
-
-std::unique_ptr<ChecksumSet> ARCSCalculator::Impl::calculate(
-	const std::string &audiofilename,
-	const bool &skip_front,
-	const bool &skip_back)
-{
-	return this->calculate_track(audiofilename, skip_front, skip_back);
 }
 
 
@@ -491,6 +482,15 @@ Checksums ARCSCalculator::Impl::calculate(
 	}
 
 	return arcss;
+}
+
+
+std::unique_ptr<ChecksumSet> ARCSCalculator::Impl::calculate(
+	const std::string &audiofilename,
+	const bool &skip_front,
+	const bool &skip_back)
+{
+	return this->calculate_track(audiofilename, skip_front, skip_back);
 }
 
 
@@ -616,9 +616,9 @@ Checksums ARCSCalculator::calculate(
 
 
 /**
- * Private implementation of a ProfileCalculator
+ * Private implementation of a ARCSMultifileAlbumCalculator
  */
-class ProfileCalculator::Impl final
+class ARCSMultifileAlbumCalculator::Impl final
 {
 
 public:
@@ -634,7 +634,7 @@ public:
 
 
 std::tuple<Checksums, ARId, std::unique_ptr<TOC>>
-	ProfileCalculator::Impl::calculate(
+	ARCSMultifileAlbumCalculator::Impl::calculate(
 			const std::vector<std::string> &audiofilenames,
 			const std::string &metafilename) const
 {
@@ -673,7 +673,7 @@ std::tuple<Checksums, ARId, std::unique_ptr<TOC>>
 
 
 std::tuple<Checksums, ARId, std::unique_ptr<TOC>>
-	ProfileCalculator::Impl::calculate(
+	ARCSMultifileAlbumCalculator::Impl::calculate(
 		const std::string &metafilename,
 		const std::string &audiosearchpath) const
 {
@@ -713,51 +713,58 @@ std::tuple<Checksums, ARId, std::unique_ptr<TOC>>
 					std::make_unique<TOC>(toc));
 		}
 
-		std::string audiofile(toc.filename(1));
-		audiofile.insert(0, audiosearchpath);
+		std::string audiofile { toc.filename(1) };
 
-		// Commented out: is it necessary to put filesystem access herein
-		// just to check that early? Prefer informative exception from
-		// calculator
-		/*
-		FileChecker check;
-		if (not check.file_exists(audiofile))
+		if (not audiosearchpath.empty())
 		{
-			ARCS_LOG_ERROR << "Audiofile " << audiofile << " is not readable";
-			return nullptr;
+			// NOTE: there MUST be a platform-specific file separator at the
+			// end of audiosearchpath or this will fail
+			audiofile.insert(0, audiosearchpath);
 		}
-		*/
 
 		auto result { calculator.calculate(audiofile, toc) };
+
 		return std::make_tuple(result.first, result.second,
 					std::make_unique<TOC>(toc));
 	}
 
 	ARCS_LOG_DEBUG << "TOC references multiple files";
 
-	auto arcss = calculator.calculate(details::get_files(toc), true, true);
+	auto filenames { details::get_filenames(toc) };
 
-	ARCS_LOG_DEBUG << "Compute result from metafilename (and searchpath)";
+	if (not audiosearchpath.empty())
+	{
+		for (auto& filename : filenames)
+		{
+			// NOTE: there MUST be a platform-specific file separator at the
+			// end of audiosearchpath or this will fail
+			filename.insert(0, audiosearchpath);
+		}
+	}
+
+	auto arcss = calculator.calculate(filenames, true, true);
+
+	ARCS_LOG_DEBUG << "Calculate result from metafilename (and searchpath)";
 
 	return std::make_tuple(arcss, *make_arid(toc), std::make_unique<TOC>(toc));
 }
 
 
-// ProfileCalculator
+// ARCSMultifileAlbumCalculator
 
 
-ProfileCalculator::ProfileCalculator()
-	: impl_(std::make_unique<ProfileCalculator::Impl>())
+ARCSMultifileAlbumCalculator::ARCSMultifileAlbumCalculator()
+	: impl_(std::make_unique<ARCSMultifileAlbumCalculator::Impl>())
 {
 	// empty
 }
 
 
-ProfileCalculator::~ProfileCalculator() noexcept = default;
+ARCSMultifileAlbumCalculator::~ARCSMultifileAlbumCalculator() noexcept = default;
 
 
 std::tuple<Checksums, ARId, std::unique_ptr<TOC>>
-	ProfileCalculator::calculate(
+	ARCSMultifileAlbumCalculator::calculate(
 		const std::vector<std::string> &audiofilenames,
 		const std::string &metafilename) const
 {
@@ -766,7 +773,7 @@ std::tuple<Checksums, ARId, std::unique_ptr<TOC>>
 
 
 std::tuple<Checksums, ARId, std::unique_ptr<TOC>>
-	ProfileCalculator::calculate(
+	ARCSMultifileAlbumCalculator::calculate(
 		const std::string &metafilename, const std::string &searchpath) const
 {
 	return impl_->calculate(metafilename, searchpath);

@@ -112,7 +112,10 @@ private:
 
 
 /**
- * Compute ARCSs for input audio files.
+ * Calculate ARCSs for input audio files.
+ *
+ * Note that ARCSCalculator does not perform any lookups in the filesystem. This
+ * part is completely delegated to the <tt>FileReader</tt>s.
  */
 class ARCSCalculator
 {
@@ -135,7 +138,8 @@ public:
 	 *
 	 * The TOC is supposed to contain the offsets of all tracks represented
 	 * in the audio file. The result will contain ARCS v1 and v2 for all tracks
-	 * specified in the TOC.
+	 * specified in the TOC. If the TOC contains any audio file names, they are
+	 * ignored in favor of \c audiofilename.
 	 *
 	 * \param[in] audiofilename Name of the audiofile
 	 * \param[in] toc           Metadata for the audiofile
@@ -144,25 +148,6 @@ public:
 	 */
 	std::pair<Checksums, ARId> calculate(const std::string &audiofilename,
 			const TOC &toc);
-	// multiple tracks with tracknos (by TOC)
-
-	/**
-	 * Calculate an ARCS for the given audio file
-	 *
-	 * The flags skip_front and skip_back control whether the track is processed
-	 * as first or last track of an album. If skip_front is set to TRUE, the
-	 * first 2939 samples are skipped in the calculation. If skip_back
-	 * is set to TRUE, the last 5 frames of are skipped in the calculation.
-	 *
-	 * \param[in] audiofilename  Name  of the audiofile
-	 * \param[in] skip_front     Skip front samples of first track
-	 * \param[in] skip_back      Skip back samples of last track
-	 *
-	 * \return The AccurateRip checksum of this track
-	 */
-	std::unique_ptr<ChecksumSet> calculate(const std::string &audiofilename,
-		const bool &skip_front, const bool &skip_back);
-	// single track without trackno
 
 	/**
 	 * Calculate ARCSs for the given audio files.
@@ -181,7 +166,23 @@ public:
 	Checksums calculate(const std::vector<std::string> &audiofilenames,
 			const bool &first_file_with_skip,
 			const bool &last_file_with_skip);
-	// multiple tracks with tracknos (by default) (no id)
+
+	/**
+	 * Calculate an ARCS for the given audio file.
+	 *
+	 * The flags skip_front and skip_back control whether the track is processed
+	 * as first or last track of an album. If skip_front is set to TRUE, the
+	 * first 2939 samples are skipped in the calculation. If skip_back
+	 * is set to TRUE, the last 5 frames of are skipped in the calculation.
+	 *
+	 * \param[in] audiofilename  Name  of the audiofile
+	 * \param[in] skip_front     Skip front samples of first track
+	 * \param[in] skip_back      Skip back samples of last track
+	 *
+	 * \return The AccurateRip checksum of this track
+	 */
+	std::unique_ptr<ChecksumSet> calculate(const std::string &audiofilename,
+		const bool &skip_front, const bool &skip_back);
 
 
 private:
@@ -200,7 +201,7 @@ private:
  * Wrapper for \ref ARCSCalculator to calculate album metadata from a sequence
  * of single results that are known to form an album.
  */
-class ProfileCalculator
+class ARCSMultifileAlbumCalculator
 {
 
 public:
@@ -208,16 +209,19 @@ public:
 	/**
 	 * Constructor
 	 */
-	ProfileCalculator();
+	ARCSMultifileAlbumCalculator();
 
 	/**
 	 * Virtual default destructor
 	 */
-	virtual ~ProfileCalculator() noexcept;
+	virtual ~ARCSMultifileAlbumCalculator() noexcept;
 
 	/**
-	 * Compute the result values of the CD image represented by the specified
+	 * Calculate ARCS values of the CD image represented by the specified
 	 * files.
+	 *
+	 * If the metadata file contains any names of audiofiles, they are ignored
+	 * in favor of \c audiofilenames.
 	 *
 	 * \param[in] audiofilenames Name of the audio files
 	 * \param[in] metafilename   Name of the metadata file
@@ -229,8 +233,10 @@ public:
 			const std::string &metafilename) const;
 
 	/**
-	 * Compute the result values of the CD image represented by the specified
-	 * file.
+	 * Calculate ARCS values of the CD image represented by the specified
+	 * metadata file and search audiofiles in the searchpath.
+	 *
+	 * The searchpath must end with a file separator.
 	 *
 	 * \param[in] metafilename   Name of the metadata file
 	 * \param[in] searchpath     Name of the searchpath for audio files
