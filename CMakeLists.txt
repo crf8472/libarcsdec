@@ -359,6 +359,9 @@ configure_file (
 set (EXPORTED_HEADERS )
 
 list (APPEND EXPORTED_HEADERS "${PROJECT_SOURCE_DIR}/calculators.hpp" )
+list (APPEND EXPORTED_HEADERS "${PROJECT_SOURCE_DIR}/audioreader.hpp" )
+list (APPEND EXPORTED_HEADERS "${PROJECT_SOURCE_DIR}/metaparser.hpp" )
+list (APPEND EXPORTED_HEADERS "${PROJECT_SOURCE_DIR}/fileformats.hpp" )
 
 
 ## --- Add and configure project target

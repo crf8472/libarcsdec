@@ -24,11 +24,15 @@ extern "C" {
 #ifndef __LIBARCS_CALCULATE_HPP__
 #include <arcs/calculate.hpp>
 #endif
+#ifndef __LIBARCS_LOGGING_HPP__
+#include <arcs/logging.hpp>
+#endif
+
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__
 #include "audioreader.hpp" // from .h
 #endif
-#ifndef __LIBARCS_LOGGING_HPP__
-#include <arcs/logging.hpp>
+#ifndef __LIBARCSDEC_AUDIOBUFFER_HPP__
+#include "audiobuffer.hpp"
 #endif
 
 
@@ -1436,6 +1440,174 @@ void WavAudioHandler::do_fail()
 	ARCS_LOG_ERROR << "Validation failed";
 
 	throw InvalidAudioException("Validation failed");
+}
+
+
+/**
+ * Implements pull reading PCM samples from a std::ifstream.
+ *
+ * This is the block reading policy for the RIFF/WAV (PCM) format.
+ */
+class PCMBlockReader : public BlockCreator
+{
+
+public:
+
+	/**
+	 * Constructs a PCMBlockReader with buffer of size samples_per_block.
+	 *
+	 * \param[in] samples_per_block Number of 32 bit PCM samples in one block
+	 */
+	explicit PCMBlockReader(const uint32_t &samples_per_block);
+
+	// make class non-copyable (1/2)
+	PCMBlockReader(const PCMBlockReader &) = delete;
+
+	// TODO Move constructor
+
+	/**
+	 * Virtual default destructor
+	 */
+	~PCMBlockReader() noexcept override;
+
+	/**
+	 * Registers a consuming method for blocks.
+	 *
+	 * \param[in] func The functor to be registered as block consumer.
+	 */
+	void register_block_consumer(const std::function<void(
+				PCMForwardIterator begin, PCMForwardIterator end)>
+			&func);
+
+	/**
+	 * Read blocks from the stream until the end of the stream.
+	 *
+	 * The number of actual bytes read is returned and will be equal to
+	 * total_pcm_bytes on success.
+	 *
+	 * \param[in] in Stream of bytes to read from
+	 * \param[in] total_pcm_bytes Total number of 32 bit PCM samples in the
+	 * stream
+	 *
+	 * \throw FileReadException On any read error
+	 *
+	 * \return The actual number of bytes read
+	 */
+	uint64_t read_blocks(std::ifstream &in, const uint64_t &total_pcm_bytes);
+
+	// make class non-copyable (2/2)
+	PCMBlockReader& operator = (const PCMBlockReader &) = delete;
+
+	// TODO Move assignment
+
+
+private:
+
+	/**
+	 * Registered callback method to consume a block.
+	 *
+	 * Called by block_complete().
+	 */
+	std::function<void(PCMForwardIterator begin, PCMForwardIterator end)>
+		consume_;
+};
+
+
+// PCMBlockReader
+
+
+PCMBlockReader::PCMBlockReader(const uint32_t &samples_per_block)
+	: BlockCreator(samples_per_block)
+	, consume_()
+{
+	// empty
+}
+
+
+PCMBlockReader::~PCMBlockReader() noexcept = default;
+
+
+void PCMBlockReader::register_block_consumer(const std::function<void(
+			PCMForwardIterator begin, PCMForwardIterator end
+		)> &consume)
+{
+	consume_ = consume;
+}
+
+
+uint64_t PCMBlockReader::read_blocks(std::ifstream &in,
+		const uint64_t &total_pcm_bytes)
+{
+	std::vector<uint32_t> samples(this->samples_per_block());
+
+	uint32_t bytes_per_block =
+			this->samples_per_block() * CDDA.BYTES_PER_SAMPLE;
+
+	uint32_t estimated_blocks = total_pcm_bytes / bytes_per_block
+				+ (total_pcm_bytes % bytes_per_block ? 1 : 0);
+
+	ARCS_LOG_DEBUG << "START READING " << total_pcm_bytes
+		<< " bytes in " << std::to_string(estimated_blocks) << " blocks with "
+		<< bytes_per_block << " bytes per block";
+
+	uint32_t samples_todo = total_pcm_bytes / CDDA.BYTES_PER_SAMPLE;
+	uint32_t total_bytes_read   = 0;
+	uint32_t total_blocks_read  = 0;
+
+	uint32_t read_bytes = this->samples_per_block() * sizeof(uint32_t);
+	// FIXME Use sample type!
+
+	while (total_bytes_read < total_pcm_bytes)
+	{
+		// Adjust buffer size for last buffer, if necessary
+
+		if (samples_todo < this->samples_per_block())
+		{
+			// Avoid trailing zeros in buffer
+			samples.resize(samples_todo);
+
+			//read_bytes = samples_todo * sizeof(samples.front());
+			read_bytes = samples_todo * sizeof(uint32_t); // FIXME Use sample type!
+		}
+
+		// Actually read the bytes
+
+		try
+		{
+			in.read(reinterpret_cast<char*>(samples.data()), read_bytes);
+		}
+		catch (const std::ifstream::failure& f)
+		{
+			total_bytes_read += in.gcount();
+
+			ARCS_LOG_ERROR << "Failed to read from file: " << f.what();
+
+			throw FileReadException(f.what(), total_bytes_read + 1);
+		}
+		total_bytes_read += read_bytes;
+		samples_todo     -= samples.size();
+
+		// Logging + Statistics
+
+		++total_blocks_read;
+
+		ARCS_LOG_DEBUG << "READ BLOCK " << total_blocks_read
+			<< "/" << estimated_blocks;
+		ARCS_LOG(LOG_DEBUG1) << "Size: " << read_bytes << " bytes";
+		ARCS_LOG(LOG_DEBUG1) << "      " << samples.size()
+				<< " Stereo PCM samples (32 bit)";
+
+		this->consume_(samples.begin(), samples.end());
+	}
+
+	ARCS_LOG_DEBUG << "END READING after " << total_blocks_read << " blocks";
+
+	ARCS_LOG(LOG_DEBUG1) << "Read "
+		<< std::to_string(total_bytes_read / CDDA.BYTES_PER_SAMPLE)
+		<< " samples / "
+		<< total_bytes_read << " bytes";
+
+	return total_bytes_read;
 }
 
 

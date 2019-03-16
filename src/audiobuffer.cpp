@@ -93,8 +93,8 @@ uint32_t BlockCreator::clip_samples_per_block(
 
 
 BlockAccumulator::BlockAccumulator()
-	: samples_(BLOCKSIZE::DEFAULT)
-	, consume_()
+	: consume_()
+	, samples_(BLOCKSIZE::DEFAULT)
 	, samples_processed_(0)
 	, sequences_processed_(0)
 	, blocks_processed_(0)
@@ -105,8 +105,8 @@ BlockAccumulator::BlockAccumulator()
 
 BlockAccumulator::BlockAccumulator(const uint32_t &samples_per_block)
 	: BlockCreator(samples_per_block)
-	, samples_(samples_per_block)
 	, consume_()
+	, samples_(samples_per_block)
 	, samples_processed_(0)
 	, sequences_processed_(0)
 	, blocks_processed_(0)
@@ -278,6 +278,57 @@ void BlockAccumulator::init_buffer(const uint32_t &buffer_size)
 
 	// Remove trailing zeros
 	samples_.resize(buffer_size);
+}
+
+
+// SampleBuffer
+
+
+SampleBuffer::SampleBuffer()
+	: BlockAccumulator(BLOCKSIZE::DEFAULT)
+	, call_update_audiosize_()
+{
+	this->init();
+}
+
+
+SampleBuffer::SampleBuffer(const uint32_t samples_per_block)
+	: BlockAccumulator(samples_per_block)
+	, call_update_audiosize_()
+{
+	this->init();
+}
+
+
+SampleBuffer::~SampleBuffer() noexcept = default;
+
+
+void SampleBuffer::reset()
+{
+	this->init();
+}
+
+
+void SampleBuffer::notify_total_samples(const uint32_t sample_count)
+{
+	ARCS_LOG_DEBUG << "Total samples updated to: " << sample_count;
+
+	AudioSize size;
+	size.set_sample_count(sample_count);
+	call_update_audiosize_(size); // call registered method
+}
+
+
+void SampleBuffer::register_processor(Calculation &calc)
+{
+	// Set Calculation instance as consumer for blocks
+	this->register_block_consumer(
+		std::bind(&Calculation::update, &calc,
+			std::placeholders::_1, std::placeholders::_2));
+
+	// Inform Calculation instance when total number of samples is set/updated
+	call_update_audiosize_ =
+		std::bind(&Calculation::update_audiosize, &calc, std::placeholders::_1);
 }
 
 

@@ -2,7 +2,7 @@
 #define __LIBARCS_CALCULATORS_HPP__
 
 /**
- * \file calculators.hpp A high-level API for calculating ARCSs of files.
+ * \file calculators.hpp A high-level API for calculating ARCSs and IDs.
  */
 
 #include <memory>
@@ -16,12 +16,19 @@
 #include <arcs/calculate.hpp>
 #endif
 
+#ifndef __LIBARCSDEC_FILEFORMATS_HPP__
+#include "fileformats.hpp"
+#endif
+#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
+#include "audioreader.hpp"
+#endif
+
 
 namespace arcs
 {
 
 /**
- * \defgroup calc Level 2 API : Calculators for AccurateRip Checksums and IDs
+ * \defgroup calculators Calculators for AccurateRip Checksums and IDs
  *
  * \brief Calculators for the AccurateRip ID and the AccurateRip checksums of
  * a medium
@@ -137,12 +144,15 @@ public:
 	 * the given TOC.
 	 *
 	 * The TOC is supposed to contain the offsets of all tracks represented
-	 * in the audio file. The result will contain ARCS v1 and v2 for all tracks
-	 * specified in the TOC. If the TOC contains any audio file names, they are
-	 * ignored in favor of \c audiofilename.
+	 * in the audio file. It is not required to be <tt>complete()</tt>.
+	 *
+	 * Any audio file names in the TOC are ignored in favor of \c audiofilename.
+	 *
+	 * The result will contain ARCS v1 and v2 for all tracks specified in the
+	 * TOC.
 	 *
 	 * \param[in] audiofilename Name of the audiofile
-	 * \param[in] toc           Metadata for the audiofile
+	 * \param[in] toc           Offsets for the audiofile
 	 *
 	 * \return AccurateRip checksums of all tracks specified in the TOC
 	 */
@@ -151,6 +161,9 @@ public:
 
 	/**
 	 * Calculate ARCSs for the given audio files.
+	 *
+	 * It can be specified that the sequence of audiofiles forms an album by
+	 * passing <tt>true</tt> for both boolean parameters.
 	 *
 	 * The ARCSs in the result will have the same order as the input files,
 	 * so for any index i: 0 <= i < audiofilenames.size(), result[i] will be the
@@ -171,8 +184,8 @@ public:
 	 * Calculate an ARCS for the given audio file.
 	 *
 	 * The flags skip_front and skip_back control whether the track is processed
-	 * as first or last track of an album. If skip_front is set to TRUE, the
-	 * first 2939 samples are skipped in the calculation. If skip_back
+	 * as first or last track of an album. If \c skip_front is set to TRUE, the
+	 * first 2939 samples are skipped in the calculation. If \c skip_back
 	 * is set to TRUE, the last 5 frames of are skipped in the calculation.
 	 *
 	 * \param[in] audiofilename  Name  of the audiofile
@@ -181,71 +194,22 @@ public:
 	 *
 	 * \return The AccurateRip checksum of this track
 	 */
-	std::unique_ptr<ChecksumSet> calculate(const std::string &audiofilename,
+	ChecksumSet calculate(const std::string &audiofilename,
 		const bool &skip_front, const bool &skip_back);
 
-
-private:
-
-	// Forward declaration for private implementation.
-	class Impl;
+	/**
+	 * Set the AudioReaderCreator for this instance.
+	 *
+	 * \param[in] creator The AudioReaderCreator to use
+	 */
+	void set_audioreader_creator(std::unique_ptr<AudioReaderCreator> creator);
 
 	/**
-	 * Internal implementation instance
+	 * Get the AudioReaderCreator used by this instance.
+	 *
+	 * \return The AudioReaderCreator used by this instance
 	 */
-	std::unique_ptr<Impl> impl_;
-};
-
-
-/**
- * Wrapper for \ref ARCSCalculator to calculate album metadata from a sequence
- * of single results that are known to form an album.
- */
-class ARCSMultifileAlbumCalculator
-{
-
-public:
-
-	/**
-	 * Constructor
-	 */
-	ARCSMultifileAlbumCalculator();
-
-	/**
-	 * Virtual default destructor
-	 */
-	virtual ~ARCSMultifileAlbumCalculator() noexcept;
-
-	/**
-	 * Calculate ARCS values of the CD image represented by the specified
-	 * files.
-	 *
-	 * If the metadata file contains any names of audiofiles, they are ignored
-	 * in favor of \c audiofilenames.
-	 *
-	 * \param[in] audiofilenames Name of the audio files
-	 * \param[in] metafilename   Name of the metadata file
-	 *
-	 * \return Checksums, Id and TOC of the image represented by the input files
-	 */
-	std::tuple<Checksums, ARId, std::unique_ptr<TOC>> calculate(
-			const std::vector<std::string> &audiofilenames,
-			const std::string &metafilename) const;
-
-	/**
-	 * Calculate ARCS values of the CD image represented by the specified
-	 * metadata file and search audiofiles in the searchpath.
-	 *
-	 * The searchpath must end with a file separator.
-	 *
-	 * \param[in] metafilename   Name of the metadata file
-	 * \param[in] searchpath     Name of the searchpath for audio files
-	 *
-	 * \return Checksums, Id and TOC of the image represented by the input files
-	 */
-	std::tuple<Checksums, ARId, std::unique_ptr<TOC>> calculate(
-			const std::string &metafilename, const std::string &searchpath)
-			const;
+	const AudioReaderCreator& audioreader_creator() const;
 
 
 private:
@@ -258,7 +222,6 @@ private:
 	 */
 	std::unique_ptr<Impl> impl_;
 };
-
 
 /// @}
 

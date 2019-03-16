@@ -11,11 +11,12 @@
 #include <memory>
 #include <string>
 
-#ifndef __LIBARCSDEC_METAFORMATS_HPP__
-#include "metaformats.hpp"
-#endif
 #ifndef __LIBARCS_LOGGING_HPP__
 #include <arcs/logging.hpp>
+#endif
+
+#ifndef __LIBARCSDEC_METAFORMATS_HPP__
+#include "metaformats.hpp"
 #endif
 
 
@@ -99,11 +100,9 @@ MetadataParserCreator::~MetadataParserCreator() noexcept = default;
 
 
 std::unique_ptr<MetadataParser> MetadataParserCreator::create_metadata_parser(
-	const std::string &filename)
+	const std::string &filename) const
 {
-	FileReader* file_reader_rptr = nullptr;
-
-	// Create FileReader and release pointee
+	// Create FileReader
 
 	auto file_reader_uptr = FileReaderCreator::create_reader(filename);
 
@@ -113,11 +112,16 @@ std::unique_ptr<MetadataParser> MetadataParserCreator::create_metadata_parser(
 		return nullptr;
 	}
 
+	// Create MetadataParser manually by (safe) downcasting and reassignment
+
 	auto metaparser_uptr = std::make_unique<MetadataParser>(nullptr);
 
+	FileReader* file_reader_rptr = nullptr;
 	file_reader_rptr = file_reader_uptr.release();
-
-	// Create AudioReader manually by (safe) downcasting and reassignment
+	// This is definitively NOT nice since file_reader_rptr is now an
+	// owning raw pointer. We will fix that with the following reset() to
+	// a unique_ptr. If thereby something goes wrong, we immediately destroy
+	// the raw pointer accurately.
 
 	try
 	{
@@ -127,7 +131,7 @@ std::unique_ptr<MetadataParser> MetadataParserCreator::create_metadata_parser(
 		// MetadataParser. If not, the file is not a supported audio file, so
 		// bail out.
 
-	} catch (const std::bad_cast& e)
+	} catch (...) // std::bad_cast is possible, but we play it safe
 	{
 		if (file_reader_rptr)
 		{

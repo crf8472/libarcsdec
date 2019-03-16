@@ -116,18 +116,32 @@ bool FileFormat::operator != (const FileFormat &rhs) const
 // FileFormatTest
 
 
+FileFormatTest::FileFormatTest()
+	: filename_()
+{
+	// empty
+}
+
+
+FileFormatTest::FileFormatTest(const std::string &filename)
+	: filename_(filename)
+{
+	// empty
+}
+
+
 FileFormatTest::~FileFormatTest() noexcept = default;
 
 
 void FileFormatTest::set_filename(const std::string &filename)
 {
-	this->do_set_filename(filename);
+	filename_ = filename;
 }
 
 
-std::string FileFormatTest::filename() const
+const std::string& FileFormatTest::filename() const
 {
-	return this->do_filename();
+	return filename_;
 }
 
 
@@ -144,27 +158,14 @@ FileFormatTestBytes::FileFormatTestBytes(const uint64_t &offset,
 		const uint32_t &length)
 	: offset_(offset)
 	, length_(length)
-	, filename_()
 {
 	// empty
 }
 
 
-void FileFormatTestBytes::do_set_filename(const std::string &filename)
-{
-	filename_ = filename;
-}
-
-
-std::string FileFormatTestBytes::do_filename() const
-{
-	return filename_;
-}
-
-
 bool FileFormatTestBytes::do_matches(const FileFormat &format) const
 {
-	auto bytes = this->read_bytes(filename_, offset_, length_);
+	auto bytes = this->read_bytes(this->filename(), offset_, length_);
 	return format.can_have_bytes(bytes, offset_);
 }
 
@@ -216,35 +217,9 @@ std::vector<char> FileFormatTestBytes::read_bytes(const std::string &filename,
 // FileFormatTestSuffix
 
 
-FileFormatTestSuffix::FileFormatTestSuffix()
-	: filename_()
-{
-	// empty
-}
-
-
-FileFormatTestSuffix::FileFormatTestSuffix(const std::string &filename)
-	: filename_(filename)
-{
-	// empty
-}
-
-
-void FileFormatTestSuffix::do_set_filename(const std::string &filename)
-{
-	filename_ = filename;
-}
-
-
-std::string FileFormatTestSuffix::do_filename() const
-{
-	return filename_;
-}
-
-
 bool FileFormatTestSuffix::do_matches(const FileFormat &format) const
 {
-	auto suffix = this->get_suffix(filename_);
+	auto suffix = this->get_suffix(this->filename());
 	return format.can_have_suffix(suffix);
 }
 
@@ -258,6 +233,23 @@ std::string FileFormatTestSuffix::get_suffix(const std::string &filename) const
 		: (pos < filename.length())
 			? filename.substr(pos + 1, filename.length())
 			: std::to_string(filename.back());
+}
+
+
+// FileFormatTestFormatname
+
+
+FileFormatTestFormatname::FileFormatTestFormatname(
+		const std::string &formatname)
+	: formatname_(formatname)
+{
+	// empty
+}
+
+
+bool FileFormatTestFormatname::do_matches(const FileFormat &format) const
+{
+	return formatname_ == format.name();
 }
 
 
@@ -375,7 +367,7 @@ public:
 	 *
 	 * \return Number of format instances removed.
 	 */
-	int remove_format(FileFormat const * format); // TODO const ptr?
+	int remove_format(const FileFormat * format);
 
 	/**
 	 * Register a test for a FileFormat for the specified filename.
@@ -392,7 +384,12 @@ public:
 	 *
 	 * \return Number of test instances removed.
 	 */
-	int remove_test(FileFormatTest const * format_test); // TODO const ptr?
+	int remove_test(const FileFormatTest * format_test);
+
+	/**
+	 * Removes all tests registered to this instance.
+	 */
+	void remove_all_tests();
 
 	/**
 	 * Sets the FileFormatSelector for this instance
@@ -415,7 +412,7 @@ public:
 	 *
 	 * \return A FileFormat for the specified file
 	 */
-	std::unique_ptr<FileFormat> get_format(const std::string &filename);
+	std::unique_ptr<FileFormat> get_format(const std::string &filename) const;
 
 	/**
 	 * Create an opaque FileReader for the given file.
@@ -427,7 +424,8 @@ public:
 	 *
 	 * \return A FileReader for the specified file
 	 */
-	std::unique_ptr<FileReader> create_reader(const std::string &filename);
+	std::unique_ptr<FileReader> create_reader(const std::string &filename)
+		const;
 
 	/**
 	 * Reset this instance to its initial state, removing all tests and
@@ -491,7 +489,7 @@ void FileReaderCreator::Impl::register_format(
 }
 
 
-int FileReaderCreator::Impl::remove_format(FileFormat const * format)
+int FileReaderCreator::Impl::remove_format(const FileFormat * format)
 {
 	int counter = 0;
 
@@ -516,7 +514,7 @@ void FileReaderCreator::Impl::register_test(
 }
 
 
-int FileReaderCreator::Impl::remove_test(FileFormatTest const * test)
+int FileReaderCreator::Impl::remove_test(const FileFormatTest * test)
 {
 	int counter = 0;
 
@@ -530,6 +528,12 @@ int FileReaderCreator::Impl::remove_test(FileFormatTest const * test)
 	}
 
 	return counter;
+}
+
+
+void FileReaderCreator::Impl::remove_all_tests()
+{
+	tests_.clear();
 }
 
 
@@ -547,7 +551,7 @@ const FileFormatSelector& FileReaderCreator::Impl::selector() const
 
 
 std::unique_ptr<FileFormat> FileReaderCreator::Impl::get_format(
-		const std::string &filename)
+		const std::string &filename) const
 {
 	if (filename.empty())
 	{
@@ -576,7 +580,7 @@ std::unique_ptr<FileFormat> FileReaderCreator::Impl::get_format(
 
 
 std::unique_ptr<FileReader> FileReaderCreator::Impl::create_reader(
-		const std::string &filename)
+		const std::string &filename) const
 {
 	auto format = this->get_format(filename);
 
@@ -621,7 +625,7 @@ void FileReaderCreator::register_format(std::unique_ptr<FileFormat> format)
 }
 
 
-int FileReaderCreator::remove_format(FileFormat const * format)
+int FileReaderCreator::remove_format(const FileFormat * format)
 {
 	return impl_->remove_format(format);
 }
@@ -634,9 +638,15 @@ void FileReaderCreator::register_test(
 }
 
 
-int FileReaderCreator::remove_test(FileFormatTest const * test)
+int FileReaderCreator::remove_test(const FileFormatTest * test)
 {
 	return impl_->remove_test(test);
+}
+
+
+void FileReaderCreator::remove_all_tests()
+{
+	return impl_->remove_all_tests();
 }
 
 
@@ -654,14 +664,14 @@ const FileFormatSelector& FileReaderCreator::selector() const
 
 
 std::unique_ptr<FileFormat> FileReaderCreator::get_format(
-		const std::string &filename)
+		const std::string &filename) const
 {
 	return impl_->get_format(filename);
 }
 
 
 std::unique_ptr<FileReader> FileReaderCreator::create_reader(
-		const std::string &filename)
+		const std::string &filename) const
 {
 	return impl_->create_reader(filename);
 }

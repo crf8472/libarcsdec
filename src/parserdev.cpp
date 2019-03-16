@@ -21,11 +21,12 @@ extern "C" {
 #ifndef __LIBARCS_CALCULATE_HPP__
 #include <arcs/calculate.hpp>
 #endif
-#ifndef __LIBARCSDEC_METAPARSER_HPP__
-#include "metaparser.hpp"
-#endif
 #ifndef __LIBARCS_LOGGING_HPP__
 #include <arcs/logging.hpp>
+#endif
+
+#ifndef __LIBARCSDEC_METAPARSER_HPP__
+#include "metaparser.hpp"
 #endif
 
 

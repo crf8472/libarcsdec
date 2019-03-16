@@ -14,9 +14,6 @@
 #include <arcs/calculate.hpp>
 #endif
 
-#ifndef __LIBARCSDEC_AUDIOBUFFER_HPP__
-#include "audiobuffer.hpp"
-#endif
 #ifndef __LIBARCSDEC_FILEFORMATS_HPP__
 #include "fileformats.hpp"
 #endif
@@ -235,72 +232,6 @@ enum SAMPLE_FORMAT : uint8_t
 
 
 /**
- * A format and reader independent sample buffer.
- *
- * Enhances BlockAccumulator for some convenience functions such as registering
- * the \ref Calculation for you. It aliases the arcane BlockAccumulator::sequence()
- * with the more intuitive append() and provides a reset() method to reuse
- * the buffer.
- *
- * By residing in this module, it decouples the
- * concrete audio reader classes from the classes in the \ref audiobuffer.
- */
-class SampleBuffer : public BlockAccumulator
-{
-
-public:
-
-	/**
-	 * Default constructor
-	 */
-	SampleBuffer();
-
-	/**
-	 * Constructs a SampleBuffer with buffer of size samples_per_block.
-	 *
-	 * \param[in] samples_per_block Number of 32 bit PCM samples in one block
-	 */
-	explicit SampleBuffer(const uint32_t samples_per_block);
-
-	/**
-	 * Default destructor
-	 */
-	virtual ~SampleBuffer() noexcept;
-
-	/**
-	 * Reset the buffer to its initial state, thereby discarding its content.
-	 * The current buffer capacity is preserved.
-	 */
-	void reset();
-
-	/**
-	 * Handler method that informs about the end of input.
-	 *
-	 * This method is to be called by the AudioReaderImpl before the last block
-	 * is flushed.
-	 *
-	 * \param[in] idx Index of the last 32 bit PCM sample
-	 */
-	void notify_total_samples(const uint32_t idx);
-
-	/**
-	 * Register a processor for this buffer
-	 *
-	 * \param[in] calc The processor for this buffer
-	 */
-	void register_processor(Calculation &calc);
-
-
-private:
-
-	/**
-	 * Registered callback method to update the \ref AudioSize.
-	 */
-	std::function<void(const AudioSize &audiosize)> call_update_audiosize_;
-};
-
-
-/**
  * Validates values against the reference values in CDDA_t.
  *
  * This just encapsulate the comparisons for reuse.
@@ -493,82 +424,6 @@ private:
 
 
 /**
- * Implements pull reading PCM samples from a std::ifstream.
- *
- * This is the block reading policy for the RIFF/WAV (PCM) format.
- */
-class PCMBlockReader : public BlockCreator
-{
-
-public:
-
-	/**
-	 * Constructs a PCMBlockReader with buffer of size
-	 * SAMPLES.PER_BLOCK_DEFAULT.
-	 */
-	PCMBlockReader();
-
-	/**
-	 * Constructs a PCMBlockReader with buffer of size samples_per_block.
-	 *
-	 * \param[in] samples_per_block Number of 32 bit PCM samples in one block
-	 */
-	explicit PCMBlockReader(const uint32_t &samples_per_block);
-
-	// make class non-copyable (1/2)
-	PCMBlockReader(const PCMBlockReader &) = delete;
-
-	// TODO Move constructor
-
-	/**
-	 * Virtual default destructor
-	 */
-	~PCMBlockReader() noexcept override;
-
-	/**
-	 * Registers a consuming method for blocks.
-	 *
-	 * \param[in] func The functor to be registered as block consumer.
-	 */
-	void register_block_consumer(const std::function<void(
-				PCMForwardIterator begin, PCMForwardIterator end)>
-			&func);
-
-	/**
-	 * Read blocks from the stream until the end of the stream.
-	 *
-	 * The number of actual bytes read is returned and will be equal to
-	 * total_pcm_bytes on success.
-	 *
-	 * \param[in] in Stream of bytes to read from
-	 * \param[in] total_pcm_bytes Total number of 32 bit PCM samples in the
-	 * stream
-	 *
-	 * \throw FileReadException On any read error
-	 *
-	 * \return The actual number of bytes read
-	 */
-	uint64_t read_blocks(std::ifstream &in, const uint64_t &total_pcm_bytes);
-
-	// make class non-copyable (2/2)
-	PCMBlockReader& operator = (const PCMBlockReader &) = delete;
-
-	// TODO Move assignment
-
-
-private:
-
-	/**
-	 * Registered callback method to consume a block.
-	 *
-	 * Called by block_complete().
-	 */
-	std::function<void(PCMForwardIterator begin, PCMForwardIterator end)>
-		consume_;
-};
-
-
-/**
  * Abstract base class for AudioReader implementations.
  *
  * Concrete subclasses of AudioReaderImpl implement AudioReaders for a concrete
@@ -736,7 +591,7 @@ private:
  * A AudioReader can process an audio file and return its checksums including
  * the ARCSs v1 and v2 for all tracks.
  */
-class AudioReader : public FileReader
+class AudioReader : public FileReader//, public virtual SampleProvider
 {
 
 public:
@@ -858,7 +713,7 @@ public:
 	 * \return An AudioReader for the given file
 	 */
 	std::unique_ptr<AudioReader> create_audio_reader(
-			const std::string &filename);
+			const std::string &filename) const;
 };
 
 } // namespace arcs

@@ -4,8 +4,8 @@
  */
 
 
-#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
-#include "audioreader.hpp"
+#ifndef __LIBARCSDEC_READERSNDFILE_HPP__
+#include "readersndfile.hpp"
 #endif
 
 #include <cstdint>
@@ -15,11 +15,15 @@
 
 #include <sndfile.hh>
 
-#ifndef __LIBARCSDEC_READERSNDFILE_HPP__
-#include "readersndfile.hpp"
-#endif
 #ifndef __LIBARCS_LOGGING_HPP__
 #include <arcs/logging.hpp>
+#endif
+
+#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
+#include "audioreader.hpp"
+#endif
+#ifndef __LIBARCSDEC_AUDIOBUFFER_HPP__
+#include "audiobuffer.hpp"
 #endif
 
 

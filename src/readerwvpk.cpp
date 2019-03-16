@@ -32,6 +32,9 @@ extern "C" {
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__
 #include "audioreader.hpp" // from .h
 #endif
+#ifndef __LIBARCSDEC_AUDIOBUFFER_HPP__
+#include "audiobuffer.hpp"
+#endif
 
 
 namespace arcs

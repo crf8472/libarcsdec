@@ -13,6 +13,7 @@
 #ifndef __LIBARCS_CALCULATE_HPP__
 #include <arcs/calculate.hpp>
 #endif
+
 #ifndef __LIBARCSDEC_FILEFORMATS_HPP__
 #include "fileformats.hpp"
 #endif
@@ -170,7 +171,7 @@ public:
 	 * \throw FileReadException If the file could not be read
 	 */
 	std::unique_ptr<MetadataParser> create_metadata_parser(
-			const std::string &metafilename);
+			const std::string &metafilename) const;
 };
 
 /// @}

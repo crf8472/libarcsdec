@@ -14,15 +14,12 @@
 #include <string>
 #include <sstream>
 
-#ifndef __LIBARCSDEC_AUDIOBUFFER_HPP__
-#include "audiobuffer.hpp"
-#endif
-#ifndef __LIBARCSDEC_AUDIOFORMATS_HPP__
-#include "audioformats.hpp"
-#endif
-
 #ifndef __LIBARCS_LOGGING_HPP__
 #include <arcs/logging.hpp>
+#endif
+
+#ifndef __LIBARCSDEC_AUDIOFORMATS_HPP__
+#include "audioformats.hpp"
 #endif
 
 
@@ -123,57 +120,6 @@ uint32_t ByteConverter::be_bytes_to_uint32(const char &b1,
 		const char &b4) const
 {
 	return be_bytes_to_int32(b1, b2, b3, b4) & 0xFFFFFFFF;
-}
-
-
-// SampleBuffer
-
-
-SampleBuffer::SampleBuffer()
-	: BlockAccumulator(BLOCKSIZE::DEFAULT)
-	, call_update_audiosize_()
-{
-	this->init();
-}
-
-
-SampleBuffer::SampleBuffer(const uint32_t samples_per_block)
-	: BlockAccumulator(samples_per_block)
-	, call_update_audiosize_()
-{
-	this->init();
-}
-
-
-SampleBuffer::~SampleBuffer() noexcept = default;
-
-
-void SampleBuffer::reset()
-{
-	this->init();
-}
-
-
-void SampleBuffer::notify_total_samples(const uint32_t sample_count)
-{
-	ARCS_LOG_DEBUG << "Total samples updated to: " << sample_count;
-
-	AudioSize size;
-	size.set_sample_count(sample_count);
-	call_update_audiosize_(size); // call registered method
-}
-
-
-void SampleBuffer::register_processor(Calculation &calc)
-{
-	// Set Calculation instance as consumer for blocks
-	this->register_block_consumer(
-		std::bind(&Calculation::update, &calc,
-			std::placeholders::_1, std::placeholders::_2));
-
-	// Inform Calculation instance when total number of samples is set/updated
-	call_update_audiosize_ =
-		std::bind(&Calculation::update_audiosize, &calc, std::placeholders::_1);
 }
 
 
@@ -339,111 +285,6 @@ bool ReaderValidatingHandler::assert_true(
 }
 
 
-// PCMBlockReader
-
-
-PCMBlockReader::PCMBlockReader()
-	: consume_()
-{
-	// empty
-}
-
-
-PCMBlockReader::PCMBlockReader(const uint32_t &samples_per_block)
-	: BlockCreator(samples_per_block)
-	, consume_()
-{
-	// empty
-}
-
-
-PCMBlockReader::~PCMBlockReader() noexcept = default;
-
-
-void PCMBlockReader::register_block_consumer(const std::function<void(
-			PCMForwardIterator begin, PCMForwardIterator end
-		)> &consume)
-{
-	consume_ = consume;
-}
-
-
-uint64_t PCMBlockReader::read_blocks(std::ifstream &in,
-		const uint64_t &total_pcm_bytes)
-{
-	std::vector<uint32_t> samples(this->samples_per_block());
-
-	uint32_t bytes_per_block =
-			this->samples_per_block() * CDDA.BYTES_PER_SAMPLE;
-
-	uint32_t estimated_blocks = total_pcm_bytes / bytes_per_block
-				+ (total_pcm_bytes % bytes_per_block ? 1 : 0);
-
-	ARCS_LOG_DEBUG << "START READING " << total_pcm_bytes
-		<< " bytes in " << std::to_string(estimated_blocks) << " blocks with "
-		<< bytes_per_block << " bytes per block";
-
-	uint32_t samples_todo = total_pcm_bytes / CDDA.BYTES_PER_SAMPLE;
-	uint32_t total_bytes_read   = 0;
-	uint32_t total_blocks_read  = 0;
-
-	uint32_t read_bytes = this->samples_per_block() * sizeof(uint32_t);
-	// FIXME Use sample type!
-
-	while (total_bytes_read < total_pcm_bytes)
-	{
-		// Adjust buffer size for last buffer, if necessary
-
-		if (samples_todo < this->samples_per_block())
-		{
-			// Avoid trailing zeros in buffer
-			samples.resize(samples_todo);
-
-			//read_bytes = samples_todo * sizeof(samples.front());
-			read_bytes = samples_todo * sizeof(uint32_t); // FIXME Use sample type!
-		}
-
-		// Actually read the bytes
-
-		try
-		{
-			in.read(reinterpret_cast<char*>(samples.data()), read_bytes);
-		}
-		catch (const std::ifstream::failure& f)
-		{
-			total_bytes_read += in.gcount();
-
-			ARCS_LOG_ERROR << "Failed to read from file: " << f.what();
-
-			throw FileReadException(f.what(), total_bytes_read + 1);
-		}
-		total_bytes_read += read_bytes;
-		samples_todo     -= samples.size();
-
-		// Logging + Statistics
-
-		++total_blocks_read;
-
-		ARCS_LOG_DEBUG << "READ BLOCK " << total_blocks_read
-			<< "/" << estimated_blocks;
-		ARCS_LOG(LOG_DEBUG1) << "Size: " << read_bytes << " bytes";
-		ARCS_LOG(LOG_DEBUG1) << "      " << samples.size()
-				<< " Stereo PCM samples (32 bit)";
-
-		this->consume_(samples.begin(), samples.end());
-	}
-
-	ARCS_LOG_DEBUG << "END READING after " << total_blocks_read << " blocks";
-
-	ARCS_LOG(LOG_DEBUG1) << "Read "
-		<< std::to_string(total_bytes_read / CDDA.BYTES_PER_SAMPLE)
-		<< " samples / "
-		<< total_bytes_read << " bytes";
-
-	return total_bytes_read;
-}
-
-
 // AudioReaderImpl
 
 
@@ -580,10 +421,8 @@ AudioReaderCreator::~AudioReaderCreator() noexcept = default;
 
 
 std::unique_ptr<AudioReader> AudioReaderCreator::create_audio_reader(
-	const std::string &filename)
+	const std::string &filename) const
 {
-	FileReader* file_reader_rptr = nullptr;
-
 	// Create FileReader
 
 	auto file_reader_uptr = FileReaderCreator::create_reader(filename);
@@ -598,7 +437,12 @@ std::unique_ptr<AudioReader> AudioReaderCreator::create_audio_reader(
 
 	auto audio_reader_uptr = std::make_unique<AudioReader>(nullptr);
 
+	FileReader* file_reader_rptr = nullptr;
 	file_reader_rptr = file_reader_uptr.release();
+	// This is definitively NOT nice since file_reader_rptr is now an
+	// owning raw pointer. We will fix that with the following reset() to
+	// a unique_ptr. If thereby something goes wrong, we immediately destroy
+	// the raw pointer accurately.
 
 	try
 	{
@@ -608,7 +452,7 @@ std::unique_ptr<AudioReader> AudioReaderCreator::create_audio_reader(
 		// AudioReader. If not, the file is not a supported audio file, so bail
 		// out.
 
-	} catch (const std::bad_cast& e)
+	} catch (...) // std::bad_cast is possible, but we play it safe
 	{
 		if (file_reader_rptr)
 		{

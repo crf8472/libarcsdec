@@ -12,8 +12,12 @@
 #include <fstream>
 #include <memory>
 
+#ifndef __LIBARCS_CALCULATE_HPP__
 #include <arcs/calculate.hpp> // for PCMForwardIterator
+#endif
+#ifndef __LIBARCS_SAMPLES_HPP__
 #include <arcs/samples.hpp>   // for SampleSequence
+#endif
 
 
 namespace arcs
@@ -57,8 +61,7 @@ namespace arcs
  * BlockAccumulator buffers up sequences of samples until the defined buffer
  * size is reached.
  *
- * Classes SampleBuffer and PCMBlockReader in \ref audioreader are built on this
- * API.
+ * Classes SampleBuffer and PCMBlockReader are built on this API.
  *
  * @{
  */
@@ -211,8 +214,7 @@ public:
 	/**
 	 * Default constructor.
 	 *
-	 * Constructs a BlockAccumulator with buffer of size
-	 * SAMPLES.PER_BLOCK_DEFAULT.
+	 * Constructs a BlockAccumulator with buffer of size BLOCKSIZE::DEFAULT
 	 */
 	BlockAccumulator();
 
@@ -302,17 +304,28 @@ public:
 protected:
 
 	/**
-	 * Virtual implementation of init()
+	 * Reinitialize internal buffer to specified size as number of 32 bit PCM
+	 * samples.
+	 *
+	 * \param[in] total_samples Reinitialize buffer for new block
+	 */
+	void init_buffer(const uint32_t &total_samples);
+
+
+private:
+
+	/**
+	 * Implementation of init()
 	 */
 	virtual void do_init();
 
 	/**
-	 * Virtual implementation of flush()
+	 * Implementation of flush()
 	 */
 	virtual void do_flush();
 
 	/**
-	 * Virtual implementation of append()
+	 * Implementation of append()
 	 *
 	 * \param[in] begin Begin of the sample sequence
 	 * \param[in] end   End of the sample sequence
@@ -325,28 +338,17 @@ protected:
 	virtual void init_buffer();
 
 	/**
-	 * Reinitialize internal buffer to specified size as number of 32 bit PCM
-	 * samples.
-	 *
-	 * \param[in] total_samples Reinitialize buffer for new block
-	 */
-	void init_buffer(const uint32_t &total_samples);
-
-
-private:
-
-	/**
-	 * Internal sample buffer
-	 */
-	std::vector<uint32_t> samples_;
-
-	/**
 	 * Registered callback method to consume a block.
 	 *
 	 * Called by block_complete().
 	 */
 	std::function<void(PCMForwardIterator begin, PCMForwardIterator end)>
 		consume_;
+
+	/**
+	 * Internal sample buffer
+	 */
+	std::vector<uint32_t> samples_;
 
 	/**
 	 * Number of samples processed
@@ -362,6 +364,69 @@ private:
 	 * Number of blocks processed
 	 */
 	uint64_t blocks_processed_;
+};
+
+
+/**
+ * A format and reader independent sample buffer.
+ *
+ * Enhances BlockAccumulator for some convenience functions such as registering
+ * the \ref Calculation for you. It aliases the arcane
+ * BlockAccumulator::sequence() with the more intuitive append() and provides a
+ * reset() method to reuse the buffer.
+ */
+class SampleBuffer : public BlockAccumulator
+{
+
+public:
+
+	/**
+	 * Default constructor
+	 */
+	SampleBuffer();
+
+	/**
+	 * Constructs a SampleBuffer with buffer of size samples_per_block.
+	 *
+	 * \param[in] samples_per_block Number of 32 bit PCM samples in one block
+	 */
+	explicit SampleBuffer(const uint32_t samples_per_block);
+
+	/**
+	 * Default destructor
+	 */
+	virtual ~SampleBuffer() noexcept;
+
+	/**
+	 * Reset the buffer to its initial state, thereby discarding its content.
+	 * The current buffer capacity is preserved.
+	 */
+	void reset();
+
+	/**
+	 * Handler method that informs about the end of input.
+	 *
+	 * This method is to be called by the AudioReaderImpl before the last block
+	 * is flushed.
+	 *
+	 * \param[in] idx Index of the last 32 bit PCM sample
+	 */
+	void notify_total_samples(const uint32_t idx);
+
+	/**
+	 * Register a processor for this buffer
+	 *
+	 * \param[in] calc The processor for this buffer
+	 */
+	void register_processor(Calculation &calc);
+
+
+private:
+
+	/**
+	 * Registered callback method to update the \ref AudioSize.
+	 */
+	std::function<void(const AudioSize &audiosize)> call_update_audiosize_;
 };
 
 /// @}

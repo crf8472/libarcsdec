@@ -1,20 +1,22 @@
-/**
- * \file fileformats.hpp Toolkit for selecting file readers by file format
- *
- * This file provides the interface of the \ref fileformats API.
- *
- */
-
 #ifndef __LIBARCSDEC_FILEFORMATS_HPP__
 #define __LIBARCSDEC_FILEFORMATS_HPP__
 
+/**
+ * \file fileformats.hpp Toolkit for selecting file readers
+ */
+
 #include <cstdint>
+#include <functional>  // for std::function
 #include <list>
 #include <memory>
 #include <set>
 #include <stdexcept>
 #include <string>
 #include <vector>
+
+#ifndef __LIBARCS_CALCULATE_HPP__
+#include <arcs/calculate.hpp> // for PCMForwardIterator
+#endif
 
 
 namespace arcs
@@ -43,6 +45,38 @@ namespace arcs
  */
 
 /// @{
+
+
+/**
+ * Chainable interface for sample processing classes.
+ */
+class SampleProvider
+{
+	/**
+	 * Passes the sequence to the consumer function.
+	 *
+	 * \param[in] begin Begin of the sequence
+	 * \param[in] end   End of the sequence
+	 */
+	void pass_sequence(PCMForwardIterator begin, PCMForwardIterator end);
+
+	/**
+	 * Registers a consuming method for sample sequences.
+	 *
+	 * \param[in] func The functor to be registered as sample consumer.
+	 */
+	void register_consumer(const std::function<void(
+			PCMForwardIterator begin, PCMForwardIterator end)> &func);
+
+
+private:
+
+	/**
+	 * Consumer function
+	 */
+	std::function<void(PCMForwardIterator, PCMForwardIterator)> call_consumer_;
+};
+
 
 /**
  * Abstract base class for all file readers, audio readers as well as metadata
@@ -271,23 +305,35 @@ class FileFormatTest
 public:
 
 	/**
+	 * Constructor
+	 */
+	FileFormatTest();
+
+	/**
+	 * Constructor
+	 *
+	 * \param[in] filename The filename to test
+	 */
+	explicit FileFormatTest(const std::string &filename);
+
+	/**
 	 * Virtual default destructor
 	 */
 	virtual ~FileFormatTest() noexcept;
 
 	/**
-	 * Sets the name or name with path of the file to test
+	 * Set the filename to test.
 	 *
-	 * \param[in] filepath Sets the filepath of the file to test
+	 * \param[in] filename The filename to test
 	 */
-	void set_filename(const std::string &filepath);
+	void set_filename(const std::string &filename);
 
 	/**
-	 * Returns the name of the file to test
+	 * Returns the filename tested by this test.
 	 *
-	 * \return Name of the file to test
+	 * \return Filename to test
 	 */
-	std::string filename() const;
+	const std::string& filename() const;
 
 	/**
 	 * Test a given format instance for matching the criteria of this test
@@ -302,20 +348,9 @@ public:
 private:
 
 	/**
-	 * Implements FileFormatTest::set_filename()
-	 *
-	 * \param[in] filepath Sets the filepath of the file to test
+	 * Filename tested by this test.
 	 */
-	virtual void do_set_filename(const std::string &filepath)
-	= 0;
-
-	/**
-	 * Implements FileFormatTest::filename()
-	 *
-	 * \return Name of the file to test
-	 */
-	virtual std::string do_filename() const
-	= 0;
+	std::string filename_;
 
 	/**
 	 * Implements FileFormatTest::matches()
@@ -351,10 +386,6 @@ public:
 
 private:
 
-	void do_set_filename(const std::string &filepath) override;
-
-	std::string do_filename() const override;
-
 	bool do_matches(const FileFormat &format) const override;
 
 	/**
@@ -381,11 +412,6 @@ private:
 	 * Number of bytes to read from the start position
 	 */
 	uint16_t length_;
-
-	/**
-	 * Name of the file to test
-	 */
-	std::string filename_;
 };
 
 
@@ -395,26 +421,7 @@ private:
 class FileFormatTestSuffix final : public FileFormatTest
 {
 
-public:
-
-	/**
-	 * Empty constructor
-	 */
-	FileFormatTestSuffix();
-
-	/**
-	 * Empty constructor
-	 *
-	 * \param[in] filename The filename to test
-	 */
-	FileFormatTestSuffix(const std::string &filename);
-
-
 private:
-
-	void do_set_filename(const std::string &filepath) override;
-
-	std::string do_filename() const override;
 
 	bool do_matches(const FileFormat &format) const override;
 
@@ -430,11 +437,33 @@ private:
 	 * \return The relevant suffix or the entire filename
 	 */
 	std::string get_suffix(const std::string &filename) const;
+};
+
+
+/**
+ * Selects a FileFormat by its name
+ */
+class FileFormatTestFormatname final : public FileFormatTest
+{
+
+public:
 
 	/**
-	 * Name of the file to test
+	 * Constructor
+	 *
+	 * \param[in] formatname Name of the FileFormat to match
 	 */
-	std::string filename_;
+	FileFormatTestFormatname(const std::string &formatname);
+
+
+private:
+
+	bool do_matches(const FileFormat &format) const override;
+
+	/**
+	 * The FileFormat name to match
+	 */
+	std::string formatname_;
 };
 
 
@@ -446,7 +475,7 @@ private:
  *
  * The default FileFormatSelector selects just the first format in the format
  * list passed that passes all tests. Subclassing FileFormatSelector can
- * implement different selection policies (like e.g. "best").
+ * implement different selection policies.
  */
 class FileFormatSelector
 {
@@ -536,7 +565,7 @@ public:
 	 *
 	 * \return Number of format instances removed.
 	 */
-	int remove_format(FileFormat const * format); // TODO const ptr?
+	int remove_format(const FileFormat * format);
 
 	/**
 	 * Register a test for a FileFormat for the specified filename.
@@ -553,7 +582,12 @@ public:
 	 *
 	 * \return Number of test instances removed.
 	 */
-	int remove_test(FileFormatTest const * format_test); // TODO const ptr?
+	int remove_test(const FileFormatTest * format_test);
+
+	/**
+	 * Removes all tests registered to this instance.
+	 */
+	void remove_all_tests();
 
 	/**
 	 * Set the FileFormatSelector for this instance
@@ -576,7 +610,7 @@ public:
 	 *
 	 * \return A FileFormat for the specified file
 	 */
-	std::unique_ptr<FileFormat> get_format(const std::string &filename);
+	std::unique_ptr<FileFormat> get_format(const std::string &filename) const;
 
 	/**
 	 * Create an opaque FileReader for the given file.
@@ -588,7 +622,8 @@ public:
 	 *
 	 * \return A FileReader for the specified file
 	 */
-	std::unique_ptr<FileReader> create_reader(const std::string &filename);
+	std::unique_ptr<FileReader> create_reader(const std::string &filename)
+		const;
 
 	/**
 	 * Reset this instance to its initial state, removing all tests and
