@@ -53,19 +53,32 @@ The following features are planned, but not yet implemented:
 
 ## How to Build
 
-Mandatory buildtime dependencies:
+### Mandatory buildtime dependencies:
 
 - cmake >= 3.9.6
 
-Mandatory build- and runtime dependencies:
+### Mandatory build- and runtime dependencies:
 
+- libarcs >= 0.1.0-alpha.1
 - libcue >= 2.0.0
 
-Optional default build- and runtime dependencies:
+### Optional default build- and runtime dependencies:
 
 - FLAC++ headers >= 1.3.1
 - libwavpack >= 5.0.0
 - ffmpeg >= 3.1
+
+If you do not need any of the optional default dependencies, you can switch them
+off independently from each other:
+
+- build without FLAC support by ``-DWITH_FLAC=OFF``
+- build without WavPack support by ``-DWITH_WVPK=OFF``
+- build without ffmpeg support by ``-DWITH_FFMPEG=OFF``
+
+You cannot switch off libcue since this would leave libarcsdec unable to parse
+any TOC data, rendering it effectively useless.
+
+### Configure and start build
 
 Build and install to just use the libarcsdec API:
 
@@ -74,17 +87,6 @@ Build and install to just use the libarcsdec API:
 	$ cmake -DCMAKE_BUILD_TYPE=Release ..  # use any build switches you need
 	$ cmake --build .
 	$ sudo make install # installs to /usr/local
-
-However, you can individually decide, whether you need all these components. You
-can alter these requirements by using any combination of the following
-configuration switches:
-
-- build without FLAC support by ``-DWITH_FLAC=OFF``
-- build without WavPack support by ``-DWITH_WVPK=OFF``
-- build without ffmpeg support by ``-DWITH_FFMPEG=OFF``
-
-You cannot switch off libcue since this would leave libarcsdec unable to parse
-any TOC data, rendering it effectively useless.
 
 See a [detailed HowTo](BUILD.md) explaining different build scenarios and all
 build switches.
