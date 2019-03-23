@@ -123,7 +123,7 @@ build switches.
 
 ## Bugs
 
-- Never tested with CD images containing data tracks.
+- No sufficient unit tests yet
 
 
 
