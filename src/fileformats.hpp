@@ -52,6 +52,14 @@ namespace arcs
  */
 class SampleProvider
 {
+
+public:
+
+	/**
+	 * Default destructor
+	 */
+	virtual ~SampleProvider() noexcept;
+
 	/**
 	 * Passes the sequence to the consumer function.
 	 *

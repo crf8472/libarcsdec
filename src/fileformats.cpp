@@ -26,6 +26,26 @@
 namespace arcs
 {
 
+// SampleProvider
+
+
+SampleProvider::~SampleProvider() noexcept = default;
+
+
+void SampleProvider::pass_sequence(PCMForwardIterator begin,
+		PCMForwardIterator end)
+{
+	this->call_consumer_(begin, end);
+}
+
+
+void SampleProvider::register_consumer(const std::function<void(
+			PCMForwardIterator begin, PCMForwardIterator end)> &func)
+{
+	this->call_consumer_ = func;
+}
+
+
 // FileReader
 
 
