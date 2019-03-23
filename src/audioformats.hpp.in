@@ -2,7 +2,7 @@
 #define __LIBARCSDEC_AUDIOFORMATS_HPP__
 
 /**
- * \file audioformats.h.in Provide built-in file format support classes.
+ * \file audioformats.hpp.in Provide compiled-in FileFormat classes.
  *
  * This information is controlled by cmake. It is made accessible at build time
  * for program scope.
@@ -29,7 +29,7 @@
 
 // WAVPACK
 
-#cmakedefine WITH_WAVPACK  // will be defined iff compiled with WAVPACK support
+#cmakedefine WITH_WAVPACK
 
 #ifdef WITH_WAVPACK
 	#include "@PROJECT_SOURCE_DIR@/readerwvpk.hpp"
