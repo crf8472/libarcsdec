@@ -221,7 +221,7 @@ public:
  * informations: the physical size of a sample in bits and whether the samples
  * are arranged in a planar or interleaved layout.
  */
-enum SAMPLE_FORMAT : uint8_t
+enum class SAMPLE_FORMAT : uint8_t
 {
 	UNKNOWN = 0,
 	S16     = 1,
@@ -296,6 +296,11 @@ public:
 	 */
 	ReaderValidatingHandler();
 
+	// make class non-copyable (1/2)
+	ReaderValidatingHandler(const ReaderValidatingHandler &) = delete;
+
+	// TODO move constructor
+
 	/**
 	 * Virtual default destructor
 	 */
@@ -328,6 +333,12 @@ public:
 	 * \return The last error that occurred
 	 */
 	std::string last_error();
+
+	// make class non-copyable (2/2)
+	ReaderValidatingHandler& operator = (const ReaderValidatingHandler &)
+		= delete;
+
+	// TODO move assignment
 
 
 protected:
@@ -412,14 +423,6 @@ private:
 	 * Result: List of errors in the validated stream
 	 */
 	std::vector<std::string> errors_;
-
-
-	// make class non-copyable (1/2)
-	ReaderValidatingHandler(const ReaderValidatingHandler &) = delete;
-
-	// make class non-copyable (2/2)
-	ReaderValidatingHandler& operator = (const ReaderValidatingHandler &)
-		= delete;
 };
 
 
