@@ -10,32 +10,34 @@
 - A high-level API for sample and metadata input for [libarcs][1]
 - A bunch of decoder and parser adapters to let you calculate ARCSs on your
   already archived lossless audio data
-- You define the task like "Take this audio and this TOC and just give me the
-  checksums"
-- Lets you recalculate ARCSs of a CD image at any time after ripping
 - Facility to read virtually any lossless codec from virtually any
   container file (by the use of external dependencies)
+- Lets you recalculate ARCSs of a CD image at any time after ripping
+- You define the task like "Take this audio and this TOC and just give me the
+  checksums"
 - Hides completely the concrete decoding of audio data
 - Hides completely the parsing of metadata files
-
-Libarcsdec contains:
-
-- Native audio reader for RIFFWAV/PCM files
-- Audio reader for FLAC/FLAC files (based on flac/libFLAC++)
-- Audio reader for lossless Wavpack/WV files (based on libwavpack)
-- Generic audio reader based on ffmpeg >= 3.1 (for any lossless codec in any
-  container, e.g. ALAC/M4, ALAC/CAF, APE/APE, AIFF/AIFF, FLAC/OGG ... you name
-  it)
-- Metadata parser for CUE sheets (based on libcue >= 2.0.0)
-- A rudimentary sample buffering framework
 
 The following features are planned, but not yet implemented:
 
 - Metadata parser for compact discs (based on libcdio)
 - Metadata parser for cdrdao's TOC format
 - Generic audio reader based on libsndfile (just as an alternative to ffmpeg)
-- Add OGG support to the native audio reader for FLAC
-- Add support for embedded CUE sheets to the native audio reader for FLAC
+- Add OGG support to the audio reader for FLAC/FLAC
+- Add support for embedded CUE sheets to the audio reader for FLAC/FLAC
+
+
+## Current codecs and formats
+
+Libarcsdec contains:
+
+- TOC/Metadata parser for CUE sheets (based on libcue >= 2.0.0)
+- Generic audio reader (based on ffmpeg >= 3.1, for any lossless codec in any
+  container, e.g. ALAC/M4, ALAC/CAF, APE/APE, AIFF/AIFF, FLAC/OGG ... you name
+  it)
+- Audio reader for FLAC/FLAC files (based on flac/libFLAC++)
+- Audio reader for lossless Wavpack/WV files (based on libwavpack)
+- Native audio reader for RIFFWAV/PCM files
 
 
 ## What libarcsdec does not
