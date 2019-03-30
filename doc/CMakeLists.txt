@@ -7,6 +7,7 @@ find_package (Doxygen 1.8.0 COMPONENTS REQUIRED dot )
 
 set (PROJECT_BUILD_DOC_DIR "${PROJECT_BINARY_DIR}/doc" )
 
+set (PROJECT_DOXYGEN_FILE_PATTERNS "*.hpp *.hpp.in *.md" )
 
 message (STATUS
 	"Note: to build documentation do 'cmake --build . --target doc'" )
@@ -42,13 +43,18 @@ if (WITH_IMPLONLY_DOCS)
 
 	endif (NOT WITH_INTERNAL_DOCS)
 
-	set (PROJECT_DOXYGEN_INTERNAL_DOCS "YES" )
+	message (STATUS "Will build documentation also for implementations" )
 
 	set(DOC_COMMENT "${DOC_COMMENT} and implementations" )
 
-	message (STATUS "Will build documentation also for implementations" )
+	## Set replacement values for Doxyfile
+
+	set (PROJECT_DOXYGEN_INTERNAL_DOCS    "YES" )
 
 	set (PROJECT_DOXYGEN_ENABLED_SECTIONS "IMPL_ONLY" )
+
+	set (PROJECT_DOXYGEN_FILE_PATTERNS
+		"${PROJECT_DOXYGEN_FILE_PATTERNS} *.cpp *.tpp" )
 
 else ()
 
@@ -59,8 +65,8 @@ endif (WITH_IMPLONLY_DOCS)
 
 ## Create Main Doxyfile
 
-configure_file (${PROJECT_DOC_DIR}/Doxyfile.in
-	${PROJECT_BUILD_DOC_DIR}/Doxyfile
+configure_file ("${PROJECT_DOC_DIR}/Doxyfile.in"
+	"${PROJECT_BUILD_DOC_DIR}/Doxyfile"
 	@ONLY
 )
 
@@ -82,33 +88,32 @@ if (USE_MCSS ) ## Use HTML5/CSS3 doxygen design from m.css
 		add_subdirectory (thirdparty/m.css )
 		add_subdirectory (thirdparty/python-virtualenv )
 
+		set (DOXYFILE "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile-mcss" )
+
 		## Provide Doxygen configuration for m.css
-		configure_file (${PROJECT_DOC_DIR}/Doxyfile-mcss.in
-			${PROJECT_BUILD_DOC_DIR}/Doxyfile-mcss
+		configure_file ("${PROJECT_DOC_DIR}/Doxyfile-mcss.in"
+			"${PROJECT_BUILD_DOC_DIR}/Doxyfile-mcss"
 			@ONLY
 		)
 
 		## Run dox2html5.py
-
-		message (STATUS "Use sandbox directory: ${ENV_DIRECTORY}" )
-		message (STATUS "Use python binary: ${PYTHON_CMD}" )
-		message (STATUS "Use dox2html5: ${MCSS_DOX2HTML5}" )
-
-		add_custom_target (doc
-			COMMAND ${PYTHON_CMD} ${MCSS_DOX2HTML5} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile-mcss
-			DEPENDS ${ENV_TARGET}
-			WORKING_DIRECTORY ${ENV_DIRECTORY}
-			COMMENT ${DOC_COMMENT} VERBATIM
+		add_custom_target ( doc
+			COMMAND ${PYTHON_CMD} ${MCSS_DOX2HTML5} "${DOXYFILE}"
+			DEPENDS "${ENV_TARGET}" "${DOXYFILE}" "${PROJECT_SOURCE_DIR}"
+			WORKING_DIRECTORY "${ENV_DIRECTORY}"
+			COMMENT "${DOC_COMMENT}"
+			VERBATIM
 		)
 
 	endif ()
 
 else() ## Use standard doxygen
 
-	add_custom_target (doc # ALL  ## if you need to run doc on regular build
-		Doxygen::doxygen ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
-		WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-		COMMENT ${DOC_COMMENT} VERBATIM
+	add_custom_target ( doc ## add 'ALL' if you wish to run doc on regular build
+		Doxygen::doxygen  "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile"
+		WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+		COMMENT "${DOC_COMMENT}"
+		VERBATIM
 	)
 
 endif (USE_MCSS )
