@@ -507,10 +507,15 @@ public:
 	 */
 	SampleProcessorAdapter(Calculation &calculation);
 
+	SampleProcessorAdapter(const SampleProcessorAdapter &rhs) = delete;
+
 	/**
 	 * Virtual default destructor
 	 */
 	~SampleProcessorAdapter() noexcept override;
+
+	SampleProcessorAdapter& operator = (const SampleProcessorAdapter &rhs)
+		= delete;
 
 
 private:
