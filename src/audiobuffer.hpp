@@ -1,23 +1,29 @@
-/**
- * \file audiobuffer.hpp Toolkit for buffering audio samples
- *
- */
-
-
 #ifndef __LIBARCSDEC_AUDIOBUFFER_HPP__
 #define __LIBARCSDEC_AUDIOBUFFER_HPP__
+
+/**
+ * \file audiobuffer.hpp Toolkit for buffering audio samples
+ */
 
 #include <chrono>
 #include <functional>
 #include <fstream>
 #include <memory>
 
-#ifndef __LIBARCS_CALCULATE_HPP__
-#include <arcs/calculate.hpp> // for PCMForwardIterator
-#endif
 #ifndef __LIBARCS_SAMPLES_HPP__
 #include <arcs/samples.hpp>   // for SampleSequence
 #endif
+
+// forward declarations
+namespace arcs
+{
+inline namespace v_1_0_0
+{
+	class AudioSize;
+	class Calculation;
+	class PCMForwardIterator;
+} // namespace v_1_0_0
+} // namespace arcs
 
 
 namespace arcs

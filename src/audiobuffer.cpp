@@ -1,12 +1,10 @@
-/**
- * \file audiobuffer.cpp Implements toolkit classes for buffering audio samples
- *
- */
-
-
 #ifndef __LIBARCSDEC_AUDIOBUFFER_HPP__
 #include "audiobuffer.hpp"
 #endif
+
+/**
+ * \file audiobuffer.cpp Implements toolkit classes for buffering audio samples
+ */
 
 #include <algorithm>
 #include <array>
@@ -17,8 +15,8 @@
 #include <string>
 #include <vector>
 
-#ifndef __LIBARCS_IDENTIFIER_HPP__
-#include <arcs/identifier.hpp> // for CDDA
+#ifndef __LIBARCS_CALCULATE_HPP__
+#include <arcs/calculate.hpp> // for AudioSize, Calculation, PCMForwardIterator
 #endif
 #ifndef __LIBARCS_LOGGING_HPP__
 #include <arcs/logging.hpp>
