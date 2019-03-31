@@ -285,10 +285,76 @@ bool ReaderValidatingHandler::assert_true(
 }
 
 
+// SampleProcessor
+
+
+SampleProcessor::~SampleProcessor() noexcept = default;
+
+
+void SampleProcessor::append_samples(PCMForwardIterator begin,
+		PCMForwardIterator end)
+{
+	this->do_append_samples(begin, end);
+
+	++total_sequences_;
+	total_samples_ += std::distance(begin, end);
+}
+
+
+void SampleProcessor::update_audiosize(const AudioSize &size)
+{
+	this->do_update_audiosize(size);
+}
+
+
+int64_t SampleProcessor::sequences_processed() const
+{
+	return total_sequences_;
+}
+
+
+int64_t SampleProcessor::samples_processed() const
+{
+	return total_samples_;
+}
+
+
+// SampleProcessorAdapter
+
+
+SampleProcessorAdapter::SampleProcessorAdapter(Calculation &calculation)
+	: calculation_(&calculation)
+{
+	// empty
+}
+
+
+SampleProcessorAdapter::~SampleProcessorAdapter() noexcept = default;
+
+
+void SampleProcessorAdapter::do_append_samples(
+		PCMForwardIterator begin, PCMForwardIterator end)
+{
+	calculation_->update(begin, end);
+}
+
+
+void SampleProcessorAdapter::do_update_audiosize(
+		const AudioSize &size)
+{
+	calculation_->update_audiosize(size);
+}
+
+
 // AudioReaderImpl
 
 
-AudioReaderImpl::AudioReaderImpl() = default;
+AudioReaderImpl::AudioReaderImpl()
+	: append_samples_()
+	, update_audiosize_()
+{
+	// empty
+}
 
 
 AudioReaderImpl::~AudioReaderImpl() noexcept = default;
@@ -301,42 +367,197 @@ std::unique_ptr<AudioSize> AudioReaderImpl::acquire_size(
 }
 
 
-Checksums AudioReaderImpl::process_file(const std::string &filename)
+void AudioReaderImpl::process_file(const std::string &filename)
 {
-	return this->do_process_file(filename);
+	this->do_process_file(filename);
 }
 
 
-void AudioReaderImpl::set_samples_per_block(const uint32_t &samples_per_block)
-
+void AudioReaderImpl::register_processor(SampleProcessor &processor)
 {
-	this->do_set_samples_per_block(samples_per_block);
+	this->append_samples_ = std::bind(&SampleProcessor::append_samples,
+			&processor,
+			std::placeholders::_1, std::placeholders::_2);
+
+	this->update_audiosize_ = std::bind(&SampleProcessor::update_audiosize,
+			&processor,
+			std::placeholders::_1);
+
+	// Binding result() is not required, you won't acquire the result directly
+	// from the AudioReader. Get the SampleProcessor instead. The calling code
+	// will know what to do.
 }
 
 
-uint32_t AudioReaderImpl::samples_per_block() const
+void AudioReaderImpl::append_samples(
+		PCMForwardIterator begin, PCMForwardIterator end)
 {
-	return this->do_get_samples_per_block();
+	this->append_samples_(begin, end);
 }
 
 
-void AudioReaderImpl::set_calc(std::unique_ptr<Calculation> calc)
+void AudioReaderImpl::update_audiosize(const AudioSize &size)
 {
-	this->do_set_calc(std::move(calc));
+	this->update_audiosize_(size);
 }
 
 
-const Calculation& AudioReaderImpl::calc() const
+// Audioreader::Impl
+
+
+/**
+ * Private implementation of AudioReader
+ */
+class AudioReader::Impl final
 {
-	return this->do_get_calc();
+
+public:
+
+	/**
+	 * Construct an AudioReader::Impl
+	 *
+	 * \param[in] readerimpl The AudioReaderImpl to use
+	 * \param[in] processor  The SampleProcessor to use
+	 */
+	Impl(std::unique_ptr<AudioReaderImpl> readerimpl,
+			SampleProcessor &processor);
+
+	/**
+	 * Construct an incomplete AudioReader::Impl (without SampleProcessor).
+	 *
+	 * \param[in] readerimpl The AudioReaderImpl to use
+	 */
+	Impl(std::unique_ptr<AudioReaderImpl> readerimpl);
+
+	Impl(const Impl &rhs) = delete;
+
+	// TODO Move constructor
+
+	std::unique_ptr<AudioSize> acquire_size(const std::string &filename) const;
+
+	void process_file(const std::string &filename);
+
+	/**
+	 *
+	 * \param[in] readerimpl The reader interface implementation to use
+	 */
+	void set_readerimpl(std::unique_ptr<AudioReaderImpl> readerimpl);
+
+	/**
+	 *
+	 * \return The reader interface implementation
+	 */
+	const AudioReaderImpl& readerimpl();
+
+	/**
+	 *
+	 * \param[in] processor The SampleProcessor to use
+	 */
+	void set_sampleprocessor(SampleProcessor &processor);
+
+	/**
+	 *
+	 * \return The SampleProcessor the reader uses
+	 */
+	const SampleProcessor& sampleprocessor();
+
+	Impl& operator = (const Impl &rhs) = delete;
+
+	// TODO Move assignment
+
+
+private:
+
+	/**
+	 * \brief Internal AudioReaderImpl instance.
+	 */
+	std::unique_ptr<AudioReaderImpl> readerimpl_;
+
+	/**
+	 * \brief Internal SampleProcessor instance.
+	 */
+	SampleProcessor *processor_;
+};
+
+
+AudioReader::Impl::Impl(std::unique_ptr<AudioReaderImpl> readerimpl,
+			SampleProcessor &processor)
+	: readerimpl_(std::move(readerimpl))
+	, processor_(&processor)
+{
+	readerimpl_->register_processor(*processor_);
+}
+
+
+AudioReader::Impl::Impl(std::unique_ptr<AudioReaderImpl> readerimpl)
+	: readerimpl_(std::move(readerimpl))
+	, processor_(nullptr)
+{
+	// empty
+}
+
+
+std::unique_ptr<AudioSize> AudioReader::Impl::acquire_size(
+		const std::string &filename) const
+{
+	return readerimpl_->acquire_size(filename);
+}
+
+
+void AudioReader::Impl::process_file(const std::string &filename)
+{
+	readerimpl_->process_file(filename);
+}
+
+
+void AudioReader::Impl::set_readerimpl(
+		std::unique_ptr<AudioReaderImpl> readerimpl)
+{
+	readerimpl_ = std::move(readerimpl);
+
+	if (processor_)
+	{
+		readerimpl_->register_processor(*processor_);
+	}
+}
+
+
+const AudioReaderImpl& AudioReader::Impl::readerimpl()
+{
+	return *readerimpl_;
+}
+
+
+void AudioReader::Impl::set_sampleprocessor(SampleProcessor &processor)
+{
+	processor_ = &processor;
+
+	if (readerimpl_)
+	{
+		readerimpl_->register_processor(*processor_);
+	}
+}
+
+
+const SampleProcessor& AudioReader::Impl::sampleprocessor()
+{
+	return *processor_;
 }
 
 
 // AudioReader
 
 
+AudioReader::AudioReader(std::unique_ptr<AudioReaderImpl> impl,
+			SampleProcessor &proc)
+	: impl_(std::make_unique<AudioReader::Impl>(std::move(impl), proc))
+{
+	// empty
+}
+
+
 AudioReader::AudioReader(std::unique_ptr<AudioReaderImpl> impl)
-	:impl_(std::move(impl))
+	: impl_(std::make_unique<AudioReader::Impl>(std::move(impl)))
 {
 	// empty
 }
@@ -352,33 +573,15 @@ std::unique_ptr<AudioSize> AudioReader::acquire_size(
 }
 
 
-Checksums AudioReader::process_file(const std::string &filename)
+void AudioReader::process_file(const std::string &filename)
 {
-	return impl_->process_file(filename);
+	impl_->process_file(filename);
 }
 
 
-void AudioReader::set_samples_per_block(const uint32_t &samples_per_block)
+void AudioReader::register_processor(SampleProcessor &processor)
 {
-	impl_->set_samples_per_block(samples_per_block);
-}
-
-
-uint32_t AudioReader::samples_per_block() const
-{
-	return impl_->samples_per_block();
-}
-
-
-void AudioReader::set_calc(std::unique_ptr<Calculation> calc)
-{
-	impl_->set_calc(std::move(calc));
-}
-
-
-const Calculation& AudioReader::calc()
-{
-	return impl_->calc();
+	impl_->set_sampleprocessor(processor);
 }
 
 

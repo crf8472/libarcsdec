@@ -170,16 +170,9 @@ public:
 	= 0;
 };
 
-/// @}
-/// \endcond IMPL_ONLY
-
 
 WAV_CDDA_t::~WAV_CDDA_t() noexcept = default;
 
-
-/// \cond IMPL_ONLY
-/// \internal \addtogroup readerwavImpl
-/// @{
 
 /**
  * Implements reference values for CDDA compliant RIFF/WAV PCM.
@@ -356,9 +349,6 @@ public:
 	uint32_t data_subchunk_id() const override;
 };
 
-/// @}
-/// \endcond IMPL_ONLY
-
 
 constexpr uint32_t RIFFWAV_PCM_CDDA_t::WAV_CDDA_[11][3];
 
@@ -432,10 +422,6 @@ uint32_t RIFFWAV_PCM_CDDA_t::data_subchunk_id() const
 }
 
 
-/// \cond IMPL_ONLY
-/// \internal \addtogroup readerwavImpl
-/// @{
-
 /**
  * Represents the parsed chunk descriptor of a WAV file.
  *
@@ -500,9 +486,6 @@ public:
 	const uint32_t format;
 };
 
-/// @}
-/// \endcond IMPL_ONLY
-
 
 WavChunkDescriptor::WavChunkDescriptor(
 			const uint32_t &id,
@@ -521,10 +504,6 @@ WavChunkDescriptor::WavChunkDescriptor(
 
 WavChunkDescriptor::~WavChunkDescriptor() noexcept = default;
 
-
-/// \cond IMPL_ONLY
-/// \internal \addtogroup readerwavImpl
-/// @{
 
 /**
  * Represents the parsed subchunk header in a WAV file.
@@ -568,9 +547,6 @@ public:
 	std::string name() const;
 };
 
-/// @}
-/// \endcond IMPL_ONLY
-
 
 WavSubchunkHeader::WavSubchunkHeader(const uint32_t &id, const uint32_t &size)
 	: id(id)
@@ -597,10 +573,6 @@ std::string WavSubchunkHeader::name() const
 	return name;
 }
 
-
-/// \cond IMPL_ONLY
-/// \internal \addtogroup readerwavImpl
-/// @{
 
 /**
  * Represents the parsed content of a format subchunk. Since it is a
@@ -671,10 +643,6 @@ public:
 };
 
 
-/// @}
-/// \endcond IMPL_ONLY
-
-
 WavFormatSubchunk::WavFormatSubchunk(
 			const WavSubchunkHeader &header,
 			const uint16_t &wFormatTag,
@@ -698,11 +666,6 @@ WavFormatSubchunk::WavFormatSubchunk(
 
 
 WavFormatSubchunk::~WavFormatSubchunk() noexcept = default;
-
-
-/// \cond IMPL_ONLY
-/// \internal \addtogroup readerwavImpl
-/// @{
 
 
 /**
@@ -778,10 +741,6 @@ private:
 	 */
 	ByteConverter convert_;
 };
-
-
-/// @}
-/// \endcond IMPL_ONLY
 
 
 // static definition
@@ -879,11 +838,6 @@ WavFormatSubchunk WavPartParser::format_subchunk(
 		convert_.le_bytes_to_uint16(bytes[14], bytes[15])
 	);
 }
-
-
-/// \cond IMPL_ONLY
-/// \internal \addtogroup readerwavImpl
-/// @{
 
 
 /**
@@ -1127,10 +1081,6 @@ private:
 	 */
 	uint32_t state_;
 };
-
-
-/// @}
-/// \endcond IMPL_ONLY
 
 
 WavAudioHandler::WavAudioHandler(std::unique_ptr<WAV_CDDA_t> valid)
@@ -1611,10 +1561,6 @@ uint64_t PCMBlockReader::read_blocks(std::ifstream &in,
 }
 
 
-/// \cond IMPL_ONLY
-/// \internal \addtogroup readerwavImpl
-/// @{
-
 // WavAudioReaderImpl
 
 
@@ -1664,15 +1610,7 @@ private:
 	std::unique_ptr<AudioSize> do_acquire_size(
 		const std::string &filename) override;
 
-	Checksums do_process_file(const std::string &filename) override;
-
-	void do_set_samples_per_block(const uint32_t &samples_per_block) override;
-
-	uint32_t do_get_samples_per_block() const override;
-
-	void do_set_calc(std::unique_ptr<Calculation> calc) override;
-
-	const Calculation& do_get_calc() const override;
+	void do_process_file(const std::string &filename) override;
 
 	/**
 	 * Service method: acquire the physical file size in bytes
@@ -1722,37 +1660,14 @@ private:
 			uint64_t &total_pcm_bytes);
 
 	/**
-	 * Non-const access to internal calculator instance
-	 *
-	 * \return Non-const reference to the internal ARCSCalc
-	 */
-	Calculation& use_calc();
-
-	/**
-	 * Number of samples to be read in one block
-	 */
-	uint32_t samples_per_block_;
-
-	/**
-	 * Internal calculator instance
-	 */
-	std::unique_ptr<Calculation> calc_;
-
-	/**
 	 * Validator handler instance
 	 */
 	std::unique_ptr<WavAudioHandler> audio_handler_;
 };
 
 
-/// @}
-/// \endcond IMPL_ONLY
-
-
 WavAudioReaderImpl::WavAudioReaderImpl()
 	: AudioReaderImpl()
-	, samples_per_block_(BLOCKSIZE::DEFAULT)
-	, calc_()
 	, audio_handler_()
 {
 	// empty
@@ -1905,12 +1820,9 @@ uint64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 			ARCS_LOG_INFO << "Total samples: " <<
 				(total_pcm_bytes / CDDA.BYTES_PER_SAMPLE);
 
-			if (calc_)
-			{
-				AudioSize audiosize;
-				audiosize.set_pcm_byte_count(subchunk_header.size);
-				calc_->update_audiosize(audiosize);
-			}
+			AudioSize audiosize;
+			audiosize.set_pcm_byte_count(subchunk_header.size);
+			this->update_audiosize(audiosize);
 
 			audio_handler_->subchunk_data(subchunk_header.size);
 
@@ -1918,10 +1830,11 @@ uint64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 			{
 				// Read audio bytes in blocks
 
-				PCMBlockReader block_reader(this->samples_per_block());
+				// FIXME Make block size configurable
+				PCMBlockReader block_reader(BLOCKSIZE::DEFAULT);
 
 				block_reader.register_block_consumer(
-					std::bind(&Calculation::update, &(use_calc()),
+					std::bind(&WavAudioReaderImpl::append_samples, this,
 						std::placeholders::_1, std::placeholders::_2)
 					);
 
@@ -1998,14 +1911,6 @@ void WavAudioReaderImpl::process_file(const std::string &filename,
 		return;
 	}
 
-	if (calculate and not calc_)
-	{
-		std::string msg("No Calculation instance present in AudioReader");
-		ARCS_LOG_ERROR << msg;
-
-		throw std::runtime_error(msg);
-	}
-
 	if (not validate)
 	{
 		// If no Validation is Requested, Turn off all Tests for any
@@ -2057,12 +1962,6 @@ void WavAudioReaderImpl::process_file(const std::string &filename,
 }
 
 
-Calculation& WavAudioReaderImpl::use_calc()
-{
-	return *calc_;
-}
-
-
 std::unique_ptr<AudioSize> WavAudioReaderImpl::do_acquire_size(
 	const std::string &audiofilename)
 {
@@ -2091,27 +1990,13 @@ std::unique_ptr<AudioSize> WavAudioReaderImpl::do_acquire_size(
 }
 
 
-Checksums WavAudioReaderImpl::do_process_file(const std::string &audiofilename)
+void WavAudioReaderImpl::do_process_file(const std::string &audiofilename)
 {
 	uint64_t total_pcm_bytes = 0;
 
 	// Validate And Calculate
 
 	this->process_file(audiofilename, true, true, total_pcm_bytes);
-
-	return this->get_result();
-}
-
-
-void WavAudioReaderImpl::do_set_calc(std::unique_ptr<Calculation> calc)
-{
-	calc_ = std::move(calc);
-}
-
-
-const Calculation& WavAudioReaderImpl::do_get_calc() const
-{
-	return *calc_;
 }
 
 
@@ -2121,25 +2006,7 @@ void WavAudioReaderImpl::register_audio_handler(
 	audio_handler_ = std::move(hndlr);
 }
 
-
-void WavAudioReaderImpl::do_set_samples_per_block(
-		const uint32_t &samples_per_block)
-{
-	samples_per_block_ = samples_per_block;
-}
-
-
-uint32_t WavAudioReaderImpl::do_get_samples_per_block() const
-{
-	return samples_per_block_;
-}
-
-
-Checksums WavAudioReaderImpl::get_result()
-{
-	return use_calc().result();
-}
-
+/// @}
 
 } // namespace
 

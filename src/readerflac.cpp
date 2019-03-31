@@ -58,257 +58,6 @@ namespace
 
 
 /**
- * Provides an implementation of the FLAC__write_callback handler that
- * accumulates samples to blocks and send each block to processing.
- *
- * Each call of the write_callback can call the frame() method and after
- * processing of the file is complete, the \ref Calculation instance pointed to
- * holds the results. FLACFrameHandler is a mere wrapper that hides the FLAC API
- * to BlockAccumulator.
- */
-class FlacFrameHandler
-{
-
-public:
-
-	/**
-	 * Constructor that sets the \ref Calculation of this handler
-	 *
-	 * \param[in] calc The \ref Calculation instance of this handler
-	 */
-	explicit FlacFrameHandler(std::unique_ptr<Calculation> calc);
-
-	/**
-	 * Default destructor
-	 */
-	virtual ~FlacFrameHandler() noexcept;
-
-	/**
-	 * Handler method: flac frame occurred.
-	 *
-	 * \param[in] frame  The frame describing object as defined by FLAC
-	 * \param[in] buffer The sample buffer
-	 */
-	void frame(	const ::FLAC__Frame *       frame,
-				const   FLAC__int32 * const buffer[] );
-
-	/**
-	 * Number of frames processed since init() was called the last time.
-	 *
-	 * \return Return the number of frames processed
-	 */
-	uint64_t frames_processed() const;
-
-	/**
-	 * Set the \ref Calculation instance for this handler
-	 *
-	 * \param[in] calc The \ref Calculation instance for this handler
-	 */
-	void set_calc(std::unique_ptr<Calculation> calc);
-
-	/**
-	 * Get the \ref Calculation instance of this handler
-	 *
-	 * \return The \ref Calculation of this handler
-	 */
-	const Calculation& calc();
-
-	/**
-	 * Set the number of samples to be read in one block
-	 *
-	 * \param[in] samples_per_block The number of samples to be processed in one
-	 * block
-	 */
-	void set_samples_per_block(const uint32_t &samples_per_block);
-
-	/**
-	 * Return the number of samples to be read in one block
-	 *
-	 * \return The number of samples to be processed in one block
-	 */
-	uint32_t samples_per_block() const;
-
-	/**
-	 * Returns the calculation result
-	 *
-	 * \return The Profile of the file
-	 */
-	Checksums get_result();
-
-	/**
-	 * Notify this instance about how many samples in total are to be
-	 * processed
-	 *
-	 * \param[in] sample_count The total number of 32 bit PCM samples in the
-	 * file
-	 */
-	void notify_sample_count(const uint64_t &sample_count);
-
-	/**
-	 * Initialize handler. To be called by the client of this handler before
-	 * using this handler.
-	 */
-	void init();
-
-	/**
-	 * Finish handler. To be called by the client of this handler after
-	 * the last use of this handler.
-	 */
-	void finish();
-
-	/**
-	 * Number of samples processed since init() was called the last time.
-	 *
-	 * \return Return the number of samples processed
-	 */
-	uint64_t samples_processed() const;
-
-	/**
-	 * Number of bytes processed since init() was called the last time.
-	 *
-	 * \return Return the number of bytes processed
-	 */
-	uint64_t bytes_processed() const;
-
-	/**
-	 * Number of blocks processed since init() was called the last time.
-	 *
-	 * \return Return the number of blocks processed
-	 */
-	uint64_t blocks_processed() const;
-
-
-private:
-
-	/**
-	 * Internal pointer to the \ref Calculation instance.
-	 */
-	std::unique_ptr<Calculation> calc_;
-
-	/**
-	 * Internal BlockAccumulator instance
-	 */
-	SampleBuffer buffer_;
-
-	/**
-	 * Internal SampleSequence instance
-	 */
-	SampleSequence<FLAC__int32, true> smplseq_;
-
-
-	// make class non-copyable (1/2)
-	FlacFrameHandler(const FlacFrameHandler &) = delete;
-
-	// make class non-copyable (2/2)
-	FlacFrameHandler& operator = (const FlacFrameHandler &) = delete;
-};
-
-
-/// @}
-/// \endcond IMPL_ONLY
-
-
-FlacFrameHandler::FlacFrameHandler(std::unique_ptr<Calculation> calc)
-	: calc_(std::move(calc))
-	, buffer_()
-	, smplseq_()
-{
-	// This line is doubled up in set_calc()
-	buffer_.register_processor(*calc_);
-}
-
-
-FlacFrameHandler::~FlacFrameHandler() noexcept = default;
-
-
-void FlacFrameHandler::frame(
-	const ::FLAC__Frame *       frame,
-	const FLAC__int32	* const buffer[])
-{
-	smplseq_.reset(buffer[0], buffer[1], frame->header.blocksize);
-	buffer_.append(smplseq_.begin(), smplseq_.end());
-}
-
-
-uint64_t FlacFrameHandler::frames_processed() const
-{
-	return buffer_.sequences_processed();
-}
-
-
-void FlacFrameHandler::set_calc(std::unique_ptr<Calculation> calc)
-{
-	calc_ = std::move(calc);
-	buffer_.register_processor(*calc_);
-}
-
-
-const Calculation& FlacFrameHandler::calc()
-{
-	return *calc_;
-}
-
-
-void FlacFrameHandler::set_samples_per_block(
-		const uint32_t &samples_per_block)
-{
-	buffer_.set_samples_per_block(samples_per_block);
-}
-
-
-uint32_t FlacFrameHandler::samples_per_block() const
-{
-	return buffer_.samples_per_block();
-}
-
-
-Checksums FlacFrameHandler::get_result()
-{
-	return calc_->result();
-}
-
-
-void FlacFrameHandler::notify_sample_count(const uint64_t &sample_count)
-{
-	buffer_.notify_total_samples(sample_count);
-}
-
-
-void FlacFrameHandler::init()
-{
-	buffer_.reset();
-}
-
-
-void FlacFrameHandler::finish()
-{
-	buffer_.flush();
-}
-
-
-uint64_t FlacFrameHandler::samples_processed() const
-{
-	return buffer_.samples_processed();
-}
-
-
-uint64_t FlacFrameHandler::bytes_processed() const
-{
-	return buffer_.bytes_processed();
-}
-
-
-uint64_t FlacFrameHandler::blocks_processed() const
-{
-	return buffer_.blocks_processed();
-}
-
-
-/// \cond IMPL_ONLY
-/// \internal \addtogroup readerflacImpl
-/// @{
-
-/**
  * Provides an implementation of the FLAC__metadata_callback handler that
  * validates the audio data for conforming to CDDA.
  *
@@ -374,9 +123,6 @@ private:
 	FlacMetadataHandler& operator = (const FlacMetadataHandler &) = delete;
 };
 
-/// @}
-/// \endcond IMPL_ONLY
-
 
 FlacMetadataHandler::FlacMetadataHandler() = default;
 
@@ -440,10 +186,6 @@ void FlacMetadataHandler::cuesheet(const ::FLAC__StreamMetadata *)
 }
 
 
-/// \cond IMPL_ONLY
-/// \internal \addtogroup readerflacImpl
-/// @{
-
 /**
  * File reader implementation for files in CDDA/Flac format, i.e. containing
  * 44.100 Hz/16 bit Stereo PCM data samples.
@@ -462,6 +204,11 @@ public:
 	 * Default constructor
 	 */
 	FlacAudioReaderImpl();
+
+	// make class non-copyable (1/2)
+	FlacAudioReaderImpl(const FlacAudioReaderImpl &) = delete;
+
+	// TODO Move constructor
 
 	/**
 	 * Default destructor
@@ -509,30 +256,13 @@ public:
 	 */
 	const FlacMetadataHandler& validate_handler();
 
-	/**
-	 * Register a FlacFrameHandler to this instance
-	 *
-	 * \param[in] hndlr Set the FlacFrameHandler of this instance
-	 */
-	void register_proc_handler(std::unique_ptr<FlacFrameHandler> hndlr);
+	// make class non-copyable (2/2)
+	FlacAudioReaderImpl& operator = (const FlacAudioReaderImpl &) = delete;
 
-	/**
-	 * Access the FlacFrameHandler of this instance
-	 *
-	 * \return The FlacFrameHandler of this instance
-	 */
-	const FlacFrameHandler& proc_handler();
+	// TODO Move assignment
 
 
 private:
-
-	/**
-	 * Callback method: inform instance about the total number of samples
-	 * found in the stream.
-	 *
-	 * \param[in] sample_count Number of total 32 bit PCM samples in the file
-	 */
-	virtual void notify_sample_count(const uint64_t &sample_count);
 
 	/**
 	 * Read the FLAC file and optionally validate it. This method provides
@@ -544,46 +274,30 @@ private:
 	 *
 	 * \return TRUE if file was processed without errors
 	 */
-	bool process_file(const std::string &filename,
-			uint32_t& total_pcm_bytes);
+	bool process_file(const std::string &filename, uint32_t& total_pcm_bytes);
 
 	std::unique_ptr<AudioSize> do_acquire_size(const std::string &filename)
 		override;
 
-	Checksums do_process_file(const std::string &filename) override;
-
-	void do_set_samples_per_block(const uint32_t &samples_per_block) override;
-
-	uint32_t do_get_samples_per_block() const override;
-
-	void do_set_calc(std::unique_ptr<Calculation> calc) override;
-
-	const Calculation& do_get_calc() const override;
+	void do_process_file(const std::string &filename) override;
 
 	/**
-	 * Handles each frame
+	 * Internal SampleSequence instance
 	 */
-	std::unique_ptr<FlacFrameHandler> frame_handler_;
+	SampleSequence<FLAC__int32, true> smplseq_;
 
 	/**
 	 * Handles each metadata block
 	 */
 	std::unique_ptr<FlacMetadataHandler> metadata_handler_;
-
-
-	// make class non-copyable (1/2)
-	FlacAudioReaderImpl(const FlacAudioReaderImpl &) = delete;
-
-	// make class non-copyable (2/2)
-	FlacAudioReaderImpl& operator = (const FlacAudioReaderImpl &) = delete;
 };
 
-/// @}
-/// \endcond IMPL_ONLY
+
+// FlacAudioReaderImpl
 
 
 FlacAudioReaderImpl::FlacAudioReaderImpl()
-	: frame_handler_()
+	: smplseq_()
 	, metadata_handler_()
 {
 	// empty
@@ -597,7 +311,8 @@ FlacAudioReaderImpl::~FlacAudioReaderImpl() noexcept = default;
 		const ::FLAC__Frame	*frame,
 		const FLAC__int32   * const buffer[])
 {
-	frame_handler_->frame(frame, buffer);
+	smplseq_.reset(buffer[0], buffer[1], frame->header.blocksize);
+	this->append_samples(smplseq_.begin(), smplseq_.end());
 
 	return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
 }
@@ -606,13 +321,16 @@ FlacAudioReaderImpl::~FlacAudioReaderImpl() noexcept = default;
 void FlacAudioReaderImpl::metadata_callback(
 		const ::FLAC__StreamMetadata *metadata)
 {
+	AudioSize size;
+
 	switch (metadata->type)
 	{
 		case FLAC__METADATA_TYPE_STREAMINFO:
 
 			// Inform calculator instance about sample count
 
-			this->notify_sample_count(metadata->data.stream_info.total_samples);
+			size.set_sample_count(metadata->data.stream_info.total_samples);
+			this->update_audiosize(size);
 
 			// Streaminfo could already have been validated explicitly
 
@@ -699,18 +417,9 @@ std::unique_ptr<AudioSize> FlacAudioReaderImpl::do_acquire_size(
 }
 
 
-Checksums FlacAudioReaderImpl::do_process_file(const std::string &filename)
+void FlacAudioReaderImpl::do_process_file(const std::string &filename)
 {
-	if (not frame_handler_)
-	{
-		ARCS_LOG_ERROR << "No processing handler available in reader. Stop.";
-		return Checksums(0);
-	}
-
 	// Process decoded samples
-
-	frame_handler_->set_samples_per_block(this->samples_per_block());
-	frame_handler_->init();
 
 	this->set_md5_checking(false); // We check for checksums for ourselves
 
@@ -721,8 +430,7 @@ Checksums FlacAudioReaderImpl::do_process_file(const std::string &filename)
 		ARCS_LOG_ERROR << "FLAC__StreamDecoderInitStatus: "
 				<< std::string(
 					FLAC__StreamDecoderInitStatusString[init_status]);
-
-		return Checksums(0);
+		return;
 	}
 
 	// Get channel order to decide whether order must be swapped.
@@ -764,52 +472,11 @@ Checksums FlacAudioReaderImpl::do_process_file(const std::string &filename)
 
 		ARCS_LOG_INFO << "Audio file closed";
 
-		return Checksums(0);
+		return;
 	}
 
 	this->finish();
 	ARCS_LOG_INFO << "Audio file closed";
-
-	frame_handler_->finish();
-
-	ARCS_LOG(LOG_DEBUG1) << "Read " << frame_handler_->blocks_processed()
-			<< " blocks";
-	ARCS_LOG(LOG_DEBUG1) << "Read samples: "
-			<< frame_handler_->samples_processed();
-	ARCS_LOG(LOG_DEBUG1) << "    in bytes: "
-			<< frame_handler_->bytes_processed();
-
-	if (!frame_handler_)
-	{
-		return Checksums(0);
-	}
-
-	return frame_handler_->get_result();
-}
-
-
-void FlacAudioReaderImpl::do_set_samples_per_block(
-		const uint32_t &samples_per_block)
-{
-	frame_handler_->set_samples_per_block(samples_per_block);
-}
-
-
-uint32_t FlacAudioReaderImpl::do_get_samples_per_block() const
-{
-	return frame_handler_->samples_per_block();
-}
-
-
-void FlacAudioReaderImpl::do_set_calc(std::unique_ptr<Calculation> calc)
-{
-	frame_handler_->set_calc(std::move(calc));
-}
-
-
-const Calculation& FlacAudioReaderImpl::do_get_calc() const
-{
-	return frame_handler_->calc();
 }
 
 
@@ -825,33 +492,7 @@ const FlacMetadataHandler& FlacAudioReaderImpl::validate_handler()
 	return *metadata_handler_;
 }
 
-
-void FlacAudioReaderImpl::register_proc_handler(
-		std::unique_ptr<FlacFrameHandler> hndlr)
-{
-	frame_handler_ = std::move(hndlr);
-}
-
-
-const FlacFrameHandler& FlacAudioReaderImpl::proc_handler()
-{
-	return *frame_handler_;
-}
-
-
-void FlacAudioReaderImpl::notify_sample_count(const uint64_t &sample_count)
-{
-	if (frame_handler_)
-	{
-		frame_handler_->notify_sample_count(sample_count);
-
-		ARCS_LOG_INFO << "Total samples: " + std::to_string(sample_count);
-		return;
-	}
-
-	ARCS_LOG_WARNING << "No calculator instance";
-}
-
+/// @}
 
 } // namespace
 
@@ -893,12 +534,6 @@ std::unique_ptr<FileReader> FileFormatFlac::do_create_reader() const
 	auto impl = std::make_unique<FlacAudioReaderImpl>();
 
 	impl->register_validate_handler(std::make_unique<FlacMetadataHandler>());
-
-	std::unique_ptr<Calculation> calc = std::make_unique<Calculation>(
-				make_context(std::string(), false, false));
-
-	impl->register_proc_handler(
-			std::make_unique<FlacFrameHandler>(std::move(calc)));
 
 	return std::make_unique<AudioReader>(std::move(impl));
 }

@@ -1,14 +1,12 @@
 #include "catch2/catch.hpp"
 
-//#ifndef __LIBARCSDEC_SAMPLESEQUENCE_HPP__
-//#include "samplesequence.hpp"
-//#endif
+
 #ifndef __LIBARCSDEC_AUDIOBUFFER_HPP__
 #include "audiobuffer.hpp"
 #endif
 
 #ifndef __LIBARCS_IDENTIFIER_HPP__
-#include <arcs/identifier.hpp>
+#include <arcs/identifier.hpp> // for CDDA
 #endif
 #ifndef __LIBARCS_IDENTIFIER_HPP__
 #include <arcs/samples.hpp>

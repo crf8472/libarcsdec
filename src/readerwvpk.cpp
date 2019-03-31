@@ -126,10 +126,6 @@ public:
 };
 
 
-/// @}
-/// \endcond IMPL_ONLY
-
-
 WAVPACK_CDDA_t::~WAVPACK_CDDA_t() noexcept = default;
 
 
@@ -156,10 +152,6 @@ uint16_t WAVPACK_CDDA_t::bytes_per_sample() const
 	return 2; // Always require 16bit per sample and channel
 }
 
-
-/// \cond IMPL_ONLY
-/// \internal \addtogroup readerwvpkImpl
-/// @{
 
 // WAVPACK_CDDA_WAV_PCM_t
 
@@ -195,10 +187,6 @@ public:
 };
 
 
-/// @}
-/// \endcond IMPL_ONLY
-
-
 WAVPACK_CDDA_WAV_PCM_t::~WAVPACK_CDDA_WAV_PCM_t() noexcept = default;
 
 
@@ -213,10 +201,6 @@ bool WAVPACK_CDDA_WAV_PCM_t::floats_ok() const
 	return false;
 }
 
-
-/// \cond IMPL_ONLY
-/// \internal \addtogroup readerwvpkImpl
-/// @{
 
 // WavpackOpenFile
 
@@ -351,10 +335,6 @@ private:
 	 */
 	WavpackOpenFile& operator = (WavpackOpenFile &file) = delete;
 };
-
-
-/// @}
-/// \endcond IMPL_ONLY
 
 
 WavpackOpenFile::WavpackOpenFile(const std::string &filename)
@@ -573,10 +553,6 @@ uint32_t WavpackOpenFile::read_pcm_samples(const uint32_t &pcm_samples_to_read,
 }
 
 
-/// \cond IMPL_ONLY
-/// \internal \addtogroup readerwvpkImpl
-/// @{
-
 // WavpackValidatingHandler
 
 
@@ -644,10 +620,6 @@ private:
 	 */
 	std::unique_ptr<WAVPACK_CDDA_t> valid_;
 };
-
-
-/// @}
-/// \endcond IMPL_ONLY
 
 
 WavpackValidatingHandler::WavpackValidatingHandler(
@@ -760,10 +732,6 @@ bool WavpackValidatingHandler::validate_version(const WavpackOpenFile &file)
 }
 
 
-/// \cond IMPL_ONLY
-/// \internal \addtogroup readerwvpkImpl
-/// @{
-
 // WavpackAudioReaderImpl
 
 
@@ -799,28 +767,27 @@ public:
 	 */
 	const WavpackValidatingHandler& validate_handler();
 
+	/**
+	 * Set the number of samples to read in one read operation.
+	 *
+	 * The default is BLOCKSIZE::DEFAULT.
+	 */
+	void set_samples_per_read(const uint32_t &samples_per_read);
+
+	/**
+	 * Return the number of samples to read in one read operation.
+	 *
+	 * \return Number of samples per read operation.
+	 */
+	uint32_t samples_per_read() const;
+
 
 private:
 
-	std::unique_ptr<AudioSize> do_acquire_size(
-			const std::string &filename) override;
+	std::unique_ptr<AudioSize> do_acquire_size(const std::string &filename)
+		override;
 
-	Checksums do_process_file(const std::string &filename) override;
-
-	void do_set_samples_per_block(const uint32_t &samples_per_block) override;
-
-	uint32_t do_get_samples_per_block() const override;
-
-	void do_set_calc(std::unique_ptr<Calculation> calc) override;
-
-	const Calculation& do_get_calc() const override;
-
-	/**
-	 * Non-const access to the internal ARCSCalc
-	 *
-	 * \return \ref Calculation of this instance
-	 */
-	Calculation& use_calc();
+	void do_process_file(const std::string &filename) override;
 
 	/**
 	 * Perform the actual validation process
@@ -834,12 +801,7 @@ private:
 	/**
 	 * Number of samples to be read in one block
 	 */
-	uint32_t samples_per_block_;
-
-	/**
-	 * Internal calculator instance
-	 */
-	std::unique_ptr<Calculation> calc_;
+	uint32_t samples_per_read_;
 
 	/**
 	 * Validating handler of this instance
@@ -848,13 +810,8 @@ private:
 };
 
 
-/// @}
-/// \endcond IMPL_ONLY
-
-
 WavpackAudioReaderImpl::WavpackAudioReaderImpl()
-	: samples_per_block_(BLOCKSIZE::DEFAULT)
-	, calc_()
+	: samples_per_read_(BLOCKSIZE::DEFAULT)
 	, validate_handler_()
 {
 	// empty
@@ -877,7 +834,7 @@ std::unique_ptr<AudioSize> WavpackAudioReaderImpl::do_acquire_size(
 }
 
 
-Checksums WavpackAudioReaderImpl::do_process_file(const std::string &filename)
+void WavpackAudioReaderImpl::do_process_file(const std::string &filename)
 {
 	ARCS_LOG_DEBUG << "Start validating Wavpack file: " << filename;
 	WavpackOpenFile file(filename);
@@ -890,7 +847,8 @@ Checksums WavpackAudioReaderImpl::do_process_file(const std::string &filename)
 	if (not perform_validations(file))
 	{
 		ARCS_LOG_ERROR << "Validation failed";
-		return Checksums(0);
+		//return Checksums(0);
+		return;
 	}
 
 	ARCS_LOG_DEBUG << "Completed validation of Wavpack file";
@@ -898,22 +856,23 @@ Checksums WavpackAudioReaderImpl::do_process_file(const std::string &filename)
 	uint32_t total_samples = file.total_pcm_samples();
 	ARCS_LOG_INFO << "Total samples: " << total_samples;
 
-	// Read the samples
-
-	SampleBuffer buffer { samples_per_block_ };
-	buffer.register_processor(use_calc());
-	buffer.notify_total_samples(total_samples);
+	// Notify about correct size
+	{
+		AudioSize size;
+		size.set_sample_count(total_samples);
+		this->update_audiosize(size);
+	}
 
 	// Samples reading loop
 	{
 		std::vector<int32_t> samples;
 		SampleSequence<int32_t, false> sequence(file.channel_order());
 
-		samples.resize(samples_per_block_);
+		samples.resize(samples_per_read_);
 
 		// Request half the number of samples in a block, thus a sequence will
 		// have exactly the size of a block.
-		uint32_t wv_sample_count = samples_per_block_ / CDDA.NUMBER_OF_CHANNELS;
+		uint32_t wv_sample_count = samples_per_read_ / CDDA.NUMBER_OF_CHANNELS;
 		uint32_t samples_read    = 0;
 
 		for (int32_t i = total_samples; i > 0; i -= wv_sample_count)
@@ -951,38 +910,22 @@ Checksums WavpackAudioReaderImpl::do_process_file(const std::string &filename)
 			// NOTE That we use the number of 16 bit samples per channel, not
 			// the total number of 16 bit samples in the chunk
 
-			buffer.append(sequence.begin(), sequence.end());
+			this->append_samples(sequence.begin(), sequence.end());
 		}
 	}
-
-	buffer.flush();
-
-	return calc_->result();
 }
 
 
-void WavpackAudioReaderImpl::do_set_samples_per_block(
-		const uint32_t &samples_per_block)
+void WavpackAudioReaderImpl::set_samples_per_read(
+		const uint32_t &samples_per_read)
 {
-	samples_per_block_ = samples_per_block;
+	samples_per_read_ = samples_per_read;
 }
 
 
-uint32_t WavpackAudioReaderImpl::do_get_samples_per_block() const
+uint32_t WavpackAudioReaderImpl::samples_per_read() const
 {
-	return samples_per_block_;
-}
-
-
-void WavpackAudioReaderImpl::do_set_calc(std::unique_ptr<Calculation> calc)
-{
-	calc_ = std::move(calc);
-}
-
-
-const Calculation& WavpackAudioReaderImpl::do_get_calc() const
-{
-	return *calc_;
+	return samples_per_read_;
 }
 
 
@@ -1032,12 +975,7 @@ bool WavpackAudioReaderImpl::perform_validations(const WavpackOpenFile &file)
 	return true;
 }
 
-
-Calculation& WavpackAudioReaderImpl::use_calc()
-{
-	return *calc_;
-}
-
+/// @}
 
 } // namespace
 

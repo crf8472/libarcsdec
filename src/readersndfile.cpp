@@ -1,12 +1,10 @@
-/**
- * \file readersndfile.cpp Implements Libsndfile-based generic audio reader
- *
- */
-
-
 #ifndef __LIBARCSDEC_READERSNDFILE_HPP__
 #include "readersndfile.hpp"
 #endif
+
+/**
+ * \file readersndfile.cpp Implements Libsndfile-based generic audio reader
+ */
 
 #include <cstdint>
 #include <memory>
@@ -15,6 +13,9 @@
 
 #include <sndfile.hh>
 
+#ifndef __LIBARCS_SAMPLES_HPP__
+#include <arcs/samples.hpp>
+#endif
 #ifndef __LIBARCS_LOGGING_HPP__
 #include <arcs/logging.hpp>
 #endif
@@ -69,12 +70,9 @@ public:
 	 */
 	virtual ~LibsndfileAudioReaderImpl() noexcept;
 
-	/**
-	 * Return the internal calculator instance
-	 *
-	 * \return Calculation result
-	 */
-	Checksums get_result();
+	void set_samples_per_read(const uint32_t &samples_per_read);
+
+	uint32_t samples_per_read() const;
 
 
 private:
@@ -82,32 +80,12 @@ private:
 	std::unique_ptr<AudioSize> do_acquire_size(const std::string &filename)
 		override;
 
-	Checksums do_process_file(const std::string &filename) override;
-
-	void do_set_samples_per_block(const uint32_t &samples_per_block) override;
-
-	uint32_t do_get_samples_per_block() const override;
-
-	void do_set_calc(std::unique_ptr<Calculation> calc) override;
-
-	const Calculation& do_get_calc() const override;
-
-	/**
-	 * Non-const access to internal calculator instance
-	 *
-	 * \return Non-const reference to the internal ARCSCalc
-	 */
-	Calculation& use_calc();
+	void do_process_file(const std::string &filename) override;
 
 	/**
 	 * Number of samples to be read in one block
 	 */
-	uint32_t samples_per_block_;
-
-	/**
-	 * Internal calculator instance
-	 */
-	std::unique_ptr<Calculation> calc_;
+	uint32_t samples_per_read_;
 };
 
 
@@ -117,8 +95,7 @@ private:
 
 LibsndfileAudioReaderImpl::LibsndfileAudioReaderImpl()
 	: AudioReaderImpl()
-	, samples_per_block_(BLOCKSIZE::DEFAULT)
-	, calc_()
+	, samples_per_read_(BLOCKSIZE::DEFAULT)
 {
 	// empty
 }
@@ -140,7 +117,7 @@ std::unique_ptr<AudioSize> LibsndfileAudioReaderImpl::do_acquire_size(
 }
 
 
-Checksums LibsndfileAudioReaderImpl::do_process_file(const std::string &filename)
+void LibsndfileAudioReaderImpl::do_process_file(const std::string &filename)
 {
 	SndfileHandle audiofile(filename, SFM_READ);
 
@@ -151,19 +128,19 @@ Checksums LibsndfileAudioReaderImpl::do_process_file(const std::string &filename
 	if (audiofile.samplerate() - CDDA.SAMPLES_PER_SECOND != 0)
 	{
 		ARCS_LOG_DEBUG << "Samplerate: " << audiofile.samplerate();
-		return Checksums(0);
+		return;
 	}
 
 	if (audiofile.channels() - CDDA.NUMBER_OF_CHANNELS != 0)
 	{
 		ARCS_LOG_DEBUG << "Channels: " << audiofile.channels();
-		return Checksums(0);
+		return;
 	}
 
 	if (not (audiofile.format() | SF_FORMAT_PCM_16))
 	{
 		ARCS_LOG_DEBUG << "Format: " + audiofile.format();
-		return Checksums(0);
+		return;
 	}
 
 	ARCS_LOG_INFO << "Validation completed: file seems to be CDDA";
@@ -173,21 +150,14 @@ Checksums LibsndfileAudioReaderImpl::do_process_file(const std::string &filename
 
 	AudioSize audiosize;
 	audiosize.set_sample_count(audiofile.frames());
-	use_calc().update_audiosize(audiosize);
+	this->update_audiosize(audiosize);
 
 	// Prepare Read buffer (16 bit samples)
 
-	uint32_t buffer_len = this->samples_per_block() * CDDA.NUMBER_OF_CHANNELS;
+	uint32_t buffer_len = this->samples_per_read() * CDDA.NUMBER_OF_CHANNELS;
 	std::vector<int16_t> buffer(buffer_len);
 
-	// Prepare sequence (entire buffer content as 32 bit samples)
-
-	std::vector<uint32_t> sequence(this->samples_per_block());
-	auto sample = sequence.begin();
-
-	constexpr uint_fast16_t TO_UINT_16 = 0xFFFF;
-	uint32_t left  = 0;
-	uint32_t right = 1;
+	SampleSequence<int16_t, false> sequence;
 
 	// Checking
 
@@ -212,11 +182,9 @@ Checksums LibsndfileAudioReaderImpl::do_process_file(const std::string &filename
 		{
 			// This is allowed only for the last block
 
-			auto known_sample_count {
-				use_calc().context().audio_size().sample_count() };
+			auto expected_total { audiosize.sample_count() - sample_count };
 
-			if (known_sample_count - sample_count
-					!= ints_in_block / CDDA.NUMBER_OF_CHANNELS)
+			if (expected_total != ints_in_block / CDDA.NUMBER_OF_CHANNELS)
 			{
 				std::stringstream ss;
 				ss << "  Block contains "
@@ -239,21 +207,9 @@ Checksums LibsndfileAudioReaderImpl::do_process_file(const std::string &filename
 					<< ". Resize buffer";
 
 			buffer.resize(ints_in_block);
-			//sequence.resize(buffer.size() / CDDA.NUMBER_OF_CHANNELS);
 		}
 
-		// Prepare sequence
-
-		left  = 0;
-		right = 1;
-		for (sample = sequence.begin(); sample != sequence.end();
-				++sample, left += 2, right += 2)
-		{
-			*sample  = static_cast<uint32_t>(buffer[right]) << 16u;
-			*sample += static_cast<uint32_t>(buffer[left] )  & TO_UINT_16;
-		}
-		sample_count += sequence.size();
-
+		sequence.reset(&buffer[0], buffer.size());
 
 		ARCS_LOG(LOG_DEBUG1) << "  Size: "
 				<< (buffer.size() * sizeof(buffer[0])) << " bytes";
@@ -261,47 +217,23 @@ Checksums LibsndfileAudioReaderImpl::do_process_file(const std::string &filename
 				<< (buffer.size() / CDDA.NUMBER_OF_CHANNELS)
 				<< " Stereo PCM samples (32 bit)";
 
-		use_calc().update(sequence.begin(), sequence.end());
+		this->append_samples(sequence.begin(), sequence.end());
+
+		sample_count += sequence.size();
 	}
-
-	return this->get_result();
 }
 
 
-Checksums LibsndfileAudioReaderImpl::get_result()
+void LibsndfileAudioReaderImpl::set_samples_per_read(
+		const uint32_t &samples_per_read)
 {
-	return calc_->result();
+	samples_per_read_ = samples_per_read;
 }
 
 
-void LibsndfileAudioReaderImpl::do_set_samples_per_block(
-		const uint32_t &samples_per_block)
+uint32_t LibsndfileAudioReaderImpl::samples_per_read() const
 {
-	samples_per_block_ = samples_per_block;
-}
-
-
-uint32_t LibsndfileAudioReaderImpl::do_get_samples_per_block() const
-{
-	return samples_per_block_;
-}
-
-
-void LibsndfileAudioReaderImpl::do_set_calc(std::unique_ptr<Calculation> calc)
-{
-	calc_ = std::move(calc);
-}
-
-
-const Calculation& LibsndfileAudioReaderImpl::do_get_calc() const
-{
-	return *calc_;
-}
-
-
-Calculation& LibsndfileAudioReaderImpl::use_calc()
-{
-	return *calc_;
+	return samples_per_read_;
 }
 
 

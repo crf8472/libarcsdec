@@ -30,9 +30,9 @@ extern "C"
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__
 #include "audioreader.hpp"
 #endif
-#ifndef __LIBARCSDEC_AUDIOBUFFER_HPP__
-#include "audiobuffer.hpp"
-#endif
+//#ifndef __LIBARCSDEC_AUDIOBUFFER_HPP__
+//#include "audiobuffer.hpp"
+//#endif
 
 
 namespace arcs
@@ -290,6 +290,11 @@ class FFmpegAudioFile final
 
 public:
 
+	// make class non-copyable
+	FFmpegAudioFile (const FFmpegAudioFile &file) = delete;
+
+	// TODO Move constructor
+
 	/**
 	 * Default destructor
 	 */
@@ -349,11 +354,26 @@ public:
 	uint32_t traverse_samples();
 
 	/**
-	 * Register the SampleBuffer to use for reading
+	 * Register the append_samples() method.
 	 *
-	 * \param[in] buffer The SampleBuffer to use for reading
+	 * \param[in] func The append_samples() method to use while reading
 	 */
-	void register_buffer(SampleBuffer &buffer);
+	void register_append_samples(
+		std::function<void(PCMForwardIterator begin, PCMForwardIterator end)>
+		func);
+
+	/**
+	 * Register the update_audiosize() method.
+	 *
+	 * \param[in] func The update_audiosize() method to use while reading
+	 */
+	void register_update_audiosize(std::function<void(const AudioSize &size)>
+		func);
+
+	// make class non-copyable
+	FFmpegAudioFile& operator = (const FFmpegAudioFile &file) = delete;
+
+	// TODO Move assignment
 
 
 private:
@@ -429,17 +449,15 @@ private:
 	bool channel_layout_;
 
 	/**
-	 * Callback for notifying outside world about the total number of samples
-	 * counted
+	 * Callback for notifying outside world about the correct AudioSize
 	 */
-	std::function<void(const uint32_t &smpl_count)> samples_counted_;
+	std::function<void(const AudioSize &size)> update_audiosize_;
 
 	/**
 	 * Callback for notifying outside world about a new sequence of samples
 	 */
-	//std::function<void(SampleSequence * const smpl_seq)> buffer_append_;
 	std::function<void(PCMForwardIterator begin, PCMForwardIterator end)>
-		buffer_append_;
+		append_samples_;
 
 	/**
 	 * Constructor
@@ -447,12 +465,6 @@ private:
 	 * \param[in] filename The file to open
 	 */
 	explicit FFmpegAudioFile(const std::string &filename);
-
-	// make class non-copyable
-	FFmpegAudioFile (const FFmpegAudioFile &file) = delete;
-
-	// make class non-copyable
-	FFmpegAudioFile& operator = (const FFmpegAudioFile &file) = delete;
 };
 
 
@@ -489,32 +501,7 @@ private:
 	std::unique_ptr<AudioSize> do_acquire_size(
 		const std::string &filename) override;
 
-	Checksums do_process_file(const std::string &filename) override;
-
-	void do_set_samples_per_block(const uint32_t &samples_per_block) override;
-
-	uint32_t do_get_samples_per_block() const override;
-
-	void do_set_calc(std::unique_ptr<Calculation> calc) override;
-
-	const Calculation& do_get_calc() const override;
-
-	/**
-	 * Non-const access to internal calculator instance
-	 *
-	 * \return Non-const reference to the internal ARCSCalc
-	 */
-	Calculation& use_calc();
-
-	/**
-	 * Internal calculator instance
-	 */
-	std::unique_ptr<Calculation> calc_;
-
-	/**
-	 * Number of samples to be read in one block
-	 */
-	uint32_t samples_per_block_;
+	void do_process_file(const std::string &filename) override;
 };
 
 
@@ -1207,8 +1194,8 @@ FFmpegAudioFile::FFmpegAudioFile(const std::string &filename)
 	, num_planes_(0)
 	, format_(SAMPLE_FORMAT::UNKNOWN)
 	, channel_layout_(true)
-	, samples_counted_()
-	, buffer_append_()
+	, update_audiosize_()
+	, append_samples_()
 {
 	// empty
 }
@@ -1254,15 +1241,18 @@ bool FFmpegAudioFile::channel_layout() const
 }
 
 
-void FFmpegAudioFile::register_buffer(SampleBuffer &buffer)
+void FFmpegAudioFile::register_append_samples(
+		std::function<void(PCMForwardIterator begin, PCMForwardIterator end)>
+		func)
 {
-	buffer_append_ =
-		std::bind(&SampleBuffer::append, &buffer, std::placeholders::_1,
-				std::placeholders::_2);
+	append_samples_ = func;
+}
 
-	samples_counted_ =
-		std::bind(&SampleBuffer::notify_total_samples, &buffer,
-				std::placeholders::_1);
+
+void FFmpegAudioFile::register_update_audiosize(
+		std::function<void(const AudioSize &size)> func)
+{
+	update_audiosize_ = func;
 }
 
 
@@ -1385,7 +1375,9 @@ bool FFmpegAudioFile::decode_packet(::AVPacket packet, ::AVFrame *frame,
 					// Does also work (subtract positive, add negative)
 					//total_samples_ -= total_diff;
 
-					samples_counted_(total_samples_);
+					AudioSize size;
+					size.set_sample_count(total_samples_);
+					update_audiosize_(size);
 
 					ARCS_LOG_INFO << "Correct total number of samples to: "
 							<< this->total_samples();
@@ -1425,7 +1417,7 @@ int FFmpegAudioFile::pass_samples(const uint8_t* ch0, const uint8_t* ch1,
 		SampleSequence<int16_t, true> sequence;
 		sequence.wrap(ch0, ch1, bytes_per_plane);
 
-		buffer_append_(sequence.begin(), sequence.end());
+		append_samples_(sequence.begin(), sequence.end());
 
 		return 0;
 	}
@@ -1435,7 +1427,7 @@ int FFmpegAudioFile::pass_samples(const uint8_t* ch0, const uint8_t* ch1,
 		SampleSequence<int16_t, false> sequence;
 		sequence.wrap(ch0, bytes_per_plane);
 
-		buffer_append_(sequence.begin(), sequence.end());
+		append_samples_(sequence.begin(), sequence.end());
 
 		return 0;
 	}
@@ -1445,7 +1437,7 @@ int FFmpegAudioFile::pass_samples(const uint8_t* ch0, const uint8_t* ch1,
 		SampleSequence<int32_t, true> sequence;
 		sequence.wrap(ch0, ch1, bytes_per_plane);
 
-		buffer_append_(sequence.begin(), sequence.end());
+		append_samples_(sequence.begin(), sequence.end());
 
 		return 0;
 	}
@@ -1455,7 +1447,7 @@ int FFmpegAudioFile::pass_samples(const uint8_t* ch0, const uint8_t* ch1,
 		SampleSequence<int32_t, false> sequence;
 		sequence.wrap(ch0, bytes_per_plane);
 
-		buffer_append_(sequence.begin(), sequence.end());
+		append_samples_(sequence.begin(), sequence.end());
 
 		return 0;
 	}
@@ -1631,8 +1623,6 @@ uint32_t FFmpegAudioFile::traverse_samples()
 
 FFmpegAudioReaderImpl::FFmpegAudioReaderImpl()
 	: AudioReaderImpl()
-	, calc_()
-	, samples_per_block_(BLOCKSIZE::DEFAULT)
 {
 	// empty
 }
@@ -1648,13 +1638,13 @@ std::unique_ptr<AudioSize> FFmpegAudioReaderImpl::do_acquire_size(
 
 	FFmpegFileLoader loader;
 	auto audiofile = loader.load(filename);
-	audiosize->set_sample_count(audiofile->total_samples());
+	audiosize->set_sample_count(audiofile->total_samples()); // estimated!
 
 	return audiosize;
 }
 
 
-Checksums FFmpegAudioReaderImpl::do_process_file(const std::string &filename)
+void FFmpegAudioReaderImpl::do_process_file(const std::string &filename)
 {
 	// Redirect ffmpeg logging to arcs logging
 
@@ -1666,24 +1656,30 @@ Checksums FFmpegAudioReaderImpl::do_process_file(const std::string &filename)
 	FFmpegFileLoader loader;
 	auto audiofile = loader.load(filename);
 
-	SampleBuffer buffer;
-	buffer.register_processor(use_calc());
-
 	// Provide estimation
 
-	buffer.notify_total_samples(audiofile->total_samples());
+	AudioSize size;
+	size.set_sample_count(audiofile->total_samples());
+	this->update_audiosize(size);
 
-	audiofile->register_buffer(buffer);
+	// Register this AudioReaderImpl instance as the target for samples and
+	// metadata updates
+
+	audiofile->register_append_samples(
+		std::bind(&FFmpegAudioReaderImpl::append_samples,
+			this,
+			std::placeholders::_1, std::placeholders::_2));
+
+	audiofile->register_update_audiosize(
+		std::bind(&FFmpegAudioReaderImpl::update_audiosize,
+			this,
+			std::placeholders::_1));
 
 
 	// Process file
 
-	auto sample_count_expect {
-		use_calc().context().audio_size().sample_count() };
-
-	auto sample_count_fact { audiofile->traverse_samples() };
-
-	buffer.flush();
+	auto sample_count_expect { size.sample_count() };
+	auto sample_count_fact   { audiofile->traverse_samples() };
 
 
 	// Do some logging
@@ -1709,39 +1705,6 @@ Checksums FFmpegAudioReaderImpl::do_process_file(const std::string &filename)
 	}
 
 	ARCS_LOG_DEBUG << "Finished processing";
-
-	return use_calc().result();
-}
-
-
-void FFmpegAudioReaderImpl::do_set_samples_per_block(
-		const uint32_t &samples_per_block)
-{
-	samples_per_block_ = samples_per_block;
-}
-
-
-uint32_t FFmpegAudioReaderImpl::do_get_samples_per_block() const
-{
-	return samples_per_block_;
-}
-
-
-void FFmpegAudioReaderImpl::do_set_calc(std::unique_ptr<Calculation> calc)
-{
-	calc_ = std::move(calc);
-}
-
-
-const Calculation& FFmpegAudioReaderImpl::do_get_calc() const
-{
-	return *calc_;
-}
-
-
-Calculation& FFmpegAudioReaderImpl::use_calc()
-{
-	return *calc_;
 }
 
 

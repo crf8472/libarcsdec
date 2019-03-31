@@ -427,6 +427,113 @@ private:
 
 
 /**
+ * Interface for processing samples provided by an AudioReaderImpl
+ */
+class SampleProcessor
+{
+
+public:
+
+	/**
+	 * Virtual default constructor
+	 */
+	virtual ~SampleProcessor() noexcept;
+
+	/**
+	 * \brief Callback for sample sequences.
+	 *
+	 * \param[in] begin Begin of the sample sequence
+	 * \param[in] end   End of the sample sequence
+	 */
+	void append_samples(PCMForwardIterator begin, PCMForwardIterator end);
+
+	/**
+	 * \brief Callback for AudioSize.
+	 *
+	 * \param[in] size AudioSize reported
+	 */
+	void update_audiosize(const AudioSize &size);
+
+	/**
+	 * \return Number of sequences processed
+	 */
+	int64_t sequences_processed() const;
+
+	/**
+	 * \return Number of samples processed
+	 */
+	int64_t samples_processed() const;
+
+
+private:
+
+	/**
+	 * Implements SampleProcessor::samples_callback(PCMForwardIterator begin, PCMForwardIterator end)
+	 */
+	virtual void do_append_samples(PCMForwardIterator begin,
+			PCMForwardIterator end)
+	= 0;
+
+	/**
+	 * Implements SampleProcessor::audiosize_callback(const AudioSize &size)
+	 */
+	virtual void do_update_audiosize(const AudioSize &size)
+	= 0;
+
+	/**
+	 * Sequence counter
+	 */
+	int64_t total_sequences_ = 0;
+
+	/**
+	 * PCM 32 Bit Sample counter
+	 */
+	int64_t total_samples_ = 0;
+};
+
+
+/**
+ * Unbuffered wrapper for a Calculation.
+ */
+class SampleProcessorAdapter : virtual public SampleProcessor
+{
+
+public:
+
+	/**
+	 * \brief Converting constructor for Calculation instances.
+	 *
+	 * \param[in] calculation The Calculation to use
+	 */
+	SampleProcessorAdapter(Calculation &calculation);
+
+	/**
+	 * Virtual default destructor
+	 */
+	~SampleProcessorAdapter() noexcept override;
+
+
+private:
+
+	/**
+	 * Implements SampleProcessor::append_samples
+	 */
+	void do_append_samples(PCMForwardIterator begin, PCMForwardIterator end)
+		override;
+
+	/**
+	 * Implements SampleProcessor::update_audiosize
+	 */
+	void do_update_audiosize(const AudioSize &size) override;
+
+	/**
+	 * Internal pointer to the calculation to wrap
+	 */
+	Calculation *calculation_;
+};
+
+
+/**
  * Abstract base class for AudioReader implementations.
  *
  * Concrete subclasses of AudioReaderImpl implement AudioReaders for a concrete
@@ -472,40 +579,16 @@ public:
 	 *
 	 * \throw FileReadException If the file could not be read
 	 */
-	Checksums process_file(const std::string &filename);
+	void process_file(const std::string &filename);
 
 	/**
-	 * Set the number of samples to be accumulated in one block to be processed.
-	 * The parameter is silently clipped to appropriate bounds if necessary.
+	 * Register a SampleProcessor instance to pass the read samples to.
 	 *
-	 * Setting the samples per block to a certain value does not guarantee that
-	 * this number of samples is read in a block at once. It only clips the
-	 * number of samples to be accumulated in memory.
+	 * \param[in] processor SampleProcessor to use
 	 *
-	 * \param[in] samples_per_block The number of samples in one block
+	 * \todo This should be part of a SampleProvider interface
 	 */
-	void set_samples_per_block(const uint32_t &samples_per_block);
-
-	/**
-	 * Return the number of samples to be put in one block.
-	 *
-	 * \return The current number of samples to put in one block
-	 */
-	uint32_t samples_per_block() const;
-
-	/**
-	 * Sets the \ref Calculation instance of this instance
-	 *
-	 * \param[in] calc The \ref Calculation for this instance
-	 */
-	void set_calc(std::unique_ptr<Calculation> calc);
-
-	/**
-	 * Returns the \ref Calculation instance of this instance
-	 *
-	 * \return The \ref Calculation of this instance
-	 */
-	const Calculation& calc() const;
+	void register_processor(SampleProcessor &processor);
 
 	// make class non-copyable (2/2)
 	AudioReaderImpl& operator = (const AudioReaderImpl &) = delete;
@@ -513,7 +596,40 @@ public:
 	// TODO move assignment
 
 
+protected:
+
+	/**
+	 * Append a sample sequence to the processing pipeline.
+	 *
+	 * The actual method call is just passed to the registered SampleProcessor.
+	 *
+	 * \param[in] begin Iterator pointing to the begin of the sequence
+	 * \param[in] end   Iterator pointing to the end of the sequence
+	 */
+	void append_samples(PCMForwardIterator begin, PCMForwardIterator end);
+
+	/**
+	 * Update the AudioSize of the input stream.
+	 *
+	 * The actual method call is just passed to the registered SampleProcessor.
+	 *
+	 * \param[in] size AudioSize to report
+	 */
+	void update_audiosize(const AudioSize &size);
+
+
 private:
+
+	/**
+	 * Callback pointer for appending samples sequences to processing
+	 */
+	std::function<void(PCMForwardIterator begin, PCMForwardIterator end)>
+		append_samples_;
+
+	/**
+	 * Callback pointer for updateing the AudioSize
+	 */
+	std::function<void(const AudioSize &size)> update_audiosize_;
 
 	/**
 	 * Provides implementation for \c acquire_size() of an \ref AudioReader
@@ -537,52 +653,7 @@ private:
 	 *
 	 * \throw FileReadException If the file could not be read
 	 */
-	virtual Checksums do_process_file(const std::string &filename)
-	= 0;
-
-	/**
-	 * Implementation of set_samples_per_block()
-	 *
-	 * Set the number of samples to be accumulated in one block to be processed.
-	 * The parameter is silently clipped to appropriate bounds if necessary.
-	 *
-	 * Setting the samples per block to a certain value does not guarantee that
-	 * this number of samples is read in a block at once. It only clips the
-	 * number of samples to be accumulated in memory.
-	 *
-	 * \param[in] samples_per_block The number of samples in one block
-	 */
-	virtual void do_set_samples_per_block(const uint32_t &samples_per_block)
-	= 0;
-
-	/**
-	 * Implementation of get_samples_per_block()
-	 *
-	 * Return the number of samples to be put in one block.
-	 *
-	 * \return The current number of samples to put in one block
-	 */
-	virtual uint32_t do_get_samples_per_block() const
-	= 0;
-
-	/**
-	 * Implementation of set_calc()
-	 *
-	 * Sets the \ref Calculation instance of this instance
-	 *
-	 * \param[in] calc The \ref Calculation for this instance
-	 */
-	virtual void do_set_calc(std::unique_ptr<Calculation> calc)
-	= 0;
-
-	/**
-	 * Implementation of get_calc()
-	 *
-	 * Returns the \ref Calculation instance of this instance
-	 *
-	 * \return The \ref Calculation of this instance
-	 */
-	virtual const Calculation& do_get_calc() const
+	virtual void do_process_file(const std::string &filename)
 	= 0;
 };
 
@@ -594,10 +665,18 @@ private:
  * A AudioReader can process an audio file and return its checksums including
  * the ARCSs v1 and v2 for all tracks.
  */
-class AudioReader : public FileReader//, public virtual SampleProvider
+class AudioReader : public FileReader
 {
 
 public:
+
+	/**
+	 * Constructor with a concrete implementation and a SampleProcessor
+	 *
+	 * \param[in] impl AudioReader implementation to use
+	 * \param[in] proc SampleProcessor to use
+	 */
+	AudioReader(std::unique_ptr<AudioReaderImpl> impl, SampleProcessor &proc);
 
 	/**
 	 * Constructor with a concrete implementation
@@ -627,8 +706,7 @@ public:
 	 *
 	 * \throw FileReadException If the file could not be read
 	 */
-	std::unique_ptr<AudioSize> acquire_size(
-		const std::string &filename) const;
+	std::unique_ptr<AudioSize> acquire_size(const std::string &filename) const;
 
 	/**
 	 * Process the file and return ARCSs v1 and v2 for all tracks.
@@ -639,40 +717,16 @@ public:
 	 *
 	 * \throw FileReadException If the file could not be read
 	 */
-	Checksums process_file(const std::string &filename);
+	void process_file(const std::string &filename);
 
 	/**
-	 * Set the number of samples to be accumulated in one block to be processed.
-	 * The parameter is silently clipped to appropriate bounds if necessary.
+	 * Register a SampleProcessor instance to pass the read samples to.
 	 *
-	 * Setting the samples per block to a certain value does not guarantee that
-	 * this number of samples is read in a block at once. It only clips the
-	 * number of samples to be accumulated in memory.
+	 * \param[in] processor SampleProcessor to use
 	 *
-	 * \param[in] samples_per_block The number of samples in one block
+	 * \todo This should be part of a SampleProvider interface
 	 */
-	void set_samples_per_block(const uint32_t &samples_per_block);
-
-	/**
-	 * Return the number of samples to be put in one block.
-	 *
-	 * \return The current number of samples to put in one block
-	 */
-	uint32_t samples_per_block() const;
-
-	/**
-	 * Set the calculator instance of this reader
-	 *
-	 * \param[in] calc The \ref Calculation for this instance
-	 */
-	void set_calc(std::unique_ptr<Calculation> calc);
-
-	/**
-	 * Get the calculator instance of this reader
-	 *
-	 * \return The \ref Calculation of this instance
-	 */
-	const Calculation& calc();
+	void register_processor(SampleProcessor &processor);
 
 	// make class non-copyable (2/2)
 	AudioReader& operator = (const AudioReader &) = delete;
@@ -682,10 +736,12 @@ public:
 
 private:
 
+	class Impl;
+
 	/**
 	 * Private implementation of this AudioReader
 	 */
-	std::unique_ptr<AudioReaderImpl> impl_;
+	std::unique_ptr<AudioReader::Impl> impl_;
 };
 
 
@@ -719,9 +775,9 @@ public:
 			const std::string &filename) const;
 };
 
-} // namespace arcs
-
 /// @}
+
+} // namespace arcs
 
 #endif
 

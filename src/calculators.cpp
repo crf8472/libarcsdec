@@ -346,11 +346,28 @@ std::pair<Checksums, ARId> ARCSCalculator::Impl::calculate(
 
 	// Configure AudioReader and process file
 
-	reader->set_calc(std::move(calc));
+	SampleProcessorAdapter proc { *calc };
+	reader->register_processor(proc);
+	reader->process_file(audiofilename);
 
-	Checksums checksums = reader->process_file(audiofilename);
+	if (not calc->complete())
+	{
+		ARCS_LOG_ERROR << "Calculation is not complete after last sample";
+	}
 
-	auto id = reader->calc().context().id();
+	auto checksums { calc->result() };
+
+	if (checksums.size() == 0)
+	{
+		ARCS_LOG_ERROR << "No checksums";
+	}
+
+	auto id { calc->context().id() };
+
+	if (id.empty())
+	{
+		ARCS_LOG_ERROR << "Empty ARId";
+	}
 
 	return std::make_pair(checksums, id);
 }
@@ -448,9 +465,16 @@ ChecksumSet ARCSCalculator::Impl::calculate_track(
 
 	// Configure AudioReader, process file, sanity-check result
 
-	reader->set_calc(std::move(calc));
+	SampleProcessorAdapter proc { *calc };
+	reader->register_processor(proc);
+	reader->process_file(audiofilename);
 
-	auto track_checksums { reader->process_file(audiofilename) };
+	if (not calc->complete())
+	{
+		ARCS_LOG_ERROR << "Calculation is not complete after last sample";
+	}
+
+	auto track_checksums { calc->result() };
 
 	if (track_checksums.size() == 0)
 	{
