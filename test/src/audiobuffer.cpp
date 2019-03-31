@@ -8,6 +8,9 @@
 #ifndef __LIBARCS_IDENTIFIER_HPP__
 #include <arcs/identifier.hpp> // for CDDA
 #endif
+#ifndef __LIBARCS_calculate_HPP__
+#include <arcs/calculate.hpp> // for PCMForwardIterator implementation
+#endif
 #ifndef __LIBARCS_IDENTIFIER_HPP__
 #include <arcs/samples.hpp>
 #endif
