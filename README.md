@@ -103,6 +103,7 @@ build switches.
 
 ## Current Limitations
 
+- Consider this pre-alpha quality
 - No production release yet - will be 1.0.0
 - API is not considered stable before 1.0.0 (may change any time in any way
   until then)
@@ -126,7 +127,6 @@ build switches.
 ## Bugs
 
 - No sufficient unit tests yet
-
 
 
 [1]: https://codeberg.org/tristero/libarcs
