@@ -1547,6 +1547,11 @@ uint64_t PCMBlockReader::read_blocks(std::ifstream &in,
 		ARCS_LOG(LOG_DEBUG1) << "      " << samples.size()
 				<< " Stereo PCM samples (32 bit)";
 
+		if (not consume_)
+		{
+			ARCS_LOG_ERROR << "No block consumer registered.";
+			continue;
+		}
 		this->consume_(samples.begin(), samples.end());
 	}
 
@@ -1574,7 +1579,7 @@ uint64_t PCMBlockReader::read_blocks(std::ifstream &in,
  * bytes following byte 0x2C. The format subchunk is validated to conform to
  * CDDA.
  */
-class WavAudioReaderImpl : public AudioReaderImpl
+class WavAudioReaderImpl : public BufferedAudioReaderImpl
 {
 
 public:
@@ -1594,21 +1599,15 @@ public:
 	 *
 	 * \param[in] hndlr The validating handler to set
 	 */
-	void register_audio_handler(
-			std::unique_ptr<WavAudioHandler> hndlr);
-
-	/**
-	 * Return the internal calculator instance
-	 *
-	 * \return Calculation result
-	 */
-	Checksums get_result();
+	void register_audio_handler(std::unique_ptr<WavAudioHandler> hndlr);
 
 
 private:
 
-	std::unique_ptr<AudioSize> do_acquire_size(
-		const std::string &filename) override;
+	//bool do_has_read_buffer() const override;
+
+	std::unique_ptr<AudioSize> do_acquire_size(const std::string &filename)
+		override;
 
 	void do_process_file(const std::string &filename) override;
 
@@ -1667,8 +1666,7 @@ private:
 
 
 WavAudioReaderImpl::WavAudioReaderImpl()
-	: AudioReaderImpl()
-	, audio_handler_()
+	: audio_handler_()
 {
 	// empty
 }
@@ -1822,7 +1820,7 @@ uint64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 
 			AudioSize audiosize;
 			audiosize.set_pcm_byte_count(subchunk_header.size);
-			this->update_audiosize(audiosize);
+			this->process_audiosize(audiosize);
 
 			audio_handler_->subchunk_data(subchunk_header.size);
 
@@ -1830,11 +1828,10 @@ uint64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 			{
 				// Read audio bytes in blocks
 
-				// FIXME Make block size configurable
-				PCMBlockReader block_reader(BLOCKSIZE::DEFAULT);
+				PCMBlockReader block_reader(this->samples_per_read());
 
 				block_reader.register_block_consumer(
-					std::bind(&WavAudioReaderImpl::append_samples, this,
+					std::bind(&WavAudioReaderImpl::process_samples, this,
 						std::placeholders::_1, std::placeholders::_2)
 					);
 

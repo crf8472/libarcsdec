@@ -100,7 +100,7 @@ DevParserImpl::DevParserImpl()
 DevParserImpl::~DevParserImpl() noexcept = default;
 
 
-std::unique_ptr<TOC> DevParserImpl::do_parse(const std::string &device)
+std::unique_ptr<TOC> DevParserImpl::do_parse(const std::string &/*device*/)
 {
 	// Open device and print some info about the driver
 
@@ -162,7 +162,7 @@ std::unique_ptr<TOC> DevParserImpl::do_parse(const std::string &device)
 	std::vector<::lsn_t> track_lsn(cdio_track_count+1);
 	::msf_t msf;
 	::lsn_t lsn;
-	unsigned int sectors;
+	//unsigned int sectors;
 
 	int frames;
 	int frames_prev = 0;

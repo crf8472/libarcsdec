@@ -23,15 +23,12 @@ TEST_CASE ( "BlockAccumulator", "[audiobuffer] [blockaccumulator]" )
 {
 	arcs::BlockAccumulator accumulator; // Capacity: BLOCKSIZE::DEFAULT
 
-	REQUIRE ( accumulator.samples_processed()   == 0 );
-	REQUIRE ( accumulator.bytes_processed()     == 0 );
-	REQUIRE ( accumulator.sequences_processed() == 0 );
-	REQUIRE ( accumulator.blocks_processed()    == 0 );
+	REQUIRE ( accumulator.samples_appended()   == 0 );
 
 
 	SECTION ( "BlockAccumulator append works correct" )
 	{
-		// Create actual samples (i.e. WVPK)
+		// Create actual samples
 		std::vector<int32_t> samples;
 		samples.resize(4096); // smaller than BLOCKSIZE::DEFAULT
 
@@ -40,19 +37,26 @@ TEST_CASE ( "BlockAccumulator", "[audiobuffer] [blockaccumulator]" )
 		sequence.reset(samples.data(),
 				samples.size() / arcs::CDDA.NUMBER_OF_CHANNELS);
 
-		accumulator.append(sequence.begin(), sequence.end());
+		// We can append those sequences without registering a processor
+		// because the won't trigger a flush()
 
-		REQUIRE ( accumulator.samples_processed()   == 1024 );
-		REQUIRE ( accumulator.sequences_processed() ==    1 );
-		REQUIRE ( accumulator.blocks_processed()    ==    0 );
+		accumulator.append_to_block(sequence.begin(), sequence.end());
 
-		accumulator.append(sequence.begin(), sequence.end());
+		REQUIRE ( accumulator.samples_appended()   == 1024 );
 
-		REQUIRE ( accumulator.samples_processed()   == 2048 );
-		REQUIRE ( accumulator.sequences_processed() ==    2 );
-		REQUIRE ( accumulator.blocks_processed()    ==    0 );
+		accumulator.append_to_block(sequence.begin(), sequence.end());
+
+		REQUIRE ( accumulator.samples_appended()   == 2048 );
 
 		//accumulator.flush();
 	}
+}
+
+
+TEST_CASE ( "SampleBuffer", "[audiobuffer] [samplebuffer]" )
+{
+	arcs::SampleBuffer buffer;
+
+	REQUIRE ( buffer.samples_processed() == 0 );
 }
 

@@ -13,15 +13,22 @@
 #ifndef __LIBARCS_SAMPLES_HPP__
 #include <arcs/samples.hpp>   // for SampleSequence
 #endif
+#ifndef __LIBARCSDEC_SAMPLEPROC_HPP__
+#include "sampleproc.hpp"
+#endif
+
 
 // forward declarations
 namespace arcs
 {
 inline namespace v_1_0_0
 {
-	class AudioSize;
-	class Calculation;
-	class PCMForwardIterator;
+
+// from arcs/calculate.hpp
+class AudioSize;
+class Calculation;
+class PCMForwardIterator;
+
 } // namespace v_1_0_0
 } // namespace arcs
 
@@ -212,7 +219,7 @@ private:
  * compatible with this strategy, define an appropriate subclass of
  * SampleSequence.
  */
-class BlockAccumulator : public BlockCreator
+class BlockAccumulator : public virtual BlockCreator
 {
 
 public:
@@ -243,14 +250,17 @@ public:
 	~BlockAccumulator() noexcept override;
 
 	/**
+	 * Registers a consuming method for sample sequences.
+	 *
+	 * \param[in] func The functor to be registered as sample consumer.
+	 */
+	void register_block_consumer(const std::function<void(
+			PCMForwardIterator begin, PCMForwardIterator end)> &func);
+
+	/**
 	 * Call this method before passing the first sample sequence
 	 */
 	void init();
-
-	/**
-	 * Call this method after having passed the last sample sequence
-	 */
-	void flush();
 
 	/**
 	 * Appends a sample sequence to the buffer.
@@ -263,43 +273,40 @@ public:
 	 * \param[in] begin Begin of the sample sequence
 	 * \param[in] end   End of the sample sequence
 	 */
-	void append(PCMForwardIterator begin, PCMForwardIterator end);
+	void append_to_block(PCMForwardIterator begin, PCMForwardIterator end);
 
 	/**
-	 * Registers a consuming method for sample sequences.
-	 *
-	 * \param[in] func The functor to be registered as sample consumer.
+	 * Call this method after having passed the last sample sequence
 	 */
-	void register_block_consumer(const std::function<void(
-			PCMForwardIterator begin, PCMForwardIterator end)> &func);
+	void flush();
 
 	/**
 	 * Returns the number of bytes processed
 	 *
 	 * \return Number of bytes processed since init() was called
 	 */
-	uint64_t bytes_processed() const;
+	//uint64_t bytes_processed() const;
 
 	/**
 	 * Returns the number of samples processed
 	 *
 	 * \return Number of samples processed since init() was called
 	 */
-	uint64_t samples_processed() const;
+	uint64_t samples_appended() const;
 
 	/**
 	 * Returns the number of sequences processed
 	 *
 	 * \return Number of sequences processed since init() was called
 	 */
-	uint64_t sequences_processed() const;
+	//uint64_t sequences_processed() const;
 
 	/**
 	 * Returns the number of blocks processed
 	 *
 	 * \return Number of blocks processed since init() was called
 	 */
-	uint64_t blocks_processed() const;
+	//uint64_t blocks_processed() const;
 
 	// make class non-copyable (2/2)
 	BlockAccumulator& operator = (const BlockAccumulator &) = delete;
@@ -336,7 +343,8 @@ private:
 	 * \param[in] begin Begin of the sample sequence
 	 * \param[in] end   End of the sample sequence
 	 */
-	virtual void do_append(PCMForwardIterator begin, PCMForwardIterator end);
+	//virtual void do_append(PCMForwardIterator begin, PCMForwardIterator end)
+	//	= 0;
 
 	/**
 	 * Reinitialize internal buffer to configured block size.
@@ -359,17 +367,17 @@ private:
 	/**
 	 * Number of samples processed
 	 */
-	uint64_t samples_processed_;
+	uint64_t samples_appended_;
 
 	/**
 	 * Number of frames processed
 	 */
-	uint64_t sequences_processed_;
+	//uint64_t sequences_processed_;
 
 	/**
 	 * Number of blocks processed
 	 */
-	uint64_t blocks_processed_;
+	//uint64_t blocks_processed_;
 };
 
 
@@ -381,7 +389,9 @@ private:
  * BlockAccumulator::sequence() with the more intuitive append() and provides a
  * reset() method to reuse the buffer.
  */
-class SampleBuffer : public BlockAccumulator
+class SampleBuffer  : public  virtual SampleProvider
+					, public  virtual SampleProcessor
+					, private virtual BlockAccumulator
 {
 
 public:
@@ -410,6 +420,11 @@ public:
 	void reset();
 
 	/**
+	 * Flush the buffer.
+	 */
+	void flush();
+
+	/**
 	 * Handler method that informs about the end of input.
 	 *
 	 * This method is to be called by the AudioReaderImpl before the last block
@@ -426,13 +441,17 @@ public:
 	 */
 	void register_processor(Calculation &calc);
 
+	// SampleProvider
+
+	void register_processor(SampleProcessor &processor) override;
+
 
 private:
 
-	/**
-	 * Registered callback method to update the \ref AudioSize.
-	 */
-	std::function<void(const AudioSize &audiosize)> call_update_audiosize_;
+	void do_append_samples(PCMForwardIterator begin, PCMForwardIterator end)
+		override;
+
+	void do_update_audiosize(const AudioSize &size) override;
 };
 
 /// @}

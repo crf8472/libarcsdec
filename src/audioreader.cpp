@@ -285,79 +285,25 @@ bool ReaderValidatingHandler::assert_true(
 }
 
 
-// SampleProcessor
-
-
-SampleProcessor::~SampleProcessor() noexcept = default;
-
-
-void SampleProcessor::append_samples(PCMForwardIterator begin,
-		PCMForwardIterator end)
-{
-	this->do_append_samples(begin, end);
-
-	++total_sequences_;
-	total_samples_ += std::distance(begin, end);
-}
-
-
-void SampleProcessor::update_audiosize(const AudioSize &size)
-{
-	this->do_update_audiosize(size);
-}
-
-
-int64_t SampleProcessor::sequences_processed() const
-{
-	return total_sequences_;
-}
-
-
-int64_t SampleProcessor::samples_processed() const
-{
-	return total_samples_;
-}
-
-
-// SampleProcessorAdapter
-
-
-SampleProcessorAdapter::SampleProcessorAdapter(Calculation &calculation)
-	: calculation_(&calculation)
-{
-	// empty
-}
-
-
-SampleProcessorAdapter::~SampleProcessorAdapter() noexcept = default;
-
-
-void SampleProcessorAdapter::do_append_samples(
-		PCMForwardIterator begin, PCMForwardIterator end)
-{
-	calculation_->update(begin, end);
-}
-
-
-void SampleProcessorAdapter::do_update_audiosize(
-		const AudioSize &size)
-{
-	calculation_->update_audiosize(size);
-}
-
-
 // AudioReaderImpl
 
 
-AudioReaderImpl::AudioReaderImpl()
+AudioReaderImpl::AudioReaderImpl() = default;
+/*
 	: append_samples_()
 	, update_audiosize_()
 {
 	// empty
 }
-
+*/
 
 AudioReaderImpl::~AudioReaderImpl() noexcept = default;
+
+
+bool AudioReaderImpl::configurable_read_buffer() const
+{
+	return this->do_configurable_read_buffer();
+}
 
 
 std::unique_ptr<AudioSize> AudioReaderImpl::acquire_size(
@@ -373,32 +319,78 @@ void AudioReaderImpl::process_file(const std::string &filename)
 }
 
 
-void AudioReaderImpl::register_processor(SampleProcessor &processor)
+bool AudioReaderImpl::do_configurable_read_buffer() const
 {
-	this->append_samples_ = std::bind(&SampleProcessor::append_samples,
-			&processor,
-			std::placeholders::_1, std::placeholders::_2);
-
-	this->update_audiosize_ = std::bind(&SampleProcessor::update_audiosize,
-			&processor,
-			std::placeholders::_1);
-
-	// Binding result() is not required, you won't acquire the result directly
-	// from the AudioReader. Get the SampleProcessor instead. The calling code
-	// will know what to do.
+	return false;
 }
 
 
-void AudioReaderImpl::append_samples(
-		PCMForwardIterator begin, PCMForwardIterator end)
+//void AudioReaderImpl::register_processor(SampleProcessor &processor)
+//{
+//	this->append_samples_ = std::bind(&SampleProcessor::append_samples,
+//			&processor,
+//			std::placeholders::_1, std::placeholders::_2);
+//
+//	this->update_audiosize_ = std::bind(&SampleProcessor::update_audiosize,
+//			&processor,
+//			std::placeholders::_1);
+//
+//	// Binding result() is not required, you won't acquire the result directly
+//	// from the AudioReader. Get the SampleProcessor instead. The calling code
+//	// will know what to do.
+//}
+//
+//
+//void AudioReaderImpl::append_samples(
+//		PCMForwardIterator begin, PCMForwardIterator end)
+//{
+//	this->append_samples_(begin, end);
+//}
+//
+//
+//void AudioReaderImpl::update_audiosize(const AudioSize &size)
+//{
+//	this->update_audiosize_(size);
+//}
+
+
+// BufferedAudioReaderImpl
+
+
+BufferedAudioReaderImpl::BufferedAudioReaderImpl()
+	: samples_per_read_(16777216) // FIXME Should be BLOCKSIZE::DEFAULT
 {
-	this->append_samples_(begin, end);
+	// empty
 }
 
 
-void AudioReaderImpl::update_audiosize(const AudioSize &size)
+BufferedAudioReaderImpl::BufferedAudioReaderImpl(
+		const uint32_t samples_per_read)
+	: samples_per_read_(samples_per_read)
 {
-	this->update_audiosize_(size);
+	// empty
+}
+
+
+BufferedAudioReaderImpl::~BufferedAudioReaderImpl() noexcept = default;
+
+
+void BufferedAudioReaderImpl::set_samples_per_read(
+		const uint32_t &samples_per_read)
+{
+	samples_per_read_ = samples_per_read;
+}
+
+
+uint32_t BufferedAudioReaderImpl::samples_per_read() const
+{
+	return samples_per_read_;
+}
+
+
+bool BufferedAudioReaderImpl::do_configurable_read_buffer() const
+{
+	return true;
 }
 
 
@@ -427,21 +419,25 @@ public:
 	 *
 	 * \param[in] readerimpl The AudioReaderImpl to use
 	 */
-	Impl(std::unique_ptr<AudioReaderImpl> readerimpl);
+	explicit Impl(std::unique_ptr<AudioReaderImpl> readerimpl);
 
 	Impl(const Impl &rhs) = delete;
 
 	// TODO Move constructor
 
-	std::unique_ptr<AudioSize> acquire_size(const std::string &filename) const;
-
-	void process_file(const std::string &filename);
+	bool configurable_read_buffer() const;
 
 	/**
 	 *
-	 * \param[in] readerimpl The reader interface implementation to use
+	 * \param[in] filename Audiofile to get size from
 	 */
-	void set_readerimpl(std::unique_ptr<AudioReaderImpl> readerimpl);
+	std::unique_ptr<AudioSize> acquire_size(const std::string &filename) const;
+
+	/**
+	 *
+	 * \param[in] filename Audiofile to process
+	 */
+	void process_file(const std::string &filename);
 
 	/**
 	 *
@@ -453,7 +449,7 @@ public:
 	 *
 	 * \param[in] processor The SampleProcessor to use
 	 */
-	void set_sampleprocessor(SampleProcessor &processor);
+	void set_processor(SampleProcessor &processor);
 
 	/**
 	 *
@@ -472,28 +468,27 @@ private:
 	 * \brief Internal AudioReaderImpl instance.
 	 */
 	std::unique_ptr<AudioReaderImpl> readerimpl_;
-
-	/**
-	 * \brief Internal SampleProcessor instance.
-	 */
-	SampleProcessor *processor_;
 };
 
 
 AudioReader::Impl::Impl(std::unique_ptr<AudioReaderImpl> readerimpl,
 			SampleProcessor &processor)
 	: readerimpl_(std::move(readerimpl))
-	, processor_(&processor)
 {
-	readerimpl_->register_processor(*processor_);
+	readerimpl_->register_processor(processor);
 }
 
 
 AudioReader::Impl::Impl(std::unique_ptr<AudioReaderImpl> readerimpl)
 	: readerimpl_(std::move(readerimpl))
-	, processor_(nullptr)
 {
 	// empty
+}
+
+
+bool AudioReader::Impl::configurable_read_buffer() const
+{
+	return readerimpl_->configurable_read_buffer();
 }
 
 
@@ -510,38 +505,21 @@ void AudioReader::Impl::process_file(const std::string &filename)
 }
 
 
-void AudioReader::Impl::set_readerimpl(
-		std::unique_ptr<AudioReaderImpl> readerimpl)
-{
-	readerimpl_ = std::move(readerimpl);
-
-	if (processor_)
-	{
-		readerimpl_->register_processor(*processor_);
-	}
-}
-
-
 const AudioReaderImpl& AudioReader::Impl::readerimpl()
 {
 	return *readerimpl_;
 }
 
 
-void AudioReader::Impl::set_sampleprocessor(SampleProcessor &processor)
+void AudioReader::Impl::set_processor(SampleProcessor &processor)
 {
-	processor_ = &processor;
-
-	if (readerimpl_)
-	{
-		readerimpl_->register_processor(*processor_);
-	}
+	readerimpl_->register_processor(processor);
 }
 
 
 const SampleProcessor& AudioReader::Impl::sampleprocessor()
 {
-	return *processor_;
+	return readerimpl_->processor();
 }
 
 
@@ -566,6 +544,12 @@ AudioReader::AudioReader(std::unique_ptr<AudioReaderImpl> impl)
 AudioReader::~AudioReader() noexcept = default;
 
 
+bool AudioReader::configurable_read_buffer() const
+{
+	return impl_->configurable_read_buffer();
+}
+
+
 std::unique_ptr<AudioSize> AudioReader::acquire_size(
 	const std::string &filename) const
 {
@@ -579,9 +563,9 @@ void AudioReader::process_file(const std::string &filename)
 }
 
 
-void AudioReader::register_processor(SampleProcessor &processor)
+void AudioReader::set_processor(SampleProcessor &processor)
 {
-	impl_->set_sampleprocessor(processor);
+	impl_->set_processor(processor);
 }
 
 
@@ -590,8 +574,6 @@ void AudioReader::register_processor(SampleProcessor &processor)
 
 AudioReaderCreator::AudioReaderCreator()
 {
-	// Provide tests
-
 	std::unique_ptr<FileFormatTestBytes> test =
 		std::make_unique<FileFormatTestBytes>(0, 24);
 	// 24 is a sufficient number of bytes for recognition (at the moment)
@@ -626,13 +608,16 @@ AudioReaderCreator::~AudioReaderCreator() noexcept = default;
 std::unique_ptr<AudioReader> AudioReaderCreator::create_audio_reader(
 	const std::string &filename) const
 {
-	// Create FileReader
+	return this->safe_cast(std::move(
+				FileReaderCreator::create_reader(filename)));
+}
 
-	auto file_reader_uptr = FileReaderCreator::create_reader(filename);
 
+std::unique_ptr<AudioReader> AudioReaderCreator::safe_cast(
+		std::unique_ptr<FileReader> file_reader_uptr) const
+{
 	if (not file_reader_uptr)
 	{
-		ARCS_LOG_ERROR << "FileReader could not be created";
 		return nullptr;
 	}
 

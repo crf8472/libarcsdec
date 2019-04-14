@@ -48,45 +48,6 @@ namespace arcs
 
 
 /**
- * Chainable interface for sample processing classes.
- */
-class SampleProvider
-{
-
-public:
-
-	/**
-	 * Default destructor
-	 */
-	virtual ~SampleProvider() noexcept;
-
-	/**
-	 * Passes the sequence to the consumer function.
-	 *
-	 * \param[in] begin Begin of the sequence
-	 * \param[in] end   End of the sequence
-	 */
-	void pass_sequence(PCMForwardIterator begin, PCMForwardIterator end);
-
-	/**
-	 * Registers a consuming method for sample sequences.
-	 *
-	 * \param[in] func The functor to be registered as sample consumer.
-	 */
-	void register_consumer(const std::function<void(
-			PCMForwardIterator begin, PCMForwardIterator end)> &func);
-
-
-private:
-
-	/**
-	 * Consumer function
-	 */
-	std::function<void(PCMForwardIterator, PCMForwardIterator)> call_consumer_;
-};
-
-
-/**
  * Abstract base class for all file readers, audio readers as well as metadata
  * readers.
  *

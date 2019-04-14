@@ -93,9 +93,7 @@ uint32_t BlockCreator::clip_samples_per_block(
 BlockAccumulator::BlockAccumulator()
 	: consume_()
 	, samples_(BLOCKSIZE::DEFAULT)
-	, samples_processed_(0)
-	, sequences_processed_(0)
-	, blocks_processed_(0)
+	, samples_appended_(0)
 {
 	// empty
 }
@@ -105,9 +103,7 @@ BlockAccumulator::BlockAccumulator(const uint32_t &samples_per_block)
 	: BlockCreator(samples_per_block)
 	, consume_()
 	, samples_(samples_per_block)
-	, samples_processed_(0)
-	, sequences_processed_(0)
-	, blocks_processed_(0)
+	, samples_appended_(0)
 {
 	// empty
 }
@@ -128,12 +124,6 @@ void BlockAccumulator::flush()
 }
 
 
-void BlockAccumulator::append(PCMForwardIterator begin, PCMForwardIterator end)
-{
-	this->do_append(begin, end);
-}
-
-
 void BlockAccumulator::register_block_consumer(const std::function<void(
 			PCMForwardIterator begin, PCMForwardIterator end
 		)> &consume)
@@ -142,38 +132,15 @@ void BlockAccumulator::register_block_consumer(const std::function<void(
 }
 
 
-uint64_t BlockAccumulator::bytes_processed() const
+uint64_t BlockAccumulator::samples_appended() const
 {
-	return samples_processed_ * sizeof(uint32_t);
-
-	// Type uint32_t represents a single sample.
-	// Using CDDA.BYTES_PER_SAMPLE would ignore the actual data type.
-}
-
-
-uint64_t BlockAccumulator::samples_processed() const
-{
-	return samples_processed_;
-}
-
-
-uint64_t BlockAccumulator::sequences_processed() const
-{
-	return sequences_processed_;
-}
-
-
-uint64_t BlockAccumulator::blocks_processed() const
-{
-	return blocks_processed_;
+	return samples_appended_;
 }
 
 
 void BlockAccumulator::do_init()
 {
-	samples_processed_   = 0;
-	sequences_processed_ = 0;
-	blocks_processed_    = 0;
+	samples_appended_   = 0;
 
 	this->init_buffer();
 }
@@ -183,11 +150,12 @@ void BlockAccumulator::do_flush()
 {
 	// Statistics
 
-	++blocks_processed_;
+	//++blocks_processed_;
 
 	// Logging
 
-	ARCS_LOG_DEBUG << "READ BLOCK " << blocks_processed_;
+	//ARCS_LOG_DEBUG << "READ BLOCK " << blocks_processed_;
+	ARCS_LOG_DEBUG << "BLOCK COMPLETED";
 
 	if (samples_.size() > 0) // samples_.front() must be accessible
 	{
@@ -205,7 +173,7 @@ void BlockAccumulator::do_flush()
 }
 
 
-void BlockAccumulator::do_append(PCMForwardIterator begin,
+void BlockAccumulator::append_to_block(PCMForwardIterator begin,
 		PCMForwardIterator end)
 {
 	uint32_t seq_size         = std::distance(begin, end);
@@ -223,7 +191,7 @@ void BlockAccumulator::do_append(PCMForwardIterator begin,
 		// available free positions.
 
 		buffer_avail = this->samples_per_block() -
-					(samples_processed_ % this->samples_per_block());
+					(this->samples_appended() % this->samples_per_block());
 
 		// Set pointers to start and end of the buffer slice to be filled
 		// with samples from the sequence.
@@ -249,7 +217,7 @@ void BlockAccumulator::do_append(PCMForwardIterator begin,
 		samples_todo -= samples_buffered;
 		buffer_avail -= samples_buffered;
 
-		samples_processed_ += samples_buffered; // statistics
+		samples_appended_ += samples_buffered; // statistics
 
 		// Buffer full? => Flush it and put remaining samples in the sequence
 		// in a new buffer. Do while there remain samples to process.
@@ -260,7 +228,7 @@ void BlockAccumulator::do_append(PCMForwardIterator begin,
 		}
 	}
 
-	++sequences_processed_;
+	//++sequences_processed_;
 }
 
 
@@ -284,7 +252,6 @@ void BlockAccumulator::init_buffer(const uint32_t &buffer_size)
 
 SampleBuffer::SampleBuffer()
 	: BlockAccumulator(BLOCKSIZE::DEFAULT)
-	, call_update_audiosize_()
 {
 	this->init();
 }
@@ -292,7 +259,6 @@ SampleBuffer::SampleBuffer()
 
 SampleBuffer::SampleBuffer(const uint32_t samples_per_block)
 	: BlockAccumulator(samples_per_block)
-	, call_update_audiosize_()
 {
 	this->init();
 }
@@ -307,26 +273,62 @@ void SampleBuffer::reset()
 }
 
 
+void SampleBuffer::flush()
+{
+	BlockAccumulator::flush();
+}
+
+
 void SampleBuffer::notify_total_samples(const uint32_t sample_count)
 {
 	ARCS_LOG_DEBUG << "Total samples updated to: " << sample_count;
 
 	AudioSize size;
 	size.set_sample_count(sample_count);
-	call_update_audiosize_(size); // call registered method
+
+	this->process_audiosize(size);
+}
+
+
+void SampleBuffer::register_processor(SampleProcessor &processor)
+{
+	SampleProvider::register_processor(processor);
+
+	// Attach SampleProcessor to the inherited BlockAccumulator
+	this->register_block_consumer(
+		std::bind(&SampleProcessor::append_samples, &processor,
+			std::placeholders::_1, std::placeholders::_2));
 }
 
 
 void SampleBuffer::register_processor(Calculation &calc)
 {
-	// Set Calculation instance as consumer for blocks
+	this->register_appendsamples(
+			std::bind(&Calculation::update, &calc,
+				std::placeholders::_1, std::placeholders::_2));
+
+	this->register_updatesize(
+			std::bind(&Calculation::update_audiosize, &calc,
+				std::placeholders::_1));
+
+	// Attach Calculation to the inherited BlockAccumulator
 	this->register_block_consumer(
 		std::bind(&Calculation::update, &calc,
 			std::placeholders::_1, std::placeholders::_2));
+}
 
-	// Inform Calculation instance when total number of samples is set/updated
-	call_update_audiosize_ =
-		std::bind(&Calculation::update_audiosize, &calc, std::placeholders::_1);
+
+void SampleBuffer::do_append_samples(PCMForwardIterator begin,
+		PCMForwardIterator end)
+{
+	this->append_to_block(begin, end);
+}
+
+
+void SampleBuffer::do_update_audiosize(const AudioSize &size)
+{
+	// just pass on to registered processor
+	this->process_audiosize(size);
 }
 
 

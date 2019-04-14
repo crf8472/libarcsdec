@@ -190,13 +190,12 @@ void FlacMetadataHandler::cuesheet(const ::FLAC__StreamMetadata *)
  * File reader implementation for files in CDDA/Flac format, i.e. containing
  * 44.100 Hz/16 bit Stereo PCM data samples.
  *
- * This class provides the PCM sample data as a succession of blocks
- * of 32 bit PCM samples to its \ref Calculation. The first block starts with the very
+ * This class provides the PCM sample data as a succession of blocks of 32 bit
+ * PCM samples to its \ref Calculation. The first block starts with the very
  * first PCM sample in the file. The streaminfo metadata block is validated to
  * conform to CDDA.
  */
-class FlacAudioReaderImpl : public AudioReaderImpl, FLAC::Decoder::File
-{
+class FlacAudioReaderImpl : public AudioReaderImpl, FLAC::Decoder::File {
 
 public:
 
@@ -264,18 +263,6 @@ public:
 
 private:
 
-	/**
-	 * Read the FLAC file and optionally validate it. This method provides
-	 * the implementation of FlacAudioReader::process_file().
-	 *
-	 * \param[in] filename The audiofile to process
-	 * \param[in,out] total_pcm_bytes  The total number of sample bytes in the
-	 * file
-	 *
-	 * \return TRUE if file was processed without errors
-	 */
-	bool process_file(const std::string &filename, uint32_t& total_pcm_bytes);
-
 	std::unique_ptr<AudioSize> do_acquire_size(const std::string &filename)
 		override;
 
@@ -312,7 +299,7 @@ FlacAudioReaderImpl::~FlacAudioReaderImpl() noexcept = default;
 		const FLAC__int32   * const buffer[])
 {
 	smplseq_.reset(buffer[0], buffer[1], frame->header.blocksize);
-	this->append_samples(smplseq_.begin(), smplseq_.end());
+	this->process_samples(smplseq_.begin(), smplseq_.end());
 
 	return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
 }
@@ -330,7 +317,7 @@ void FlacAudioReaderImpl::metadata_callback(
 			// Inform calculator instance about sample count
 
 			size.set_sample_count(metadata->data.stream_info.total_samples);
-			this->update_audiosize(size);
+			this->process_audiosize(size);
 
 			// Streaminfo could already have been validated explicitly
 
@@ -440,21 +427,21 @@ void FlacAudioReaderImpl::do_process_file(const std::string &filename)
 	const auto channel_assignment = this->get_channel_assignment();
 	switch (channel_assignment)
 	{
-		case 0:
-		case 1:
-		case 2:
-		case 3:
-		case 4:
-		case 5:
-		case 6:
-		case 7: ARCS_LOG_INFO << "Channel assignment: left/right";
-				break;
-		case 8: ARCS_LOG_INFO << "Channel assignment: left/side stereo";
-				break;
-		case 9: ARCS_LOG_INFO << "Channel assignment: right/side stereo";
-				break;
-		case 10: ARCS_LOG_INFO << "Channel assignment: mid/side stereo";
-				break;
+		case FLAC__CHANNEL_ASSIGNMENT_INDEPENDENT:
+			ARCS_LOG_INFO << "Channel assignment: left/right";
+			break;
+
+		case FLAC__CHANNEL_ASSIGNMENT_LEFT_SIDE:
+			ARCS_LOG_INFO << "Channel assignment: left/side stereo";
+			break;
+
+		case FLAC__CHANNEL_ASSIGNMENT_RIGHT_SIDE:
+			ARCS_LOG_INFO << "Channel assignment: right/side stereo";
+			break;
+
+		case FLAC__CHANNEL_ASSIGNMENT_MID_SIDE:
+			ARCS_LOG_INFO << "Channel assignment: mid/side stereo";
+			break;
 	}
 	// end channel order stuff
 
@@ -465,14 +452,6 @@ void FlacAudioReaderImpl::do_process_file(const std::string &filename)
 		ARCS_LOG_ERROR << "Decoding failed";
 		ARCS_LOG_ERROR << "Last decoder state: "
 				<< std::string(this->get_state().as_cstring());
-
-		// finish() resets decoder state, log state before
-
-		this->finish();
-
-		ARCS_LOG_INFO << "Audio file closed";
-
-		return;
 	}
 
 	this->finish();

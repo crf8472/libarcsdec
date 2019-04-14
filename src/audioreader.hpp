@@ -17,11 +17,11 @@
 #ifndef __LIBARCSDEC_FILEFORMATS_HPP__
 #include "fileformats.hpp"
 #endif
+#ifndef __LIBARCSDEC_SAMPLEPROC_HPP__
+#include "sampleproc.hpp"
+#endif
 
 
-/**
- * Namespace for readers
- */
 namespace arcs
 {
 
@@ -69,9 +69,6 @@ namespace arcs
  *
  * @{
  */
-
-
-// ByteConverter
 
 
 /**
@@ -427,124 +424,12 @@ private:
 
 
 /**
- * Interface for processing samples provided by an AudioReaderImpl
- */
-class SampleProcessor
-{
-
-public:
-
-	/**
-	 * Virtual default constructor
-	 */
-	virtual ~SampleProcessor() noexcept;
-
-	/**
-	 * \brief Callback for sample sequences.
-	 *
-	 * \param[in] begin Begin of the sample sequence
-	 * \param[in] end   End of the sample sequence
-	 */
-	void append_samples(PCMForwardIterator begin, PCMForwardIterator end);
-
-	/**
-	 * \brief Callback for AudioSize.
-	 *
-	 * \param[in] size AudioSize reported
-	 */
-	void update_audiosize(const AudioSize &size);
-
-	/**
-	 * \return Number of sequences processed
-	 */
-	int64_t sequences_processed() const;
-
-	/**
-	 * \return Number of samples processed
-	 */
-	int64_t samples_processed() const;
-
-
-private:
-
-	/**
-	 * Implements SampleProcessor::samples_callback(PCMForwardIterator begin, PCMForwardIterator end)
-	 */
-	virtual void do_append_samples(PCMForwardIterator begin,
-			PCMForwardIterator end)
-	= 0;
-
-	/**
-	 * Implements SampleProcessor::audiosize_callback(const AudioSize &size)
-	 */
-	virtual void do_update_audiosize(const AudioSize &size)
-	= 0;
-
-	/**
-	 * Sequence counter
-	 */
-	int64_t total_sequences_ = 0;
-
-	/**
-	 * PCM 32 Bit Sample counter
-	 */
-	int64_t total_samples_ = 0;
-};
-
-
-/**
- * Unbuffered wrapper for a Calculation.
- */
-class SampleProcessorAdapter : virtual public SampleProcessor
-{
-
-public:
-
-	/**
-	 * \brief Converting constructor for Calculation instances.
-	 *
-	 * \param[in] calculation The Calculation to use
-	 */
-	SampleProcessorAdapter(Calculation &calculation);
-
-	SampleProcessorAdapter(const SampleProcessorAdapter &rhs) = delete;
-
-	/**
-	 * Virtual default destructor
-	 */
-	~SampleProcessorAdapter() noexcept override;
-
-	SampleProcessorAdapter& operator = (const SampleProcessorAdapter &rhs)
-		= delete;
-
-
-private:
-
-	/**
-	 * Implements SampleProcessor::append_samples
-	 */
-	void do_append_samples(PCMForwardIterator begin, PCMForwardIterator end)
-		override;
-
-	/**
-	 * Implements SampleProcessor::update_audiosize
-	 */
-	void do_update_audiosize(const AudioSize &size) override;
-
-	/**
-	 * Internal pointer to the calculation to wrap
-	 */
-	Calculation *calculation_;
-};
-
-
-/**
  * Abstract base class for AudioReader implementations.
  *
  * Concrete subclasses of AudioReaderImpl implement AudioReaders for a concrete
  * FileFormat.
  */
-class AudioReaderImpl
+class AudioReaderImpl : public virtual SampleProvider
 {
 
 public:
@@ -587,13 +472,20 @@ public:
 	void process_file(const std::string &filename);
 
 	/**
+	 * Returns TRUE if the number of samples to read at once is configurable.
+	 *
+	 * \return TRUE if the number of samples to read at once is configurable.
+	 */
+	bool configurable_read_buffer() const;
+
+	/**
 	 * Register a SampleProcessor instance to pass the read samples to.
 	 *
 	 * \param[in] processor SampleProcessor to use
 	 *
 	 * \todo This should be part of a SampleProvider interface
 	 */
-	void register_processor(SampleProcessor &processor);
+	//void register_processor(SampleProcessor &processor);
 
 	// make class non-copyable (2/2)
 	AudioReaderImpl& operator = (const AudioReaderImpl &) = delete;
@@ -601,40 +493,36 @@ public:
 	// TODO move assignment
 
 
-protected:
-
-	/**
-	 * Append a sample sequence to the processing pipeline.
-	 *
-	 * The actual method call is just passed to the registered SampleProcessor.
-	 *
-	 * \param[in] begin Iterator pointing to the begin of the sequence
-	 * \param[in] end   Iterator pointing to the end of the sequence
-	 */
-	void append_samples(PCMForwardIterator begin, PCMForwardIterator end);
-
-	/**
-	 * Update the AudioSize of the input stream.
-	 *
-	 * The actual method call is just passed to the registered SampleProcessor.
-	 *
-	 * \param[in] size AudioSize to report
-	 */
-	void update_audiosize(const AudioSize &size);
+//protected:
+//
+//	/**
+//	 * Append a sample sequence to the processing pipeline.
+//	 *
+//	 * The actual method call is just passed to the registered SampleProcessor.
+//	 *
+//	 * \param[in] begin Iterator pointing to the begin of the sequence
+//	 * \param[in] end   Iterator pointing to the end of the sequence
+//	 */
+//	void append_samples(PCMForwardIterator begin, PCMForwardIterator end);
+//
+//	/**
+//	 * Update the AudioSize of the input stream.
+//	 *
+//	 * The actual method call is just passed to the registered SampleProcessor.
+//	 *
+//	 * \param[in] size AudioSize to report
+//	 */
+//	void update_audiosize(const AudioSize &size);
 
 
 private:
 
 	/**
-	 * Callback pointer for appending samples sequences to processing
+	 * Returns TRUE if the number of samples to read at once is configurable.
+	 *
+	 * \return TRUE if the number of samples to read at once is configurable.
 	 */
-	std::function<void(PCMForwardIterator begin, PCMForwardIterator end)>
-		append_samples_;
-
-	/**
-	 * Callback pointer for updateing the AudioSize
-	 */
-	std::function<void(const AudioSize &size)> update_audiosize_;
+	virtual bool do_configurable_read_buffer() const;
 
 	/**
 	 * Provides implementation for \c acquire_size() of an \ref AudioReader
@@ -660,6 +548,56 @@ private:
 	 */
 	virtual void do_process_file(const std::string &filename)
 	= 0;
+};
+
+
+class BufferedAudioReaderImpl : public AudioReaderImpl
+{
+
+public:
+
+	/**
+	 *
+	 */
+	BufferedAudioReaderImpl();
+
+	/**
+	 * Constructor with read size
+	 */
+	explicit BufferedAudioReaderImpl(const uint32_t samples_per_read);
+
+	/**
+	 *
+	 */
+	~BufferedAudioReaderImpl() noexcept override;
+
+	// TODO Copy + move
+
+	/**
+	 * Set the number of samples to read in one read operation.
+	 *
+	 * The default is BLOCKSIZE::DEFAULT.
+	 */
+	void set_samples_per_read(const uint32_t &samples_per_read);
+
+	/**
+	 * Return the number of samples to read in one read operation.
+	 *
+	 * \return Number of samples per read operation.
+	 */
+	uint32_t samples_per_read() const;
+
+	// TODO Copy + move
+
+
+private:
+
+	bool do_configurable_read_buffer() const final;
+
+	/**
+	 * Number of samples to be read in one block
+	 */
+	uint32_t samples_per_read_;
 };
 
 
@@ -700,6 +638,8 @@ public:
 	 */
 	~AudioReader() noexcept override;
 
+	bool configurable_read_buffer() const;
+
 	/**
 	 * Acquire the \ref AudioSize of a file.
 	 *
@@ -731,7 +671,7 @@ public:
 	 *
 	 * \todo This should be part of a SampleProvider interface
 	 */
-	void register_processor(SampleProcessor &processor);
+	void set_processor(SampleProcessor &processor);
 
 	// make class non-copyable (2/2)
 	AudioReader& operator = (const AudioReader &) = delete;
@@ -778,6 +718,32 @@ public:
 	 */
 	std::unique_ptr<AudioReader> create_audio_reader(
 			const std::string &filename) const;
+
+	/**
+	 * Create the specified AudioReader by its AudioReaderType name.
+	 *
+	 * If there is no AudioReaderType found with this name, nullptr will be
+	 * returned.
+	 *
+	 * \param[in] name Name of the AudioReader to create
+	 * \param[in] buffer_size_in_smpls Size of its read buffer in number of samples
+	 *
+	 * \return An AudioReader with the given name or nullptr
+	 */
+	//std::unique_ptr<AudioReader> create_audio_reader(
+	//		const std::string &name, const uint32_t buffer_size_in_smpls) const;
+
+protected:
+
+	/**
+	 * Turns a FileReader* to an AudioReader*.
+	 *
+	 * \param[in] filereader The FileReader to cast
+	 *
+	 * \return AudioReader or nullptr
+	 */
+	std::unique_ptr<AudioReader> safe_cast(
+			std::unique_ptr<FileReader> filereader) const;
 };
 
 /// @}

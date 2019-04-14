@@ -1,6 +1,5 @@
 /**
  * \file readerffmpeg.cpp Implements ffmpeg-based generic audio reader
- *
  */
 
 
@@ -30,9 +29,6 @@ extern "C"
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__
 #include "audioreader.hpp"
 #endif
-//#ifndef __LIBARCSDEC_AUDIOBUFFER_HPP__
-//#include "audiobuffer.hpp"
-//#endif
 
 
 namespace arcs
@@ -174,8 +170,6 @@ class FFmpegAudioFile;
 
 /**
  * Loads an audio file and returns a representation as FFmpegAudioFile.
- *
- * Uses the ffmpeg API.
  */
 class FFmpegFileLoader final
 {
@@ -280,8 +274,6 @@ private:
  * - Wavpack
  * - ALAC
  * - Monkey's Audio
- *
- * Uses the ffmpeg API.
  */
 class FFmpegAudioFile final
 {
@@ -554,7 +546,7 @@ bool FFmpegCodecList::support(const ::AVCodecID &id)
 
 		//case ::AV_CODEC_ID_WAVPACK: // Removed: could not check for lossy
 
-		// WMALOSSLESS ?
+		// TODO WMALOSSLESS should be respected
 
 			return true;
 
@@ -1660,18 +1652,18 @@ void FFmpegAudioReaderImpl::do_process_file(const std::string &filename)
 
 	AudioSize size;
 	size.set_sample_count(audiofile->total_samples());
-	this->update_audiosize(size);
+	this->process_audiosize(size);
 
 	// Register this AudioReaderImpl instance as the target for samples and
 	// metadata updates
 
 	audiofile->register_append_samples(
-		std::bind(&FFmpegAudioReaderImpl::append_samples,
+		std::bind(&FFmpegAudioReaderImpl::process_samples,
 			this,
 			std::placeholders::_1, std::placeholders::_2));
 
 	audiofile->register_update_audiosize(
-		std::bind(&FFmpegAudioReaderImpl::update_audiosize,
+		std::bind(&FFmpegAudioReaderImpl::process_audiosize,
 			this,
 			std::placeholders::_1));
 

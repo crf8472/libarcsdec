@@ -55,24 +55,15 @@ namespace
  *
  * \todo To support WAV formats as well as ALAC, FLAC, AIFF/AIFC, RAW
  */
-class LibsndfileAudioReaderImpl : public AudioReaderImpl
+class LibsndfileAudioReaderImpl : public BufferedAudioReaderImpl
 {
 
 public:
 
 	/**
-	 * Default constructor
-	 */
-	LibsndfileAudioReaderImpl();
-
-	/**
 	 * Virtual default destructor
 	 */
 	virtual ~LibsndfileAudioReaderImpl() noexcept;
-
-	void set_samples_per_read(const uint32_t &samples_per_read);
-
-	uint32_t samples_per_read() const;
 
 
 private:
@@ -81,24 +72,11 @@ private:
 		override;
 
 	void do_process_file(const std::string &filename) override;
-
-	/**
-	 * Number of samples to be read in one block
-	 */
-	uint32_t samples_per_read_;
 };
 
 
 /// @}
 /// \endcond IMPL_ONLY
-
-
-LibsndfileAudioReaderImpl::LibsndfileAudioReaderImpl()
-	: AudioReaderImpl()
-	, samples_per_read_(BLOCKSIZE::DEFAULT)
-{
-	// empty
-}
 
 
 LibsndfileAudioReaderImpl::~LibsndfileAudioReaderImpl() noexcept = default;
@@ -150,7 +128,7 @@ void LibsndfileAudioReaderImpl::do_process_file(const std::string &filename)
 
 	AudioSize audiosize;
 	audiosize.set_sample_count(audiofile.frames());
-	this->update_audiosize(audiosize);
+	this->process_audiosize(audiosize);
 
 	// Prepare Read buffer (16 bit samples)
 
@@ -217,23 +195,10 @@ void LibsndfileAudioReaderImpl::do_process_file(const std::string &filename)
 				<< (buffer.size() / CDDA.NUMBER_OF_CHANNELS)
 				<< " Stereo PCM samples (32 bit)";
 
-		this->append_samples(sequence.begin(), sequence.end());
+		this->process_samples(sequence.begin(), sequence.end());
 
 		sample_count += sequence.size();
 	}
-}
-
-
-void LibsndfileAudioReaderImpl::set_samples_per_read(
-		const uint32_t &samples_per_read)
-{
-	samples_per_read_ = samples_per_read;
-}
-
-
-uint32_t LibsndfileAudioReaderImpl::samples_per_read() const
-{
-	return samples_per_read_;
 }
 
 

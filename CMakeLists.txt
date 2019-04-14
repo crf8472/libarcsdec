@@ -91,6 +91,7 @@ list (APPEND SOURCES "${PROJECT_SOURCE_DIR}/metaparser.cpp" )
 ## readersndfile.cpp is optional and default OFF, depends on libsndfile
 list (APPEND SOURCES "${PROJECT_SOURCE_DIR}/readerwav.cpp" )
 ## readerwvpk.cpp    is optional and default ON,  depends on libwavpack
+list (APPEND SOURCES "${PROJECT_SOURCE_DIR}/sampleproc.cpp" )
 
 
 ## --- Define required objects and libraries to link to the project target
@@ -100,37 +101,19 @@ set (REQUIRED_OBJECTS )
 set (REQUIRED_LIBRARIES )
 
 
+## --- Define compiler switches
+
+set (FLAGS_WARNINGS -Wall -Wextra -Wold-style-cast -Wpedantic -Weffc++
+	-Wno-unused-function )
+
+set (FLAGS_OPTIMIZE -march=native -mtune=generic )
+
+
 ## --- Required library: libarcs
 
 find_package (libarcs REQUIRED )
 
 list (APPEND REQUIRED_LIBRARIES ${libarcs_LIBRARIES} )
-
-
-## --- Required object target: parserdev (requires libcdio)
-
-add_library (parserdev OBJECT ${PROJECT_SOURCE_DIR}/parserdev.cpp )
-
-find_package (libcdio 2.0.0 REQUIRED )
-target_include_directories (parserdev PRIVATE ${libcdio_INCLUDE_DIRS} )
-
-set_property (TARGET parserdev PROPERTY POSITION_INDEPENDENT_CODE ON )
-
-list (APPEND REQUIRED_OBJECTS   $<TARGET_OBJECTS:parserdev> )
-list (APPEND REQUIRED_LIBRARIES ${libcdio_LIBRARIES} )
-
-
-## --- Required object target: parsercue (requires libcue)
-
-add_library (parsercue OBJECT ${PROJECT_SOURCE_DIR}/parsercue.cpp )
-
-find_package (libcue 2.0.0 REQUIRED )
-target_include_directories (parsercue PRIVATE ${libcue_INCLUDE_DIRS} )
-
-set_property (TARGET parsercue PROPERTY POSITION_INDEPENDENT_CODE ON )
-
-list (APPEND REQUIRED_OBJECTS   $<TARGET_OBJECTS:parsercue> )
-list (APPEND REQUIRED_LIBRARIES ${libcue_LIBRARIES} )
 
 
 ## --- Configure optional features
@@ -153,13 +136,62 @@ option (WITH_LIBCDIO    "Add libcdio reading capabilities" OFF )
 
 option (IWYU "Request use of include-what-you-use" OFF )
 
+option (WITH_NATIVE "Use platform specific optimization on compiling" ON )
+
+
+## --- Required object target: parserdev (requires libcdio)
+
+add_library (parserdev OBJECT ${PROJECT_SOURCE_DIR}/parserdev.cpp )
+
+find_package (libcdio 2.0.0 REQUIRED )
+target_include_directories (parserdev PRIVATE ${libcdio_INCLUDE_DIRS} )
+
+set_target_properties (parserdev PROPERTIES
+	POSITION_INDEPENDENT_CODE ON
+	CXX_STANDARD  14 )
+
+if (WITH_NATIVE )
+
+	target_compile_options (parserdev
+		PUBLIC ${FLAGS_WARNINGS} ${FLAGS_OPTIMIZE} )
+else ()
+
+	target_compile_options (parserdev PUBLIC ${FLAGS_WARNINGS} )
+endif (WITH_NATIVE )
+
+list (APPEND REQUIRED_OBJECTS   $<TARGET_OBJECTS:parserdev> )
+list (APPEND REQUIRED_LIBRARIES ${libcdio_LIBRARIES} )
+
+
+## --- Required object target: parsercue (requires libcue)
+
+add_library (parsercue OBJECT ${PROJECT_SOURCE_DIR}/parsercue.cpp )
+
+find_package (libcue 2.0.0 REQUIRED )
+target_include_directories (parsercue PRIVATE ${libcue_INCLUDE_DIRS} )
+
+set_target_properties (parsercue PROPERTIES
+	POSITION_INDEPENDENT_CODE ON
+	CXX_STANDARD  14 )
+
+if (WITH_NATIVE )
+
+	target_compile_options (parsercue
+		PUBLIC ${FLAGS_WARNINGS} ${FLAGS_OPTIMIZE} )
+else ()
+
+	target_compile_options (parsercue PUBLIC ${FLAGS_WARNINGS} )
+endif (WITH_NATIVE )
+
+list (APPEND REQUIRED_OBJECTS   $<TARGET_OBJECTS:parsercue> )
+list (APPEND REQUIRED_LIBRARIES ${libcue_LIBRARIES} )
+
 
 ## --- Define optional objects and libraries to link to the project target
 
 set (OPTIONAL_OBJECTS )
 
 set (OPTIONAL_LIBRARIES )
-
 
 ## --- Optional: Add FLAC (default: ON)
 
@@ -173,7 +205,20 @@ if (WITH_FLAC)
 	target_include_directories (readerflac PRIVATE ${FLAC_INCLUDE_DIRS} )
 
 	## We want to link this object into a shared object
-	set_property (TARGET readerflac PROPERTY POSITION_INDEPENDENT_CODE ON )
+	#set_property (TARGET readerflac PROPERTY POSITION_INDEPENDENT_CODE ON )
+
+	set_target_properties (readerflac PROPERTIES
+		POSITION_INDEPENDENT_CODE ON
+		CXX_STANDARD  14 )
+
+	if (WITH_NATIVE )
+
+		target_compile_options (readerflac
+			PUBLIC ${FLAGS_WARNINGS} ${FLAGS_OPTIMIZE} )
+	else ()
+
+		target_compile_options (readerflac PUBLIC ${FLAGS_WARNINGS} )
+	endif (WITH_NATIVE )
 
 	list (APPEND OPTIONAL_OBJECTS   $<TARGET_OBJECTS:readerflac> )
 	list (APPEND OPTIONAL_LIBRARIES ${FLAC_LIBRARIES} )
@@ -196,7 +241,20 @@ if (WITH_WAVPACK)
 	target_include_directories (readerwvpk PRIVATE ${libwavpack_INCLUDE_DIRS} )
 
 	## We want to link this object into a shared object
-	set_property (TARGET readerwvpk PROPERTY POSITION_INDEPENDENT_CODE ON )
+	#set_property (TARGET readerwvpk PROPERTY POSITION_INDEPENDENT_CODE ON )
+
+	set_target_properties (readerwvpk PROPERTIES
+		POSITION_INDEPENDENT_CODE ON
+		CXX_STANDARD  14 )
+
+	if (WITH_NATIVE )
+
+		target_compile_options (readerwvpk
+			PUBLIC ${FLAGS_WARNINGS} ${FLAGS_OPTIMIZE} )
+	else ()
+
+		target_compile_options (readerwvpk PUBLIC ${FLAGS_WARNINGS} )
+	endif (WITH_NATIVE )
 
 	list (APPEND OPTIONAL_OBJECTS $<TARGET_OBJECTS:readerwvpk> )
 	list (APPEND OPTIONAL_LIBRARIES ${libwavpack_LIBRARIES} )
@@ -264,7 +322,20 @@ if (WITH_FFMPEG)
 	target_include_directories (readerffmpeg PRIVATE ${avutil_INCLUDE_DIRS} )
 
 	## We want to link this object into a shared object
-	set_property (TARGET readerffmpeg PROPERTY POSITION_INDEPENDENT_CODE ON )
+	# set_property (TARGET readerffmpeg PROPERTY POSITION_INDEPENDENT_CODE ON )
+
+	set_target_properties (readerffmpeg PROPERTIES
+		POSITION_INDEPENDENT_CODE ON
+		CXX_STANDARD  14 )
+
+	if (WITH_NATIVE )
+
+		target_compile_options (readerffmpeg
+			PUBLIC ${FLAGS_WARNINGS} ${FLAGS_OPTIMIZE} )
+	else ()
+
+		target_compile_options (readerffmpeg PUBLIC ${FLAGS_WARNINGS} )
+	endif (WITH_NATIVE )
 
 	list (APPEND OPTIONAL_OBJECTS   $<TARGET_OBJECTS:readerffmpeg> )
 	list (APPEND OPTIONAL_LIBRARIES ${avcodec_LIBRARIES} )
@@ -290,7 +361,20 @@ if (WITH_LIBSNDFILE)
 		PRIVATE ${libsndfile_INCLUDE_DIRS})
 
 	## We want to link this object into a shared object
-	set_property (TARGET readersndfile PROPERTY POSITION_INDEPENDENT_CODE ON )
+	#set_property (TARGET readersndfile PROPERTY POSITION_INDEPENDENT_CODE ON )
+
+	set_target_properties (readersndfile PROPERTIES
+		POSITION_INDEPENDENT_CODE ON
+		CXX_STANDARD  14 )
+
+	if (WITH_NATIVE )
+
+		target_compile_options (readersndfile
+			PUBLIC ${FLAGS_WARNINGS} ${FLAGS_OPTIMIZE} )
+	else ()
+
+		target_compile_options (readersndfile PUBLIC ${FLAGS_WARNINGS} )
+	endif (WITH_NATIVE )
 
 	list (APPEND OPTIONAL_OBJECTS   $<TARGET_OBJECTS:readersndfile> )
 	list (APPEND OPTIONAL_LIBRARIES ${libsndfile_LIBRARIES} )
@@ -358,10 +442,11 @@ configure_file (
 
 set (EXPORTED_HEADERS )
 
-list (APPEND EXPORTED_HEADERS "${PROJECT_SOURCE_DIR}/calculators.hpp" )
 list (APPEND EXPORTED_HEADERS "${PROJECT_SOURCE_DIR}/audioreader.hpp" )
-list (APPEND EXPORTED_HEADERS "${PROJECT_SOURCE_DIR}/metaparser.hpp" )
+list (APPEND EXPORTED_HEADERS "${PROJECT_SOURCE_DIR}/calculators.hpp" )
 list (APPEND EXPORTED_HEADERS "${PROJECT_SOURCE_DIR}/fileformats.hpp" )
+list (APPEND EXPORTED_HEADERS "${PROJECT_SOURCE_DIR}/metaparser.hpp" )
+list (APPEND EXPORTED_HEADERS "${PROJECT_SOURCE_DIR}/sampleproc.hpp" )
 
 
 ## --- Add and configure project target
@@ -411,8 +496,6 @@ endif (NOT SKIP_INSTALL_ALL)
 
 
 ## --- Compiler Specific Settings
-
-option (WITH_NATIVE "Use platform specific optimization on compiling" ON )
 
 ## Settings for g++ and clang
 
@@ -466,18 +549,6 @@ if (WITH_TESTS)
 
 	## Add Catch2 test framework
 	add_subdirectory (thirdparty/catch2 EXCLUDE_FROM_ALL )
-
-#	if (${CMAKE_VERSION} VERSION_LESS "3.14.0" )
-#		## No FetchContent module available, so we have to explicitly build
-#		## catch2 during configuration stage
-#
-#		execute_process(
-#			COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_SOURCE_DIR}/ext/catch2
-#			WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/ext/catch2
-#		)
-#
-#		add_subdirectory (ext/catch2/src/catch2 )
-#	endif()
 
 	## Add tests
 	add_subdirectory (${PROJECT_TEST_DIR} )

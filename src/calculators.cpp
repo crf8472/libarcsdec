@@ -29,6 +29,9 @@
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__
 #include "audioreader.hpp"
 #endif
+#ifndef __LIBARCSDEC_AUDIOBUFFER_HPP__
+#include "audiobuffer.hpp"
+#endif
 #ifndef __LIBARCSDEC_METAPARSER_HPP__
 #include "metaparser.hpp"
 #endif
@@ -346,9 +349,28 @@ std::pair<Checksums, ARId> ARCSCalculator::Impl::calculate(
 
 	// Configure AudioReader and process file
 
-	SampleProcessorAdapter proc { *calc };
-	reader->register_processor(proc);
-	reader->process_file(audiofilename);
+	if (reader->configurable_read_buffer())
+	{
+		// TODO Actually configure read buffer size
+
+		SampleProcessorAdapter proc { *calc };
+
+		reader->set_processor(proc);
+		reader->process_file(audiofilename);
+	} else
+	{
+		// TODO Actually configure buffer size
+
+		SampleBuffer buffer(BLOCKSIZE::DEFAULT);
+		buffer.register_processor(*calc);
+
+		reader->set_processor(buffer);
+		reader->process_file(audiofilename);
+		buffer.flush();
+	}
+
+
+	// Sanity-check result
 
 	if (not calc->complete())
 	{
@@ -462,12 +484,29 @@ ChecksumSet ARCSCalculator::Impl::calculate_track(
 		return ChecksumSet { 0 };
 	}
 
+	// Configure AudioReader and process file
 
-	// Configure AudioReader, process file, sanity-check result
+	if (reader->configurable_read_buffer())
+	{
+		// TODO Actually configure read buffer
 
-	SampleProcessorAdapter proc { *calc };
-	reader->register_processor(proc);
-	reader->process_file(audiofilename);
+		SampleProcessorAdapter proc { *calc };
+
+		reader->set_processor(proc);
+		reader->process_file(audiofilename);
+	} else
+	{
+		// TODO Actually configure buffer size
+
+		SampleBuffer buffer(BLOCKSIZE::DEFAULT);
+		buffer.register_processor(*calc);
+
+		reader->set_processor(buffer);
+		reader->process_file(audiofilename);
+	}
+
+
+	// Sanity-check result
 
 	if (not calc->complete())
 	{

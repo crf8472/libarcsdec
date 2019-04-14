@@ -504,14 +504,14 @@ bool WavpackOpenFile::channel_order() const
 
 	if (channel_mask == 3)
 	{
-		unsigned char identities[3] = { '0', '0', '\0' };;
+		unsigned char identities[3] = { '0', '0', '\0' };
 
 		WavpackGetChannelIdentities(context_, identities);
 
 		if (identities)
 		{
-			char first  = identities[0];
-			char second = identities[1];
+			auto first  { identities[0] };
+			auto second { identities[1] };
 
 			ARCS_LOG_DEBUG << "Channel identities: channel 0 = '"
 				<< std::to_string(first)
@@ -738,7 +738,7 @@ bool WavpackValidatingHandler::validate_version(const WavpackOpenFile &file)
 /**
  * Implementation of a AudioReader for the Wavpack format.
  */
-class WavpackAudioReaderImpl : public AudioReaderImpl
+class WavpackAudioReaderImpl : public BufferedAudioReaderImpl
 {
 
 public:
@@ -767,20 +767,6 @@ public:
 	 */
 	const WavpackValidatingHandler& validate_handler();
 
-	/**
-	 * Set the number of samples to read in one read operation.
-	 *
-	 * The default is BLOCKSIZE::DEFAULT.
-	 */
-	void set_samples_per_read(const uint32_t &samples_per_read);
-
-	/**
-	 * Return the number of samples to read in one read operation.
-	 *
-	 * \return Number of samples per read operation.
-	 */
-	uint32_t samples_per_read() const;
-
 
 private:
 
@@ -799,11 +785,6 @@ private:
 	bool perform_validations(const WavpackOpenFile &file);
 
 	/**
-	 * Number of samples to be read in one block
-	 */
-	uint32_t samples_per_read_;
-
-	/**
 	 * Validating handler of this instance
 	 */
 	std::unique_ptr<WavpackValidatingHandler> validate_handler_;
@@ -811,8 +792,7 @@ private:
 
 
 WavpackAudioReaderImpl::WavpackAudioReaderImpl()
-	: samples_per_read_(BLOCKSIZE::DEFAULT)
-	, validate_handler_()
+	: validate_handler_()
 {
 	// empty
 }
@@ -847,7 +827,6 @@ void WavpackAudioReaderImpl::do_process_file(const std::string &filename)
 	if (not perform_validations(file))
 	{
 		ARCS_LOG_ERROR << "Validation failed";
-		//return Checksums(0);
 		return;
 	}
 
@@ -860,7 +839,7 @@ void WavpackAudioReaderImpl::do_process_file(const std::string &filename)
 	{
 		AudioSize size;
 		size.set_sample_count(total_samples);
-		this->update_audiosize(size);
+		this->process_audiosize(size);
 	}
 
 	// Samples reading loop
@@ -868,11 +847,12 @@ void WavpackAudioReaderImpl::do_process_file(const std::string &filename)
 		std::vector<int32_t> samples;
 		SampleSequence<int32_t, false> sequence(file.channel_order());
 
-		samples.resize(samples_per_read_);
+		samples.resize(this->samples_per_read());
 
 		// Request half the number of samples in a block, thus a sequence will
 		// have exactly the size of a block.
-		uint32_t wv_sample_count = samples_per_read_ / CDDA.NUMBER_OF_CHANNELS;
+		uint32_t wv_sample_count =
+			this->samples_per_read() / CDDA.NUMBER_OF_CHANNELS;
 		uint32_t samples_read    = 0;
 
 		for (int32_t i = total_samples; i > 0; i -= wv_sample_count)
@@ -910,22 +890,9 @@ void WavpackAudioReaderImpl::do_process_file(const std::string &filename)
 			// NOTE That we use the number of 16 bit samples per channel, not
 			// the total number of 16 bit samples in the chunk
 
-			this->append_samples(sequence.begin(), sequence.end());
+			this->process_samples(sequence.begin(), sequence.end());
 		}
 	}
-}
-
-
-void WavpackAudioReaderImpl::set_samples_per_read(
-		const uint32_t &samples_per_read)
-{
-	samples_per_read_ = samples_per_read;
-}
-
-
-uint32_t WavpackAudioReaderImpl::samples_per_read() const
-{
-	return samples_per_read_;
 }
 
 
