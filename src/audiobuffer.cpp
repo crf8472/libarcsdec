@@ -61,12 +61,7 @@ uint32_t BlockCreator::samples_per_block() const
 
 uint32_t BlockCreator::min_samples_per_block() const
 {
-	// Inspired by FLAC:
-	// Biggest value for the number of PCM samples in a FLAC frame. This
-	// entails that at least one FLAC frame is guaranteed to fit in a block of
-	// minimal size.
-
-	return 65536;
+	return BLOCKSIZE::MIN;
 }
 
 
@@ -148,16 +143,9 @@ void BlockAccumulator::do_init()
 
 void BlockAccumulator::do_flush()
 {
-	// Statistics
-
-	//++blocks_processed_;
-
-	// Logging
-
-	//ARCS_LOG_DEBUG << "READ BLOCK " << blocks_processed_;
 	ARCS_LOG_DEBUG << "BLOCK COMPLETED";
 
-	if (samples_.size() > 0) // samples_.front() must be accessible
+	if (samples_.size() > 0)
 	{
 		ARCS_LOG(LOG_DEBUG1) << "  Size: "
 			<< (samples_.size() * sizeof(samples_.front())) << " bytes / "
@@ -227,8 +215,6 @@ void BlockAccumulator::append_to_block(PCMForwardIterator begin,
 			this->flush();
 		}
 	}
-
-	//++sequences_processed_;
 }
 
 

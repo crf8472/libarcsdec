@@ -479,40 +479,23 @@ public:
 	bool configurable_read_buffer() const;
 
 	/**
-	 * Register a SampleProcessor instance to pass the read samples to.
+	 * Set the number of samples to read in one read operation.
 	 *
-	 * \param[in] processor SampleProcessor to use
-	 *
-	 * \todo This should be part of a SampleProvider interface
+	 * The default is BLOCKSIZE::DEFAULT.
 	 */
-	//void register_processor(SampleProcessor &processor);
+	void set_samples_per_read(const uint32_t &samples_per_read);
+
+	/**
+	 * Return the number of samples to read in one read operation.
+	 *
+	 * \return Number of samples per read operation.
+	 */
+	uint32_t samples_per_read() const;
 
 	// make class non-copyable (2/2)
 	AudioReaderImpl& operator = (const AudioReaderImpl &) = delete;
 
 	// TODO move assignment
-
-
-//protected:
-//
-//	/**
-//	 * Append a sample sequence to the processing pipeline.
-//	 *
-//	 * The actual method call is just passed to the registered SampleProcessor.
-//	 *
-//	 * \param[in] begin Iterator pointing to the begin of the sequence
-//	 * \param[in] end   Iterator pointing to the end of the sequence
-//	 */
-//	void append_samples(PCMForwardIterator begin, PCMForwardIterator end);
-//
-//	/**
-//	 * Update the AudioSize of the input stream.
-//	 *
-//	 * The actual method call is just passed to the registered SampleProcessor.
-//	 *
-//	 * \param[in] size AudioSize to report
-//	 */
-//	void update_audiosize(const AudioSize &size);
 
 
 private:
@@ -523,6 +506,20 @@ private:
 	 * \return TRUE if the number of samples to read at once is configurable.
 	 */
 	virtual bool do_configurable_read_buffer() const;
+
+	/**
+	 * Set the number of samples to read in one read operation.
+	 *
+	 * The default is BLOCKSIZE::DEFAULT.
+	 */
+	virtual void do_set_samples_per_read(const uint32_t &samples_per_read);
+
+	/**
+	 * Return the number of samples to read in one read operation.
+	 *
+	 * \return Number of samples per read operation.
+	 */
+	virtual uint32_t do_samples_per_read() const;
 
 	/**
 	 * Provides implementation for \c acquire_size() of an \ref AudioReader
@@ -551,6 +548,10 @@ private:
 };
 
 
+/**
+ * An AudioReaderImpl that has its own SampleBuffer
+ *
+ */
 class BufferedAudioReaderImpl : public AudioReaderImpl
 {
 
@@ -578,14 +579,14 @@ public:
 	 *
 	 * The default is BLOCKSIZE::DEFAULT.
 	 */
-	void set_samples_per_read(const uint32_t &samples_per_read);
+	//void set_samples_per_read(const uint32_t &samples_per_read);
 
 	/**
 	 * Return the number of samples to read in one read operation.
 	 *
 	 * \return Number of samples per read operation.
 	 */
-	uint32_t samples_per_read() const;
+	//uint32_t samples_per_read() const;
 
 	// TODO Copy + move
 
@@ -593,6 +594,10 @@ public:
 private:
 
 	bool do_configurable_read_buffer() const final;
+
+	void do_set_samples_per_read(const uint32_t &samples_per_read) final;
+
+	uint32_t do_samples_per_read() const final;
 
 	/**
 	 * Number of samples to be read in one block
@@ -638,7 +643,29 @@ public:
 	 */
 	~AudioReader() noexcept override;
 
+	/**
+	 * Check if the read buffer size can be specified.
+	 *
+	 * Returns TRUE if it can be specified which amount the reader should read
+	 * in one pass.
+	 *
+	 * \return TRUE if this reader has a configurable buffer, otherwise FALSE
+	 */
 	bool configurable_read_buffer() const;
+
+	/**
+	 * Set the number of samples to read in one read operation.
+	 *
+	 * The default is BLOCKSIZE::DEFAULT.
+	 */
+	void set_samples_per_read(const uint32_t &samples_per_read);
+
+	/**
+	 * Return the number of samples to read in one read operation.
+	 *
+	 * \return Number of samples per read operation.
+	 */
+	uint32_t samples_per_read() const;
 
 	/**
 	 * Acquire the \ref AudioSize of a file.
@@ -719,19 +746,6 @@ public:
 	std::unique_ptr<AudioReader> create_audio_reader(
 			const std::string &filename) const;
 
-	/**
-	 * Create the specified AudioReader by its AudioReaderType name.
-	 *
-	 * If there is no AudioReaderType found with this name, nullptr will be
-	 * returned.
-	 *
-	 * \param[in] name Name of the AudioReader to create
-	 * \param[in] buffer_size_in_smpls Size of its read buffer in number of samples
-	 *
-	 * \return An AudioReader with the given name or nullptr
-	 */
-	//std::unique_ptr<AudioReader> create_audio_reader(
-	//		const std::string &name, const uint32_t buffer_size_in_smpls) const;
 
 protected:
 

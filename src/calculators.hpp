@@ -139,6 +139,12 @@ public:
 	 */
 	virtual ~ARCSCalculator() noexcept;
 
+	// void allow_convert_buffer(const bool sample_buffer_allowed);
+	// bool uses_convert_buffer() const;
+
+	// void set_buffer_size(const uint32_t samples);
+	// uint32_t buffer_size() const;
+
 	/**
 	 * Calculate ARCS values for the given audio file, using the metadata from
 	 * the given TOC.

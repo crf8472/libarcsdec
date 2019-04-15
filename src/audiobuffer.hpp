@@ -81,32 +81,6 @@ namespace arcs
 
 
 /**
- * Number of 32 bit samples for some block sizes
- */
-enum SAMPLES : uint32_t
-{
-	FOR_256MB = 67108864,
-
-	FOR_128MB = 33554432,
-
-	FOR_64MB  = 16777216,
-
-	FOR_32MB  = 8388608
-};
-
-
-/**
- * Symbolic constants for default and maximum block size
- */
-enum BLOCKSIZE : uint32_t
-{
-	DEFAULT = SAMPLES::FOR_64MB,
-
-	MAX     = SAMPLES::FOR_256MB
-};
-
-
-/**
  * Base class of a block creating policy.
  *
  * Readers that pull their blocks from the filesystem can control the
@@ -128,7 +102,7 @@ class BlockCreator
 public:
 
 	/**
-	 * Constructs a BlockCreator with buffer of size SAMPLES.PER_BLOCK_DEFAULT.
+	 * Constructs a BlockCreator with buffer of size BLOCKSIZE::DEFAULT
 	 */
 	BlockCreator();
 
@@ -281,32 +255,11 @@ public:
 	void flush();
 
 	/**
-	 * Returns the number of bytes processed
-	 *
-	 * \return Number of bytes processed since init() was called
-	 */
-	//uint64_t bytes_processed() const;
-
-	/**
 	 * Returns the number of samples processed
 	 *
 	 * \return Number of samples processed since init() was called
 	 */
 	uint64_t samples_appended() const;
-
-	/**
-	 * Returns the number of sequences processed
-	 *
-	 * \return Number of sequences processed since init() was called
-	 */
-	//uint64_t sequences_processed() const;
-
-	/**
-	 * Returns the number of blocks processed
-	 *
-	 * \return Number of blocks processed since init() was called
-	 */
-	//uint64_t blocks_processed() const;
 
 	// make class non-copyable (2/2)
 	BlockAccumulator& operator = (const BlockAccumulator &) = delete;
@@ -338,15 +291,6 @@ private:
 	virtual void do_flush();
 
 	/**
-	 * Implementation of append()
-	 *
-	 * \param[in] begin Begin of the sample sequence
-	 * \param[in] end   End of the sample sequence
-	 */
-	//virtual void do_append(PCMForwardIterator begin, PCMForwardIterator end)
-	//	= 0;
-
-	/**
 	 * Reinitialize internal buffer to configured block size.
 	 */
 	virtual void init_buffer();
@@ -368,26 +312,16 @@ private:
 	 * Number of samples processed
 	 */
 	uint64_t samples_appended_;
-
-	/**
-	 * Number of frames processed
-	 */
-	//uint64_t sequences_processed_;
-
-	/**
-	 * Number of blocks processed
-	 */
-	//uint64_t blocks_processed_;
 };
 
 
 /**
  * A format and reader independent sample buffer.
  *
- * Enhances BlockAccumulator for some convenience functions such as registering
- * the \ref Calculation for you. It aliases the arcane
- * BlockAccumulator::sequence() with the more intuitive append() and provides a
- * reset() method to reuse the buffer.
+ * Enhances BlockAccumulator to a SampleProcessor that also transports the
+ * AudioSize update and is also a SampleProvider - which means it can have a
+ * further SampleProcessor registered. Provides a convenience method for
+ * registering a Calculation as addressee of all updates.
  */
 class SampleBuffer  : public  virtual SampleProvider
 					, public  virtual SampleProcessor
@@ -435,9 +369,9 @@ public:
 	void notify_total_samples(const uint32_t idx);
 
 	/**
-	 * Register a processor for this buffer
+	 * Register a Calculation to update by this instance.
 	 *
-	 * \param[in] calc The processor for this buffer
+	 * \param[in] calc The Calculation updated by this instance
 	 */
 	void register_processor(Calculation &calc);
 

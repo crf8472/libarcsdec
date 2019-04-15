@@ -25,6 +25,37 @@ namespace arcs
 
 
 /**
+ * Number of 32 bit samples for some block sizes
+ */
+enum SAMPLES : uint32_t
+{
+	FOR_256MB = 67108864,
+
+	FOR_128MB = 33554432,
+
+	FOR_64MB  = 16777216,
+
+	FOR_32MB  = 8388608
+};
+
+
+/**
+ * Symbolic constants for default and maximum block size
+ */
+enum BLOCKSIZE : uint32_t
+{
+	DEFAULT = SAMPLES::FOR_64MB,
+
+	MAX     = SAMPLES::FOR_256MB,
+
+	MIN     = 65536 // == 256K, Size of a maximal fLaC block
+	// Biggest value for the number of PCM samples in a fLaC frame. This
+	// entails that at least one fLaC frame is guaranteed to fit in a block of
+	// minimal size.
+};
+
+
+/**
  * Interface for processing samples provided by an AudioReaderImpl
  */
 class SampleProcessor

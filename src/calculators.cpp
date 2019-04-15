@@ -289,6 +289,16 @@ public:
 	const AudioReaderCreator& audioreader_creator() const;
 
 
+protected:
+
+	/**
+	 *
+	 * \param[in] audiofilename  Name  of the audiofile
+	 */
+	void process_file(const std::string &audiofilename, Calculation& calc,
+		const uint32_t buffer_size) const;
+
+
 private:
 
 	/**
@@ -326,48 +336,9 @@ std::pair<Checksums, ARId> ARCSCalculator::Impl::calculate(
 	ARCS_LOG_DEBUG << "Calculate by TOC and single audiofilename: "
 		<< audiofilename;
 
-	// Configure Calculation
-
 	auto calc = std::make_unique<Calculation>(make_context(audiofilename, toc));
 
-
-	// Create AudioReader
-
-	std::unique_ptr<AudioReader> reader;
-
-	{
-		reader = audioreader_creator().create_audio_reader(audiofilename);
-
-		if (!reader)
-		{
-			ARCS_LOG_ERROR << "No AudioReader available. Bail out.";
-
-			return std::make_pair(Checksums(0), ARId(0,0,0,0));
-		}
-	}
-
-
-	// Configure AudioReader and process file
-
-	if (reader->configurable_read_buffer())
-	{
-		// TODO Actually configure read buffer size
-
-		SampleProcessorAdapter proc { *calc };
-
-		reader->set_processor(proc);
-		reader->process_file(audiofilename);
-	} else
-	{
-		// TODO Actually configure buffer size
-
-		SampleBuffer buffer(BLOCKSIZE::DEFAULT);
-		buffer.register_processor(*calc);
-
-		reader->set_processor(buffer);
-		reader->process_file(audiofilename);
-		buffer.flush();
-	}
+	this->process_file(audiofilename, *calc, BLOCKSIZE::DEFAULT);
 
 
 	// Sanity-check result
@@ -377,21 +348,7 @@ std::pair<Checksums, ARId> ARCSCalculator::Impl::calculate(
 		ARCS_LOG_ERROR << "Calculation is not complete after last sample";
 	}
 
-	auto checksums { calc->result() };
-
-	if (checksums.size() == 0)
-	{
-		ARCS_LOG_ERROR << "No checksums";
-	}
-
-	auto id { calc->context().id() };
-
-	if (id.empty())
-	{
-		ARCS_LOG_ERROR << "Empty ARId";
-	}
-
-	return std::make_pair(checksums, id);
+	return std::make_pair(calc->result(), calc->context().id());
 }
 
 
@@ -460,6 +417,77 @@ ChecksumSet ARCSCalculator::Impl::calculate(
 }
 
 
+void ARCSCalculator::Impl::process_file(const std::string &audiofilename,
+		Calculation& calc, const uint32_t buffer_size) const
+{
+	// Create AudioReader
+
+	std::unique_ptr<AudioReader> reader =
+		audioreader_creator().create_audio_reader(audiofilename);
+
+	if (!reader)
+	{
+		ARCS_LOG_ERROR << "No AudioReader available. Bail out.";
+		throw std::logic_error("No AudioReader available. Bail out.");
+	}
+
+	// Verify buffer size
+
+	const bool buffer_size_is_legal =
+			(BLOCKSIZE::MIN <= buffer_size and buffer_size <= BLOCKSIZE::MAX);
+
+	const bool conv_buffer_requested = false;
+
+	// Configure AudioReader and process file
+
+	if ((conv_buffer_requested and !reader->configurable_read_buffer())
+			and buffer_size_is_legal)
+	{
+		// Conversion/Buffering was explicitly requested
+
+		// AudioReader has no configurable read buffer, the buffer size is
+		// in a legal range
+
+		SampleBuffer buffer(buffer_size);
+		buffer.register_processor(calc);
+
+		reader->set_processor(buffer);
+		reader->process_file(audiofilename);
+		buffer.flush();
+	} else
+	{
+		// Conversion/Buffering was not requested
+
+		if (reader->configurable_read_buffer())
+		{
+			if (buffer_size_is_legal)
+			{
+				reader->set_samples_per_read(buffer_size);
+
+			} else
+			{
+				ARCS_LOG_WARNING << "Specified buffer size of " << buffer_size
+					<< ", but this is not within the legal range of "
+					<< BLOCKSIZE::MIN << " - " << BLOCKSIZE::MAX
+					<< ". Use implementations default instead.";
+
+				// Do nothing, AudioReaderImpl uses its default
+			}
+		} else
+		{
+			ARCS_LOG_WARNING << "AudioReader has no configuration option "
+				<< "for read buffer size."
+				<< " Ignore request and use implementation's default.";
+		}
+
+		SampleProcessorAdapter proc { calc };
+
+		reader->set_processor(proc);
+		reader->process_file(audiofilename);
+	}
+}
+
+
 ChecksumSet ARCSCalculator::Impl::calculate_track(
 	const std::string &audiofilename,
 	const bool &skip_front, const bool &skip_back)
@@ -471,39 +499,7 @@ ChecksumSet ARCSCalculator::Impl::calculate_track(
 	auto calc = std::make_unique<Calculation>(
 		make_context(audiofilename, skip_front, skip_back));
 
-
-	// Create AudioReader
-
-	std::unique_ptr<AudioReader> reader =
-		audioreader_creator().create_audio_reader(audiofilename);
-
-	if (!reader)
-	{
-		ARCS_LOG_ERROR << "No AudioReader available. Bail out.";
-
-		return ChecksumSet { 0 };
-	}
-
-	// Configure AudioReader and process file
-
-	if (reader->configurable_read_buffer())
-	{
-		// TODO Actually configure read buffer
-
-		SampleProcessorAdapter proc { *calc };
-
-		reader->set_processor(proc);
-		reader->process_file(audiofilename);
-	} else
-	{
-		// TODO Actually configure buffer size
-
-		SampleBuffer buffer(BLOCKSIZE::DEFAULT);
-		buffer.register_processor(*calc);
-
-		reader->set_processor(buffer);
-		reader->process_file(audiofilename);
-	}
+	this->process_file(audiofilename, *calc, BLOCKSIZE::DEFAULT);
 
 
 	// Sanity-check result
@@ -517,24 +513,12 @@ ChecksumSet ARCSCalculator::Impl::calculate_track(
 
 	if (track_checksums.size() == 0)
 	{
-		ARCS_LOG_ERROR << "Unexpected empty result for single track";
-
-		return ChecksumSet { 0 };
-	}
-
-
-	// Convert checksums
-
-	auto checksums { track_checksums[0] };
-
-	if (checksums.empty())
-	{
 		ARCS_LOG_ERROR << "Calculation lead to no result, return null";
 
 		return ChecksumSet { 0 };
 	}
 
-	return checksums;
+	return track_checksums[0];
 }
 
 
