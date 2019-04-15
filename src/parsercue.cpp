@@ -96,13 +96,6 @@ public:
 	virtual ~CueOpenFile() noexcept;
 
 	/**
-	 * Returns the number of tracks
-	 *
-	 * \return Number of tracks in the CUEsheet
-	 */
-	uint16_t track_count();
-
-	/**
 	 * Returns all TOC information from the file.
 	 *
 	 * \return CueInfo representing the TOC information
@@ -163,46 +156,11 @@ public:
 	virtual ~CueInfo() noexcept;
 
 	/**
-	 * Name of the CUEsheet file
-	 *
-	 * \return Name of the CUEsheet file
-	 */
-	std::string filename() const;
-
-	/**
 	 * Number of tracks specified in the CUE file
 	 *
 	 * \return Number of tracks according to the CUEsheet
 	 */
 	int track_count() const;
-
-	/**
-	 * Frame offset (in frames) of the specified track in the CUE file
-	 *
-	 * \param[in] track The track to get the offset for
-	 *
-	 * \return The offset in frames of the track passed
-	 */
-	int32_t offset(const uint8_t track) const;
-
-	/**
-	 * Track length (in frames) of the specified track in the CUE file. Length
-	 * of last track is 0, since it is not computable from the CUE sheet.
-	 *
-	 * \param[in] track The track to get the length for
-	 *
-	 * \return The length in frames of the track passed
-	 */
-	int32_t length(const uint8_t track) const;
-
-	/**
-	 * Name of the audiofile of the specified track.
-	 *
-	 * \param[in] track The track to get the length for
-	 *
-	 * \return The length in frames of the track passed
-	 */
-	std::string audiofilename(const uint8_t track) const;
 
 	/**
 	 * Return the frame offsets specified in the CUE file
@@ -245,11 +203,6 @@ private:
 			const int32_t &offset,
 			const int32_t &length,
 			const std::string &audiofilename);
-
-	/**
-	 * Name of the last parsed CUE file
-	 */
-	std::string filename_;
 
 	/**
 	 * Number of tracks specified in the CUE file
@@ -343,18 +296,12 @@ CueOpenFile::~CueOpenFile() noexcept
 }
 
 
-uint16_t CueOpenFile::track_count()
-{
-	return ::cd_get_ntrack(cd_info_);
-}
-
-
 CueInfo CueOpenFile::parse_info()
 {
 	// return types according to libcue-API
 	long trk_offset = 0;
 	long trk_length = 0;
-	int track_count = ::cd_get_ntrack(cd_info_);
+	uint16_t track_count = ::cd_get_ntrack(cd_info_);
 
 	if (track_count <= 0)
 	{
@@ -413,6 +360,27 @@ CueInfo CueOpenFile::parse_info()
 			audiofilename);
 	}
 
+	// Basic verification
+
+	if (track_count != cue_info.offsets().size())
+	{
+		ARCS_LOG_WARNING << "Expected " << track_count << " tracks, but parsed "
+			<< cue_info.offsets().size() << " offsets "
+			<< "(" << std::abs(static_cast<int32_t>(
+					track_count - cue_info.offsets().size()))
+			<< (track_count < cue_info.offsets().size() ? " more" : " less")
+			<< ")";
+	}
+	if (track_count != cue_info.lengths().size())
+	{
+		ARCS_LOG_WARNING << "Expected " << track_count << " tracks, but parsed "
+			<< cue_info.lengths().size() << " lengths "
+			<< "(" << std::abs(static_cast<int32_t>(
+					track_count - cue_info.lengths().size()))
+			<< (track_count < cue_info.lengths().size() ? " more" : " less")
+			<< ")";
+	}
+
 	return cue_info;
 }
 
@@ -442,8 +410,7 @@ uint32_t CueOpenFile::signed_long_to_uint32(const long &value) const
 
 
 CueInfo::CueInfo()
-	: filename_(std::string())
-	, track_count_(0)
+	: track_count_(0)
 	, offsets_()
 	, lengths_()
 	, audiofilenames_()
@@ -455,33 +422,9 @@ CueInfo::CueInfo()
 CueInfo::~CueInfo() noexcept = default;
 
 
-std::string CueInfo::filename() const
-{
-	return filename_;
-}
-
-
 int CueInfo::track_count() const
 {
 	return track_count_;
-}
-
-
-int32_t CueInfo::offset(const uint8_t track) const
-{
-	return offsets_.at(track);
-}
-
-
-int32_t CueInfo::length(const uint8_t track) const
-{
-	return lengths_.at(track);
-}
-
-
-std::string CueInfo::audiofilename(const uint8_t track) const
-{
-	return audiofilenames_.at(track);
 }
 
 
@@ -557,13 +500,9 @@ public:
 	std::string filename() const;
 
 
-protected:
-
-	// Override
-	std::unique_ptr<TOC> do_parse(const std::string &filename);
-
-
 private:
+
+	std::unique_ptr<TOC> do_parse(const std::string &filename) override;
 
 	/**
 	 * Name of the last parsed CUE file

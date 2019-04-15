@@ -67,7 +67,7 @@ public:
 	std::unique_ptr<TOC> parse(const std::string &filename);
 
 
-protected:
+private:
 
 	/**
 	 * Implements parse()
@@ -79,7 +79,8 @@ protected:
 	 * \throw FileReadException      If the file could not be read
 	 * \throw MetadataParseException If the metadata could not be parsed
 	 */
-	virtual std::unique_ptr<TOC> do_parse(const std::string &filename) = 0;
+	virtual std::unique_ptr<TOC> do_parse(const std::string &filename)
+	= 0;
 };
 
 
@@ -159,7 +160,7 @@ public:
 	/**
 	 * Virtual default destructor
 	 */
-	virtual ~MetadataParserCreator() noexcept;
+	~MetadataParserCreator() noexcept override;
 
 	/**
 	 * Create a MetadataParser for the specified file

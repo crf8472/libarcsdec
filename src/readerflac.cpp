@@ -92,27 +92,6 @@ public:
 	 */
 	bool streaminfo(const FLAC::Metadata::StreamInfo &streaminfo);
 
-	/**
-	 * Handler method: to be called by FLAC's metadata_callback() to handle
-	 * the streaminfo metatdata block. Validates it for CDDA compliance.
-	 *
-	 * \param[in] metadata The StreamMetadata from FLAC
-	 *
-	 * \return TRUE if metadata indicates CDDA conformity, otherwise FALSE
-	 */
-	bool streaminfo(::FLAC__StreamMetadata *metadata);
-
-	/**
-	 * Handler method: to be called by FLAC's metadata_callback() to handle
-	 * the cuesheet metatdata block.
-	 *
-	 * \todo Unimplemented. This could extract the offsets directly
-	 * from the audio file if they are available.
-	 *
-	 * \param[in] metadata The StreamMetadata from FLAC
-	 */
-	void cuesheet(const ::FLAC__StreamMetadata *metadata);
-
 
 private:
 
@@ -168,21 +147,6 @@ bool FlacMetadataHandler::streaminfo(
 	}
 
 	return true;
-}
-
-
-bool FlacMetadataHandler::streaminfo(::FLAC__StreamMetadata *metadata)
-{
-	const FLAC::Metadata::StreamInfo streaminfo(metadata, false);
-	return this->streaminfo(streaminfo);
-}
-
-
-void FlacMetadataHandler::cuesheet(const ::FLAC__StreamMetadata *)
-{
-	ARCS_LOG_DEBUG << "Found FLAC cuesheet metadata block (ignored)";
-
-	// Implement cuesheet
 }
 
 
@@ -247,13 +211,6 @@ public:
 	 * \param[in] hndlr Set the FLACMetadataHandler of this instance
 	 */
 	void register_validate_handler(std::unique_ptr<FlacMetadataHandler> hndlr);
-
-	/**
-	 * Access the FLACMetadataHandler of this instance
-	 *
-	 * \return The FLACMetadataHandler of this instance
-	 */
-	const FlacMetadataHandler& validate_handler();
 
 	// make class non-copyable (2/2)
 	FlacAudioReaderImpl& operator = (const FlacAudioReaderImpl &) = delete;
@@ -333,7 +290,8 @@ void FlacAudioReaderImpl::metadata_callback(
 
 		case FLAC__METADATA_TYPE_CUESHEET:
 
-			metadata_handler_->cuesheet(metadata);
+			ARCS_LOG_DEBUG << "Found FLAC cuesheet metadata block (ignored)";
+			// TODO Implement cuesheet handler
 			break;
 
 		default:
@@ -390,9 +348,12 @@ std::unique_ptr<AudioSize> FlacAudioReaderImpl::do_acquire_size(
 
 	FLAC__uint64 total_samples = streaminfo.get_total_samples();
 
-	if (total_samples > 0xFFFFFFFF) // FIXME Never true, doesn't make sense!
+	if (total_samples > CDDA.MAX_BLOCK_ADDRESS)
 	{
-		ARCS_LOG_ERROR << "Too many samples: " << total_samples
+		ARCS_LOG_WARNING << "Too many samples: "
+				<< "Counted " << total_samples
+				<< " samples but maximal lba for 99.59.74 MSF is "
+				<< CDDA.MAX_BLOCK_ADDRESS
 				<< ". Does not seem to be a CDDA image.";
 	}
 
@@ -463,12 +424,6 @@ void FlacAudioReaderImpl::register_validate_handler(
 		std::unique_ptr<FlacMetadataHandler> hndlr)
 {
 	metadata_handler_ = std::move(hndlr);
-}
-
-
-const FlacMetadataHandler& FlacAudioReaderImpl::validate_handler()
-{
-	return *metadata_handler_;
 }
 
 /// @}

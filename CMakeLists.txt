@@ -103,8 +103,7 @@ set (REQUIRED_LIBRARIES )
 
 ## --- Define compiler switches
 
-set (FLAGS_WARNINGS -Wall -Wextra -Wold-style-cast -Wpedantic -Weffc++
-	-Wno-unused-function )
+set (FLAGS_WARNINGS -Wall -Wextra -Wold-style-cast -Wpedantic -Weffc++ )
 
 set (FLAGS_OPTIMIZE -march=native -mtune=generic )
 

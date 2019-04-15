@@ -68,13 +68,9 @@ public:
 	virtual ~DevParserImpl() noexcept;
 
 
-protected:
-
-	// Override
-	std::unique_ptr<TOC> do_parse(const std::string &filename);
-
-
 private:
+
+	std::unique_ptr<TOC> do_parse(const std::string &filename) override;
 
 	/**
 	 * Name of the last parsed CUE file

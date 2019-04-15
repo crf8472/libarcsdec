@@ -463,7 +463,7 @@ bool WavpackOpenFile::channel_order() const
 
 	// Channel layout
 
-// Commented out: unclear to me whether layout is of use, commented out for now
+// Commented out: unclear to me whether layout is of use
 //
 //  // Extract layout, counter-check channel number and test for reordering
 //
@@ -499,8 +499,7 @@ bool WavpackOpenFile::channel_order() const
 
 	// Channel identities
 
-	// Remember that this->num_channels() == CDDA.NUMBER_OF_CHANNELS is part of
-	// validation
+	// Validation has already guaranteed two channels.
 
 	if (channel_mask == 3)
 	{
@@ -760,13 +759,6 @@ public:
 	 */
 	void register_validate_handler(std::unique_ptr<WavpackValidatingHandler> v);
 
-	/**
-	 * Access to the validating handler.
-	 *
-	 * \return The validating handler of this instance
-	 */
-	const WavpackValidatingHandler& validate_handler();
-
 
 private:
 
@@ -816,37 +808,44 @@ std::unique_ptr<AudioSize> WavpackAudioReaderImpl::do_acquire_size(
 
 void WavpackAudioReaderImpl::do_process_file(const std::string &filename)
 {
+	// Validation
+
 	ARCS_LOG_DEBUG << "Start validating Wavpack file: " << filename;
 	WavpackOpenFile file(filename);
 
 	if (not validate_handler_)
 	{
-		ARCS_LOG_ERROR << "No validator configured, cannot validate file.";
-	}
-
-	if (not perform_validations(file))
+		ARCS_LOG_WARNING
+			<< "No validation handler configured, cannot validate file.";
+	} else
 	{
-		ARCS_LOG_ERROR << "Validation failed";
-		return;
+		if (not perform_validations(file))
+		{
+			ARCS_LOG_ERROR << "Validation failed";
+			return;
+		}
+
+		ARCS_LOG_DEBUG << "Completed validation of Wavpack file";
 	}
 
-	ARCS_LOG_DEBUG << "Completed validation of Wavpack file";
-
-	uint32_t total_samples = file.total_pcm_samples();
+	uint32_t total_samples { file.total_pcm_samples() };
 	ARCS_LOG_INFO << "Total samples: " << total_samples;
 
+
 	// Notify about correct size
+
 	{
 		AudioSize size;
 		size.set_sample_count(total_samples);
 		this->process_audiosize(size);
 	}
 
+
 	// Samples reading loop
 	{
-		std::vector<int32_t> samples;
 		SampleSequence<int32_t, false> sequence(file.channel_order());
 
+		std::vector<int32_t> samples;
 		samples.resize(this->samples_per_read());
 
 		// Request half the number of samples in a block, thus a sequence will
@@ -863,8 +862,10 @@ void WavpackAudioReaderImpl::do_process_file(const std::string &filename)
 
 			if (samples_read != wv_sample_count)
 			{
-				// Chunk is smaller than declared, this only ok for last chunk
-				// (last run will see i == total_samples % wv_sample_count)
+				// Chunk is smaller than declared. This is only allowed for the
+				// last chunk.
+				// The last chunk must have size total_samples % wv_sample_count
+				// and this is the value for i after the last loop run.
 
 				if (samples_read != static_cast<uint32_t>(i))
 				{
@@ -887,7 +888,7 @@ void WavpackAudioReaderImpl::do_process_file(const std::string &filename)
 					<< " integers, add to current block";
 
 			sequence.reset(samples.data(), samples.size());
-			// NOTE That we use the number of 16 bit samples per channel, not
+			// NOTE That we use the number of 16 bit samples _per_channel_, not
 			// the total number of 16 bit samples in the chunk
 
 			this->process_samples(sequence.begin(), sequence.end());
@@ -903,43 +904,12 @@ void WavpackAudioReaderImpl::register_validate_handler(
 }
 
 
-const WavpackValidatingHandler& WavpackAudioReaderImpl::validate_handler()
-{
-	return *validate_handler_;
-}
-
-
 bool WavpackAudioReaderImpl::perform_validations(const WavpackOpenFile &file)
 {
-	// format
-
-	if (not validate_handler_->validate_format(file))
-	{
-		return false;
-	}
-
-	// mode
-
-	if (not validate_handler_->validate_mode(file))
-	{
-		return false;
-	}
-
-	// cdda
-
-	if (not validate_handler_->validate_cdda(file))
-	{
-		return false;
-	}
-
-	// version
-
-	if (not validate_handler_->validate_version(file))
-	{
-		return false;
-	}
-
-	return true;
+	return  validate_handler_->validate_format(file)
+		and validate_handler_->validate_mode(file)
+		and validate_handler_->validate_cdda(file)
+		and validate_handler_->validate_version(file);
 }
 
 /// @}
