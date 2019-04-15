@@ -351,7 +351,7 @@ uint32_t AudioReaderImpl::do_samples_per_read() const
 
 
 BufferedAudioReaderImpl::BufferedAudioReaderImpl()
-	: samples_per_read_(BLOCKSIZE::DEFAULT)
+	: samples_per_read_(BLOCKSIZE.DEFAULT)
 {
 	// empty
 }
@@ -430,7 +430,7 @@ public:
 	/**
 	 * Set the number of samples to read in one read operation.
 	 *
-	 * The default is BLOCKSIZE::DEFAULT.
+	 * The default is BLOCKSIZE.DEFAULT.
 	 */
 	void set_samples_per_read(const uint32_t &samples_per_read);
 

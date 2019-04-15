@@ -25,34 +25,39 @@ namespace arcs
 
 
 /**
- * Number of 32 bit samples for some block sizes
+ * \brief Symbolic constants for certain block sizes
  */
-enum SAMPLES : uint32_t
+struct BLOCKSIZE_t
 {
-	FOR_256MB = 67108864,
+	/**
+	 * \brief Maximum buffer size in number of PCM 32 bit samples.
+	 *
+	 * Currently, this is 256 MiB.
+	 */
+	const uint32_t MAX     = 67108864; // == 256 * 1024^2 / 4
 
-	FOR_128MB = 33554432,
+	/**
+	 * \brief Default buffer size in number of PCM 32 bit samples.
+	 *
+	 * Currently, this is 64 MiB.
+	 */
+	const uint32_t DEFAULT = 16777216; // == 64 * 1024^2 / 4
 
-	FOR_64MB  = 16777216,
-
-	FOR_32MB  = 8388608
+	/**
+	 * \brief Minimum buffer size in number of PCM 32 bit samples.
+	 *
+	 * Currently, this is 256 KiB.
+	 */
+	const uint32_t MIN     = 65536; // == 256 * 1024 / 4
+	// The size of a maximal fLaC block. This entails that at least one fLaC
+	// frame is guaranteed to fit in a block of minimal size.
 };
 
 
 /**
- * Symbolic constants for default and maximum block size
+ * \brief Global symbolic block sizes
  */
-enum BLOCKSIZE : uint32_t
-{
-	DEFAULT = SAMPLES::FOR_64MB,
-
-	MAX     = SAMPLES::FOR_256MB,
-
-	MIN     = 65536 // == 256K, Size of a maximal fLaC block
-	// Biggest value for the number of PCM samples in a fLaC frame. This
-	// entails that at least one fLaC frame is guaranteed to fit in a block of
-	// minimal size.
-};
+extern const BLOCKSIZE_t BLOCKSIZE;
 
 
 /**

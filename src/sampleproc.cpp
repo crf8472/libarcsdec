@@ -12,6 +12,8 @@
 namespace arcs
 {
 
+const BLOCKSIZE_t BLOCKSIZE;
+
 
 // SampleProcessor
 

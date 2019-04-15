@@ -21,7 +21,7 @@
 
 TEST_CASE ( "BlockAccumulator", "[audiobuffer] [blockaccumulator]" )
 {
-	arcs::BlockAccumulator accumulator; // Capacity: BLOCKSIZE::DEFAULT
+	arcs::BlockAccumulator accumulator; // Capacity: BLOCKSIZE.DEFAULT
 
 	REQUIRE ( accumulator.samples_appended()   == 0 );
 
@@ -30,7 +30,7 @@ TEST_CASE ( "BlockAccumulator", "[audiobuffer] [blockaccumulator]" )
 	{
 		// Create actual samples
 		std::vector<int32_t> samples;
-		samples.resize(4096); // smaller than BLOCKSIZE::DEFAULT
+		samples.resize(4096); // smaller than BLOCKSIZE.DEFAULT
 
 		// Configure sequence "adapter" for actual samples
 		arcs::SampleSequence<int32_t, false> sequence; // left 0, right 1

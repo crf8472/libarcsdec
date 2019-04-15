@@ -31,7 +31,7 @@ namespace arcs
 
 
 BlockCreator::BlockCreator()
-	: samples_per_block_(BLOCKSIZE::DEFAULT)
+	: samples_per_block_(BLOCKSIZE.DEFAULT)
 {
 	// empty
 }
@@ -61,7 +61,7 @@ uint32_t BlockCreator::samples_per_block() const
 
 uint32_t BlockCreator::min_samples_per_block() const
 {
-	return BLOCKSIZE::MIN;
+	return BLOCKSIZE.MIN;
 }
 
 
@@ -87,7 +87,7 @@ uint32_t BlockCreator::clip_samples_per_block(
 
 BlockAccumulator::BlockAccumulator()
 	: consume_()
-	, samples_(BLOCKSIZE::DEFAULT)
+	, samples_(BLOCKSIZE.DEFAULT)
 	, samples_appended_(0)
 {
 	// empty
@@ -237,7 +237,7 @@ void BlockAccumulator::init_buffer(const uint32_t &buffer_size)
 
 
 SampleBuffer::SampleBuffer()
-	: BlockAccumulator(BLOCKSIZE::DEFAULT)
+	: BlockAccumulator(BLOCKSIZE.DEFAULT)
 {
 	this->init();
 }

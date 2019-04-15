@@ -353,7 +353,7 @@ std::pair<Checksums, ARId> ARCSCalculator::Impl::calculate(
 
 	auto calc = std::make_unique<Calculation>(make_context(audiofilename, toc));
 
-	this->process_file(audiofilename, *calc, BLOCKSIZE::DEFAULT, false);
+	this->process_file(audiofilename, *calc, BLOCKSIZE.DEFAULT, false);
 
 
 	// Sanity-check result
@@ -446,7 +446,7 @@ void ARCSCalculator::Impl::process_file(const std::string &audiofilename,
 	}
 
 	const bool buffer_size_is_legal =
-			(BLOCKSIZE::MIN <= buffer_size and buffer_size <= BLOCKSIZE::MAX);
+			(BLOCKSIZE.MIN <= buffer_size and buffer_size <= BLOCKSIZE.MAX);
 
 
 	// Configure AudioReader and process file
@@ -476,7 +476,7 @@ void ARCSCalculator::Impl::process_file(const std::string &audiofilename,
 			{
 				ARCS_LOG_WARNING << "Specified buffer size of " << buffer_size
 					<< ", but this is not within the legal range of "
-					<< BLOCKSIZE::MIN << " - " << BLOCKSIZE::MAX
+					<< BLOCKSIZE.MIN << " - " << BLOCKSIZE.MAX
 					<< ". Use implementations default instead.";
 
 				// Do nothing, AudioReaderImpl uses its default
@@ -506,7 +506,7 @@ ChecksumSet ARCSCalculator::Impl::calculate_track(
 	auto calc = std::make_unique<Calculation>(
 		make_context(audiofilename, skip_front, skip_back));
 
-	this->process_file(audiofilename, *calc, BLOCKSIZE::DEFAULT, false);
+	this->process_file(audiofilename, *calc, BLOCKSIZE.DEFAULT, false);
 
 
 	// Sanity-check result
