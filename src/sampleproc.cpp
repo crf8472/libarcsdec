@@ -35,6 +35,12 @@ void SampleProcessor::update_audiosize(const AudioSize &size)
 }
 
 
+void SampleProcessor::end_input(const uint32_t last_sample_index)
+{
+	this->do_end_input(last_sample_index);
+}
+
+
 int64_t SampleProcessor::sequences_processed() const
 {
 	return total_sequences_;
@@ -67,10 +73,15 @@ void SampleProcessorAdapter::do_append_samples(
 }
 
 
-void SampleProcessorAdapter::do_update_audiosize(
-		const AudioSize &size)
+void SampleProcessorAdapter::do_update_audiosize(const AudioSize &size)
 {
 	calculation_->update_audiosize(size);
+}
+
+
+void SampleProcessorAdapter::do_end_input(const uint32_t /* last_sample_index*/)
+{
+	// empty
 }
 
 
@@ -86,6 +97,7 @@ ISampleProvider::~ISampleProvider() noexcept = default;
 SampleProvider::SampleProvider()
 	: append_samples_()
 	, update_audiosize_()
+	, end_input_()
 	, processor_()
 {
 	// empty
@@ -93,20 +105,6 @@ SampleProvider::SampleProvider()
 
 
 SampleProvider::~SampleProvider() noexcept = default;
-
-
-void SampleProvider::register_processor(SampleProcessor &processor)
-{
-	processor_ = &processor;
-
-	this->register_appendsamples(std::bind(&SampleProcessor::append_samples,
-			&processor,
-			std::placeholders::_1, std::placeholders::_2));
-
-	this->register_updatesize(std::bind(&SampleProcessor::update_audiosize,
-			&processor,
-			std::placeholders::_1));
-}
 
 
 void SampleProvider::register_appendsamples(
@@ -124,6 +122,13 @@ void SampleProvider::register_updatesize(
 }
 
 
+void SampleProvider::register_endinput(
+		std::function<void(const uint32_t last_sample_index)> func)
+{
+	this->end_input_ = func;
+}
+
+
 void SampleProvider::process_samples(
 		PCMForwardIterator begin, PCMForwardIterator end)
 {
@@ -137,9 +142,47 @@ void SampleProvider::process_audiosize(const AudioSize &size)
 }
 
 
-const SampleProcessor& SampleProvider::processor() const
+void SampleProvider::process_endinput(const uint32_t last_sample_index)
 {
-	return *this->processor_;
+	this->end_input_(last_sample_index);
+}
+
+
+void SampleProvider::register_processor(SampleProcessor &processor)
+{
+	processor_ = &processor;
+
+	this->register_appendsamples(std::bind(&SampleProcessor::append_samples,
+			&processor,
+			std::placeholders::_1, std::placeholders::_2));
+
+	this->register_updatesize(std::bind(&SampleProcessor::update_audiosize,
+			&processor,
+			std::placeholders::_1));
+
+	this->register_endinput(std::bind(&SampleProcessor::end_input,
+			&processor,
+			std::placeholders::_1));
+
+	this->hook_post_register_processor();
+}
+
+
+const SampleProcessor* SampleProvider::processor() const
+{
+	return this->processor_;
+}
+
+
+SampleProcessor* SampleProvider::use_processor()
+{
+	return this->processor_;
+}
+
+
+void SampleProvider::hook_post_register_processor()
+{
+	// empty
 }
 
 

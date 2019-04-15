@@ -359,25 +359,23 @@ public:
 	void flush();
 
 	/**
-	 * Handler method that informs about the end of input.
+	 * Handler method that informs about the number of total samples.
 	 *
-	 * This method is to be called by the AudioReaderImpl before the last block
-	 * is flushed.
+	 * Constructs an AudioSize instance of the passed sample amount and calls
+	 * the registered update_audiosize() callback method. This is mere
+	 * convenience for the caller not to be forced to construct the AudioSize
+	 * object.
 	 *
 	 * \param[in] idx Index of the last 32 bit PCM sample
 	 */
-	void notify_total_samples(const uint32_t idx);
+	//void notify_total_samples(const uint32_t idx);
 
 	/**
 	 * Register a Calculation to update by this instance.
 	 *
 	 * \param[in] calc The Calculation updated by this instance
 	 */
-	void register_processor(Calculation &calc);
-
-	// SampleProvider
-
-	void register_processor(SampleProcessor &processor) override;
+	//void register_processor(Calculation &calc);
 
 
 private:
@@ -386,6 +384,10 @@ private:
 		override;
 
 	void do_update_audiosize(const AudioSize &size) override;
+
+	void do_end_input(const uint32_t last_sample_index) override;
+
+	void hook_post_register_processor() override;
 };
 
 /// @}

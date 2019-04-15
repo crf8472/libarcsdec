@@ -84,6 +84,13 @@ public:
 	void update_audiosize(const AudioSize &size);
 
 	/**
+	 * \brief Callback for end of input
+	 *
+	 * \param[in] sample_index 0-based index of the last sample.
+	 */
+	void end_input(const uint32_t last_sample_index);
+
+	/**
 	 * \brief Number of sample sequence that this instance has processed.
 	 *
 	 * This value is identical to how often append_samples() was called.
@@ -105,16 +112,22 @@ public:
 private:
 
 	/**
-	 * Implements SampleProcessor::samples_callback(PCMForwardIterator begin, PCMForwardIterator end)
+	 * Implements SampleProcessor::append_samples(PCMForwardIterator begin, PCMForwardIterator end)
 	 */
 	virtual void do_append_samples(PCMForwardIterator begin,
 			PCMForwardIterator end)
 	= 0;
 
 	/**
-	 * Implements SampleProcessor::audiosize_callback(const AudioSize &size)
+	 * Implements SampleProcessor::update_audiosize(const AudioSize &size)
 	 */
 	virtual void do_update_audiosize(const AudioSize &size)
+	= 0;
+
+	/**
+	 * Implements SampleProcessor::end_input(const uint32_t last_sample_index)
+	 */
+	virtual void do_end_input(const uint32_t last_sample_index)
 	= 0;
 
 	/**
@@ -157,16 +170,12 @@ public:
 
 private:
 
-	/**
-	 * Implements SampleProcessor::append_samples
-	 */
 	void do_append_samples(PCMForwardIterator begin, PCMForwardIterator end)
 		override;
 
-	/**
-	 * Implements SampleProcessor::update_audiosize
-	 */
 	void do_update_audiosize(const AudioSize &size) override;
+
+	void do_end_input(const uint32_t last_sample_index) override;
 
 	/**
 	 * Internal pointer to the calculation to wrap
@@ -183,36 +192,63 @@ class ISampleProvider
 
 public:
 
+	/**
+	 * Virtual default destructor
+	 */
 	virtual ~ISampleProvider() noexcept;
 
 	/**
+	 * Register a function callback called as \c append_samples().
+	 *
+	 * \param[in] f
+	 */
+	virtual void register_appendsamples(
+			std::function<void(PCMForwardIterator, PCMForwardIterator)> f)
+	= 0;
+
+	/**
+	 * Register a function callback called as \c update_audiosize().
+	 *
+	 * \param[in] f
+	 */
+	virtual void register_updatesize(std::function<void(const AudioSize &)> f)
+	= 0;
+
+	/**
+	 * Register a function callback called as \c end_input().
+	 *
+	 * \param[in] f The function to register
+	 */
+	virtual void register_endinput(std::function<void(const uint32_t)> f)
+	= 0;
+
+	/**
+	 * Register a SampleProcessor.
+	 *
+	 * This will register all callback methods of the \c processor. Already
+	 * registered callbacks will be overwritten by this method.
+	 *
+	 * The method is a mere convenience for completely registering a single
+	 * SampleProcessor instance.
 	 *
 	 * \param[in] processor The SampleProcessor to use
 	 */
 	virtual void register_processor(SampleProcessor &processor)
 	= 0;
 
-	virtual void register_appendsamples(
-			std::function<void(PCMForwardIterator, PCMForwardIterator)> f)
-	= 0;
-
-	virtual void register_updatesize(std::function<void(const AudioSize &)> f)
-	= 0;
-
 	/**
+	 * Return the registered SampleProcessor.
 	 *
 	 * \return The SampleProcessor the reader uses
 	 */
-	virtual const SampleProcessor& processor() const
+	virtual const SampleProcessor* processor() const
 	= 0;
 
 
-protected:
+private:
 
 	/**
-	 * Call append_samples on the registered SampleProcessor.
-	 *
-	 * The actual method call is just passed to the registered SampleProcessor.
+	 * Call the registered \c append_samples() callback.
 	 *
 	 * \param[in] begin Iterator pointing to the begin of the sequence
 	 * \param[in] end   Iterator pointing to the end of the sequence
@@ -221,15 +257,22 @@ protected:
 			PCMForwardIterator begin, PCMForwardIterator end)
 	= 0;
 
-
 	/**
-	 * Call update_audiosize on the registered SampleProcessor.
+	 * Call the registered \c update_audiosize() callback.
 	 *
 	 * The actual method call is just passed to the registered SampleProcessor.
 	 *
 	 * \param[in] size AudioSize to report
 	 */
 	virtual void process_audiosize(const AudioSize &size)
+	= 0;
+
+	/**
+	 * Call the registered \c end_input() callback.
+	 *
+	 * \param[in] last_sample_index The 0-based index of the last sample.
+	 */
+	virtual void process_endinput(const uint32_t last_sample_index)
 	= 0;
 };
 
@@ -249,23 +292,17 @@ public:
 
 	SampleProvider(const SampleProvider &rhs) = delete;
 
-	/**
-	 *
-	 * \param[in] processor The SampleProcessor to use
-	 */
-	void register_processor(SampleProcessor &processor) override;
-
 	void register_appendsamples(
 			std::function<void(PCMForwardIterator, PCMForwardIterator)> f)
 		final;
 
 	void register_updatesize(std::function<void(const AudioSize &size)>) final;
 
-	/**
-	 *
-	 * \return The SampleProcessor the reader uses
-	 */
-	const SampleProcessor& processor() const final;
+	void register_endinput(std::function<void(const uint32_t)> f) final;
+
+	void register_processor(SampleProcessor &processor) final;
+
+	const SampleProcessor* processor() const final;
 
 	SampleProvider& operator = (const SampleProvider &rhs) = delete;
 
@@ -282,8 +319,17 @@ protected:
 
 	void process_audiosize(const AudioSize &size) override;
 
+	void process_endinput(const uint32_t last_sample_index) override;
+
+	SampleProcessor* use_processor();
+
 
 private:
+
+	/**
+	 * Hook to be called before leaving register_processor().
+	 */
+	virtual void hook_post_register_processor();
 
 	/**
 	 * Callback pointer for appending samples sequences to processing
@@ -295,6 +341,11 @@ private:
 	 * Callback pointer for updateing the AudioSize
 	 */
 	std::function<void(const AudioSize &size)> update_audiosize_;
+
+	/**
+	 * Callback pointer for indicating the end of the sample input
+	 */
+	std::function<void(const uint32_t last_sample_index)> end_input_;
 
 	/**
 	 * Internal pointer to the SampleProcessor.

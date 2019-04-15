@@ -265,56 +265,64 @@ void SampleBuffer::flush()
 }
 
 
-void SampleBuffer::notify_total_samples(const uint32_t sample_count)
-{
-	ARCS_LOG_DEBUG << "Total samples updated to: " << sample_count;
-
-	AudioSize size;
-	size.set_sample_count(sample_count);
-
-	this->process_audiosize(size);
-}
-
-
-void SampleBuffer::register_processor(SampleProcessor &processor)
-{
-	SampleProvider::register_processor(processor);
-
-	// Attach SampleProcessor to the inherited BlockAccumulator
-	this->register_block_consumer(
-		std::bind(&SampleProcessor::append_samples, &processor,
-			std::placeholders::_1, std::placeholders::_2));
-}
+//void SampleBuffer::notify_total_samples(const uint32_t sample_count)
+//{
+//	ARCS_LOG_DEBUG << "Total samples updated to: " << sample_count;
+//
+//	AudioSize size;
+//	size.set_sample_count(sample_count);
+//
+//	this->process_audiosize(size);
+//}
 
 
-void SampleBuffer::register_processor(Calculation &calc)
-{
-	this->register_appendsamples(
-			std::bind(&Calculation::update, &calc,
-				std::placeholders::_1, std::placeholders::_2));
-
-	this->register_updatesize(
-			std::bind(&Calculation::update_audiosize, &calc,
-				std::placeholders::_1));
-
-	// Attach Calculation to the inherited BlockAccumulator
-	this->register_block_consumer(
-		std::bind(&Calculation::update, &calc,
-			std::placeholders::_1, std::placeholders::_2));
-}
+//void SampleBuffer::register_processor(Calculation &calc)
+//{
+//	this->register_appendsamples(
+//			std::bind(&Calculation::update, &calc,
+//				std::placeholders::_1, std::placeholders::_2));
+//
+//	this->register_updatesize(
+//			std::bind(&Calculation::update_audiosize, &calc,
+//				std::placeholders::_1));
+//
+//	// Attach Calculation to the inherited BlockAccumulator
+//	this->register_block_consumer(
+//		std::bind(&Calculation::update, &calc,
+//			std::placeholders::_1, std::placeholders::_2));
+//}
 
 
 void SampleBuffer::do_append_samples(PCMForwardIterator begin,
 		PCMForwardIterator end)
 {
 	this->append_to_block(begin, end);
+	// append_to_block calls process_samples() once the buffer is full
 }
 
 
 void SampleBuffer::do_update_audiosize(const AudioSize &size)
 {
-	// just pass on to registered processor
+	// do nothing, just pass on to registered processor
 	this->process_audiosize(size);
+}
+
+
+void SampleBuffer::do_end_input(const uint32_t last_sample_index)
+{
+	this->flush();
+
+	// pass on to registered processor
+	this->process_endinput(last_sample_index);
+}
+
+
+void SampleBuffer::hook_post_register_processor()
+{
+	// Attach SampleProcessor to the inherited BlockAccumulator
+	this->register_block_consumer(
+		std::bind(&SampleProcessor::append_samples, this->use_processor(),
+			std::placeholders::_1, std::placeholders::_2));
 }
 
 

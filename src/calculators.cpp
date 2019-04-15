@@ -292,11 +292,26 @@ public:
 protected:
 
 	/**
+	 * Worker: process a file and calculate the results.
+	 *
+	 * The \c buffer_size is specified as number of 32 bit PCM samples. It is
+	 * applied to the created AudioReader's read buffer iff it has a
+	 * configurable_read_buffer(). In this case, parameter \c use_cbuffer will
+	 * stay irrelevant.
+	 *
+	 * If the AudioReader has no configurable_read_buffer(), the behaviour
+	 * depends on the parameter \c use_cbuffer. If it is FALSE, this renders
+	 * \c buffer_size without effect. If it is TRUE, a buffering in the
+	 * specified \c buffer-size will be enforced. Thus, parameter \c use_cbuffer
+	 * controls whether buffering is enforced.
 	 *
 	 * \param[in] audiofilename  Name  of the audiofile
+	 * \param[in] calc           The Calculation to use
+	 * \param[in] buffer_size    Buffer size in number of samples
+	 * \param[in] use_cbuffer    Enforce a converting buffer
 	 */
 	void process_file(const std::string &audiofilename, Calculation& calc,
-		const uint32_t buffer_size) const;
+		const uint32_t buffer_size, const bool use_cbuffer) const;
 
 
 private:
@@ -338,7 +353,7 @@ std::pair<Checksums, ARId> ARCSCalculator::Impl::calculate(
 
 	auto calc = std::make_unique<Calculation>(make_context(audiofilename, toc));
 
-	this->process_file(audiofilename, *calc, BLOCKSIZE::DEFAULT);
+	this->process_file(audiofilename, *calc, BLOCKSIZE::DEFAULT, false);
 
 
 	// Sanity-check result
@@ -418,10 +433,9 @@ ChecksumSet ARCSCalculator::Impl::calculate(
 
 
 void ARCSCalculator::Impl::process_file(const std::string &audiofilename,
-		Calculation& calc, const uint32_t buffer_size) const
+		Calculation& calc, const uint32_t buffer_size, const bool use_cbuffer)
+		const
 {
-	// Create AudioReader
-
 	std::unique_ptr<AudioReader> reader =
 		audioreader_creator().create_audio_reader(audiofilename);
 
@@ -431,29 +445,23 @@ void ARCSCalculator::Impl::process_file(const std::string &audiofilename,
 		throw std::logic_error("No AudioReader available. Bail out.");
 	}
 
-	// Verify buffer size
-
 	const bool buffer_size_is_legal =
 			(BLOCKSIZE::MIN <= buffer_size and buffer_size <= BLOCKSIZE::MAX);
 
-	const bool conv_buffer_requested = false;
 
 	// Configure AudioReader and process file
 
-	if ((conv_buffer_requested and !reader->configurable_read_buffer())
+	SampleProcessorAdapter proc { calc };
+
+	if (use_cbuffer and !reader->configurable_read_buffer()
 			and buffer_size_is_legal)
 	{
 		// Conversion/Buffering was explicitly requested
 
-		// AudioReader has no configurable read buffer, the buffer size is
-		// in a legal range
-
 		SampleBuffer buffer(buffer_size);
-		buffer.register_processor(calc);
+		buffer.register_processor(proc);
 
 		reader->set_processor(buffer);
-		reader->process_file(audiofilename);
-		buffer.flush();
 	} else
 	{
 		// Conversion/Buffering was not requested
@@ -475,16 +483,15 @@ void ARCSCalculator::Impl::process_file(const std::string &audiofilename,
 			}
 		} else
 		{
-			ARCS_LOG_WARNING << "AudioReader has no configuration option "
-				<< "for read buffer size."
-				<< " Ignore request and use implementation's default.";
+			ARCS_LOG_INFO << "AudioReader has no configuration option "
+				<< "for read buffer size. Use implementation's default since "
+				<< "no CBuffer was requested.";
 		}
 
-		SampleProcessorAdapter proc { calc };
-
 		reader->set_processor(proc);
-		reader->process_file(audiofilename);
 	}
+
+	reader->process_file(audiofilename);
 }
 
 
@@ -499,7 +506,7 @@ ChecksumSet ARCSCalculator::Impl::calculate_track(
 	auto calc = std::make_unique<Calculation>(
 		make_context(audiofilename, skip_front, skip_back));
 
-	this->process_file(audiofilename, *calc, BLOCKSIZE::DEFAULT);
+	this->process_file(audiofilename, *calc, BLOCKSIZE::DEFAULT, false);
 
 
 	// Sanity-check result

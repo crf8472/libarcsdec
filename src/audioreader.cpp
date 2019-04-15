@@ -469,7 +469,7 @@ public:
 	 *
 	 * \return The SampleProcessor the reader uses
 	 */
-	const SampleProcessor& sampleprocessor();
+	const SampleProcessor* sampleprocessor();
 
 	Impl& operator = (const Impl &rhs) = delete;
 
@@ -543,7 +543,7 @@ void AudioReader::Impl::set_processor(SampleProcessor &processor)
 }
 
 
-const SampleProcessor& AudioReader::Impl::sampleprocessor()
+const SampleProcessor* AudioReader::Impl::sampleprocessor()
 {
 	return readerimpl_->processor();
 }
