@@ -176,6 +176,12 @@ public:
 	 * result for audiofilenames[i]. The result will have the same size as
 	 * audiofilenames.
 	 *
+	 * Note that in this use case, it is not offered to compute the ARId of the
+	 * album since the exact offsets are missing. Calculating the offsets from
+	 * the actual tracks may be a feature but it is in no way guaranteed that
+	 * this would lead to a correct result (e.g. if the silence was not appended
+	 * to the end of the previous track).
+	 *
 	 * \param[in] audiofilenames       Names of the audiofiles
 	 * \param[in] first_file_with_skip Process first file as first track
 	 * \param[in] last_file_with_skip  Process last file as last track
@@ -187,12 +193,14 @@ public:
 			const bool &last_file_with_skip);
 
 	/**
-	 * Calculate an ARCS for the given audio file.
+	 * Calculate a single ARCS for the given audio file.
 	 *
 	 * The flags skip_front and skip_back control whether the track is processed
 	 * as first or last track of an album. If \c skip_front is set to TRUE, the
-	 * first 2939 samples are skipped in the calculation. If \c skip_back
-	 * is set to TRUE, the last 5 frames of are skipped in the calculation.
+	 * track is processed as first track of an album, meaning the first 2939
+	 * samples are skipped in the calculation. If \c skip_back
+	 * is set to TRUE, the track is processed as the last track of an album,
+	 * meaning that the last 5 frames of are skipped in the calculation.
 	 *
 	 * \param[in] audiofilename  Name  of the audiofile
 	 * \param[in] skip_front     Skip front samples of first track
