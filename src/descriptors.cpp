@@ -1,10 +1,10 @@
 /**
- * \file fileformats.cpp Implementation of a selection toolkit for FileReaders
+ * \file descriptors.cpp Implementation of a selection toolkit for FileReaders
  */
 
 
 #ifndef __LIBARCSDEC_FILEFORMATS_HPP__
-#include "fileformats.hpp"
+#include "descriptors.hpp"
 #endif
 
 #include <cstdint>
@@ -312,9 +312,9 @@ bool FileReaderSelector::matches(
 /**
  * \cond IMPL_ONLY
  *
- * \internal \defgroup fileformatsImpl Implementation details for building and selecting file types
+ * \internal \defgroup descriptorsImpl Implementation details for building and selecting file types
  *
- * \ingroup fileformats
+ * \ingroup descriptors
  * @{
  */
 

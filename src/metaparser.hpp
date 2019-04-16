@@ -15,7 +15,7 @@
 #endif
 
 #ifndef __LIBARCSDEC_FILEFORMATS_HPP__
-#include "fileformats.hpp"
+#include "descriptors.hpp"
 #endif
 
 

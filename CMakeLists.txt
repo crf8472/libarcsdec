@@ -82,7 +82,7 @@ list (APPEND SOURCES "${PROJECT_SOURCE_DIR}/calculators.cpp" )
 
 list (APPEND SOURCES "${PROJECT_SOURCE_DIR}/audiobuffer.cpp" )
 list (APPEND SOURCES "${PROJECT_SOURCE_DIR}/audioreader.cpp" )
-list (APPEND SOURCES "${PROJECT_SOURCE_DIR}/fileformats.cpp" )
+list (APPEND SOURCES "${PROJECT_SOURCE_DIR}/descriptors.cpp" )
 list (APPEND SOURCES "${PROJECT_SOURCE_DIR}/metaparser.cpp" )
 ## parserdev.cpp     is optional and default OFF, depends on libcdio
 ## parsercue.cpp     is required, depends on libcue

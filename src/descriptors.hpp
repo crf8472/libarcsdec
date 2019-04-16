@@ -2,7 +2,7 @@
 #define __LIBARCSDEC_FILEFORMATS_HPP__
 
 /**
- * \file fileformats.hpp Toolkit for selecting file readers
+ * \file descriptors.hpp Toolkit for selecting file readers
  */
 
 #include <cstdint>
@@ -25,7 +25,7 @@ namespace arcs
 inline namespace v_1_0_0
 {
 
-/// \defgroup fileformats Level 0 API: Create a FileReader for a Given File
+/// \defgroup descriptors Level 0 API: Create a FileReader for a Given File
 
 /**
  * \brief Framework for creating specialized FileReaders for a specified file.

@@ -13,7 +13,7 @@
 #include <vector>
 
 #ifndef __LIBARCSDEC_FILEFORMATS_HPP__
-#include "fileformats.hpp"
+#include "descriptors.hpp"
 #endif
 #ifndef __LIBARCSDEC_METAPARSER_HPP__
 #include "metaparser.hpp"
