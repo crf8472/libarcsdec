@@ -64,7 +64,7 @@ namespace arcs
  *
  * ByteConverter converts single sequences of chars to integer representations.
  *
- * AudioReaderCreator is a convenience class to create an AudioReader for any
+ * AudioReaderSelection is a convenience class to create an AudioReader for any
  * specified audio input file.
  *
  * @{
@@ -718,10 +718,9 @@ private:
 
 
 /**
- * A builder class for AudioReaders. Selects a matching FileFormat for a given
- * file and creates an appropriate AudioReader for the specified file.
+ * \brief Selects and builds AudioReader instances for given inputs.
  */
-class AudioReaderCreator : public FileReaderCreator
+class AudioReaderSelection : public FileReaderSelection
 {
 
 public:
@@ -729,12 +728,12 @@ public:
 	/**
 	 * Constructor
 	 */
-	AudioReaderCreator();
+	AudioReaderSelection();
 
 	/**
 	 * Virtual default destructor
 	 */
-	~AudioReaderCreator() noexcept override;
+	~AudioReaderSelection() noexcept override;
 
 	/**
 	 * Create an AudioReader for the specified file
@@ -743,14 +742,25 @@ public:
 	 *
 	 * \return An AudioReader for the given file
 	 */
-	std::unique_ptr<AudioReader> create_audio_reader(
-			const std::string &filename) const;
+	std::unique_ptr<AudioReader> for_file(const std::string &filename) const;
+
+	/**
+	 * Return the AudioReader specified by its name.
+	 *
+	 * If the selection does not contain an AudioReader with the specified name,
+	 * \c nullptr will be returned.
+	 *
+	 * \param[in] name The name of the AudioReader.
+	 *
+	 * \return A AudioReader with the specified name
+	 */
+	std::unique_ptr<AudioReader> by_name(const std::string &name) const;
 
 
 protected:
 
 	/**
-	 * Turns a FileReader* to an AudioReader*.
+	 * Turns a FileReader to an AudioReader.
 	 *
 	 * \param[in] filereader The FileReader to cast
 	 *

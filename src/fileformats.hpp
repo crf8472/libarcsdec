@@ -26,12 +26,12 @@ namespace arcs
 /**
  * \brief Framework for creating specialized FileReaders for a specified file.
  *
- * Abstract class FileReaderCreator implements the generic mechanism to check a
+ * Abstract class FileReaderSelection implements the generic mechanism to check a
  * specified input file for a matching FileFormat. If a matching FileFormat is
  * found, an instance of this format is returned which is then used to create
  * the concrete FileReader instance.
  *
- * A FileReaderCreator holds a a list of tests to perform on the input file and
+ * A FileReaderSelection holds a a list of tests to perform on the input file and
  * a list of supported FileFormats. Internally, it uses an instance of
  * FileFormatSelector to select a concrete FileFormat. FileFormatSelector
  * performs the selection obeying a certain selection policy. The default
@@ -437,7 +437,7 @@ private:
 
 
 /**
- * Represents a selection mechanism for a FileFormatCreator.
+ * Represents a selection mechanism for a FileFormatSelection.
  *
  * A FileFormatSelector applies some FileFormatTests to decide whether a given
  * FileFormat matches or not.
@@ -501,7 +501,7 @@ private:
 /**
  * Abstract builder class for creating readers for given files.
  */
-class FileReaderCreator
+class FileReaderSelection
 {
 
 public:
@@ -509,15 +509,15 @@ public:
 	/**
 	 * Constructor
 	 */
-	FileReaderCreator();
+	FileReaderSelection();
 
 	// class is non-copy-constructible
-	FileReaderCreator(const FileReaderCreator &) = delete; // TODO why?
+	FileReaderSelection(const FileReaderSelection &) = delete; // TODO why?
 
 	/**
 	 * Virtual default destructor
 	 */
-	virtual ~FileReaderCreator() noexcept;
+	virtual ~FileReaderSelection() noexcept;
 
 	/**
 	 * Add a format to the list of formats for which a FileReader can be created
@@ -591,8 +591,19 @@ public:
 	 *
 	 * \return A FileReader for the specified file
 	 */
-	std::unique_ptr<FileReader> create_reader(const std::string &filename)
-		const;
+	std::unique_ptr<FileReader> for_file(const std::string &filename) const;
+
+	/**
+	 * Return the FileReader specified by its name.
+	 *
+	 * If the selection does not contain a FileReader with the specified name,
+	 * \c nullptr will be returned.
+	 *
+	 * \param[in] name The name of the FileReader.
+	 *
+	 * \return A FileReader with the specified name
+	 */
+	std::unique_ptr<FileReader> by_name(const std::string &name) const;
 
 	/**
 	 * Reset this instance to its initial state, removing all tests and
@@ -601,7 +612,7 @@ public:
 	void reset();
 
 	// class is non-copy-assignable
-	FileReaderCreator& operator = (const FileReaderCreator &) = delete;
+	FileReaderSelection& operator = (const FileReaderSelection &) = delete;
 	// TODO why?
 
 
@@ -613,7 +624,7 @@ private:
 	/**
 	 * Private implementation of this FileReaderFactory
 	 */
-	std::unique_ptr<FileReaderCreator::Impl> impl_;
+	std::unique_ptr<FileReaderSelection::Impl> impl_;
 };
 
 /// @}

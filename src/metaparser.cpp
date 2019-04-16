@@ -64,10 +64,10 @@ MetadataParseException::MetadataParseException(const std::string &what_arg)
 }
 
 
-// MetadataParserCreator
+// MetadataParserSelection
 
 
-MetadataParserCreator::MetadataParserCreator()
+MetadataParserSelection::MetadataParserSelection()
 {
 	// Provide tests
 
@@ -79,7 +79,7 @@ MetadataParserCreator::MetadataParserCreator()
 
 	// Provide FileFormats
 
-	// The constructor of AudioReaderCreator automagically introduces the
+	// The constructor of MetadataParserSelection automagically introduces the
 	// knowledge about what formats are available. This knowledge is
 	// provided by the instance FileFormatsAudio that is populated at
 	// buildtime based on the configuration of the build system.
@@ -96,19 +96,29 @@ MetadataParserCreator::MetadataParserCreator()
 }
 
 
-MetadataParserCreator::~MetadataParserCreator() noexcept = default;
+MetadataParserSelection::~MetadataParserSelection() noexcept = default;
 
 
-std::unique_ptr<MetadataParser> MetadataParserCreator::create_metadata_parser(
+std::unique_ptr<MetadataParser> MetadataParserSelection::for_file(
 	const std::string &filename) const
 {
-	// Create FileReader
+	return this->safe_cast(std::move(
+				FileReaderSelection::for_file(filename)));
+}
 
-	auto file_reader_uptr = FileReaderCreator::create_reader(filename);
 
+std::unique_ptr<MetadataParser> MetadataParserSelection::by_name(
+	const std::string &name) const
+{
+	return this->safe_cast(std::move(FileReaderSelection::by_name(name)));
+}
+
+
+std::unique_ptr<MetadataParser> MetadataParserSelection::safe_cast(
+		std::unique_ptr<FileReader> file_reader_uptr) const
+{
 	if (not file_reader_uptr)
 	{
-		ARCS_LOG_ERROR << "FileReader could not be created";
 		return nullptr;
 	}
 

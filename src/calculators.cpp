@@ -58,9 +58,8 @@ TOC TOCParser::parse(const std::string &metafilename)
 				"Requested metadata file parser for empty filename.");
 	}
 
-	MetadataParserCreator creator;
-	std::unique_ptr<MetadataParser> parser =
-		creator.create_metadata_parser(metafilename);
+	MetadataParserSelection selection;
+	std::unique_ptr<MetadataParser> parser = selection.for_file(metafilename);
 
 	ARCS_LOG_INFO << "Start to parse metadata input";
 
@@ -190,13 +189,9 @@ std::unique_ptr<ARId> ARIdCalculator::Impl::calculate(
 		// The builder has to check its input values either way when it is
 		// requested to start processing.
 
-		AudioReaderCreator creator;
-
-		std::unique_ptr<AudioReader> reader =
-			creator.create_audio_reader(audiofilename);
-
-		std::unique_ptr<AudioSize> audiosize =
-			reader->acquire_size(audiofilename);
+		AudioReaderSelection selection;
+		std::unique_ptr<AudioReader> reader = selection.for_file(audiofilename);
+		auto audiosize = reader->acquire_size(audiofilename);
 
 		leadout = audiosize->leadout_frame();
 	}
@@ -275,18 +270,18 @@ public:
 		const bool &skip_front, const bool &skip_back);
 
 	/**
-	 * Set the AudioReaderCreator for this instance.
+	 * Set the AudioReaderSelection for this instance.
 	 *
-	 * \param[in] creator The AudioReaderCreator to use
+	 * \param[in] selection The AudioReaderSelection to use
 	 */
-	void set_audioreader_creator(std::unique_ptr<AudioReaderCreator> creator);
+	void set_selection(std::unique_ptr<AudioReaderSelection> selection);
 
 	/**
-	 * Get the AudioReaderCreator used by this instance.
+	 * Get the AudioReaderSelection used by this instance.
 	 *
-	 * \return The AudioReaderCreator used by this instance
+	 * \return The AudioReaderSelection used by this instance
 	 */
-	const AudioReaderCreator& audioreader_creator() const;
+	const AudioReaderSelection& selection() const;
 
 
 protected:
@@ -327,9 +322,9 @@ private:
 		const bool &skip_front, const bool &skip_back);
 
 	/**
-	 * Internal AudioReaderCreator
+	 * Internal AudioReaderSelection
 	 */
-	std::unique_ptr<AudioReaderCreator> creator_;
+	std::unique_ptr<AudioReaderSelection> selection_;
 };
 
 
@@ -338,7 +333,7 @@ private:
 
 
 ARCSCalculator::Impl::Impl()
-	: creator_(std::make_unique<AudioReaderCreator>())
+	: selection_(std::make_unique<AudioReaderSelection>())
 {
 	// empty
 }
@@ -436,8 +431,7 @@ void ARCSCalculator::Impl::process_file(const std::string &audiofilename,
 		Calculation& calc, const uint32_t buffer_size, const bool use_cbuffer)
 		const
 {
-	std::unique_ptr<AudioReader> reader =
-		audioreader_creator().create_audio_reader(audiofilename);
+	std::unique_ptr<AudioReader> reader = selection().for_file(audiofilename);
 
 	if (!reader)
 	{
@@ -529,16 +523,16 @@ ChecksumSet ARCSCalculator::Impl::calculate_track(
 }
 
 
-void ARCSCalculator::Impl::set_audioreader_creator(
-		std::unique_ptr<AudioReaderCreator> creator)
+void ARCSCalculator::Impl::set_selection(
+		std::unique_ptr<AudioReaderSelection> selection)
 {
-	creator_ = std::move(creator);
+	selection_ = std::move(selection);
 }
 
 
-const AudioReaderCreator& ARCSCalculator::Impl::audioreader_creator() const
+const AudioReaderSelection& ARCSCalculator::Impl::selection() const
 {
-	return *creator_;
+	return *selection_;
 }
 
 
@@ -608,16 +602,16 @@ Checksums ARCSCalculator::calculate(
 }
 
 
-void ARCSCalculator::set_audioreader_creator(
-		std::unique_ptr<AudioReaderCreator> creator)
+void ARCSCalculator::set_selection(
+		std::unique_ptr<AudioReaderSelection> selection)
 {
-	this->impl_->set_audioreader_creator(std::move(creator));
+	this->impl_->set_selection(std::move(selection));
 }
 
 
-const AudioReaderCreator& ARCSCalculator::audioreader_creator() const
+const AudioReaderSelection& ARCSCalculator::selection() const
 {
-	return impl_->audioreader_creator();
+	return impl_->selection();
 }
 
 } // namespace arcs

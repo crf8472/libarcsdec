@@ -139,12 +139,6 @@ public:
 	 */
 	virtual ~ARCSCalculator() noexcept;
 
-	// void allow_convert_buffer(const bool sample_buffer_allowed);
-	// bool uses_convert_buffer() const;
-
-	// void set_buffer_size(const uint32_t samples);
-	// uint32_t buffer_size() const;
-
 	/**
 	 * Calculate ARCS values for the given audio file, using the metadata from
 	 * the given TOC.
@@ -212,18 +206,18 @@ public:
 		const bool &skip_front, const bool &skip_back);
 
 	/**
-	 * Set the AudioReaderCreator for this instance.
+	 * Set the AudioReaderSelection for this instance.
 	 *
-	 * \param[in] creator The AudioReaderCreator to use
+	 * \param[in] selection The AudioReaderSelection to use
 	 */
-	void set_audioreader_creator(std::unique_ptr<AudioReaderCreator> creator);
+	void set_selection(std::unique_ptr<AudioReaderSelection> selection);
 
 	/**
-	 * Get the AudioReaderCreator used by this instance.
+	 * Get the AudioReaderSelection used by this instance.
 	 *
-	 * \return The AudioReaderCreator used by this instance
+	 * \return The AudioReaderSelection used by this instance
 	 */
-	const AudioReaderCreator& audioreader_creator() const;
+	const AudioReaderSelection& selection() const;
 
 
 private:

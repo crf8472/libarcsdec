@@ -607,10 +607,10 @@ void AudioReader::set_processor(SampleProcessor &processor)
 }
 
 
-// AudioReaderCreator
+// AudioReaderSelection
 
 
-AudioReaderCreator::AudioReaderCreator()
+AudioReaderSelection::AudioReaderSelection()
 {
 	std::unique_ptr<FileFormatTestBytes> test =
 		std::make_unique<FileFormatTestBytes>(0, 24);
@@ -623,7 +623,7 @@ AudioReaderCreator::AudioReaderCreator()
 
 	// Provide FileFormats
 
-	// The constructor of AudioReaderCreator automagically introduces the
+	// The constructor of AudioReaderSelection automagically introduces the
 	// knowledge about what formats are available. This knowledge is
 	// provided by the instance FileFormatsAudio that is populated at
 	// buildtime based on the configuration of the build system.
@@ -640,18 +640,25 @@ AudioReaderCreator::AudioReaderCreator()
 }
 
 
-AudioReaderCreator::~AudioReaderCreator() noexcept = default;
+AudioReaderSelection::~AudioReaderSelection() noexcept = default;
 
 
-std::unique_ptr<AudioReader> AudioReaderCreator::create_audio_reader(
+std::unique_ptr<AudioReader> AudioReaderSelection::for_file(
 	const std::string &filename) const
 {
 	return this->safe_cast(std::move(
-				FileReaderCreator::create_reader(filename)));
+				FileReaderSelection::for_file(filename)));
 }
 
 
-std::unique_ptr<AudioReader> AudioReaderCreator::safe_cast(
+std::unique_ptr<AudioReader> AudioReaderSelection::by_name(
+	const std::string &name) const
+{
+	return this->safe_cast(std::move(FileReaderSelection::by_name(name)));
+}
+
+
+std::unique_ptr<AudioReader> AudioReaderSelection::safe_cast(
 		std::unique_ptr<FileReader> file_reader_uptr) const
 {
 	if (not file_reader_uptr)

@@ -145,9 +145,9 @@ public:
 
 
 /**
- * A builder class for MetadataParsers
+ * \brief Selects and builds MetadataParser instances for given inputs.
  */
-class MetadataParserCreator : public FileReaderCreator
+class MetadataParserSelection : public FileReaderSelection
 {
 
 public:
@@ -155,12 +155,12 @@ public:
 	/**
 	 * Constructor
 	 */
-	MetadataParserCreator();
+	MetadataParserSelection();
 
 	/**
 	 * Virtual default destructor
 	 */
-	~MetadataParserCreator() noexcept override;
+	~MetadataParserSelection() noexcept override;
 
 	/**
 	 * Create a MetadataParser for the specified file
@@ -171,8 +171,34 @@ public:
 	 *
 	 * \throw FileReadException If the file could not be read
 	 */
-	std::unique_ptr<MetadataParser> create_metadata_parser(
-			const std::string &metafilename) const;
+	std::unique_ptr<MetadataParser> for_file(const std::string &metafilename)
+		const;
+
+	/**
+	 * Return the MetadataParser specified by its name.
+	 *
+	 * If the selection does not contain a MetadataParser with the specified name,
+	 * \c nullptr will be returned.
+	 *
+	 * \param[in] name The name of the MetadataParser.
+	 *
+	 * \return A MetadataParser with the specified name
+	 */
+	std::unique_ptr<MetadataParser> by_name(const std::string &name)
+		const;
+
+
+protected:
+
+	/**
+	 * Turns a FileReader to a MetadataParser.
+	 *
+	 * \param[in] filereader The FileReader to cast
+	 *
+	 * \return MetadataParser or nullptr
+	 */
+	std::unique_ptr<MetadataParser> safe_cast(
+		std::unique_ptr<FileReader> file_reader_uptr) const;
 };
 
 /// @}

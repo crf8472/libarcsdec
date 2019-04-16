@@ -329,13 +329,10 @@ bool FileFormatSelector::matches(
  */
 
 
-// FileFormatCreator::Impl
-
-
 /**
- * Implementation of FileReaderCreator
+ * Implementation of FileReaderSelection
  */
-class FileReaderCreator::Impl
+class FileReaderSelection::Impl
 {
 
 public:
@@ -425,8 +422,19 @@ public:
 	 *
 	 * \return A FileReader for the specified file
 	 */
-	std::unique_ptr<FileReader> create_reader(const std::string &filename)
-		const;
+	std::unique_ptr<FileReader> for_file(const std::string &filename) const;
+
+	/**
+	 * Return the FileReader specified by its name.
+	 *
+	 * If the selection does not contain a FileReader with the specified name,
+	 * \c nullptr will be returned.
+	 *
+	 * \param[in] name The name of the FileReader.
+	 *
+	 * \return A FileReader with the specified name
+	 */
+	std::unique_ptr<FileReader> by_name(const std::string &name) const;
 
 	/**
 	 * Reset this instance to its initial state, removing all tests and
@@ -471,7 +479,7 @@ private:
 /// \endcond IMPL_ONLY
 
 
-FileReaderCreator::Impl::Impl()
+FileReaderSelection::Impl::Impl()
 	: selector_(std::make_unique<FileFormatSelector>())
 	, tests_()
 	, file_formats_()
@@ -480,17 +488,17 @@ FileReaderCreator::Impl::Impl()
 }
 
 
-FileReaderCreator::Impl::~Impl() noexcept = default;
+FileReaderSelection::Impl::~Impl() noexcept = default;
 
 
-void FileReaderCreator::Impl::register_format(
+void FileReaderSelection::Impl::register_format(
 		std::unique_ptr<FileFormat> format)
 {
 	file_formats_.push_back(std::move(format));
 }
 
 
-int FileReaderCreator::Impl::remove_format(const FileFormat * format)
+int FileReaderSelection::Impl::remove_format(const FileFormat * format)
 {
 	int counter = 0;
 
@@ -508,14 +516,14 @@ int FileReaderCreator::Impl::remove_format(const FileFormat * format)
 }
 
 
-void FileReaderCreator::Impl::register_test(
+void FileReaderSelection::Impl::register_test(
 		std::unique_ptr<FileFormatTest> format_test)
 {
 	tests_.insert(std::move(format_test));
 }
 
 
-int FileReaderCreator::Impl::remove_test(const FileFormatTest * test)
+int FileReaderSelection::Impl::remove_test(const FileFormatTest * test)
 {
 	int counter = 0;
 
@@ -532,26 +540,26 @@ int FileReaderCreator::Impl::remove_test(const FileFormatTest * test)
 }
 
 
-void FileReaderCreator::Impl::remove_all_tests()
+void FileReaderSelection::Impl::remove_all_tests()
 {
 	tests_.clear();
 }
 
 
-void FileReaderCreator::Impl::set_selector(
+void FileReaderSelection::Impl::set_selector(
 		std::unique_ptr<FileFormatSelector> selector)
 {
 	selector_ = std::move(selector);
 }
 
 
-const FileFormatSelector& FileReaderCreator::Impl::selector() const
+const FileFormatSelector& FileReaderSelection::Impl::selector() const
 {
 	return *selector_;
 }
 
 
-std::unique_ptr<FileFormat> FileReaderCreator::Impl::get_format(
+std::unique_ptr<FileFormat> FileReaderSelection::Impl::get_format(
 		const std::string &filename) const
 {
 	if (filename.empty())
@@ -580,7 +588,7 @@ std::unique_ptr<FileFormat> FileReaderCreator::Impl::get_format(
 }
 
 
-std::unique_ptr<FileReader> FileReaderCreator::Impl::create_reader(
+std::unique_ptr<FileReader> FileReaderSelection::Impl::for_file(
 		const std::string &filename) const
 {
 	auto format = this->get_format(filename);
@@ -594,91 +602,113 @@ std::unique_ptr<FileReader> FileReaderCreator::Impl::create_reader(
 }
 
 
-void FileReaderCreator::Impl::reset()
+std::unique_ptr<FileReader> FileReaderSelection::Impl::by_name(
+		const std::string &name) const
+{
+	for (const auto& format : file_formats_)
+	{
+		if (name == format->name())
+		{
+			return format->create_reader();
+		}
+	}
+
+	return nullptr;
+}
+
+
+void FileReaderSelection::Impl::reset()
 {
 	tests_.clear();
 	file_formats_.clear();
 }
 
 
-FileFormatSelector& FileReaderCreator::Impl::use_selector()
+FileFormatSelector& FileReaderSelection::Impl::use_selector()
 {
 	return *selector_;
 }
 
 
-// FileReaderCreator
+// FileReaderSelection
 
 
-FileReaderCreator::FileReaderCreator()
-	: impl_(std::make_unique<FileReaderCreator::Impl>())
+FileReaderSelection::FileReaderSelection()
+	: impl_(std::make_unique<FileReaderSelection::Impl>())
 {
 	// empty
 }
 
 
-FileReaderCreator::~FileReaderCreator() noexcept = default;
+FileReaderSelection::~FileReaderSelection() noexcept = default;
 
 
-void FileReaderCreator::register_format(std::unique_ptr<FileFormat> format)
+void FileReaderSelection::register_format(std::unique_ptr<FileFormat> format)
 {
 	impl_->register_format(std::move(format));
 }
 
 
-int FileReaderCreator::remove_format(const FileFormat * format)
+int FileReaderSelection::remove_format(const FileFormat * format)
 {
 	return impl_->remove_format(format);
 }
 
 
-void FileReaderCreator::register_test(
+void FileReaderSelection::register_test(
 		std::unique_ptr<FileFormatTest> format_test)
 {
 	impl_->register_test(std::move(format_test));
 }
 
 
-int FileReaderCreator::remove_test(const FileFormatTest * test)
+int FileReaderSelection::remove_test(const FileFormatTest * test)
 {
 	return impl_->remove_test(test);
 }
 
 
-void FileReaderCreator::remove_all_tests()
+void FileReaderSelection::remove_all_tests()
 {
 	return impl_->remove_all_tests();
 }
 
 
-void FileReaderCreator::set_selector(
+void FileReaderSelection::set_selector(
 		std::unique_ptr<FileFormatSelector> selector)
 {
 	impl_->set_selector(std::move(selector));
 }
 
 
-const FileFormatSelector& FileReaderCreator::selector() const
+const FileFormatSelector& FileReaderSelection::selector() const
 {
 	return impl_->selector();
 }
 
 
-std::unique_ptr<FileFormat> FileReaderCreator::get_format(
+std::unique_ptr<FileFormat> FileReaderSelection::get_format(
 		const std::string &filename) const
 {
 	return impl_->get_format(filename);
 }
 
 
-std::unique_ptr<FileReader> FileReaderCreator::create_reader(
+std::unique_ptr<FileReader> FileReaderSelection::for_file(
 		const std::string &filename) const
 {
-	return impl_->create_reader(filename);
+	return impl_->for_file(filename);
 }
 
 
-void FileReaderCreator::reset()
+std::unique_ptr<FileReader> FileReaderSelection::by_name(
+		const std::string &name) const
+{
+	return impl_->by_name(name);
+}
+
+
+void FileReaderSelection::reset()
 {
 	impl_->reset();
 }
