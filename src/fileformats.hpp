@@ -21,6 +21,10 @@
 
 namespace arcs
 {
+
+inline namespace v_1_0_0
+{
+
 /// \defgroup fileformats Level 0 API: Create a FileReader for a Given File
 
 /**
@@ -45,7 +49,6 @@ namespace arcs
  */
 
 /// @{
-
 
 /**
  * \brief Abstract base class for all FileReaders, acts as tag.
@@ -611,6 +614,8 @@ private:
 };
 
 /// @}
+
+} // namespace v_1_0_0
 
 } // namespace arcs
 

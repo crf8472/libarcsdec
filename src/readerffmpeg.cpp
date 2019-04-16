@@ -35,6 +35,9 @@ extern "C"
 namespace arcs
 {
 
+inline namespace v_1_0_0
+{
+
 namespace
 {
 
@@ -1730,6 +1733,8 @@ std::unique_ptr<FileReaderDescriptor> FileReaderDescriptorFFmpeg::do_clone() con
 {
 	return std::make_unique<FileReaderDescriptorFFmpeg>();
 }
+
+} // namespace v_1_0_0
 
 } // namespace arcs
 

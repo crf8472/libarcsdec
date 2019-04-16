@@ -15,6 +15,9 @@
 namespace arcs
 {
 
+inline namespace v_1_0_0
+{
+
 /**
  * \internal \defgroup sampleproc Interface for processing samples
  *
@@ -360,6 +363,8 @@ private:
 
 
 /// @}
+
+} // namespace v_1_0_0
 
 } // namespace arcs
 

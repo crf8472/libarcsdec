@@ -12,6 +12,9 @@
 namespace arcs
 {
 
+inline namespace v_1_0_0
+{
+
 const BLOCKSIZE_t BLOCKSIZE;
 
 
@@ -187,6 +190,7 @@ void SampleProvider::hook_post_register_processor()
 	// empty
 }
 
+} // namespace v_1_0_0
 
 } // namespace arcs
 

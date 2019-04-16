@@ -25,6 +25,9 @@
 namespace arcs
 {
 
+inline namespace v_1_0_0
+{
+
 
 // FileReader
 
@@ -701,6 +704,8 @@ void FileReaderSelection::reset()
 {
 	impl_->reset();
 }
+
+} // namespace v_1_0_0
 
 } // namespace arcs
 

@@ -22,6 +22,9 @@
 namespace arcs
 {
 
+inline namespace v_1_0_0
+{
+
 /**
  * \internal \defgroup metaparser Level 0 API: Reading and Validating Metadata Files
  *
@@ -202,6 +205,8 @@ protected:
 };
 
 /// @}
+
+} // namespace v_1_0_0
 
 } // namespace arcs
 

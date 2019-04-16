@@ -27,6 +27,9 @@
 namespace arcs
 {
 
+inline namespace v_1_0_0
+{
+
 // ByteConverter
 
 
@@ -700,6 +703,8 @@ std::unique_ptr<AudioReader> AudioReaderSelection::safe_cast(
 
 	return audio_reader_uptr;
 }
+
+} // namespace v_1_0_0
 
 } // namespace arcs
 

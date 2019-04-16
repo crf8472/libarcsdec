@@ -36,6 +36,9 @@ class PCMForwardIterator;
 namespace arcs
 {
 
+inline namespace v_1_0_0
+{
+
 /**
  * \internal \defgroup audiobuffer Level 0 API: Basic Audio Sample buffering
  *
@@ -391,6 +394,8 @@ private:
 };
 
 /// @}
+
+} // namespace v_1_0_0
 
 } // namespace arcs
 

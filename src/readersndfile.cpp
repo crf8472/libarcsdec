@@ -31,6 +31,8 @@
 namespace arcs
 {
 
+inline namespace v_1_0_0
+{
 
 namespace
 {
@@ -243,6 +245,8 @@ std::unique_ptr<FileReaderDescriptor> DescriptorSndfile::do_clone() const
 {
 	return std::make_unique<DescriptorSndfile>();
 }
+
+} // namespace v_1_0_0
 
 } // namespace arcs
 

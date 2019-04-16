@@ -29,6 +29,9 @@
 namespace arcs
 {
 
+inline namespace v_1_0_0
+{
+
 /**
  * List of supported audio file formats.
  *
@@ -119,6 +122,8 @@ private:
 	 */
 	container_type formats_;
 };
+
+} // namespace v_1_0_0
 
 } // namespace arcs
 

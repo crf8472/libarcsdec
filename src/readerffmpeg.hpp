@@ -28,6 +28,9 @@ extern "C"
 namespace arcs
 {
 
+inline namespace v_1_0_0
+{
+
 /**
  * \internal \defgroup readerffmpeg Audio: Generic Audio Reading with FFmpeg
  *
@@ -107,6 +110,8 @@ private:
 };
 
 /// @}
+
+} // namespace v_1_0_0
 
 } // namespace arcs
 

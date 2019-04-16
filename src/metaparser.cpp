@@ -23,6 +23,9 @@
 namespace arcs
 {
 
+inline namespace v_1_0_0
+{
+
 // MetadataParserImpl
 
 
@@ -156,6 +159,8 @@ std::unique_ptr<MetadataParser> MetadataParserSelection::safe_cast(
 
 	return metaparser_uptr;
 }
+
+} // namespace v_1_0_0
 
 } // namespace arcs
 

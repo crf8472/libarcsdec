@@ -40,6 +40,9 @@
 namespace arcs
 {
 
+inline namespace v_1_0_0
+{
+
 
 // TOCParser
 
@@ -613,6 +616,8 @@ const AudioReaderSelection& ARCSCalculator::selection() const
 {
 	return impl_->selection();
 }
+
+} // namespace v_1_0_0
 
 } // namespace arcs
 

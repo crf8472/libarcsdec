@@ -25,6 +25,9 @@
 namespace arcs
 {
 
+inline namespace v_1_0_0
+{
+
 /**
  * \internal \defgroup audioreader Level 0 API: Reading and Validating Audio Files
  *
@@ -771,6 +774,8 @@ protected:
 };
 
 /// @}
+
+} // namespace v_1_0_0
 
 } // namespace arcs
 

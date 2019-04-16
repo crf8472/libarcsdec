@@ -27,6 +27,9 @@
 namespace arcs
 {
 
+inline namespace v_1_0_0
+{
+
 /**
  * \defgroup calculators Calculators for AccurateRip Checksums and IDs
  *
@@ -232,6 +235,8 @@ private:
 };
 
 /// @}
+
+} // namespace v_1_0_0
 
 } // namespace arcs
 

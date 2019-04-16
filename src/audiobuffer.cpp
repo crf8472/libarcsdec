@@ -26,6 +26,9 @@
 namespace arcs
 {
 
+inline namespace v_1_0_0
+{
+
 
 // BlockCreator
 
@@ -325,6 +328,8 @@ void SampleBuffer::hook_post_register_processor()
 			std::placeholders::_1, std::placeholders::_2));
 }
 
+
+} // namespace v_1_0_0
 
 } // namespace arcs
 

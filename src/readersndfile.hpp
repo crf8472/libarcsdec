@@ -20,6 +20,9 @@
 namespace arcs
 {
 
+inline namespace v_1_0_0
+{
+
 /**
  * \internal \defgroup readersndfile Audio: Generic Audio Reading with Libsndfile
  *
@@ -93,6 +96,8 @@ private:
 };
 
 /// @}
+
+} // namespace v_1_0_0
 
 } // namespace arcs
 

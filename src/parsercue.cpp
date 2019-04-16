@@ -47,6 +47,8 @@ extern "C" {
 namespace arcs
 {
 
+inline namespace v_1_0_0
+{
 
 namespace
 {
@@ -616,6 +618,8 @@ std::unique_ptr<FileReaderDescriptor> FileReaderDescriptorCUE::do_clone() const
 {
 	return std::make_unique<FileReaderDescriptorCUE>();
 }
+
+} // namespace v_1_0_0
 
 } // namespace arcs
 
