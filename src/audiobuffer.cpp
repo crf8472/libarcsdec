@@ -15,11 +15,11 @@
 #include <string>
 #include <vector>
 
-#ifndef __LIBARCS_CALCULATE_HPP__
-#include <arcs/calculate.hpp> // for AudioSize, Calculation, PCMForwardIterator
+#ifndef __LIBARCSTK_CALCULATE_HPP__
+#include <arcstk/calculate.hpp> // for AudioSize, Calculation, PCMForwardIterator
 #endif
-#ifndef __LIBARCS_LOGGING_HPP__
-#include <arcs/logging.hpp>
+#ifndef __LIBARCSTK_LOGGING_HPP__
+#include <arcstk/logging.hpp>
 #endif
 
 

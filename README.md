@@ -7,7 +7,7 @@
 
 ## What libarcsdec is
 
-- A high-level API for sample and metadata input for [libarcs][1]
+- A high-level API for sample and metadata input for [libarcstk][1]
 - A bunch of decoder and parser adapters to let you calculate ARCSs on your
   already archived lossless audio data
 - Facility to read virtually any lossless codec from virtually any
@@ -46,7 +46,7 @@ Libarcsdec contains:
   etc.
 - Libarcsdec does not contribute to tasks like verifying/matching, computing of
   the AccurateRip identifier, parsing the AccurateRip response etc. The API for
-  those things is already provided by [libarcs][1]
+  those things is already provided by [libarcstk][1]
 - Libarcsdec does not rip CDs
 - Libarcsdec offers no network facilities and is not supposed to do so. The
   actual HTTP request for fetching the reference values from AccurateRip is
@@ -61,7 +61,7 @@ Libarcsdec contains:
 
 ### Mandatory build- and runtime dependencies:
 
-- libarcs >= 0.1.0-alpha.1
+- libarcstk >= 0.1.0-alpha.1
 - libcue >= 2.0.0
 
 ### Optional default build- and runtime dependencies:

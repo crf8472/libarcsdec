@@ -13,14 +13,14 @@
 #include <utility>
 #include <vector>
 
-#ifndef __LIBARCS_IDENTIFIER_HPP__
-#include <arcs/identifier.hpp>
+#ifndef __LIBARCSTK_IDENTIFIER_HPP__
+#include <arcstk/identifier.hpp>
 #endif
-#ifndef __LIBARCS_CALCULATE_HPP__
-#include <arcs/calculate.hpp>
+#ifndef __LIBARCSTK_CALCULATE_HPP__
+#include <arcstk/calculate.hpp>
 #endif
-#ifndef __LIBARCS_LOGGING_HPP__
-#include <arcs/logging.hpp>
+#ifndef __LIBARCSTK_LOGGING_HPP__
+#include <arcstk/logging.hpp>
 #endif
 
 #ifndef __LIBARCSDEC_FILEFORMATS_HPP__

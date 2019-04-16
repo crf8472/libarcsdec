@@ -5,14 +5,14 @@
 #include "audiobuffer.hpp"
 #endif
 
-#ifndef __LIBARCS_IDENTIFIER_HPP__
-#include <arcs/identifier.hpp> // for CDDA
+#ifndef __LIBARCSTK_IDENTIFIER_HPP__
+#include <arcstk/identifier.hpp> // for CDDA
 #endif
-#ifndef __LIBARCS_calculate_HPP__
-#include <arcs/calculate.hpp> // for PCMForwardIterator implementation
+#ifndef __LIBARCSTK_calculate_HPP__
+#include <arcstk/calculate.hpp> // for PCMForwardIterator implementation
 #endif
-#ifndef __LIBARCS_IDENTIFIER_HPP__
-#include <arcs/samples.hpp>
+#ifndef __LIBARCSTK_IDENTIFIER_HPP__
+#include <arcstk/samples.hpp>
 #endif
 
 /**

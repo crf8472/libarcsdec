@@ -11,8 +11,8 @@
 #include <memory>
 #include <string>
 
-#ifndef __LIBARCS_LOGGING_HPP__
-#include <arcs/logging.hpp>
+#ifndef __LIBARCSTK_LOGGING_HPP__
+#include <arcstk/logging.hpp>
 #endif
 
 #ifndef __LIBARCSDEC_METAFORMATS_HPP__

@@ -20,11 +20,11 @@ extern "C"
 #include <libavutil/avutil.h>
 }
 
-#ifndef __LIBARCS_SAMPLES_HPP__
-#include <arcs/samples.hpp>
+#ifndef __LIBARCSTK_SAMPLES_HPP__
+#include <arcstk/samples.hpp>
 #endif
-#ifndef __LIBARCS_LOGGING_HPP__
-#include <arcs/logging.hpp>
+#ifndef __LIBARCSTK_LOGGING_HPP__
+#include <arcstk/logging.hpp>
 #endif
 
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__
@@ -58,7 +58,7 @@ extern "C"
  * A logger callback for the ffmpeg logging API.
  *
  * It logs ffmpeg messages leveled as errors, warnings and informations by the
- * libarcs logging interface. Messages leveled as debug, trace or other are
+ * libarcstk logging interface. Messages leveled as debug, trace or other are
  * discarded. All parameters except lvl and msg are ignored.
  *
  * Since this function will be passed by a function pointer to a C function, it

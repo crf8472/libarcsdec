@@ -9,7 +9,7 @@ Description: @PROJECT_BRIEF_DESC@
 Version: @PROJECT_VERSION_STRING_WITHOUT_SUFFIX@
 URL: @PROJECT_URL@
 
-Requires.private: libarcs >= 0.1.0, libcue >= 2.0.0, flac++ >= 1.3.1, wavpack >= 5.0, libavformat >= 57.33.100, libavcodec >= 57.37.100, libavutil >= 55.22.100
+Requires.private: libarcstk >= 0.1.0, libcue >= 2.0.0, flac++ >= 1.3.1, wavpack >= 5.0, libavformat >= 57.33.100, libavcodec >= 57.37.100, libavutil >= 55.22.100
 Libs: -L${libdir} -L${sharedlibdir} -larcsdec
 Cflags: -I${includedir}
 

@@ -10,8 +10,8 @@
 #include <string>
 #include <vector>
 
-#ifndef __LIBARCS_CALCULATE_HPP__
-#include <arcs/calculate.hpp>
+#ifndef __LIBARCSTK_CALCULATE_HPP__
+#include <arcstk/calculate.hpp>
 #endif
 
 #ifndef __LIBARCSDEC_FILEFORMATS_HPP__

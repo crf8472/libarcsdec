@@ -1,4 +1,4 @@
-\mainpage libarcsdec - A library with audio decoder and TOC parser adapters for libarcs
+\mainpage libarcsdec - A library with audio decoder and TOC parser adapters for libarcstk
 
 
 Home: https://codeberg.org/tristero/libarcsdec
@@ -6,7 +6,7 @@ Home: https://codeberg.org/tristero/libarcsdec
 
 \section features Features
 
-- A high-level API for sample and metadata input for [libarcs][1]
+- A high-level API for sample and metadata input for [libarcstk][1]
 - A bunch of decoder and parser adapters to let you calculate ARCSs on your
   already archived lossless audio data
 - You define the task like "Take this audio and this TOC and just give me the
@@ -25,7 +25,7 @@ Home: https://codeberg.org/tristero/libarcsdec
   etc.
 - Libarcsdec does not contribute to tasks like verifying/matching, computing of
   the AccurateRip identifier, parsing the AccurateRip response etc. The API for
-  those things is already provided by [libarcs][1]
+  those things is already provided by [libarcstk][1]
 - Libarcsdec does not rip CDs
 - Libarcsdec offers no network facilities and is not supposed to do so. The
   actual HTTP request for fetching the reference values from AccurateRip is

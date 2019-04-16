@@ -14,7 +14,7 @@ cmake_policy (SET CMP0057 NEW)
 project (arcsdec VERSION 0.1.0 LANGUAGES CXX )
 
 set (PROJECT_BRIEF_DESC
-    "A library with audio decoder and TOC parser adapters for libarcs" )
+    "A library with audio decoder and TOC parser adapters for libarcstk" )
 
 set (PROJECT_URL "https://codeberg.org/tristero/libarcsdec/" )
 
@@ -108,11 +108,11 @@ set (FLAGS_WARNINGS -Wall -Wextra -Wold-style-cast -Wpedantic -Weffc++ )
 set (FLAGS_OPTIMIZE -march=native -mtune=generic )
 
 
-## --- Required library: libarcs
+## --- Required library: libarcstk
 
-find_package (libarcs REQUIRED )
+find_package (libarcstk REQUIRED )
 
-list (APPEND REQUIRED_LIBRARIES ${libarcs_LIBRARIES} )
+list (APPEND REQUIRED_LIBRARIES ${libarcstk_LIBRARIES} )
 
 
 ## --- Configure optional features
@@ -450,7 +450,7 @@ list (APPEND EXPORTED_HEADERS "${PROJECT_SOURCE_DIR}/sampleproc.hpp" )
 
 ## --- Add and configure project target
 
-## Build libarcs shared library as project target
+## Build libarcsdec shared library as project target
 
 add_library (${PROJECT_NAME} SHARED
 	${SOURCES}

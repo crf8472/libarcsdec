@@ -1,5 +1,5 @@
-#ifndef __LIBARCS_CALCULATORS_HPP__
-#define __LIBARCS_CALCULATORS_HPP__
+#ifndef __LIBARCSTK_CALCULATORS_HPP__
+#define __LIBARCSTK_CALCULATORS_HPP__
 
 /**
  * \file calculators.hpp A high-level API for calculating ARCSs and IDs.
@@ -9,11 +9,11 @@
 #include <set>
 #include <string>
 
-#ifndef __LIBARCS_IDENTIFIER_HPP__
-#include <arcs/identifier.hpp>
+#ifndef __LIBARCSTK_IDENTIFIER_HPP__
+#include <arcstk/identifier.hpp>
 #endif
-#ifndef __LIBARCS_CALCULATE_HPP__
-#include <arcs/calculate.hpp>
+#ifndef __LIBARCSTK_CALCULATE_HPP__
+#include <arcstk/calculate.hpp>
 #endif
 
 #ifndef __LIBARCSDEC_FILEFORMATS_HPP__

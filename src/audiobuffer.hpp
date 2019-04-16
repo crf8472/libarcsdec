@@ -10,8 +10,8 @@
 #include <fstream>
 #include <memory>
 
-#ifndef __LIBARCS_SAMPLES_HPP__
-#include <arcs/samples.hpp>   // for SampleSequence
+#ifndef __LIBARCSTK_SAMPLES_HPP__
+#include <arcstk/samples.hpp>   // for SampleSequence
 #endif
 #ifndef __LIBARCSDEC_SAMPLEPROC_HPP__
 #include "sampleproc.hpp"

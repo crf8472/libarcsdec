@@ -20,7 +20,7 @@ builds out-of-the-box on BSDs but don't expect major issues.
 - ``cmake`` >= 3.9.6
 - ``make`` or some other build tool compatible to cmake (the examples suppose
   ``make`` nonetheless)
-- [libarcs][6] -- dependency of libarcsdec
+- [libarcstk][6] -- dependency of libarcsdec
 - [libcue][5] >= 2.0.0 -- parse CUE sheets
 
 
@@ -40,8 +40,8 @@ builds out-of-the-box on BSDs but don't expect major issues.
 
 NOTE on ffmpeg:
 
-Libarcs uses the decoding API introduced with libavcodec 57.37.100 on 21, April
-2016, hence the requirements are:
+Libarcsdec uses the decoding API introduced with libavcodec 57.37.100 on 21,
+April 2016, hence the requirements are:
 
 |ffmpeg-lib  |minimal version |
 |------------|----------------|
@@ -49,8 +49,8 @@ Libarcs uses the decoding API introduced with libavcodec 57.37.100 on 21, April
 |libavcodec  |57.37.100       |
 |libavutil   |55.22.100       |
 
-which determines ffmpeg 3.1 as the earliest possible version. Libarcs can not be
-compiled against earlier versions of ffmpeg.
+which determines ffmpeg 3.1 as the earliest possible version. Libarcsdec can not
+be compiled against earlier versions of ffmpeg.
 
 
 ## Building the library
@@ -185,7 +185,7 @@ Whether or not libarcsdec shall use (some of) those optional runtime dependencie
 is configured via CMake. The desired configuration may differ for users,
 developers and packagers of libarcsdec, which is pointed out below.
 
-Libarcs' CMake configuration knows the following switches:
+Libarcsdec' CMake configuration knows the following switches:
 
 |Switch         |Description                                     |Default|
 |---------------|------------------------------------------------|-------|
