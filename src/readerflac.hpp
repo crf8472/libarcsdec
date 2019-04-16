@@ -39,7 +39,7 @@ namespace arcs
  * Represents a Flac container holding samples conforming to CDDA. That
  * is 16 bit, 2 channels, 44100 samples/sec as integer representation.
  */
-class FileFormatFlac : public FileFormat
+class DescriptorFlac : public FileReaderDescriptor
 {
 
 public:
@@ -47,7 +47,7 @@ public:
 	/**
 	 * Virtual default destructor
 	 */
-	~FileFormatFlac() noexcept override;
+	~DescriptorFlac() noexcept override;
 
 
 private:
@@ -69,9 +69,9 @@ private:
 	 * \param[in] bytes  The byte sequence to check
 	 * \param[in] offset The offset to byte 0 in the file
 	 *
-	 * \return TRUE if the bytes match the FileFormatFlac, otherwise FALSE
+	 * \return TRUE if the bytes match the DescriptorFlac, otherwise FALSE
 	 */
-	bool do_can_have_bytes(const std::vector<char> &bytes,
+	bool do_accepts_bytes(const std::vector<char> &bytes,
 			const uint64_t &offset) const override;
 
 	/**
@@ -82,11 +82,11 @@ private:
 	 * \return TRUE iff suffix is case insensitively equal to "flac", otherwise
 	 * FALSE
 	 */
-	bool do_can_have_suffix(const std::string &suffix) const override;
+	bool do_accepts_suffix(const std::string &suffix) const override;
 
 	std::unique_ptr<FileReader> do_create_reader() const override;
 
-	std::unique_ptr<FileFormat> do_clone() const override;
+	std::unique_ptr<FileReaderDescriptor> do_clone() const override;
 };
 
 /// @}

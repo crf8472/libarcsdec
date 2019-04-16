@@ -427,7 +427,7 @@ private:
  * Abstract base class for AudioReader implementations.
  *
  * Concrete subclasses of AudioReaderImpl implement AudioReaders for a concrete
- * FileFormat.
+ * FileReaderDescriptor.
  */
 class AudioReaderImpl : public virtual SampleProvider
 {

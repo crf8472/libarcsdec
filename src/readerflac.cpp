@@ -431,19 +431,19 @@ void FlacAudioReaderImpl::register_validate_handler(
 } // namespace
 
 
-// FileFormatFlac
+// DescriptorFlac
 
 
-FileFormatFlac::~FileFormatFlac() noexcept = default;
+DescriptorFlac::~DescriptorFlac() noexcept = default;
 
 
-std::string FileFormatFlac::do_name() const
+std::string DescriptorFlac::do_name() const
 {
 	return "Flac";
 }
 
 
-bool FileFormatFlac::do_can_have_bytes(const std::vector<char> &bytes,
+bool DescriptorFlac::do_accepts_bytes(const std::vector<char> &bytes,
 		const uint64_t &offset) const
 {
 	return  bytes.size() >= 4
@@ -456,14 +456,14 @@ bool FileFormatFlac::do_can_have_bytes(const std::vector<char> &bytes,
 }
 
 
-bool FileFormatFlac::do_can_have_suffix(const std::string &suffix) const
+bool DescriptorFlac::do_accepts_suffix(const std::string &suffix) const
 {
 	std::locale locale;
 	return std::tolower(suffix, locale) == "flac";
 }
 
 
-std::unique_ptr<FileReader> FileFormatFlac::do_create_reader() const
+std::unique_ptr<FileReader> DescriptorFlac::do_create_reader() const
 {
 	auto impl = std::make_unique<FlacAudioReaderImpl>();
 
@@ -473,9 +473,9 @@ std::unique_ptr<FileReader> FileFormatFlac::do_create_reader() const
 }
 
 
-std::unique_ptr<FileFormat> FileFormatFlac::do_clone() const
+std::unique_ptr<FileReaderDescriptor> DescriptorFlac::do_clone() const
 {
-	return std::make_unique<FileFormatFlac>();
+	return std::make_unique<DescriptorFlac>();
 }
 
 } // namespace arcs

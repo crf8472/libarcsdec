@@ -558,26 +558,26 @@ std::unique_ptr<TOC> CueParserImpl::do_parse(const std::string &filename)
 } // namespace
 
 
-// FileFormatCUE
+// FileReaderDescriptorCUE
 
 
-FileFormatCUE::~FileFormatCUE() noexcept = default;
+FileReaderDescriptorCUE::~FileReaderDescriptorCUE() noexcept = default;
 
 
-std::string FileFormatCUE::do_name() const
+std::string FileReaderDescriptorCUE::do_name() const
 {
 	return "CUESheet";
 }
 
 
-bool FileFormatCUE::do_can_have_bytes(const std::vector<char> & /* bytes */,
+bool FileReaderDescriptorCUE::do_accepts_bytes(const std::vector<char> & /* bytes */,
 		const uint64_t & /* offset */) const
 {
 	return true;
 }
 
 
-bool FileFormatCUE::do_can_have_suffix(const std::string &suffix) const
+bool FileReaderDescriptorCUE::do_accepts_suffix(const std::string &suffix) const
 {
 	char letter = suffix.at(0);
 
@@ -604,7 +604,7 @@ bool FileFormatCUE::do_can_have_suffix(const std::string &suffix) const
 }
 
 
-std::unique_ptr<FileReader> FileFormatCUE::do_create_reader() const
+std::unique_ptr<FileReader> FileReaderDescriptorCUE::do_create_reader() const
 {
 	auto impl = std::make_unique<CueParserImpl>();
 
@@ -612,9 +612,9 @@ std::unique_ptr<FileReader> FileFormatCUE::do_create_reader() const
 }
 
 
-std::unique_ptr<FileFormat> FileFormatCUE::do_clone() const
+std::unique_ptr<FileReaderDescriptor> FileReaderDescriptorCUE::do_clone() const
 {
-	return std::make_unique<FileFormatCUE>();
+	return std::make_unique<FileReaderDescriptorCUE>();
 }
 
 } // namespace arcs

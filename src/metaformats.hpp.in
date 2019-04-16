@@ -37,9 +37,9 @@ namespace arcs
  * \internal
  * \ingroup metaparser
  */
-class FileFormatsMetadata final
+class FileReaderDescriptorsMetadata final
 {
-	using container_type = std::vector<std::unique_ptr<FileFormat>>;
+	using container_type = std::vector<std::unique_ptr<FileReaderDescriptor>>;
 
 
 public:
@@ -51,15 +51,15 @@ public:
 	/**
 	 * Default constructor. Adds all available formats to the instance.
 	 */
-	FileFormatsMetadata()
+	FileReaderDescriptorsMetadata()
 		: formats_()
 	{
 		formats_.reserve(2);
 
-		formats_.push_back(std::make_unique<FileFormatCUE>());
+		formats_.push_back(std::make_unique<FileReaderDescriptorCUE>());
 
 #ifdef WITH_LIBCDIO
-		formats_.push_back(std::make_unique<FileFormatDev>());
+		formats_.push_back(std::make_unique<DescriptorDev>());
 #endif
 	}
 

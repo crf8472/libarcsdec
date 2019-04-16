@@ -71,27 +71,27 @@ MetadataParserSelection::MetadataParserSelection()
 {
 	// Provide tests
 
-	std::unique_ptr<FileFormatTestSuffix> test =
-		std::make_unique<FileFormatTestSuffix>();
+	std::unique_ptr<FileTestSuffix> test =
+		std::make_unique<FileTestSuffix>();
 
 	this->register_test(std::move(test));
 
 
-	// Provide FileFormats
+	// Provide FileReaderDescriptors
 
 	// The constructor of MetadataParserSelection automagically introduces the
 	// knowledge about what formats are available. This knowledge is
-	// provided by the instance FileFormatsAudio that is populated at
+	// provided by the instance FileReaderDescriptorsAudio that is populated at
 	// buildtime based on the configuration of the build system.
 
-	FileFormatsMetadata compiled_supported_metadata_formats;
+	FileReaderDescriptorsMetadata compiled_supported_metadata_formats;
 
-	// We move all the actual formats to not access FileFormatsMetadata
+	// We move all the actual formats to not access FileReaderDescriptorsMetadata
 	// beyond this particular block
 
 	for (auto& f : compiled_supported_metadata_formats)
 	{
-		this->register_format(std::move(f));
+		this->add_descriptor(std::move(f));
 	}
 }
 

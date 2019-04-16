@@ -35,7 +35,7 @@ namespace arcs
 /**
  * Represents the physical CD format
  */
-class FileFormatDev : public FileFormat
+class DescriptorDev : public FileReaderDescriptor
 {
 
 public:
@@ -43,7 +43,7 @@ public:
 	/**
 	 * Virtual default destructor
 	 */
-	virtual ~FileFormatDev() noexcept;
+	virtual ~DescriptorDev() noexcept;
 
 	/**
 	 * Returns "physical device"
@@ -61,7 +61,7 @@ public:
 	 *
 	 * \return TRUE
 	 */
-	bool do_can_have_bytes(const std::vector<char> &bytes,
+	bool do_accepts_bytes(const std::vector<char> &bytes,
 			const uint64_t &offset) const;
 
 	/**
@@ -69,13 +69,13 @@ public:
 	 *
 	 * \return FALSE
 	 */
-	bool do_can_have_suffix(const std::string &suffix) const;
+	bool do_accepts_suffix(const std::string &suffix) const;
 
 	// Override
 	std::unique_ptr<FileReader> do_create_reader() const;
 
 	// Override
-	std::unique_ptr<FileFormat> do_clone() const;
+	std::unique_ptr<FileReaderDescriptor> do_clone() const;
 };
 
 /// @}

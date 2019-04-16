@@ -61,7 +61,7 @@ namespace arcs
  * Represents any combination of container and codec that can be read by
  * ffmpeg.
  */
-class FileFormatFFmpeg : public FileFormat
+class FileReaderDescriptorFFmpeg : public FileReaderDescriptor
 {
 
 public:
@@ -69,7 +69,7 @@ public:
 	/**
 	 * Virtual default destructor
 	 */
-	~FileFormatFFmpeg() noexcept override;
+	~FileReaderDescriptorFFmpeg() noexcept override;
 
 
 private:
@@ -89,7 +89,7 @@ private:
 	 *
 	 * \return TRUE
 	 */
-	bool do_can_have_bytes(const std::vector<char> &bytes,
+	bool do_accepts_bytes(const std::vector<char> &bytes,
 			const uint64_t &offset) const override;
 
 	/**
@@ -99,11 +99,11 @@ private:
 	 *
 	 * \return TRUE
 	 */
-	bool do_can_have_suffix(const std::string &suffix) const override;
+	bool do_accepts_suffix(const std::string &suffix) const override;
 
 	std::unique_ptr<FileReader> do_create_reader() const override;
 
-	std::unique_ptr<FileFormat> do_clone() const override;
+	std::unique_ptr<FileReaderDescriptor> do_clone() const override;
 };
 
 /// @}

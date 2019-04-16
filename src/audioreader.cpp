@@ -612,8 +612,8 @@ void AudioReader::set_processor(SampleProcessor &processor)
 
 AudioReaderSelection::AudioReaderSelection()
 {
-	std::unique_ptr<FileFormatTestBytes> test =
-		std::make_unique<FileFormatTestBytes>(0, 24);
+	std::unique_ptr<FileTestBytes> test =
+		std::make_unique<FileTestBytes>(0, 24);
 	// 24 is a sufficient number of bytes for recognition (at the moment)
 	// Note: RIFF/WAV needs only the first 12 bytes for identification and PCM
 	// format is encoded in byte 20 + 21, but 24 is such a beautiful number...
@@ -621,21 +621,21 @@ AudioReaderSelection::AudioReaderSelection()
 	this->register_test(std::move(test));
 
 
-	// Provide FileFormats
+	// Provide FileReaderDescriptors
 
 	// The constructor of AudioReaderSelection automagically introduces the
 	// knowledge about what formats are available. This knowledge is
-	// provided by the instance FileFormatsAudio that is populated at
+	// provided by the instance FileReaderDescriptorsAudio that is populated at
 	// buildtime based on the configuration of the build system.
 
-	FileFormatsAudio compiled_supported_audio_formats;
+	FileReaderDescriptorsAudio compiled_supported_audio_formats;
 
-	// We move all the actual formats to not access FileFormatsAudio
+	// We move all the actual formats to not access FileReaderDescriptorsAudio
 	// beyond this particular block
 
 	for (auto& f : compiled_supported_audio_formats)
 	{
-		this->register_format(std::move(f));
+		this->add_descriptor(std::move(f));
 	}
 }
 

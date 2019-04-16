@@ -26,20 +26,20 @@ namespace arcs
 /**
  * \brief Framework for creating specialized FileReaders for a specified file.
  *
- * Abstract class FileReaderSelection implements the generic mechanism to check a
- * specified input file for a matching FileFormat. If a matching FileFormat is
- * found, an instance of this format is returned which is then used to create
- * the concrete FileReader instance.
+ * Abstract class FileReaderSelection implements the generic mechanism to check
+ * a specified input file for a matching FileReaderDescriptor. If a matching
+ * FileReaderDescriptor is found, an instance of this descriptor is returned
+ * which is then used to create the concrete FileReader instance.
  *
- * A FileReaderSelection holds a a list of tests to perform on the input file and
- * a list of supported FileFormats. Internally, it uses an instance of
- * FileFormatSelector to select a concrete FileFormat. FileFormatSelector
- * performs the selection obeying a certain selection policy. The default
- * FileFormatSelector just selects the first FileFormat in the list of supported
- * FileFormats that passes all tests in the provided list of tests.
+ * A FileReaderSelection holds a a list of tests to perform on the input file
+ * and a list of supported FileReaderDescriptors. Internally, it uses an
+ * instance of FileReaderSelector to select a concrete FileReaderDescriptor.
+ * FileReaderSelector performs the selection obeying a certain selection policy.
+ * The default FileReaderSelector just selects the first FileReaderDescriptor in
+ * the list of supported FileReaderDescriptors that passes all tests in the
+ * provided list of tests.
  *
- * A FileFormatTest implements a single test. It may or may not open the file to
- * test.
+ * A FileTest implements a single test. It may or may not open the file to test.
  *
  * The \ref audioreader and \ref metaparser are built on this API.
  */
@@ -48,8 +48,7 @@ namespace arcs
 
 
 /**
- * Abstract base class for all file readers, audio readers as well as metadata
- * readers.
+ * \brief Abstract base class for all FileReaders, acts as tag.
  *
  * This class does not define any interface but ensures a common base type for
  * all readers. Therefore, all readers can be built and provided by the same
@@ -73,7 +72,7 @@ public:
 
 
 /**
- * Reports an error while reading a file.
+ * \brief Reports an error while reading a file.
  *
  * This exception can be thrown when the file does not exist or is not readable
  * or another IO related error occurrs while reading the file content.
@@ -125,22 +124,22 @@ private:
 
 
 /**
- * Abstract base class to represent a file format.
+ * \brief Abstract base class for the properties of a FileReader.
  *
- * A FileFormat provides information that can be used to decide whether a
- * a given file matches this format. It can create an opaque reader that can
- * read files matching this format.
+ * A FileReaderDescriptor provides information that can be used to decide
+ * whether a a given file can be read by readers specified by this descriptor.
+ * It can create an opaque reader that can read the file.
  *
- * A FileFormat is just an abstract test whether a specific reader should be
- * created or not. It may or may not be a specific combination of a codec and a
- * file container format. For instance, "FLAC" can be a FileFormat, representing
- * FLAC data in a FLAC container. Another way to implement a FileFormat would be
- * "ffmpeg-readable audio file". Therefore, a FileFormat does not to distinguish
- * between container format and codec, but just should provide the heuristics
- * for deciding whether the corresponding FileReader can read the file in
- * question.
+ * A FileReaderDescriptor is just an abstract test whether a specific reader
+ * should be created or not. It may or may not be a specific combination of a
+ * codec and a file container format. For instance, "FLAC" can be a
+ * FileReaderDescriptor, representing FLAC data in a FLAC container. Another way
+ * to implement a FileReaderDescriptor would be "ffmpeg-readable audio file".
+ * Therefore, a FileReaderDescriptor does not to distinguish between container
+ * format and codec, but just should provide the heuristics for deciding whether
+ * the corresponding FileReader can read the file in question.
  */
-class FileFormat
+class FileReaderDescriptor
 {
 
 public:
@@ -148,39 +147,39 @@ public:
 	/**
 	 * Virtual default destructor
 	 */
-	virtual ~FileFormat() noexcept;
+	virtual ~FileReaderDescriptor() noexcept;
 
 	/**
-	 * Name of this FileFormat
+	 * Name of this FileReaderDescriptor
 	 *
-	 * \return A human-readable name of this FileFormat
+	 * \return A human-readable name of this FileReaderDescriptor
 	 */
 	std::string name() const;
 
 	/**
-	 * Check whether this format matches the given input bytes.
+	 * Check whether this descriptor matches the given input bytes.
 	 *
 	 * \param[in] bytes  Sequence of consecutive bytes in the file
 	 * \param[in] offset Offset of the first byte of this sequence
 	 *
-	 * \return TRUE iff the byte sequence matches the format, otherwise FALSE
+	 * \return TRUE iff the descriptor accepts the sequence, otherwise FALSE
 	 */
-	bool can_have_bytes(const std::vector<char> &bytes,
+	bool accepts_bytes(const std::vector<char> &bytes,
 			const uint64_t &offset) const;
 
 	/**
-	 * Check whether this format is known to have the specified suffix.
+	 * Check whether this descriptor is known to have the specified suffix.
 	 *
 	 * \param[in] suffix The suffix of the filename to test for
 	 *
-	 * \return TRUE iff the suffix matches the suffix of the format
+	 * \return TRUE iff the suffix matches the suffix of the descriptor
 	 */
-	bool can_have_suffix(const std::string &suffix) const;
+	bool accepts_suffix(const std::string &suffix) const;
 
 	/**
 	 * Create an opaque reader for the specified file
 	 *
-	 * \return A FileReader that can read this FileFormat
+	 * \return A FileReader that can read this FileReaderDescriptor
 	 */
 	std::unique_ptr<FileReader> create_reader() const;
 
@@ -192,7 +191,7 @@ public:
 	 *
 	 * \return A deep copy of the instance
 	 */
-	std::unique_ptr<FileFormat> clone() const;
+	std::unique_ptr<FileReaderDescriptor> clone() const;
 
 	/**
 	 * Equality
@@ -202,7 +201,7 @@ public:
 	 * \return TRUE iff the right hand side is equal to the left hand side,
 	 * otherwise false
 	 */
-	bool operator == (const FileFormat &rhs) const;
+	bool operator == (const FileReaderDescriptor &rhs) const;
 
 	/**
 	 * Inequality
@@ -212,63 +211,68 @@ public:
 	 * \return TRUE iff the right hand side is not equal to the left hand side,
 	 * otherwise false
 	 */
-	bool operator != (const FileFormat &rhs) const;
+	bool operator != (const FileReaderDescriptor &rhs) const;
 
 
 private:
 
 	/**
-	 * Implements FileFormat::name()
+	 * Implements FileReaderDescriptor::name()
 	 *
-	 * \return A human-readable name of this FileFormat
+	 * \return A human-readable name of this FileReaderDescriptor
 	 */
 	virtual std::string do_name() const
 	= 0;
 
 	/**
-	 * Implements FileFormat::can_have_bytes()
+	 * Implements FileReaderDescriptor::accepts_bytes()
 	 *
 	 * \param[in] bytes  Sequence of consecutive bytes in the file
 	 * \param[in] offset Offset of the first byte of this sequence
 	 *
-	 * \return TRUE iff the byte sequence matches the format, otherwise FALSE
+	 * \return TRUE iff the descriptor accepts the bytes, otherwise FALSE
 	 */
-	virtual bool do_can_have_bytes(const std::vector<char> &bytes,
+	virtual bool do_accepts_bytes(const std::vector<char> &bytes,
 			const uint64_t &offset) const
 	= 0;
 
 	/**
-	 * Implements FileFormat::can_have_suffix()
+	 * Implements FileReaderDescriptor::accepts_suffix()
 	 *
 	 * \param[in] suffix The suffix of the filename to test for
 	 *
-	 * \return TRUE iff the suffix matches the suffix of the format
+	 * \return TRUE iff the suffix matches the suffix of the descriptor
 	 */
-	virtual bool do_can_have_suffix(const std::string &suffix) const
+	virtual bool do_accepts_suffix(const std::string &suffix) const
 	= 0;
 
 	/**
-	 * Implements FileFormat::create_reader()
+	 * Implements FileReaderDescriptor::create_reader()
 	 *
-	 * \return A FileReader that can read this FileFormat
+	 * \return A FileReader that can read this FileReaderDescriptor
 	 */
 	virtual std::unique_ptr<FileReader> do_create_reader() const
 	= 0;
 
 	/**
-	 * Implements FileFormat::clone()
+	 * Implements FileReaderDescriptor::clone()
 	 *
 	 * \return A deep copy of the instance
 	 */
-	virtual std::unique_ptr<FileFormat> do_clone() const
+	virtual std::unique_ptr<FileReaderDescriptor> do_clone() const
 	= 0;
+
+	/**
+	 * Implements FileReaderDescriptor::operator ==
+	 */
+	virtual bool do_operator_equals(const FileReaderDescriptor &rhs) const;
 };
 
 
 /**
- * Provides a test whether a given FileFormat matches certain test criteria
+ * \brief A test whether a given FileReaderDescriptor matches certain criteria
  */
-class FileFormatTest
+class FileTest
 {
 
 public:
@@ -276,19 +280,19 @@ public:
 	/**
 	 * Constructor
 	 */
-	FileFormatTest();
+	FileTest();
 
 	/**
 	 * Constructor
 	 *
 	 * \param[in] filename The filename to test
 	 */
-	explicit FileFormatTest(const std::string &filename);
+	explicit FileTest(const std::string &filename);
 
 	/**
 	 * Virtual default destructor
 	 */
-	virtual ~FileFormatTest() noexcept;
+	virtual ~FileTest() noexcept;
 
 	/**
 	 * Set the filename to test.
@@ -305,41 +309,41 @@ public:
 	const std::string& filename() const;
 
 	/**
-	 * Test a given format instance for matching the criteria of this test
+	 * Test a given descriptor instance for matching the criteria of this test
 	 *
-	 * \param[in] format The FileFormat to test
+	 * \param[in] desc The FileReaderDescriptor to test
 	 *
-	 * \return TRUE iff the format matches the criteria of this test
+	 * \return TRUE iff the descriptor matches the criteria of this test
 	 */
-	bool matches(const FileFormat &format) const;
+	bool matches(const FileReaderDescriptor &desc) const;
 
 
 private:
 
 	/**
+	 * Implements FileTest::matches()
+	 *
+	 * \param[in] desc The FileReaderDescriptor to test
+	 *
+	 * \return TRUE iff the descriptor matches the criteria of this selector
+	 */
+	virtual bool do_matches(const FileReaderDescriptor &desc) const
+	= 0;
+
+	/**
 	 * Filename tested by this test.
 	 */
 	std::string filename_;
-
-	/**
-	 * Implements FileFormatTest::matches()
-	 *
-	 * \param[in] format The FileFormat to test
-	 *
-	 * \return TRUE iff the format matches the criteria of this selector
-	 */
-	virtual bool do_matches(const FileFormat &format) const
-	= 0;
 };
 
 
 /**
- * Represents a byte sequence from a file along with its offset and length.
+ * \brief A byte sequence from a file along with its offset and length.
  *
- * FileFormatTestBytes just represent a part of a file. This part can be tested
- * for compliance to a certain FileFormat.
+ * FileTestBytes just represent a part of a file. This part can be tested
+ * for compliance to a certain FileReaderDescriptor.
  */
-class FileFormatTestBytes final : public FileFormatTest
+class FileTestBytes final : public FileTest
 {
 
 public:
@@ -350,12 +354,12 @@ public:
 	 * \param[in] offset The offset in bytes where this sequence starts
 	 * \param[in] length Number of bytes in the sequence
 	 */
-	FileFormatTestBytes(const uint64_t &offset, const uint32_t &length);
+	FileTestBytes(const uint64_t &offset, const uint32_t &length);
 
 
 private:
 
-	bool do_matches(const FileFormat &format) const override;
+	bool do_matches(const FileReaderDescriptor &desc) const override;
 
 	/**
 	 * Read length bytes from position offset in file filename.
@@ -385,14 +389,14 @@ private:
 
 
 /**
- * Test file for compliance with a certain filename suffix
+ * \brief Test file for compliance with a certain filename suffix
  */
-class FileFormatTestSuffix final : public FileFormatTest
+class FileTestSuffix final : public FileTest
 {
 
 private:
 
-	bool do_matches(const FileFormat &format) const override;
+	bool do_matches(const FileReaderDescriptor &desc) const override;
 
 	/**
 	 * Provides the suffix of a given filename.
@@ -410,96 +414,70 @@ private:
 
 
 /**
- * Selects a FileFormat by its name
- */
-class FileFormatTestFormatname final : public FileFormatTest
-{
-
-public:
-
-	/**
-	 * Constructor
-	 *
-	 * \param[in] formatname Name of the FileFormat to match
-	 */
-	FileFormatTestFormatname(const std::string &formatname);
-
-
-private:
-
-	bool do_matches(const FileFormat &format) const override;
-
-	/**
-	 * The FileFormat name to match
-	 */
-	std::string formatname_;
-};
-
-
-/**
- * Represents a selection mechanism for a FileFormatSelection.
+ * \brief A selection mechanism for a FileReaderSelection.
  *
- * A FileFormatSelector applies some FileFormatTests to decide whether a given
- * FileFormat matches or not.
+ * A FileReaderSelector applies some FileTests to decide whether a given
+ * FileReaderDescriptor matches or not.
  *
- * The default FileFormatSelector selects just the first format in the format
- * list passed that passes all tests. Subclassing FileFormatSelector can
- * implement different selection policies.
+ * The default FileReaderSelector selects just the first descriptor in the
+ * descriptor list passed that passes all tests. Subclassing FileReaderSelector
+ * can implement different selection policies.
  */
-class FileFormatSelector
-{
+class FileReaderSelector {
 
 public:
 
 	/**
 	 * Virtual default destructor
 	 */
-	virtual ~FileFormatSelector() noexcept;
+	virtual ~FileReaderSelector() noexcept;
 
 	/**
-	 * Selects the format with the lowest index position from formats that
-	 * passes all tests.
+	 * Selects the descriptor with the lowest index position from descriptors
+	 * that passes all tests.
 	 *
-	 * \param[in] tests   Set of tests to perform
-	 * \param[in] formats Set of formats to select from
+	 * \param[in] tests Set of tests to perform
+	 * \param[in] descs Set of descriptors to select from
 	 *
-	 * \return A FileFormat
+	 * \return A FileReaderDescriptor
 	 */
-	std::unique_ptr<FileFormat> select(
-			const std::set<std::unique_ptr<FileFormatTest>> &tests,
-			const std::list<std::unique_ptr<FileFormat>> &formats) const;
+	std::unique_ptr<FileReaderDescriptor> select(
+			const std::set<std::unique_ptr<FileTest>> &tests,
+			const std::list<std::unique_ptr<FileReaderDescriptor>> &descs)
+		const;
 
 
 private:
 
 	/**
-	 * Implements FileFormatSelector::select()
+	 * Implements FileReaderSelector::select()
 	 *
-	 * \param[in] tests   Set of tests to perform
-	 * \param[in] formats List of formats to select from
+	 * \param[in] tests Set of tests to perform
+	 * \param[in] descs List of descriptors to select from
 	 *
-	 * \return A FileFormat
+	 * \return A FileReaderDescriptor
 	 */
-	virtual std::unique_ptr<FileFormat> do_select(
-			const std::set<std::unique_ptr<FileFormatTest>> &tests,
-			const std::list<std::unique_ptr<FileFormat>> &formats) const;
+	virtual std::unique_ptr<FileReaderDescriptor> do_select(
+			const std::set<std::unique_ptr<FileTest>> &tests,
+			const std::list<std::unique_ptr<FileReaderDescriptor>> &descs)
+		const;
 
 	/**
-	 * Test whether a format matches the criteria of this selector
+	 * Test whether a descriptor matches the criteria of this selector
 	 *
-	 * \param[in] tests  Set of tests to perform
-	 * \param[in] format The format to check
+	 * \param[in] tests Set of tests to perform
+	 * \param[in] desc  The descriptor to check
 	 *
-	 * \return TRUE iff the format matches the criteria of this selector
+	 * \return TRUE iff the descriptor matches the criteria of this selector
 	 */
 	virtual bool matches(
-		const std::set<std::unique_ptr<FileFormatTest>> &tests,
-		const std::unique_ptr<FileFormat> &format) const;
+		const std::set<std::unique_ptr<FileTest>> &tests,
+		const std::unique_ptr<FileReaderDescriptor> &desc) const;
 };
 
 
 /**
- * Abstract builder class for creating readers for given files.
+ * \brief Abstract builder class for creating readers for given files.
  */
 class FileReaderSelection
 {
@@ -512,7 +490,9 @@ public:
 	FileReaderSelection();
 
 	// class is non-copy-constructible
-	FileReaderSelection(const FileReaderSelection &) = delete; // TODO why?
+	FileReaderSelection(const FileReaderSelection &) = delete;
+
+	// TODO Move constructor
 
 	/**
 	 * Virtual default destructor
@@ -520,38 +500,39 @@ public:
 	virtual ~FileReaderSelection() noexcept;
 
 	/**
-	 * Add a format to the list of formats for which a FileReader can be created
+	 * Add a descriptor to the list of descriptors for which a FileReader can be
+	 * created
 	 *
-	 * \param[in] format The FileFormat to support
+	 * \param[in] desc The FileReaderDescriptor to support
 	 */
-	void register_format(std::unique_ptr<FileFormat> format);
+	void add_descriptor(std::unique_ptr<FileReaderDescriptor> desc);
 
 	/**
-	 * Remove all formats that qualify as equivalent to the given format by
-	 * '==' from the list of formats.
+	 * Remove all descriptors that qualify as equivalent to the given descriptor
+	 * by '==' from the list of descriptors.
 	 *
-	 * \param[in] format The FileFormat to be removed
+	 * \param[in] desc The FileReaderDescriptor to be removed
 	 *
-	 * \return Number of format instances removed.
+	 * \return Number of descriptor instances removed.
 	 */
-	int remove_format(const FileFormat * format);
+	int remove_descriptor(const FileReaderDescriptor * desc);
 
 	/**
-	 * Register a test for a FileFormat for the specified filename.
+	 * Register a test for a FileReaderDescriptor for the specified filename.
 	 *
-	 * \param[in] format_test The test to be registered
+	 * \param[in] testobj The test to be registered
 	 */
-	void register_test(std::unique_ptr<FileFormatTest> format_test);
+	void register_test(std::unique_ptr<FileTest> testobj);
 
 	/**
 	 * Remove all tests that qualify as equivalent to the given test by
 	 * '==' from the list of test.
 	 *
-	 * \param[in] format_test The FileFormatTest to be removed
+	 * \param[in] testobj The FileTest to be removed
 	 *
 	 * \return Number of test instances removed.
 	 */
-	int remove_test(const FileFormatTest * format_test);
+	int unregister_test(const FileTest * testobj);
 
 	/**
 	 * Removes all tests registered to this instance.
@@ -559,27 +540,28 @@ public:
 	void remove_all_tests();
 
 	/**
-	 * Set the FileFormatSelector for this instance
+	 * Set the FileReaderSelector for this instance
 	 *
-	 * \param[in] selector The FileFormatSelector for this instance
+	 * \param[in] selector The FileReaderSelector for this instance
 	 */
-	void set_selector(std::unique_ptr<FileFormatSelector> selector);
+	void set_selector(std::unique_ptr<FileReaderSelector> selector);
 
 	/**
-	 * Return the FileFormatSelector of this instance
+	 * Return the FileReaderSelector of this instance
 	 *
-	 * \return The FileFormatSelector of this instance
+	 * \return The FileReaderSelector of this instance
 	 */
-	const FileFormatSelector& selector() const;
+	const FileReaderSelector& selector() const;
 
 	/**
-	 * Determine a matching FileFormat for the specified file.
+	 * Determine a matching FileReaderDescriptor for the specified file.
 	 *
-	 * \param[in] filename Name of the file to determine a FileFormat for
+	 * \param[in] filename Name of the file to determine a descriptor for
 	 *
-	 * \return A FileFormat for the specified file
+	 * \return A FileReaderDescriptor for the specified file
 	 */
-	std::unique_ptr<FileFormat> get_format(const std::string &filename) const;
+	std::unique_ptr<FileReaderDescriptor> descriptor(
+			const std::string &filename) const;
 
 	/**
 	 * Create an opaque FileReader for the given file.
@@ -607,13 +589,14 @@ public:
 
 	/**
 	 * Reset this instance to its initial state, removing all tests and
-	 * formats.
+	 * descriptors.
 	 */
 	void reset();
 
 	// class is non-copy-assignable
 	FileReaderSelection& operator = (const FileReaderSelection &) = delete;
-	// TODO why?
+
+	// TODO Move assignment
 
 
 private:

@@ -40,7 +40,7 @@ namespace arcs
  * is 16 bit, 2 channels, 44100 samples/sec as integer representation
  * exclusively.
  */
-class FileFormatWavPCM : public FileFormat
+class DescriptorWavPCM : public FileReaderDescriptor
 {
 
 public:
@@ -49,7 +49,7 @@ public:
 	/**
 	 * Virtual default destructor
 	 */
-	~FileFormatWavPCM() noexcept override;
+	~DescriptorWavPCM() noexcept override;
 
 
 private:
@@ -76,16 +76,16 @@ private:
 	 * \param[in] bytes  The byte sequence to check
 	 * \param[in] offset The offset to byte 0 in the file
 	 *
-	 * \return TRUE if the bytes match the FileFormatWavPCM, otherwise FALSE
+	 * \return TRUE if the bytes match the DescriptorWavPCM, otherwise FALSE
 	 */
-	bool do_can_have_bytes(const std::vector<char> &bytes,
+	bool do_accepts_bytes(const std::vector<char> &bytes,
 			const uint64_t &offset) const override;
 
-	bool do_can_have_suffix(const std::string &suffix) const override;
+	bool do_accepts_suffix(const std::string &suffix) const override;
 
 	std::unique_ptr<FileReader> do_create_reader() const override;
 
-	std::unique_ptr<FileFormat> do_clone() const override;
+	std::unique_ptr<FileReaderDescriptor> do_clone() const override;
 };
 
 /// @}

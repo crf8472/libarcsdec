@@ -2,7 +2,7 @@
 #define __LIBARCSDEC_AUDIOFORMATS_HPP__
 
 /**
- * \file audioformats.hpp.in Provide compiled-in FileFormat classes.
+ * \file audioformats.hpp.in Provide compiled-in FileReaderDescriptor classes.
  *
  * This information is controlled by cmake. It is made accessible at build time
  * for program scope.
@@ -65,9 +65,9 @@ namespace arcs
  * \internal
  * \ingroup filereader
  */
-class FileFormatsAudio final
+class FileReaderDescriptorsAudio final
 {
-	using container_type = std::vector<std::unique_ptr<FileFormat>>;
+	using container_type = std::vector<std::unique_ptr<FileReaderDescriptor>>;
 
 
 public:
@@ -79,29 +79,29 @@ public:
 	/**
 	 * Default constructor.
 	 *
-	 * Adds all available <tt>FileFormat</tt>s to the instance.
+	 * Adds all available <tt>FileReaderDescriptor</tt>s to the instance.
 	 */
-	FileFormatsAudio()
+	FileReaderDescriptorsAudio()
 		: formats_()
 	{
 		formats_.reserve(5);
 
-		formats_.push_back(std::make_unique<FileFormatWavPCM>());
+		formats_.push_back(std::make_unique<DescriptorWavPCM>());
 
 #ifdef WITH_FLAC
-		formats_.push_back(std::make_unique<FileFormatFlac>());
+		formats_.push_back(std::make_unique<DescriptorFlac>());
 #endif
 
 #ifdef WITH_WAVPACK
-		formats_.push_back(std::make_unique<FileFormatWavpack>());
+		formats_.push_back(std::make_unique<DescriptorWavpack>());
 #endif
 
 #ifdef WITH_FFMPEG
-		formats_.push_back(std::make_unique<FileFormatFFmpeg>());
+		formats_.push_back(std::make_unique<FileReaderDescriptorFFmpeg>());
 #endif
 
 #ifdef WITH_LIBSNDFILE
-		formats_.push_back(std::make_unique<FileFormatSndfile>());
+		formats_.push_back(std::make_unique<DescriptorSndfile>());
 #endif
 	}
 

@@ -917,19 +917,19 @@ bool WavpackAudioReaderImpl::perform_validations(const WavpackOpenFile &file)
 } // namespace
 
 
-// FileFormatWavpack
+// DescriptorWavpack
 
 
-FileFormatWavpack::~FileFormatWavpack() noexcept = default;
+DescriptorWavpack::~DescriptorWavpack() noexcept = default;
 
 
-std::string FileFormatWavpack::do_name() const
+std::string DescriptorWavpack::do_name() const
 {
 	return "Wavpack";
 }
 
 
-bool FileFormatWavpack::do_can_have_bytes(const std::vector<char> &bytes,
+bool DescriptorWavpack::do_accepts_bytes(const std::vector<char> &bytes,
 		const uint64_t &offset) const
 {
 	return  bytes.size() >= 4
@@ -942,14 +942,14 @@ bool FileFormatWavpack::do_can_have_bytes(const std::vector<char> &bytes,
 }
 
 
-bool FileFormatWavpack::do_can_have_suffix(const std::string &suffix) const
+bool DescriptorWavpack::do_accepts_suffix(const std::string &suffix) const
 {
 	std::locale locale;
 	return std::tolower(suffix, locale) == "wv";
 }
 
 
-std::unique_ptr<FileReader> FileFormatWavpack::do_create_reader() const
+std::unique_ptr<FileReader> DescriptorWavpack::do_create_reader() const
 {
 	auto impl = std::make_unique<WavpackAudioReaderImpl>();
 
@@ -964,9 +964,9 @@ std::unique_ptr<FileReader> FileFormatWavpack::do_create_reader() const
 }
 
 
-std::unique_ptr<FileFormat> FileFormatWavpack::do_clone() const
+std::unique_ptr<FileReaderDescriptor> DescriptorWavpack::do_clone() const
 {
-	return std::make_unique<FileFormatWavpack>();
+	return std::make_unique<DescriptorWavpack>();
 }
 
 } // namespace arcs

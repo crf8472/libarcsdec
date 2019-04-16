@@ -205,33 +205,33 @@ void LibsndfileAudioReaderImpl::do_process_file(const std::string &filename)
 } // namespace
 
 
-// FileFormatSndfile
+// DescriptorSndfile
 
 
-FileFormatSndfile::~FileFormatSndfile() noexcept = default;
+DescriptorSndfile::~DescriptorSndfile() noexcept = default;
 
 
-std::string FileFormatSndfile::do_name() const
+std::string DescriptorSndfile::do_name() const
 {
 	return "unknown (handled by sndfile)";
 }
 
 
-bool FileFormatSndfile::do_can_have_bytes(const std::vector<char> & /* bytes */,
+bool DescriptorSndfile::do_accepts_bytes(const std::vector<char> & /* bytes */,
 		const uint64_t & /* offset */) const
 {
 	return true;
 }
 
 
-bool FileFormatSndfile::do_can_have_suffix(const std::string & /* suffix */)
+bool DescriptorSndfile::do_accepts_suffix(const std::string & /* suffix */)
 	const
 {
 	return true;
 }
 
 
-std::unique_ptr<FileReader> FileFormatSndfile::do_create_reader() const
+std::unique_ptr<FileReader> DescriptorSndfile::do_create_reader() const
 {
 	auto impl = std::make_unique<LibsndfileAudioReaderImpl>();
 
@@ -239,9 +239,9 @@ std::unique_ptr<FileReader> FileFormatSndfile::do_create_reader() const
 }
 
 
-std::unique_ptr<FileFormat> FileFormatSndfile::do_clone() const
+std::unique_ptr<FileReaderDescriptor> DescriptorSndfile::do_clone() const
 {
-	return std::make_unique<FileFormatSndfile>();
+	return std::make_unique<DescriptorSndfile>();
 }
 
 } // namespace arcs

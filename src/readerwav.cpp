@@ -2008,19 +2008,19 @@ void WavAudioReaderImpl::register_audio_handler(
 } // namespace
 
 
-// FileFormatWavPCM
+// DescriptorWavPCM
 
 
-FileFormatWavPCM::~FileFormatWavPCM() noexcept = default;
+DescriptorWavPCM::~DescriptorWavPCM() noexcept = default;
 
 
-std::string FileFormatWavPCM::do_name() const
+std::string DescriptorWavPCM::do_name() const
 {
 	return "RIFF/WAV (PCM)";
 }
 
 
-bool FileFormatWavPCM::do_can_have_bytes(const std::vector<char> &bytes,
+bool DescriptorWavPCM::do_accepts_bytes(const std::vector<char> &bytes,
 		const uint64_t &offset) const
 {
 	if (not offset == 0 or bytes.size() < 22)
@@ -2049,14 +2049,14 @@ bool FileFormatWavPCM::do_can_have_bytes(const std::vector<char> &bytes,
 }
 
 
-bool FileFormatWavPCM::do_can_have_suffix(const std::string &suffix) const
+bool DescriptorWavPCM::do_accepts_suffix(const std::string &suffix) const
 {
 	std::locale locale;
 	return std::tolower(suffix, locale) == "wav";
 }
 
 
-std::unique_ptr<FileReader> FileFormatWavPCM::do_create_reader() const
+std::unique_ptr<FileReader> DescriptorWavPCM::do_create_reader() const
 {
 	auto impl = std::make_unique<WavAudioReaderImpl>();
 
@@ -2068,9 +2068,9 @@ std::unique_ptr<FileReader> FileFormatWavPCM::do_create_reader() const
 }
 
 
-std::unique_ptr<FileFormat> FileFormatWavPCM::do_clone() const
+std::unique_ptr<FileReaderDescriptor> DescriptorWavPCM::do_clone() const
 {
-	return std::make_unique<FileFormatWavPCM>();
+	return std::make_unique<DescriptorWavPCM>();
 }
 
 } // namespace arcs

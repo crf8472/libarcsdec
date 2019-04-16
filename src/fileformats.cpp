@@ -1,6 +1,5 @@
 /**
  * \file fileformats.cpp Implementation of a selection toolkit for FileReaders
- *
  */
 
 
@@ -62,100 +61,107 @@ int64_t FileReadException::byte_pos() const
 }
 
 
-// FileFormat
+// FileReaderDescriptor
 
 
-FileFormat::~FileFormat() noexcept = default;
+FileReaderDescriptor::~FileReaderDescriptor() noexcept = default;
 
 
-std::string FileFormat::name() const
+std::string FileReaderDescriptor::name() const
 {
 	return this->do_name();
 }
 
 
-bool FileFormat::can_have_bytes(const std::vector<char> &bytes,
+bool FileReaderDescriptor::accepts_bytes(const std::vector<char> &bytes,
 			const uint64_t &offset) const
 {
-	return this->do_can_have_bytes(bytes, offset);
+	return this->do_accepts_bytes(bytes, offset);
 }
 
 
-bool FileFormat::can_have_suffix(const std::string &suffix) const
+bool FileReaderDescriptor::accepts_suffix(const std::string &suffix) const
 {
-	return this->do_can_have_suffix(suffix);
+	return this->do_accepts_suffix(suffix);
 }
 
 
-std::unique_ptr<FileReader> FileFormat::create_reader() const
+std::unique_ptr<FileReader> FileReaderDescriptor::create_reader() const
 {
 	return this->do_create_reader();
 }
 
 
-std::unique_ptr<FileFormat> FileFormat::clone() const
+std::unique_ptr<FileReaderDescriptor> FileReaderDescriptor::clone() const
 {
 	return this->do_clone();
 }
 
 
-bool FileFormat::operator == (const FileFormat &rhs) const
+bool FileReaderDescriptor::operator == (const FileReaderDescriptor &rhs) const
 {
-	// FileFormats are stateless and hence equal iff they are of the same static
-	// type
-
-	return typeid(this) == typeid(rhs);
+	return this->do_operator_equals(rhs);
 }
 
 
-bool FileFormat::operator != (const FileFormat &rhs) const
+bool FileReaderDescriptor::operator != (const FileReaderDescriptor &rhs) const
 {
 	return not(this == &rhs);
 }
 
 
-// FileFormatTest
+bool FileReaderDescriptor::do_operator_equals(const FileReaderDescriptor &rhs)
+	const
+{
+	// FileReaderDescriptors are stateless and hence equal iff they are of the
+	// same static type
+
+	return typeid(this) == typeid(rhs);
+}
 
 
-FileFormatTest::FileFormatTest()
+// FileTest
+
+
+FileTest::FileTest()
 	: filename_()
 {
 	// empty
 }
 
 
-FileFormatTest::FileFormatTest(const std::string &filename)
+FileTest::FileTest(const std::string &filename)
 	: filename_(filename)
 {
 	// empty
 }
 
 
-FileFormatTest::~FileFormatTest() noexcept = default;
+FileTest::~FileTest() noexcept = default;
 
 
-void FileFormatTest::set_filename(const std::string &filename)
+void FileTest::set_filename(const std::string &filename)
 {
 	filename_ = filename;
 }
 
 
-const std::string& FileFormatTest::filename() const
+const std::string& FileTest::filename() const
 {
 	return filename_;
 }
 
 
-bool FileFormatTest::matches(const FileFormat &format) const
+bool FileTest::matches(const FileReaderDescriptor &desc) const
 {
-	return this->do_matches(format);
+	return this->do_matches(desc);
 }
 
 
-// FileFormatTestBytes
+// FileTestBytes
 
 
-FileFormatTestBytes::FileFormatTestBytes(const uint64_t &offset,
+FileTestBytes::FileTestBytes(const uint64_t &offset,
 		const uint32_t &length)
 	: offset_(offset)
 	, length_(length)
@@ -164,14 +170,14 @@ FileFormatTestBytes::FileFormatTestBytes(const uint64_t &offset,
 }
 
 
-bool FileFormatTestBytes::do_matches(const FileFormat &format) const
+bool FileTestBytes::do_matches(const FileReaderDescriptor &desc) const
 {
 	auto bytes = this->read_bytes(this->filename(), offset_, length_);
-	return format.can_have_bytes(bytes, offset_);
+	return desc.accepts_bytes(bytes, offset_);
 }
 
 
-std::vector<char> FileFormatTestBytes::read_bytes(const std::string &filename,
+std::vector<char> FileTestBytes::read_bytes(const std::string &filename,
 	const uint64_t &offset, const uint32_t &length) const
 {
 	// Read a number of bytes from the start of the file
@@ -215,17 +221,17 @@ std::vector<char> FileFormatTestBytes::read_bytes(const std::string &filename,
 }
 
 
-// FileFormatTestSuffix
+// FileTestSuffix
 
 
-bool FileFormatTestSuffix::do_matches(const FileFormat &format) const
+bool FileTestSuffix::do_matches(const FileReaderDescriptor &desc) const
 {
 	auto suffix = this->get_suffix(this->filename());
-	return format.can_have_suffix(suffix);
+	return desc.accepts_suffix(suffix);
 }
 
 
-std::string FileFormatTestSuffix::get_suffix(const std::string &filename) const
+std::string FileTestSuffix::get_suffix(const std::string &filename) const
 {
 	auto pos = filename.find_last_of(".");
 
@@ -237,53 +243,34 @@ std::string FileFormatTestSuffix::get_suffix(const std::string &filename) const
 }
 
 
-// FileFormatTestFormatname
+// FileReaderSelector
 
 
-FileFormatTestFormatname::FileFormatTestFormatname(
-		const std::string &formatname)
-	: formatname_(formatname)
+FileReaderSelector::~FileReaderSelector() noexcept
+= default;
+
+
+std::unique_ptr<FileReaderDescriptor> FileReaderSelector::select(
+		const std::set<std::unique_ptr<FileTest>> &tests,
+		const std::list<std::unique_ptr<FileReaderDescriptor>> &descs) const
 {
-	// empty
+	return this->do_select(tests, descs);
 }
 
 
-bool FileFormatTestFormatname::do_matches(const FileFormat &format) const
+std::unique_ptr<FileReaderDescriptor> FileReaderSelector::do_select(
+		const std::set<std::unique_ptr<FileTest>> &tests,
+		const std::list<std::unique_ptr<FileReaderDescriptor>> &descs) const
 {
-	return formatname_ == format.name();
-}
-
-
-// FileFormatSelector
-
-
-FileFormatSelector::~FileFormatSelector() noexcept = default;
-
-
-std::unique_ptr<FileFormat> FileFormatSelector::select(
-		const std::set<std::unique_ptr<FileFormatTest>> &tests,
-		const std::list<std::unique_ptr<FileFormat>> &formats) const
-{
-	return this->do_select(tests, formats);
-}
-
-
-std::unique_ptr<FileFormat> FileFormatSelector::do_select(
-		const std::set<std::unique_ptr<FileFormatTest>> &tests,
-		const std::list<std::unique_ptr<FileFormat>> &formats) const
-{
-	for (auto& format : formats)
+	for (auto& desc : descs)
 	{
-		ARCS_LOG_DEBUG << "Testing format: " << format->name();
+		ARCS_LOG_DEBUG << "Testing reader: " << desc->name();
 
-		if (this->matches(tests, format))
+		if (this->matches(tests, desc))
 		{
-			ARCS_LOG_DEBUG << "Format matched";
+			ARCS_LOG_DEBUG << "Reader descriptor matched";
 
-			return format->clone();
-			// Moving would Nullify the FileFormat in formats.
-			// Copying using decltype would be okay since FileFormats are
-			// defined to be stateless but cloning is cleanest.
+			return desc->clone();
 		}
 	}
 
@@ -291,9 +278,9 @@ std::unique_ptr<FileFormat> FileFormatSelector::do_select(
 }
 
 
-bool FileFormatSelector::matches(
-		const std::set<std::unique_ptr<FileFormatTest>> &tests,
-		const std::unique_ptr<FileFormat> &format) const
+bool FileReaderSelector::matches(
+		const std::set<std::unique_ptr<FileTest>> &tests,
+		const std::unique_ptr<FileReaderDescriptor> &desc) const
 {
 	// The default implementation of matches() returns TRUE iff each test
 	// passes (== AND). It could be overwritten by a version that returns TRUE
@@ -303,15 +290,15 @@ bool FileFormatSelector::matches(
 	{
 		ARCS_LOG_DEBUG << "Perform test";
 
-		if (not test->matches(*format))
+		if (not test->matches(*desc))
 		{
 			ARCS_LOG_DEBUG << "Test failed";
 			return false;
 		}
 	}
 
-	// Note that if no tests are registered, each FileFormat matches!
-	// This means that whatever is first in enumerating the formats will be
+	// Note that if no tests are registered, each FileReaderDescriptor matches!
+	// This means that whatever is first in enumerating the descriptors will be
 	// matched and create the FileReader.
 
 	return true;
@@ -351,38 +338,38 @@ public:
 	virtual ~Impl() noexcept;
 
 	/**
-	 * Add a file format for which a reader can be created
+	 * Add a file descriptor for which a reader can be created
 	 *
-	 * \param[in] format A FileFormat
+	 * \param[in] desc A FileReaderDescriptor
 	 */
-	void register_format(std::unique_ptr<FileFormat> format);
+	void add_descriptor(std::unique_ptr<FileReaderDescriptor> desc);
 
 	/**
-	 * Remove all formats that qualify as equivalent to the given format by
-	 * '==' from the list of formats.
+	 * Remove all descriptors that qualify as equivalent to the given descriptor
+	 * by '==' from the list of descriptors.
 	 *
-	 * \param[in] format The FileFormat to be removed
+	 * \param[in] desc The FileReaderDescriptor to be removed
 	 *
-	 * \return Number of format instances removed.
+	 * \return Number of descriptors instances removed.
 	 */
-	int remove_format(const FileFormat * format);
+	int remove_descriptor(const FileReaderDescriptor* desc);
 
 	/**
-	 * Register a test for a FileFormat for the specified filename.
+	 * Register a test for a FileReaderDescriptor for the specified filename.
 	 *
-	 * \param[in] format_test The test to be registered
+	 * \param[in] testobj The test to be registered
 	 */
-	void register_test(std::unique_ptr<FileFormatTest> format_test);
+	void register_test(std::unique_ptr<FileTest> testobj);
 
 	/**
 	 * Remove all tests that qualify as equivalent to the given test by
 	 * '==' from the list of test.
 	 *
-	 * \param[in] format_test The FileFormatTest to be removed
+	 * \param[in] testobj The FileTest to be removed
 	 *
 	 * \return Number of test instances removed.
 	 */
-	int remove_test(const FileFormatTest * format_test);
+	int unregister_test(const FileTest * testobj);
 
 	/**
 	 * Removes all tests registered to this instance.
@@ -390,27 +377,28 @@ public:
 	void remove_all_tests();
 
 	/**
-	 * Sets the FileFormatSelector for this instance
+	 * Sets the FileReaderSelector for this instance
 	 *
-	 * \param[in] selector The FileFormatSelector for this instance
+	 * \param[in] selector The FileReaderSelector for this instance
 	 */
-	void set_selector(std::unique_ptr<FileFormatSelector> selector);
+	void set_selector(std::unique_ptr<FileReaderSelector> selector);
 
 	/**
-	 * Returns the internal FileFormatSelector of this instance
+	 * Returns the internal FileReaderSelector of this instance
 	 *
-	 * \return The FileFormatSelector of this instance
+	 * \return The FileReaderSelector of this instance
 	 */
-	const FileFormatSelector& selector() const;
+	const FileReaderSelector& selector() const;
 
 	/**
-	 * Determine a matching FileFormat for the specified file.
+	 * Determine a matching FileReaderDescriptor for the specified file.
 	 *
-	 * \param[in] filename Name of the file to determine a FileFormat for
+	 * \param[in] filename Name of the file to determine a descriptor for
 	 *
-	 * \return A FileFormat for the specified file
+	 * \return A FileReaderDescriptor for the specified file
 	 */
-	std::unique_ptr<FileFormat> get_format(const std::string &filename) const;
+	std::unique_ptr<FileReaderDescriptor> descriptor(
+			const std::string &filename) const;
 
 	/**
 	 * Create an opaque FileReader for the given file.
@@ -438,7 +426,7 @@ public:
 
 	/**
 	 * Reset this instance to its initial state, removing all tests and
-	 * formats.
+	 * descriptors.
 	 */
 	void reset();
 
@@ -449,29 +437,29 @@ public:
 protected:
 
 	/**
-	 * Return the FileFormatSelector of this instance for use in subclasses.
+	 * Return the FileReaderSelector of this instance for use in subclasses.
 	 *
-	 * \return The FileFormatSelector of this instance
+	 * \return The FileReaderSelector of this instance
 	 */
-	FileFormatSelector& use_selector();
+	FileReaderSelector& use_selector();
 
 
 private:
 
 	/**
-	 * Internal FileFormatSelector
+	 * Internal FileReaderSelector
 	 */
-	std::unique_ptr<FileFormatSelector> selector_;
+	std::unique_ptr<FileReaderSelector> selector_;
 
 	/**
-	 * Internal set of FileFormatTests to performed by the selector_
+	 * Internal set of FileTests to performed by the selector_
 	 */
-	std::set<std::unique_ptr<FileFormatTest>> tests_;
+	std::set<std::unique_ptr<FileTest>> tests_;
 
 	/**
-	 * Internal list of FileFormats to match by the selector_
+	 * Internal list of FileReaderDescriptors to match by the selector_
 	 */
-	std::list<std::unique_ptr<FileFormat>> file_formats_;
+	std::list<std::unique_ptr<FileReaderDescriptor>> descriptors_;
 };
 
 
@@ -480,9 +468,9 @@ private:
 
 
 FileReaderSelection::Impl::Impl()
-	: selector_(std::make_unique<FileFormatSelector>())
+	: selector_(std::make_unique<FileReaderSelector>())
 	, tests_()
-	, file_formats_()
+	, descriptors_()
 {
 	// empty
 }
@@ -491,23 +479,24 @@ FileReaderSelection::Impl::Impl()
 FileReaderSelection::Impl::~Impl() noexcept = default;
 
 
-void FileReaderSelection::Impl::register_format(
-		std::unique_ptr<FileFormat> format)
+void FileReaderSelection::Impl::add_descriptor(
+		std::unique_ptr<FileReaderDescriptor> desc)
 {
-	file_formats_.push_back(std::move(format));
+	descriptors_.push_back(std::move(desc));
 }
 
 
-int FileReaderSelection::Impl::remove_format(const FileFormat * format)
+int FileReaderSelection::Impl::remove_descriptor(
+		const FileReaderDescriptor * desc)
 {
-	int counter = 0;
+	int counter { 0 };
 
-	auto end = file_formats_.end();
-	for (auto ptr = file_formats_.begin(); ptr != end; ++ptr) // TODO correct
+	auto end { descriptors_.end() };
+	for (auto ptr = descriptors_.begin(); ptr != end; ++ptr) // TODO correct
 	{
-		if (ptr->get() == format)
+		if (ptr->get() == desc)
 		{
-			file_formats_.erase(ptr);
+			descriptors_.erase(ptr);
 			++counter;
 		}
 	}
@@ -517,15 +506,15 @@ int FileReaderSelection::Impl::remove_format(const FileFormat * format)
 
 
 void FileReaderSelection::Impl::register_test(
-		std::unique_ptr<FileFormatTest> format_test)
+		std::unique_ptr<FileTest> testobj)
 {
-	tests_.insert(std::move(format_test));
+	tests_.insert(std::move(testobj));
 }
 
 
-int FileReaderSelection::Impl::remove_test(const FileFormatTest * test)
+int FileReaderSelection::Impl::unregister_test(const FileTest * test)
 {
-	int counter = 0;
+	int counter { 0 };
 
 	for (auto& t: tests_)
 	{
@@ -547,19 +536,19 @@ void FileReaderSelection::Impl::remove_all_tests()
 
 
 void FileReaderSelection::Impl::set_selector(
-		std::unique_ptr<FileFormatSelector> selector)
+		std::unique_ptr<FileReaderSelector> selector)
 {
 	selector_ = std::move(selector);
 }
 
 
-const FileFormatSelector& FileReaderSelection::Impl::selector() const
+const FileReaderSelector& FileReaderSelection::Impl::selector() const
 {
 	return *selector_;
 }
 
 
-std::unique_ptr<FileFormat> FileReaderSelection::Impl::get_format(
+std::unique_ptr<FileReaderDescriptor> FileReaderSelection::Impl::descriptor(
 		const std::string &filename) const
 {
 	if (filename.empty())
@@ -572,44 +561,44 @@ std::unique_ptr<FileFormat> FileReaderSelection::Impl::get_format(
 		test->set_filename(filename);
 	}
 
-	std::unique_ptr<FileFormat> format =
-		selector_->select(tests_, file_formats_);
+	std::unique_ptr<FileReaderDescriptor> desc =
+		selector_->select(tests_, descriptors_);
 
-	if (not format)
+	if (not desc)
 	{
 		ARCS_LOG_WARNING << "Container format or codec unknown.";
 
 		return nullptr;
 	}
 
-	ARCS_LOG_INFO << "Input file format seems to be " << format->name();
+	ARCS_LOG_INFO << "Select reader '" << desc->name() << "'";
 
-	return format;
+	return desc;
 }
 
 
 std::unique_ptr<FileReader> FileReaderSelection::Impl::for_file(
 		const std::string &filename) const
 {
-	auto format = this->get_format(filename);
+	auto desc = this->descriptor(filename);
 
-	if (not format)
+	if (not desc)
 	{
 		return nullptr;
 	}
 
-	return format->create_reader();
+	return desc->create_reader();
 }
 
 
 std::unique_ptr<FileReader> FileReaderSelection::Impl::by_name(
 		const std::string &name) const
 {
-	for (const auto& format : file_formats_)
+	for (const auto& desc : descriptors_)
 	{
-		if (name == format->name())
+		if (name == desc->name())
 		{
-			return format->create_reader();
+			return desc->create_reader();
 		}
 	}
 
@@ -620,11 +609,11 @@ std::unique_ptr<FileReader> FileReaderSelection::Impl::by_name(
 void FileReaderSelection::Impl::reset()
 {
 	tests_.clear();
-	file_formats_.clear();
+	descriptors_.clear();
 }
 
 
-FileFormatSelector& FileReaderSelection::Impl::use_selector()
+FileReaderSelector& FileReaderSelection::Impl::use_selector()
 {
 	return *selector_;
 }
@@ -643,28 +632,28 @@ FileReaderSelection::FileReaderSelection()
 FileReaderSelection::~FileReaderSelection() noexcept = default;
 
 
-void FileReaderSelection::register_format(std::unique_ptr<FileFormat> format)
+void FileReaderSelection::add_descriptor(
+		std::unique_ptr<FileReaderDescriptor> desc)
 {
-	impl_->register_format(std::move(format));
+	impl_->add_descriptor(std::move(desc));
 }
 
 
-int FileReaderSelection::remove_format(const FileFormat * format)
+int FileReaderSelection::remove_descriptor(const FileReaderDescriptor * desc)
 {
-	return impl_->remove_format(format);
+	return impl_->remove_descriptor(desc);
 }
 
 
-void FileReaderSelection::register_test(
-		std::unique_ptr<FileFormatTest> format_test)
+void FileReaderSelection::register_test(std::unique_ptr<FileTest> testobj)
 {
-	impl_->register_test(std::move(format_test));
+	impl_->register_test(std::move(testobj));
 }
 
 
-int FileReaderSelection::remove_test(const FileFormatTest * test)
+int FileReaderSelection::unregister_test(const FileTest * test)
 {
-	return impl_->remove_test(test);
+	return impl_->unregister_test(test);
 }
 
 
@@ -675,22 +664,22 @@ void FileReaderSelection::remove_all_tests()
 
 
 void FileReaderSelection::set_selector(
-		std::unique_ptr<FileFormatSelector> selector)
+		std::unique_ptr<FileReaderSelector> selector)
 {
 	impl_->set_selector(std::move(selector));
 }
 
 
-const FileFormatSelector& FileReaderSelection::selector() const
+const FileReaderSelector& FileReaderSelection::selector() const
 {
 	return impl_->selector();
 }
 
 
-std::unique_ptr<FileFormat> FileReaderSelection::get_format(
+std::unique_ptr<FileReaderDescriptor> FileReaderSelection::descriptor(
 		const std::string &filename) const
 {
-	return impl_->get_format(filename);
+	return impl_->descriptor(filename);
 }
 
 
