@@ -26,7 +26,7 @@
 #endif
 
 
-namespace arcs
+namespace arcsdec
 {
 
 inline namespace v_1_0_0
@@ -59,7 +59,7 @@ public:
 	{
 		formats_.reserve(2);
 
-		formats_.push_back(std::make_unique<FileReaderDescriptorCUE>());
+		formats_.push_back(std::make_unique<DescriptorCUE>());
 
 #ifdef WITH_LIBCDIO
 		formats_.push_back(std::make_unique<DescriptorDev>());
@@ -125,7 +125,7 @@ private:
 
 } // namespace v_1_0_0
 
-} // namespace arcs
+} // namespace arcsdec
 
 
 // Restrict scope of cmake-controlled variables to this file

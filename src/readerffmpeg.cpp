@@ -32,11 +32,21 @@ extern "C"
 #endif
 
 
-namespace arcs
+namespace arcsdec
 {
 
 inline namespace v_1_0_0
 {
+
+using arcs::PCMForwardIterator;
+using arcs::AudioSize;
+using arcs::Logging;
+using arcs::InvalidAudioException;
+using arcs::CDDA;
+using arcs::SampleSequence;
+
+using arcs::LOG_DEBUG;
+using arcs::LOG_DEBUG1;
 
 namespace
 {
@@ -237,7 +247,7 @@ private:
 	 * the size of one frame. This seems to ensure a "better" decision than
 	 * just the comparison to the previous frame.
 	 *
-	 * \todo Is an estimation really required? To work correctly, \ref
+	 * \todo Is an estimation really required? To work correctly,
 	 * Calculation has to know about the last relevant block when it encounters
 	 * it. It is completely sufficient to know the correct total number of
 	 * samples BEFORE flushing the last block. For this, no estimation is
@@ -356,15 +366,15 @@ public:
 	 */
 	void register_append_samples(
 		std::function<void(PCMForwardIterator begin, PCMForwardIterator end)>
-		func);
+			func);
 
 	/**
 	 * Register the update_audiosize() method.
 	 *
 	 * \param[in] func The update_audiosize() method to use while reading
 	 */
-	void register_update_audiosize(std::function<void(const AudioSize &size)>
-		func);
+	void register_update_audiosize(
+			std::function<void(const AudioSize &size)> func);
 
 	// make class non-copyable
 	FFmpegAudioFile& operator = (const FFmpegAudioFile &file) = delete;
@@ -487,8 +497,8 @@ public:
 
 private:
 
-	std::unique_ptr<AudioSize> do_acquire_size(
-		const std::string &filename) override;
+	std::unique_ptr<AudioSize> do_acquire_size(const std::string &filename)
+		override;
 
 	void do_process_file(const std::string &filename) override;
 };
@@ -1226,8 +1236,8 @@ bool FFmpegAudioFile::channels_swapped() const
 
 
 void FFmpegAudioFile::register_append_samples(
-		std::function<void(PCMForwardIterator begin, PCMForwardIterator end)>
-		func)
+		std::function<void(PCMForwardIterator begin,
+			PCMForwardIterator end)> func)
 {
 	append_samples_ = func;
 }
@@ -1618,7 +1628,8 @@ FFmpegAudioReaderImpl::~FFmpegAudioReaderImpl() noexcept = default;
 std::unique_ptr<AudioSize> FFmpegAudioReaderImpl::do_acquire_size(
 	const std::string &filename)
 {
-	std::unique_ptr<AudioSize> audiosize = std::make_unique<AudioSize>();
+	std::unique_ptr<AudioSize> audiosize =
+		std::make_unique<AudioSize>();
 
 	FFmpegFileLoader loader;
 	auto audiofile = loader.load(filename);
@@ -1736,5 +1747,5 @@ std::unique_ptr<FileReaderDescriptor> DescriptorFFmpeg::do_clone() const
 
 } // namespace v_1_0_0
 
-} // namespace arcs
+} // namespace arcsdec
 

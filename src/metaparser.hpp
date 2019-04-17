@@ -19,11 +19,13 @@
 #endif
 
 
-namespace arcs
+namespace arcsdec
 {
 
 inline namespace v_1_0_0
 {
+
+using arcs::TOC;
 
 /**
  * \internal \defgroup metaparser Level 0 API: Reading and Validating Metadata Files
@@ -179,8 +181,8 @@ public:
 	/**
 	 * Return the MetadataParser specified by its name.
 	 *
-	 * If the selection does not contain a MetadataParser with the specified name,
-	 * \c nullptr will be returned.
+	 * If the selection does not contain a MetadataParser with the specified
+	 * name, \c nullptr will be returned.
 	 *
 	 * \param[in] name The name of the MetadataParser.
 	 *
@@ -207,7 +209,7 @@ protected:
 
 } // namespace v_1_0_0
 
-} // namespace arcs
+} // namespace arcsdec
 
 #endif
 

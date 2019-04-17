@@ -21,7 +21,7 @@
 
 TEST_CASE ( "BlockAccumulator", "[audiobuffer] [blockaccumulator]" )
 {
-	arcs::BlockAccumulator accumulator; // Capacity: BLOCKSIZE.DEFAULT
+	arcsdec::BlockAccumulator accumulator; // Capacity: BLOCKSIZE.DEFAULT
 
 	REQUIRE ( accumulator.samples_appended()   == 0 );
 
@@ -55,7 +55,7 @@ TEST_CASE ( "BlockAccumulator", "[audiobuffer] [blockaccumulator]" )
 
 TEST_CASE ( "SampleBuffer", "[audiobuffer] [samplebuffer]" )
 {
-	arcs::SampleBuffer buffer;
+	arcsdec::SampleBuffer buffer;
 
 	REQUIRE ( buffer.samples_processed() == 0 );
 }

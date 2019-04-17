@@ -9,7 +9,7 @@
 
 
 
-namespace arcs
+namespace arcsdec
 {
 
 inline namespace v_1_0_0
@@ -192,5 +192,5 @@ void SampleProvider::hook_post_register_processor()
 
 } // namespace v_1_0_0
 
-} // namespace arcs
+} // namespace arcsdec
 

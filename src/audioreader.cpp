@@ -24,11 +24,15 @@
 #endif
 
 
-namespace arcs
+namespace arcsdec
 {
 
 inline namespace v_1_0_0
 {
+
+using arcs::CDDA;
+using arcs::LOG_DEBUG1;
+
 
 // ByteConverter
 
@@ -706,5 +710,5 @@ std::unique_ptr<AudioReader> AudioReaderSelection::safe_cast(
 
 } // namespace v_1_0_0
 
-} // namespace arcs
+} // namespace arcsdec
 

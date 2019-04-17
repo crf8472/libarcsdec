@@ -44,7 +44,7 @@ extern "C" {
 // https://wiki.hydrogenaud.io/index.php?title=AccurateRip#Checksum_calculation
 
 
-namespace arcs
+namespace arcsdec
 {
 
 inline namespace v_1_0_0
@@ -52,6 +52,12 @@ inline namespace v_1_0_0
 
 namespace
 {
+
+using arcs::InvalidMetadataException;
+using arcs::TOC;
+using arcs::make_toc;
+
+using arcs::LOG_DEBUG1;
 
 
 /**
@@ -621,5 +627,5 @@ std::unique_ptr<FileReaderDescriptor> DescriptorCUE::do_clone() const
 
 } // namespace v_1_0_0
 
-} // namespace arcs
+} // namespace arcsdec
 

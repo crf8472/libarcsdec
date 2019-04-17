@@ -34,7 +34,7 @@ extern "C" {
 #endif
 
 
-namespace arcs
+namespace arcsdec
 {
 
 inline namespace v_1_0_0
@@ -42,6 +42,14 @@ inline namespace v_1_0_0
 
 namespace
 {
+
+using arcs::PCMForwardIterator;
+using arcs::AudioSize;
+using arcs::CDDA;
+using arcs::InvalidAudioException;
+using arcs::SampleSequence;
+
+using arcs::LOG_DEBUG1;
 
 
 /**
@@ -2075,5 +2083,5 @@ std::unique_ptr<FileReaderDescriptor> DescriptorWavPCM::do_clone() const
 
 } // namespace v_1_0_0
 
-} // namespace arcs
+} // namespace arcsdec
 

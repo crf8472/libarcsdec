@@ -20,7 +20,7 @@
 #endif
 
 
-namespace arcs
+namespace arcsdec
 {
 
 inline namespace v_1_0_0
@@ -162,5 +162,5 @@ std::unique_ptr<MetadataParser> MetadataParserSelection::safe_cast(
 
 } // namespace v_1_0_0
 
-} // namespace arcs
+} // namespace arcsdec
 

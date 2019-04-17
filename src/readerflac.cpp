@@ -34,11 +34,17 @@
 #endif
 
 
-namespace arcs
+namespace arcsdec
 {
 
 inline namespace v_1_0_0
 {
+
+using arcs::PCMForwardIterator;
+using arcs::AudioSize;
+using arcs::CDDA;
+using arcs::InvalidAudioException;
+using arcs::SampleSequence;
 
 namespace
 {
@@ -482,5 +488,5 @@ std::unique_ptr<FileReaderDescriptor> DescriptorFlac::do_clone() const
 
 } // namespace v_1_0_0
 
-} // namespace arcs
+} // namespace arcsdec
 

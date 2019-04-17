@@ -27,7 +27,7 @@
 /**
  * Main namespace for libarcsdec
  */
-namespace arcs
+namespace arcsdec
 {
 
 /**
@@ -48,6 +48,11 @@ inline namespace v_1_0_0
  *
  * @{
  */
+
+using arcs::TOC;
+using arcs::ARId;
+using arcs::Checksums;
+using arcs::ChecksumSet;
 
 
 /**
@@ -243,7 +248,7 @@ private:
 
 } // namespace v_1_0_0
 
-} // namespace arcs
+} // namespace arcsdec
 
 #endif
 

@@ -37,11 +37,20 @@
 #endif
 
 
-namespace arcs
+namespace arcsdec
 {
 
 inline namespace v_1_0_0
 {
+
+using arcs::TOC;
+using arcs::ARId;
+using arcs::Calculation;
+using arcs::Checksums;
+using arcs::ChecksumSet;
+using arcs::make_arid;
+using arcs::make_context;
+using arcs::make_empty_arid;
 
 
 // TOCParser
@@ -619,5 +628,5 @@ const AudioReaderSelection& ARCSCalculator::selection() const
 
 } // namespace v_1_0_0
 
-} // namespace arcs
+} // namespace arcsdec
 

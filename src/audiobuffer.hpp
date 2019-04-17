@@ -23,7 +23,7 @@
 
 
 //// forward declarations
-//namespace arcs
+//namespace arcsdec
 //{
 //inline namespace v_1_0_0
 //{
@@ -34,10 +34,10 @@
 //class PCMForwardIterator;
 //
 //} // namespace v_1_0_0
-//} // namespace arcs
+//} // namespace arcsdec
 
 
-namespace arcs
+namespace arcsdec
 {
 
 inline namespace v_1_0_0
@@ -384,7 +384,7 @@ private:
 
 } // namespace v_1_0_0
 
-} // namespace arcs
+} // namespace arcsdec
 
 #endif
 

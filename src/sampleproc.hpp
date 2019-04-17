@@ -12,7 +12,7 @@
 #endif
 
 
-namespace arcs
+namespace arcsdec
 {
 
 inline namespace v_1_0_0
@@ -26,6 +26,9 @@ inline namespace v_1_0_0
  * @{
  */
 
+using arcs::PCMForwardIterator;
+using arcs::AudioSize;
+using arcs::Calculation;
 
 /**
  * \brief Symbolic constants for certain block sizes
@@ -366,7 +369,7 @@ private:
 
 } // namespace v_1_0_0
 
-} // namespace arcs
+} // namespace arcsdec
 
 #endif
 
