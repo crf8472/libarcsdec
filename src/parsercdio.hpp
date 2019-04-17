@@ -1,11 +1,9 @@
+#ifndef __LIBARCSDEC_PARSERCDIO_HPP__
+#define __LIBARCSDEC_PARSERCDIO_HPP__
+
 /**
- * \file parserdev.hpp Parser for CD device
- *
+ * \file parsercdio.hpp Parser for CD device
  */
-
-
-#ifndef __LIBARCSDEC_PARSERDEV_HPP__
-#define __LIBARCSDEC_PARSERDEV_HPP__
 
 #include <cstdint>
 #include <memory>
@@ -27,7 +25,7 @@ inline namespace v_1_0_0
 {
 
 /**
- * \internal \defgroup parserdev Metadata: physical CD
+ * \internal \defgroup parsercdio Metadata: physical CD
  *
  * \brief A MetadataParser for physical CDs
  *

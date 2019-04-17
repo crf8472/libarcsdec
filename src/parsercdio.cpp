@@ -1,11 +1,9 @@
 /**
- * \file parsercue.cpp Implements parser for CUESheets
- *
+ * \file parsercdio.cpp Implements libcdio-based parser
  */
 
-
-#ifndef __LIBARCSDEC_PARSERDEV_HPP__
-#include "parserdev.hpp"
+#ifndef __LIBARCSDEC_PARSERCDIO_HPP__
+#include "parsercdio.hpp"
 #endif
 
 extern "C" {
@@ -47,9 +45,9 @@ using arcs::make_toc;
 /**
  * \cond IMPL_ONLY
  *
- * \internal \defgroup parserDevImpl Implementation details of CUESheet parsing
+ * \internal \defgroup parserCdioImpl Implementation details of CUESheet parsing
  *
- * \ingroup parserdev
+ * \ingroup parsercdio
  *
  * @{
  */

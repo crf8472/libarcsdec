@@ -84,7 +84,7 @@ list (APPEND SOURCES "${PROJECT_SOURCE_DIR}/audiobuffer.cpp" )
 list (APPEND SOURCES "${PROJECT_SOURCE_DIR}/audioreader.cpp" )
 list (APPEND SOURCES "${PROJECT_SOURCE_DIR}/descriptors.cpp" )
 list (APPEND SOURCES "${PROJECT_SOURCE_DIR}/metaparser.cpp" )
-## parserdev.cpp     is optional and default OFF, depends on libcdio
+## parsercdio.cpp     is optional and default OFF, depends on libcdio
 ## parsercue.cpp     is required, depends on libcue
 ## readerffmpeg.cpp  is optional and default ON,  depends on parts of ffmpeg
 ## readerflac.cpp    is optional and default ON,  depends on FLAC
@@ -138,30 +138,6 @@ option (IWYU "Request use of include-what-you-use" OFF )
 option (WITH_NATIVE "Use platform specific optimization on compiling" ON )
 
 
-## --- Required object target: parserdev (requires libcdio)
-
-add_library (parserdev OBJECT ${PROJECT_SOURCE_DIR}/parserdev.cpp )
-
-find_package (libcdio 2.0.0 REQUIRED )
-target_include_directories (parserdev PRIVATE ${libcdio_INCLUDE_DIRS} )
-
-set_target_properties (parserdev PROPERTIES
-	POSITION_INDEPENDENT_CODE ON
-	CXX_STANDARD  14 )
-
-if (WITH_NATIVE )
-
-	target_compile_options (parserdev
-		PUBLIC ${FLAGS_WARNINGS} ${FLAGS_OPTIMIZE} )
-else ()
-
-	target_compile_options (parserdev PUBLIC ${FLAGS_WARNINGS} )
-endif (WITH_NATIVE )
-
-list (APPEND REQUIRED_OBJECTS   $<TARGET_OBJECTS:parserdev> )
-list (APPEND REQUIRED_LIBRARIES ${libcdio_LIBRARIES} )
-
-
 ## --- Required object target: parsercue (requires libcue)
 
 add_library (parsercue OBJECT ${PROJECT_SOURCE_DIR}/parsercue.cpp )
@@ -192,7 +168,41 @@ set (OPTIONAL_OBJECTS )
 
 set (OPTIONAL_LIBRARIES )
 
-## --- Optional: Add FLAC (default: ON)
+
+## --- Optional object target: parsercdio (requires libcdio, default: OFF)
+
+if (WITH_LIBCDIO )
+
+	message (STATUS "Build with libcdio parsing capability" )
+
+	add_library (parsercdio OBJECT ${PROJECT_SOURCE_DIR}/parsercdio.cpp )
+
+	find_package (libcdio 2.0.0 REQUIRED )
+	target_include_directories (parsercdio PRIVATE ${libcdio_INCLUDE_DIRS} )
+
+	set_target_properties (parsercdio PROPERTIES
+		POSITION_INDEPENDENT_CODE ON
+		CXX_STANDARD  14 )
+
+	if (WITH_NATIVE )
+
+		target_compile_options (parsercdio
+			PUBLIC ${FLAGS_WARNINGS} ${FLAGS_OPTIMIZE} )
+	else ()
+
+		target_compile_options (parsercdio PUBLIC ${FLAGS_WARNINGS} )
+	endif (WITH_NATIVE )
+
+	list (APPEND REQUIRED_OBJECTS   $<TARGET_OBJECTS:parsercdio> )
+	list (APPEND REQUIRED_LIBRARIES ${libcdio_LIBRARIES} )
+
+else (WITH_LIBCDIO )
+
+	message (STATUS "Build without libcdio parsing capability" )
+endif (WITH_LIBCDIO )
+
+
+## --- Optional: Add FLAC (requires FLAC++, default: ON)
 
 if (WITH_FLAC)
 

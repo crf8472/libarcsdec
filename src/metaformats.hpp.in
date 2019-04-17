@@ -22,7 +22,7 @@
 #cmakedefine WITH_LIBCDIO  // will be defined iff compiled with libcdio support
 
 #ifdef WITH_LIBCDIO
-	#include "@PROJECT_SOURCE_DIR@/parserdev.hpp"
+	#include "@PROJECT_SOURCE_DIR@/parsercdio.hpp"
 #endif
 
 
@@ -62,7 +62,7 @@ public:
 		formats_.push_back(std::make_unique<DescriptorCUE>());
 
 #ifdef WITH_LIBCDIO
-		formats_.push_back(std::make_unique<DescriptorDev>());
+		formats_.push_back(std::make_unique<DescriptorCdio>());
 #endif
 	}
 
