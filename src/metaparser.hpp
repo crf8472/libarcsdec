@@ -45,7 +45,7 @@ inline namespace v_1_0_0
 
 
 /**
- * Implementation of a MetadataParser
+ * \brief Implementation of a MetadataParser
  */
 class MetadataParserImpl
 {
@@ -88,7 +88,7 @@ private:
 
 
 /**
- * Interface for MetadataParsers
+ * \brief Interface for MetadataParsers
  */
 class MetadataParser : public FileReader
 {
@@ -130,8 +130,7 @@ private:
 
 
 /**
- * Reports an error when encountering unexpected content while parsing a
- * metadata file.
+ * \brief Reports unexpected content while parsing a metadata file.
  */
 class MetadataParseException final : public std::runtime_error
 {
@@ -148,7 +147,7 @@ public:
 
 
 /**
- * \brief Selects and builds MetadataParser instances for given inputs.
+ * \brief Selects and builds @link MetadataParser MetadataParsers @endlink for given inputs.
  */
 class MetadataParserSelection : public FileReaderSelection
 {

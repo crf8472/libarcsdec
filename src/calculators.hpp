@@ -24,9 +24,15 @@
 #endif
 
 
+/**
+ * Main namespace for libarcsdec
+ */
 namespace arcs
 {
 
+/**
+ * Version namespace
+ */
 inline namespace v_1_0_0
 {
 
@@ -45,7 +51,7 @@ inline namespace v_1_0_0
 
 
 /**
- * Parser for metadata files, e.g. files containing compact disc TOC data.
+ * \brief Format-independent parser for CD TOC metadata files.
  */
 class TOCParser
 {
@@ -69,8 +75,7 @@ public:
 
 
 /**
- * Compute AccurateRip identifiers from a metadata file and a corresponding
- * audio data representation of the file.
+ * \brief Calculate AccurateRip ID of an album.
  */
 class ARIdCalculator
 {
@@ -122,7 +127,7 @@ private:
 
 
 /**
- * Calculate ARCSs for input audio files.
+ * \brief Calculate ARCSs for input audio files.
  *
  * Note that ARCSCalculator does not perform any lookups in the filesystem. This
  * part is completely delegated to the <tt>FileReader</tt>s.

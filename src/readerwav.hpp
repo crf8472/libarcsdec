@@ -37,7 +37,7 @@ inline namespace v_1_0_0
 
 
 /**
- * Represents the RIFF WAV/PCM file format.
+ * \brief Reader for RIFF WAV files containing PCM data.
  *
  * Represents a RIFF WAV container holding PCM samples conforming to CDDA. That
  * is 16 bit, 2 channels, 44100 samples/sec as integer representation

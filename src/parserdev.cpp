@@ -271,26 +271,26 @@ std::unique_ptr<TOC> DevParserImpl::do_parse(const std::string &/*device*/)
 } // namespace
 
 
-// DescriptorDev
+// DescriptorCdio
 
 
-DescriptorDev::~DescriptorDev() noexcept = default;
+DescriptorCdio::~DescriptorCdio() noexcept = default;
 
 
-std::string DescriptorDev::do_name() const
+std::string DescriptorCdio::do_name() const
 {
 	return "physical device";
 }
 
 
-bool DescriptorDev::do_accepts_bytes(const std::vector<char> & /* bytes */,
+bool DescriptorCdio::do_accepts_bytes(const std::vector<char> & /* bytes */,
 		const uint64_t & /* offset */) const
 {
 	return false;
 }
 
 
-bool DescriptorDev::do_accepts_suffix(const std::string &suffix) const
+bool DescriptorCdio::do_accepts_suffix(const std::string &suffix) const
 {
 	// NOTE: We know that device names usually do not contain ".". If this is
 	// the case, get_suffix() will return the entire name, so we presuppose
@@ -316,7 +316,7 @@ bool DescriptorDev::do_accepts_suffix(const std::string &suffix) const
 }
 
 
-std::unique_ptr<FileReader> DescriptorDev::do_create_reader() const
+std::unique_ptr<FileReader> DescriptorCdio::do_create_reader() const
 {
 	auto impl = std::make_unique<DevParserImpl>();
 
@@ -324,9 +324,9 @@ std::unique_ptr<FileReader> DescriptorDev::do_create_reader() const
 }
 
 
-std::unique_ptr<FileReaderDescriptor> DescriptorDev::do_clone() const
+std::unique_ptr<FileReaderDescriptor> DescriptorCdio::do_clone() const
 {
-	return std::make_unique<DescriptorDev>();
+	return std::make_unique<DescriptorCdio>();
 }
 
 } // namespace v_1_0_0

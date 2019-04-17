@@ -1,12 +1,10 @@
-/**
- * \file readerwav.cpp Implements audio reader for RIFF/WAV audio files with PCM
- *
- */
-
-
 #ifndef __LIBARCSDEC_READERWAV_HPP__
 #include "readerwav.hpp"
 #endif
+
+/**
+ * \file readerwav.cpp Implements audio reader for RIFF/WAV audio files with PCM
+ */
 
 extern "C" {
 #include <assert.h>   // for assert

@@ -37,7 +37,7 @@ inline namespace v_1_0_0
 
 
 /**
- * Represents the Wavpack file format.
+ * \brief Wavpack-5-based reader for losslessly encoded wavpack files.
  *
  * Represents a Wavpack container holding losslessly encoded samples conforming
  * to CDDA. That is 16 bit, 2 channels, 44100 samples/sec as integer

@@ -1695,33 +1695,33 @@ void FFmpegAudioReaderImpl::do_process_file(const std::string &filename)
 } // namespace
 
 
-// FileReaderDescriptorFFmpeg
+// DescriptorFFmpeg
 
 
-FileReaderDescriptorFFmpeg::~FileReaderDescriptorFFmpeg() = default;
+DescriptorFFmpeg::~DescriptorFFmpeg() = default;
 
 
-std::string FileReaderDescriptorFFmpeg::do_name() const
+std::string DescriptorFFmpeg::do_name() const
 {
 	return "unknown (handled by ffmpeg)";
 }
 
 
-bool FileReaderDescriptorFFmpeg::do_accepts_bytes(const std::vector<char> & /* bytes */,
+bool DescriptorFFmpeg::do_accepts_bytes(const std::vector<char> & /* bytes */,
 		const uint64_t & /* offset */) const
 {
 	return true;
 }
 
 
-bool FileReaderDescriptorFFmpeg::do_accepts_suffix(const std::string & /* suffix */)
+bool DescriptorFFmpeg::do_accepts_suffix(const std::string & /* suffix */)
 	const
 {
 	return true;
 }
 
 
-std::unique_ptr<FileReader> FileReaderDescriptorFFmpeg::do_create_reader() const
+std::unique_ptr<FileReader> DescriptorFFmpeg::do_create_reader() const
 {
 	auto impl = std::make_unique<FFmpegAudioReaderImpl>();
 
@@ -1729,9 +1729,9 @@ std::unique_ptr<FileReader> FileReaderDescriptorFFmpeg::do_create_reader() const
 }
 
 
-std::unique_ptr<FileReaderDescriptor> FileReaderDescriptorFFmpeg::do_clone() const
+std::unique_ptr<FileReaderDescriptor> DescriptorFFmpeg::do_clone() const
 {
-	return std::make_unique<FileReaderDescriptorFFmpeg>();
+	return std::make_unique<DescriptorFFmpeg>();
 }
 
 } // namespace v_1_0_0

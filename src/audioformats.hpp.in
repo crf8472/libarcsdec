@@ -100,7 +100,7 @@ public:
 #endif
 
 #ifdef WITH_FFMPEG
-		formats_.push_back(std::make_unique<FileReaderDescriptorFFmpeg>());
+		formats_.push_back(std::make_unique<DescriptorFFmpeg>());
 #endif
 
 #ifdef WITH_LIBSNDFILE

@@ -37,7 +37,7 @@ inline namespace v_1_0_0
 
 
 /**
- * Represents the Flac file format.
+ * \brief Libflac-based reader for fLaC containers holding fLaC data.
  *
  * Represents a Flac container holding samples conforming to CDDA. That
  * is 16 bit, 2 channels, 44100 samples/sec as integer representation.

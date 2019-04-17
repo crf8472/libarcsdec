@@ -61,10 +61,9 @@ inline namespace v_1_0_0
 
 
 /**
- * Represents any combination of container and codec that can be read by
- * ffmpeg.
+ * \brief FFmpeg-based AudioReader for virtually any lossless audio format.
  */
-class FileReaderDescriptorFFmpeg : public FileReaderDescriptor
+class DescriptorFFmpeg : public FileReaderDescriptor
 {
 
 public:
@@ -72,7 +71,7 @@ public:
 	/**
 	 * Virtual default destructor
 	 */
-	~FileReaderDescriptorFFmpeg() noexcept override;
+	~DescriptorFFmpeg() noexcept override;
 
 
 private:

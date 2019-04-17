@@ -217,7 +217,7 @@ public:
 
 
 /**
- * Supported sample formats.
+ * \brief Supported sample formats.
  *
  * The sample format represents two basic informations: the physical size of a
  * sample in bits and whether the samples are arranged in a planar or
@@ -234,7 +234,7 @@ enum class SAMPLE_FORMAT : uint8_t
 
 
 /**
- * Validates values against the reference values in CDDA_t.
+ * \brief Verifies the CDDA conformity of values.
  *
  * This just encapsulate the comparisons for reuse.
  */
@@ -281,7 +281,7 @@ public:
 
 
 /**
- * Base class for event handlers to be used by instances of AudioReaderImpl.
+ * \brief Base class for validation handlers for @link AudioReaderImpl AudioReaderImpls @endlink.
  *
  * Implements a class that just provides some assert methods that get a label, a
  * current value, a proper value and an error message. The validating handler
@@ -422,14 +422,14 @@ protected:
 private:
 
 	/**
-	 * Result: List of errors in the validated stream
+	 * Result: List of errors in the validated input
 	 */
 	std::vector<std::string> errors_;
 };
 
 
 /**
- * Abstract base class for AudioReader implementations.
+ * \brief Abstract base class for AudioReader implementations.
  *
  * Concrete subclasses of AudioReaderImpl implement AudioReaders for a concrete
  * FileReaderDescriptor.
@@ -554,8 +554,7 @@ private:
 
 
 /**
- * An AudioReaderImpl that has its own SampleBuffer
- *
+ * \brief AudioReaderImpl with configurable read buffer size
  */
 class BufferedAudioReaderImpl : public AudioReaderImpl
 {
@@ -577,23 +576,9 @@ public:
 	 */
 	~BufferedAudioReaderImpl() noexcept override;
 
-	// TODO Copy + move
+	// TODO Copy + move constructors
 
-	/**
-	 * Set the number of samples to read in one read operation.
-	 *
-	 * The default is BLOCKSIZE::DEFAULT.
-	 */
-	//void set_samples_per_read(const uint32_t &samples_per_read);
-
-	/**
-	 * Return the number of samples to read in one read operation.
-	 *
-	 * \return Number of samples per read operation.
-	 */
-	//uint32_t samples_per_read() const;
-
-	// TODO Copy + move
+	// TODO Copy + move assignment
 
 
 private:
@@ -612,8 +597,7 @@ private:
 
 
 /**
- * Represents a reader to a concrete combination of a lossless audio
- * format and a file format.
+ * \brief Opaque instance to read audio files and provide the decoded samples.
  *
  * A AudioReader can process an audio file and return its checksums including
  * the ARCSs v1 and v2 for all tracks.

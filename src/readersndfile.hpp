@@ -46,8 +46,7 @@ inline namespace v_1_0_0
 
 
 /**
- * Represents any combination of container and codec that can be read by
- * libsndfile.
+ * \brief Libsndfile-based reader for some lossless audio input formats.
  */
 class DescriptorSndfile : public FileReaderDescriptor
 {

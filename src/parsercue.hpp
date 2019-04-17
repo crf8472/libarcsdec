@@ -36,9 +36,9 @@ inline namespace v_1_0_0
 
 
 /**
- * Represents the CUE file format.
+ * \brief Libcue-based parser for CUEsheets.
  */
-class FileReaderDescriptorCUE : public FileReaderDescriptor
+class DescriptorCUE : public FileReaderDescriptor
 {
 
 public:
@@ -46,7 +46,7 @@ public:
 	/**
 	 * Virtual default destructor
 	 */
-	virtual ~FileReaderDescriptorCUE() noexcept;
+	virtual ~DescriptorCUE() noexcept;
 
 	/**
 	 * Returns "CUESheet"

@@ -36,9 +36,9 @@ inline namespace v_1_0_0
 
 
 /**
- * Represents the physical CD format
+ * \brief Libcdio-based parser for physical CDs and certain images
  */
-class DescriptorDev : public FileReaderDescriptor
+class DescriptorCdio : public FileReaderDescriptor
 {
 
 public:
@@ -46,7 +46,7 @@ public:
 	/**
 	 * Virtual default destructor
 	 */
-	virtual ~DescriptorDev() noexcept;
+	virtual ~DescriptorCdio() noexcept;
 
 	/**
 	 * Returns "physical device"

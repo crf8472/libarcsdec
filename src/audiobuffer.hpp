@@ -10,27 +10,31 @@
 #include <fstream>
 #include <memory>
 
-#ifndef __LIBARCSTK_SAMPLES_HPP__
-#include <arcstk/samples.hpp>   // for SampleSequence
+#ifndef __LIBARCSTK_CALCULATE_HPP__
+#include <arcstk/samples.hpp>   // AudioSize, Calculation, PCMForwardIterator
 #endif
+#ifndef __LIBARCSTK_SAMPLES_HPP__
+#include <arcstk/samples.hpp>   // SampleSequence
+#endif
+
 #ifndef __LIBARCSDEC_SAMPLEPROC_HPP__
 #include "sampleproc.hpp"
 #endif
 
 
-// forward declarations
-namespace arcs
-{
-inline namespace v_1_0_0
-{
-
-// from arcs/calculate.hpp
-class AudioSize;
-class Calculation;
-class PCMForwardIterator;
-
-} // namespace v_1_0_0
-} // namespace arcs
+//// forward declarations
+//namespace arcs
+//{
+//inline namespace v_1_0_0
+//{
+//
+//// from arcs/calculate.hpp
+//class AudioSize;
+//class Calculation;
+//class PCMForwardIterator;
+//
+//} // namespace v_1_0_0
+//} // namespace arcs
 
 
 namespace arcs
@@ -84,7 +88,7 @@ inline namespace v_1_0_0
 
 
 /**
- * Base class of a block creating policy.
+ * \brief Base class of a sample block creator.
  *
  * Readers that pull their blocks from the filesystem can control the
  * size of the blocks directly. This does not restrict them to read the entire
@@ -184,6 +188,8 @@ private:
 
 
 /**
+ * \brief Basic buffer: creates sample blocks of specified size and flushes
+ *
  * Accumulates SampleSequences to the configured block size and passes the
  * block to a consumer as soon as it is filled completely.
  *
@@ -319,12 +325,12 @@ private:
 
 
 /**
- * A format and reader independent sample buffer.
+ * \brief Sample format and reader independent sample buffer.
  *
  * Enhances BlockAccumulator to a SampleProcessor that also transports the
  * AudioSize update and is also a SampleProvider - which means it can have a
- * further SampleProcessor registered. Provides a convenience method for
- * registering a Calculation as addressee of all updates.
+ * further SampleProcessor instances registered. Provides a convenience method
+ * for registering a Calculation as addressee of all updates.
  */
 class SampleBuffer  : public  virtual SampleProvider
 					, public  virtual SampleProcessor
