@@ -47,4 +47,4 @@ A detailed HowTo explaining different build scenarios and all build switches see
 BUILD.md.
 
 
-[1]: https://codeberg.org/tristero/libarcs
+[1]: https://codeberg.org/tristero/libarcstk
