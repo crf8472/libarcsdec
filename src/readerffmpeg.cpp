@@ -45,8 +45,7 @@ using arcs::InvalidAudioException;
 using arcs::CDDA;
 using arcs::SampleSequence;
 
-using arcs::LOG_DEBUG;
-using arcs::LOG_DEBUG1;
+using arcs::LOGLEVEL;
 
 namespace
 {
@@ -113,7 +112,7 @@ void arcs_av_log(void* /*v*/, int lvl, const char* msg, va_list /*l*/)
 	} else
 	if (AV_LOG_TRACE == lvl)
 	{
-		// ARCS_LOG(LOG_DEBUG1) << "[FFMPEG] " << message;
+		// ARCS_LOG(DEBUG1) << "[FFMPEG] " << message;
 	} else
 	{
 		// If level is totally unknown, at least show it when debugging
@@ -738,11 +737,11 @@ std::unique_ptr<FFmpegAudioFile> FFmpegFileLoader::load(
 	// Output ffmpeg-sytle streaminfo (for debug only)
 	//::av_dump_format(formatContext_, 0, filename.c_str(), 0);
 
-	if (Logging::instance().has_level(LOG_DEBUG))
+	if (Logging::instance().has_level(LOGLEVEL::DEBUG))
 	{
 		this->log_codec_info(codec_ctx);
 	}
-	if (Logging::instance().has_level(LOG_DEBUG1))
+	if (Logging::instance().has_level(LOGLEVEL::DEBUG1))
 	{
 		this->log_format_info(format_ctx);
 		this->log_stream_info(audio_stream);
@@ -929,17 +928,17 @@ void FFmpegFileLoader::log_format_info(::AVFormatContext *ctx) const
 {
 	// Print Format Context metadata
 
-	ARCS_LOG(LOG_DEBUG1) << "FORMAT INFORMATION:";
+	ARCS_LOG(DEBUG1) << "FORMAT INFORMATION:";
 
 	::AVDictionaryEntry *tag = nullptr;
 
 	while ((tag = ::av_dict_get(ctx->metadata, "", tag, AV_DICT_IGNORE_SUFFIX)))
 	{
-		ARCS_LOG(LOG_DEBUG1) << "  metadata Name: " << tag->key
+		ARCS_LOG(DEBUG1) << "  metadata Name: " << tag->key
 				<< "  Value: "    << tag->value;
 	}
 
-	ARCS_LOG(LOG_DEBUG1) << "  packet_size:  "
+	ARCS_LOG(DEBUG1) << "  packet_size:  "
 		<< std::to_string(ctx->packet_size);
 }
 
@@ -1107,34 +1106,34 @@ void FFmpegFileLoader::log_codec_info(::AVCodecContext *ctx) const
 	// Print Codec Context data
 
 	{
-		ARCS_LOG(LOG_DEBUG1) << "Codec Context information:";
+		ARCS_LOG(DEBUG1) << "Codec Context information:";
 
-		ARCS_LOG(LOG_DEBUG1) << "  skip_bottom:      " << ctx->skip_bottom;
-		ARCS_LOG(LOG_DEBUG1) << "  frame_number:     " << ctx->frame_number;
-		ARCS_LOG(LOG_DEBUG1) << "  frame_size:       " << ctx->frame_size;
-		ARCS_LOG(LOG_DEBUG1) << "  skip_frame:       " << ctx->skip_frame;
-		ARCS_LOG(LOG_DEBUG1) << "  initial_padding:  " << ctx->initial_padding;
-		ARCS_LOG(LOG_DEBUG1) << "  trailing_padding: " << ctx->trailing_padding;
+		ARCS_LOG(DEBUG1) << "  skip_bottom:      " << ctx->skip_bottom;
+		ARCS_LOG(DEBUG1) << "  frame_number:     " << ctx->frame_number;
+		ARCS_LOG(DEBUG1) << "  frame_size:       " << ctx->frame_size;
+		ARCS_LOG(DEBUG1) << "  skip_frame:       " << ctx->skip_frame;
+		ARCS_LOG(DEBUG1) << "  initial_padding:  " << ctx->initial_padding;
+		ARCS_LOG(DEBUG1) << "  trailing_padding: " << ctx->trailing_padding;
 
 		// Commented out these logs because they are mostly unnecessary
 		// for practical means, but I wanted to keep them at hand if needed.
 
 		//// applies for flac, alac, ape
-		//ARCS_LOG(LOG_DEBUG1) << "  CAP_DR1:            "
+		//ARCS_LOG(DEBUG1) << "  CAP_DR1:            "
 		//	<< std::string(
 		//		(codecContext_->codec->capabilities & AV_CODEC_CAP_DR1)
 		//		? "yes"
 		//		: "no"));
 
 		//// applies for ape
-		//ARCS_LOG(LOG_DEBUG1) << "  CAP_SUBFRAMES:      "
+		//ARCS_LOG(DEBUG1) << "  CAP_SUBFRAMES:      "
 		//	<< std::string(
 		//		(codecContext_->codec->capabilities & AV_CODEC_CAP_SUBFRAMES)
 		//		? "yes"
 		//		: "no"));
 
 		//// applies for flac, alac
-		//ARCS_LOG(LOG_DEBUG1) << "  CAP_FRAME_THREADS:  "
+		//ARCS_LOG(DEBUG1) << "  CAP_FRAME_THREADS:  "
 		//	<< std::string(
 		//		(codecContext_->codec->capabilities &
 		//			AV_CODEC_CAP_FRAME_THREADS)
@@ -1155,21 +1154,21 @@ void FFmpegFileLoader::log_stream_info(::AVStream *stream) const
 	// Print stream metadata
 
 	{
-		ARCS_LOG(LOG_DEBUG1) << "Stream information:";
+		ARCS_LOG(DEBUG1) << "Stream information:";
 
 		::AVDictionaryEntry *tag = nullptr;
 		while ((tag = ::av_dict_get(stream->metadata,
 						"", tag, AV_DICT_IGNORE_SUFFIX)))
 		{
-			ARCS_LOG(LOG_DEBUG1) << "  metadata Name: " << tag->key
+			ARCS_LOG(DEBUG1) << "  metadata Name: " << tag->key
 					<< "  Value: "    << tag->value;
 		}
-		ARCS_LOG(LOG_DEBUG1) << "  initial_padding:  " <<
+		ARCS_LOG(DEBUG1) << "  initial_padding:  " <<
 			stream->codecpar->initial_padding;
-		ARCS_LOG(LOG_DEBUG1) << "  trailing_padding: " <<
+		ARCS_LOG(DEBUG1) << "  trailing_padding: " <<
 			stream->codecpar->trailing_padding;
-		ARCS_LOG(LOG_DEBUG1) << "  nb_side_data:     " << stream->nb_side_data;
-		ARCS_LOG(LOG_DEBUG1) << "  nb_frames:        " << stream->nb_frames;
+		ARCS_LOG(DEBUG1) << "  nb_side_data:     " << stream->nb_side_data;
+		ARCS_LOG(DEBUG1) << "  nb_frames:        " << stream->nb_frames;
 
 		uint8_t *data = ::av_stream_get_side_data(
 				stream,
@@ -1349,15 +1348,15 @@ bool FFmpegAudioFile::decode_packet(::AVPacket packet, ::AVFrame *frame,
 				// one frame, check if we are "near" to the end of the stream
 				if (std::abs(total_diff) <= frame_size)
 				{
-					ARCS_LOG(LOG_DEBUG1) << "READ LAST FRAME";
-					ARCS_LOG(LOG_DEBUG1) << "  index: "
+					ARCS_LOG(DEBUG1) << "READ LAST FRAME";
+					ARCS_LOG(DEBUG1) << "  index: "
 						<< (*frames + frame_count);
-					ARCS_LOG(LOG_DEBUG1) << "  size:  "
+					ARCS_LOG(DEBUG1) << "  size:  "
 						<< frame->nb_samples << " samples of 16 bit";
-					ARCS_LOG(LOG_DEBUG1) << "  previous frame size: "
+					ARCS_LOG(DEBUG1) << "  previous frame size: "
 						<< frame_size;
 
-					ARCS_LOG(LOG_DEBUG1)
+					ARCS_LOG(DEBUG1)
 						<< "  total diff counted samples (32):   "
 						<< total_diff;
 					ARCS_LOG_DEBUG << "  frame diff to previous frame (16): "

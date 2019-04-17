@@ -49,8 +49,6 @@ using arcs::CDDA;
 using arcs::InvalidAudioException;
 using arcs::SampleSequence;
 
-using arcs::LOG_DEBUG1;
-
 
 /**
  * \cond IMPL_ONLY
@@ -1178,7 +1176,7 @@ void WavAudioHandler::subchunk_data(const uint32_t &subchunk_size)
 void WavAudioHandler::do_chunk_descriptor(
 	const WavChunkDescriptor &descriptor)
 {
-	ARCS_LOG(LOG_DEBUG1) << "Try to validate RIFF/WAV Header";
+	ARCS_LOG(DEBUG1) << "Try to validate RIFF/WAV Header";
 
 	if (not this->has_config(C_RESPECT_HEADER))
 	{
@@ -1216,7 +1214,7 @@ void WavAudioHandler::do_chunk_descriptor(
 		return;
 	}
 
-	ARCS_LOG(LOG_DEBUG1) << "RIFF/WAV Header validated";
+	ARCS_LOG(DEBUG1) << "RIFF/WAV Header validated";
 
 	this->set_state(S_VALIDATED_HEADER);
 }
@@ -1225,7 +1223,7 @@ void WavAudioHandler::do_chunk_descriptor(
 void WavAudioHandler::do_subchunk_format(
 		const WavFormatSubchunk &format_subchunk)
 {
-	ARCS_LOG(LOG_DEBUG1) << "Try to validate format subchunk";
+	ARCS_LOG(DEBUG1) << "Try to validate format subchunk";
 
 	if (not this->assert_equals("Test: id is 'fmt '?",
 		format_subchunk.id, valid_->fmt_subchunk_id(),
@@ -1301,13 +1299,13 @@ void WavAudioHandler::do_subchunk_format(
 	this->unset_state(S_STARTED_FORMAT);
 	this->set_state(S_VALIDATED_FORMAT);
 
-	ARCS_LOG(LOG_DEBUG1) << "Format subchunk validated";
+	ARCS_LOG(DEBUG1) << "Format subchunk validated";
 }
 
 
 void WavAudioHandler::do_subchunk_data(const uint32_t &subchunk_size)
 {
-	ARCS_LOG(LOG_DEBUG1) << "Try to validate data subchunk";
+	ARCS_LOG(DEBUG1) << "Try to validate data subchunk";
 
 	if (not this->assert_true("Test: format subchunk before data subchunk?",
 		this->has_state(S_VALIDATED_FORMAT),
@@ -1334,7 +1332,7 @@ void WavAudioHandler::do_subchunk_data(const uint32_t &subchunk_size)
 	this->unset_state(S_STARTED_DATA);
 	this->set_state(S_VALIDATED_DATA);
 
-	ARCS_LOG(LOG_DEBUG1) << "Data subchunk validated";
+	ARCS_LOG(DEBUG1) << "Data subchunk validated";
 }
 
 
@@ -1551,8 +1549,8 @@ uint64_t PCMBlockReader::read_blocks(std::ifstream &in,
 
 		ARCS_LOG_DEBUG << "READ BLOCK " << total_blocks_read
 			<< "/" << estimated_blocks;
-		ARCS_LOG(LOG_DEBUG1) << "Size: " << read_bytes << " bytes";
-		ARCS_LOG(LOG_DEBUG1) << "      " << samples.size()
+		ARCS_LOG(DEBUG1) << "Size: " << read_bytes << " bytes";
+		ARCS_LOG(DEBUG1) << "      " << samples.size()
 				<< " Stereo PCM samples (32 bit)";
 
 		if (not consume_)
@@ -1565,7 +1563,7 @@ uint64_t PCMBlockReader::read_blocks(std::ifstream &in,
 
 	ARCS_LOG_DEBUG << "END READING after " << total_blocks_read << " blocks";
 
-	ARCS_LOG(LOG_DEBUG1) << "Read "
+	ARCS_LOG(DEBUG1) << "Read "
 		<< std::to_string(total_bytes_read / CDDA.BYTES_PER_SAMPLE)
 		<< " samples / "
 		<< total_bytes_read << " bytes";
@@ -1787,7 +1785,7 @@ uint64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 
 			// Read subchunk and pass its content
 
-			ARCS_LOG(LOG_DEBUG1) << "Try to read format subchunk";
+			ARCS_LOG(DEBUG1) << "Try to read format subchunk";
 
 			std::vector<char> fmt_bytes(subchunk_header.size * sizeof(char));
 
@@ -1807,7 +1805,7 @@ uint64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 			}
 			total_bytes_read += bytes_to_read;
 
-			ARCS_LOG(LOG_DEBUG1) << "Format subchunk read successfully";
+			ARCS_LOG(DEBUG1) << "Format subchunk read successfully";
 
 			audio_handler_->subchunk_format(
 				parser.format_subchunk(subchunk_header, fmt_bytes));
@@ -1892,7 +1890,7 @@ uint64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 
 		in.ignore(subchunk_header.size);
 
-		ARCS_LOG(LOG_DEBUG1) << "(Ignore subchunk)";
+		ARCS_LOG(DEBUG1) << "(Ignore subchunk)";
 	} // while
 
 	return total_bytes_read;
@@ -1963,7 +1961,7 @@ void WavAudioReaderImpl::process_file(const std::string &filename,
 		throw FileReadException(f.what());
 	}
 
-	ARCS_LOG(LOG_DEBUG1) << "Audio file closed.";
+	ARCS_LOG(DEBUG1) << "Audio file closed.";
 }
 
 

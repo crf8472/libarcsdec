@@ -29,8 +29,6 @@ namespace arcsdec
 inline namespace v_1_0_0
 {
 
-using arcs::LOG_DEBUG1;
-
 
 // BlockCreator
 
@@ -152,12 +150,12 @@ void BlockAccumulator::do_flush()
 
 	if (samples_.size() > 0)
 	{
-		ARCS_LOG(LOG_DEBUG1) << "  Size: "
+		ARCS_LOG(DEBUG1) << "  Size: "
 			<< (samples_.size() * sizeof(samples_.front())) << " bytes / "
 			<< samples_.size() << " Stereo PCM samples (32 bit)";
 	} else
 	{
-		ARCS_LOG(LOG_DEBUG1) << "  Size: 0";
+		ARCS_LOG(DEBUG1) << "  Size: 0";
 	}
 
 	// Mark the block as processed
@@ -231,7 +229,7 @@ void BlockAccumulator::init_buffer()
 
 void BlockAccumulator::init_buffer(const uint32_t &buffer_size)
 {
-	ARCS_LOG(LOG_DEBUG1) << "Init buffer for " << buffer_size << " samples";
+	ARCS_LOG(DEBUG1) << "Init buffer for " << buffer_size << " samples";
 
 	// Remove trailing zeros
 	samples_.resize(buffer_size);

@@ -31,7 +31,6 @@ inline namespace v_1_0_0
 {
 
 using arcs::CDDA;
-using arcs::LOG_DEBUG1;
 
 
 // ByteConverter
@@ -196,7 +195,7 @@ bool ReaderValidatingHandler::assert_equals(const std::string &label,
 	const uint32_t &value, const uint32_t &proper_value,
 	const std::string error_msg)
 {
-	ARCS_LOG(LOG_DEBUG1) << label
+	ARCS_LOG(DEBUG1) << label
 		<< "  ["
 		<< (value == proper_value ? "yes" : "no")
 		<< "]";
@@ -223,7 +222,7 @@ bool ReaderValidatingHandler::assert_at_least(
 		const uint32_t &proper_value,
 		const std::string error_msg)
 {
-	ARCS_LOG(LOG_DEBUG1) << label
+	ARCS_LOG(DEBUG1) << label
 		<< "  ["
 		<< (value >= proper_value ? "yes" : "no")
 		<< "]";
@@ -250,7 +249,7 @@ bool ReaderValidatingHandler::assert_at_most(
 		const uint32_t &proper_value,
 		const std::string error_msg)
 {
-	ARCS_LOG(LOG_DEBUG1) << label
+	ARCS_LOG(DEBUG1) << label
 		<< "  ["
 		<< (value <= proper_value ? "yes" : "no")
 		<< "]";
@@ -276,7 +275,7 @@ bool ReaderValidatingHandler::assert_true(
 		const bool &value,
 		const std::string error_msg)
 {
-	ARCS_LOG(LOG_DEBUG1) << label << "  [" << (value ? "yes" : "no") << "]";
+	ARCS_LOG(DEBUG1) << label << "  [" << (value ? "yes" : "no") << "]";
 
 	if (not value)
 	{

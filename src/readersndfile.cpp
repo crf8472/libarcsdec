@@ -39,7 +39,6 @@ using arcs::AudioSize;
 using arcs::CDDA;
 using arcs::SampleSequence;
 
-using arcs::LOG_DEBUG1;
 
 namespace
 {
@@ -198,9 +197,9 @@ void LibsndfileAudioReaderImpl::do_process_file(const std::string &filename)
 
 		sequence.reset(&buffer[0], buffer.size());
 
-		ARCS_LOG(LOG_DEBUG1) << "  Size: "
+		ARCS_LOG(DEBUG1) << "  Size: "
 				<< (buffer.size() * sizeof(buffer[0])) << " bytes";
-		ARCS_LOG(LOG_DEBUG1) << "        "
+		ARCS_LOG(DEBUG1) << "        "
 				<< (buffer.size() / CDDA.NUMBER_OF_CHANNELS)
 				<< " Stereo PCM samples (32 bit)";
 

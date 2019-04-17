@@ -57,8 +57,6 @@ using arcs::InvalidMetadataException;
 using arcs::TOC;
 using arcs::make_toc;
 
-using arcs::LOG_DEBUG1;
-
 
 /**
  * \cond IMPL_ONLY
@@ -345,7 +343,7 @@ CueInfo CueOpenFile::parse_info()
 
 		// Log the contents
 
-		ARCS_LOG(LOG_DEBUG1) << "CUE Track "
+		ARCS_LOG(DEBUG1) << "CUE Track "
 			<< std::right
 			<< std::setw(2)
 			<< i
@@ -400,7 +398,7 @@ uint32_t CueOpenFile::signed_long_to_uint32(const long &value) const
 
 	if (value < 0)
 	{
-		ARCS_LOG(LOG_DEBUG1) << "Value from CUE sheet is negative, clip to 0";
+		ARCS_LOG(DEBUG1) << "Value from CUE sheet is negative, clip to 0";
 		return 0;
 	}
 
