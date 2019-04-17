@@ -361,25 +361,6 @@ public:
 	 */
 	void flush();
 
-	/**
-	 * Handler method that informs about the number of total samples.
-	 *
-	 * Constructs an AudioSize instance of the passed sample amount and calls
-	 * the registered update_audiosize() callback method. This is mere
-	 * convenience for the caller not to be forced to construct the AudioSize
-	 * object.
-	 *
-	 * \param[in] idx Index of the last 32 bit PCM sample
-	 */
-	//void notify_total_samples(const uint32_t idx);
-
-	/**
-	 * Register a Calculation to update by this instance.
-	 *
-	 * \param[in] calc The Calculation updated by this instance
-	 */
-	//void register_processor(Calculation &calc);
-
 
 private:
 

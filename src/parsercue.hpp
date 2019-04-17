@@ -12,7 +12,7 @@
 #include <string>
 #include <vector>
 
-#ifndef __LIBARCSDEC_FILEFORMATS_HPP__
+#ifndef __LIBARCSDEC_DESCRIPTORS_HPP__
 #include "descriptors.hpp"
 #endif
 #ifndef __LIBARCSDEC_METAPARSER_HPP__

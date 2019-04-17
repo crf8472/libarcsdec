@@ -1,5 +1,5 @@
-#ifndef __LIBARCSDEC_FILEFORMATS_HPP__
-#define __LIBARCSDEC_FILEFORMATS_HPP__
+#ifndef __LIBARCSDEC_DESCRIPTORS_HPP__
+#define __LIBARCSDEC_DESCRIPTORS_HPP__
 
 /**
  * \file descriptors.hpp Toolkit for selecting file readers
@@ -45,7 +45,7 @@ inline namespace v_1_0_0
  *
  * A FileTest implements a single test. It may or may not open the file to test.
  *
- * The \ref audioreader and \ref metaparser are built on this API.
+ * The \ref AudioReader and \ref MetadataParser APIs are built on this API.
  */
 
 /// @{

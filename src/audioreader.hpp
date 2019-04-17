@@ -14,7 +14,7 @@
 #include <arcstk/calculate.hpp>
 #endif
 
-#ifndef __LIBARCSDEC_FILEFORMATS_HPP__
+#ifndef __LIBARCSDEC_DESCRIPTORS_HPP__
 #include "descriptors.hpp"
 #endif
 #ifndef __LIBARCSDEC_SAMPLEPROC_HPP__
@@ -217,9 +217,11 @@ public:
 
 
 /**
- * Supported sample formats. The sample format represents two basic
- * informations: the physical size of a sample in bits and whether the samples
- * are arranged in a planar or interleaved layout.
+ * Supported sample formats.
+ *
+ * The sample format represents two basic informations: the physical size of a
+ * sample in bits and whether the samples are arranged in a planar or
+ * interleaved layout.
  */
 enum class SAMPLE_FORMAT : uint8_t
 {
@@ -671,13 +673,13 @@ public:
 	uint32_t samples_per_read() const;
 
 	/**
-	 * Acquire the \ref AudioSize of a file.
+	 * Acquire the AudioSize of a file.
 	 *
-	 * Acquiring the \ref AudioSize includes validation.
+	 * Acquiring the AudioSize includes validation.
 	 *
 	 * \param[in] filename The filename of the file to process
 	 *
-	 * \return \ref AudioSize for the specified file
+	 * \return AudioSize for the specified file
 	 *
 	 * \throw FileReadException If the file could not be read
 	 */

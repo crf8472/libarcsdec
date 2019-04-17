@@ -94,7 +94,7 @@ public:
 	/**
 	 * \brief Callback for end of input
 	 *
-	 * \param[in] sample_index 0-based index of the last sample.
+	 * \param[in] last_sample_index 0-based index of the last sample.
 	 */
 	void end_input(const uint32_t last_sample_index);
 

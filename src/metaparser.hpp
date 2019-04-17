@@ -14,7 +14,7 @@
 #include <arcstk/calculate.hpp>
 #endif
 
-#ifndef __LIBARCSDEC_FILEFORMATS_HPP__
+#ifndef __LIBARCSDEC_DESCRIPTORS_HPP__
 #include "descriptors.hpp"
 #endif
 
@@ -196,7 +196,7 @@ protected:
 	/**
 	 * Turns a FileReader to a MetadataParser.
 	 *
-	 * \param[in] filereader The FileReader to cast
+	 * \param[in] file_reader_uptr The FileReader to cast
 	 *
 	 * \return MetadataParser or nullptr
 	 */

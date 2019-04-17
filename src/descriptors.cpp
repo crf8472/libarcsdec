@@ -3,7 +3,7 @@
  */
 
 
-#ifndef __LIBARCSDEC_FILEFORMATS_HPP__
+#ifndef __LIBARCSDEC_DESCRIPTORS_HPP__
 #include "descriptors.hpp"
 #endif
 
