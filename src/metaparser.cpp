@@ -15,8 +15,8 @@
 #include <arcstk/logging.hpp>
 #endif
 
-#ifndef __LIBARCSDEC_METAFORMATS_HPP__
-#include "metaformats.hpp"
+#ifndef __LIBARCSDEC_DESCRIPTORS_METADATA_HPP__
+#include "descriptors_metadata.hpp"
 #endif
 
 
