@@ -19,8 +19,8 @@
 #include <arcstk/logging.hpp>
 #endif
 
-#ifndef __LIBARCSDEC_AUDIOFORMATS_HPP__
-#include "audioformats.hpp"
+#ifndef __LIBARCSDEC_DESCRIPTORS_AUDIO_HPP__
+#include "descriptors_audio.hpp"
 #endif
 
 

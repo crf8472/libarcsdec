@@ -1,8 +1,8 @@
-#ifndef __LIBARCSDEC_METAFORMATS_HPP__
-#define __LIBARCSDEC_METAFORMATS_HPP__
+#ifndef __LIBARCSDEC_DESCRIPTORS_METADATA_HPP__
+#define __LIBARCSDEC_DESCRIPTORS_METADATA_HPP__
 
 /**
- * \file metaformats.hpp.in Provide built-in metadata file format support classes.
+ * \file descriptors_metadata.hpp.in Provide compiled-in @link MetadataParserDescriptor MetadataParserDescriptors @endlink.
  *
  * This information is controlled by cmake. It is made accessible at build time
  * for program scope.

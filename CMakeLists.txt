@@ -343,8 +343,8 @@ endif (IWYU )
 ## Configure all .in files producing C++ headers files
 
 set (CONFIGURED_HEADERS
-		audioformats.hpp
-		metaformats.hpp
+		descriptors_audio.hpp
+		descriptors_metadata.hpp
 		version.hpp )
 
 foreach (_header IN LISTS CONFIGURED_HEADERS )

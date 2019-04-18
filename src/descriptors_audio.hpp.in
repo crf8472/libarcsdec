@@ -1,8 +1,8 @@
-#ifndef __LIBARCSDEC_AUDIOFORMATS_HPP__
-#define __LIBARCSDEC_AUDIOFORMATS_HPP__
+#ifndef __LIBARCSDEC_DESCRIPTORS_AUDIO_HPP__
+#define __LIBARCSDEC_DESCRIPTORS_AUDIO_HPP__
 
 /**
- * \file audioformats.hpp.in Provide compiled-in FileReaderDescriptor classes.
+ * \file descriptors_audio.hpp.in Provide compiled-in @link AudioReaderDescriptor AudioReaderDescriptors @endlink.
  *
  * This information is controlled by cmake. It is made accessible at build time
  * for program scope.
