@@ -14,7 +14,7 @@ cmake_policy (SET CMP0057 NEW)
 project (arcsdec VERSION 0.1.0 LANGUAGES CXX )
 
 set (PROJECT_BRIEF_DESC
-    "A library with audio decoder and TOC parser adapters for libarcstk" )
+    "Audio decoder and TOC parser adapters for libarcstk" )
 
 set (PROJECT_URL "https://codeberg.org/tristero/libarcsdec/" )
 

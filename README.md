@@ -1,4 +1,4 @@
-# A library with audio decoder and TOC parser adapters for libarcs
+# Audio decoder and TOC parser adapters for libarcstk
 
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![C++14](https://img.shields.io/badge/C++-14-darkred.svg)](./API.md)
