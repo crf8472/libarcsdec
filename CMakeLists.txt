@@ -13,14 +13,20 @@ cmake_policy (SET CMP0057 NEW)
 
 project (arcsdec VERSION 0.1.0 LANGUAGES CXX )
 
-set (PROJECT_BRIEF_DESC
-    "Audio decoder and TOC parser adapters for libarcstk" )
+set (PROJECT_BRIEF_DESC "Audio decoder and TOC parser adapters for libarcstk" )
 
 set (PROJECT_URL "https://codeberg.org/tristero/libarcsdec/" )
 
 set (PROJECT_VERSION_SUFFIX "alpha.1" )
 
 set (PROJECT_DEFAULT_BUILD_TYPE "Release" )
+
+
+## --- Global settings
+
+set (CMAKE_CXX_STANDARD 14 )
+set (CMAKE_CXX_STANDARD_REQUIRED ON )
+set (CMAKE_CXX_EXTENSIONS OFF ) ## use -std=c++14 instead of std=gnu++14
 
 
 ## --- Setup Version Information
@@ -96,15 +102,18 @@ list (APPEND SOURCES "${PROJECT_SOURCE_DIR}/sampleproc.cpp" )
 
 ## --- Define required objects and libraries to link to the project target
 
-set (REQUIRED_OBJECTS )
+set (OBJECT_TARGETS )      ## These get common properties
 
-set (REQUIRED_LIBRARIES )
+set (REQUIRED_OBJECTS )    ## These are build dependencies to main target
+set (REQUIRED_LIBRARIES )  ## These are dynlinked dependencies of the target
 
 
 ## --- Define compiler switches
 
+## G++/Clang++: Warnings
 set (FLAGS_WARNINGS -Wall -Wextra -Wold-style-cast -Wpedantic -Weffc++ )
 
+## G++/Clang++: Optimize flags
 set (FLAGS_OPTIMIZE -march=native -mtune=generic )
 
 
@@ -145,28 +154,9 @@ add_library (parsercue OBJECT ${PROJECT_SOURCE_DIR}/parsercue.cpp )
 find_package (libcue 2.0.0 REQUIRED )
 target_include_directories (parsercue PRIVATE ${libcue_INCLUDE_DIRS} )
 
-set_target_properties (parsercue PROPERTIES
-	POSITION_INDEPENDENT_CODE ON
-	CXX_STANDARD  14 )
-
-if (WITH_NATIVE )
-
-	target_compile_options (parsercue
-		PUBLIC ${FLAGS_WARNINGS} ${FLAGS_OPTIMIZE} )
-else ()
-
-	target_compile_options (parsercue PUBLIC ${FLAGS_WARNINGS} )
-endif (WITH_NATIVE )
-
+list (APPEND OBJECT_TARGETS     parsercue )
 list (APPEND REQUIRED_OBJECTS   $<TARGET_OBJECTS:parsercue> )
 list (APPEND REQUIRED_LIBRARIES ${libcue_LIBRARIES} )
-
-
-## --- Define optional objects and libraries to link to the project target
-
-set (OPTIONAL_OBJECTS )
-
-set (OPTIONAL_LIBRARIES )
 
 
 ## --- Optional object target: parsercdio (requires libcdio, default: OFF)
@@ -180,19 +170,7 @@ if (WITH_LIBCDIO )
 	find_package (libcdio 2.0.0 REQUIRED )
 	target_include_directories (parsercdio PRIVATE ${libcdio_INCLUDE_DIRS} )
 
-	set_target_properties (parsercdio PROPERTIES
-		POSITION_INDEPENDENT_CODE ON
-		CXX_STANDARD  14 )
-
-	if (WITH_NATIVE )
-
-		target_compile_options (parsercdio
-			PUBLIC ${FLAGS_WARNINGS} ${FLAGS_OPTIMIZE} )
-	else ()
-
-		target_compile_options (parsercdio PUBLIC ${FLAGS_WARNINGS} )
-	endif (WITH_NATIVE )
-
+	list (APPEND OBJECT_TARGETS     parsercdio )
 	list (APPEND REQUIRED_OBJECTS   $<TARGET_OBJECTS:parsercdio> )
 	list (APPEND REQUIRED_LIBRARIES ${libcdio_LIBRARIES} )
 
@@ -204,33 +182,18 @@ endif (WITH_LIBCDIO )
 
 ## --- Optional: Add FLAC (requires FLAC++, default: ON)
 
-if (WITH_FLAC)
+if (WITH_FLAC )
 
-	message (STATUS "Build with FLAC reading capability" )
+	message (STATUS "Build with fLaC reading capability" )
 
 	find_package (FLAC 1.3.1 REQUIRED ) ## checks libFLAC as well as libFLAC++
 
 	add_library (readerflac OBJECT ${PROJECT_SOURCE_DIR}/readerflac.cpp )
 	target_include_directories (readerflac PRIVATE ${FLAC_INCLUDE_DIRS} )
 
-	## We want to link this object into a shared object
-	#set_property (TARGET readerflac PROPERTY POSITION_INDEPENDENT_CODE ON )
-
-	set_target_properties (readerflac PROPERTIES
-		POSITION_INDEPENDENT_CODE ON
-		CXX_STANDARD  14 )
-
-	if (WITH_NATIVE )
-
-		target_compile_options (readerflac
-			PUBLIC ${FLAGS_WARNINGS} ${FLAGS_OPTIMIZE} )
-	else ()
-
-		target_compile_options (readerflac PUBLIC ${FLAGS_WARNINGS} )
-	endif (WITH_NATIVE )
-
-	list (APPEND OPTIONAL_OBJECTS   $<TARGET_OBJECTS:readerflac> )
-	list (APPEND OPTIONAL_LIBRARIES ${FLAC_LIBRARIES} )
+	list (APPEND OBJECT_TARGETS     readerflac )
+	list (APPEND REQUIRED_OBJECTS   $<TARGET_OBJECTS:readerflac> )
+	list (APPEND REQUIRED_LIBRARIES ${FLAC_LIBRARIES} )
 
 else (WITH_FLAC)
 
@@ -249,24 +212,9 @@ if (WITH_WAVPACK)
 	add_library (readerwvpk OBJECT ${PROJECT_SOURCE_DIR}/readerwvpk.cpp )
 	target_include_directories (readerwvpk PRIVATE ${libwavpack_INCLUDE_DIRS} )
 
-	## We want to link this object into a shared object
-	#set_property (TARGET readerwvpk PROPERTY POSITION_INDEPENDENT_CODE ON )
-
-	set_target_properties (readerwvpk PROPERTIES
-		POSITION_INDEPENDENT_CODE ON
-		CXX_STANDARD  14 )
-
-	if (WITH_NATIVE )
-
-		target_compile_options (readerwvpk
-			PUBLIC ${FLAGS_WARNINGS} ${FLAGS_OPTIMIZE} )
-	else ()
-
-		target_compile_options (readerwvpk PUBLIC ${FLAGS_WARNINGS} )
-	endif (WITH_NATIVE )
-
-	list (APPEND OPTIONAL_OBJECTS $<TARGET_OBJECTS:readerwvpk> )
-	list (APPEND OPTIONAL_LIBRARIES ${libwavpack_LIBRARIES} )
+	list (APPEND OBJECT_TARGETS     readerwvpk )
+	list (APPEND REQUIRED_OBJECTS   $<TARGET_OBJECTS:readerwvpk> )
+	list (APPEND REQUIRED_LIBRARIES ${libwavpack_LIBRARIES} )
 
 else (WITH_WAVPACK)
 
@@ -330,26 +278,11 @@ if (WITH_FFMPEG)
 	target_include_directories (readerffmpeg PRIVATE ${avformat_INCLUDE_DIRS} )
 	target_include_directories (readerffmpeg PRIVATE ${avutil_INCLUDE_DIRS} )
 
-	## We want to link this object into a shared object
-	# set_property (TARGET readerffmpeg PROPERTY POSITION_INDEPENDENT_CODE ON )
-
-	set_target_properties (readerffmpeg PROPERTIES
-		POSITION_INDEPENDENT_CODE ON
-		CXX_STANDARD  14 )
-
-	if (WITH_NATIVE )
-
-		target_compile_options (readerffmpeg
-			PUBLIC ${FLAGS_WARNINGS} ${FLAGS_OPTIMIZE} )
-	else ()
-
-		target_compile_options (readerffmpeg PUBLIC ${FLAGS_WARNINGS} )
-	endif (WITH_NATIVE )
-
-	list (APPEND OPTIONAL_OBJECTS   $<TARGET_OBJECTS:readerffmpeg> )
-	list (APPEND OPTIONAL_LIBRARIES ${avcodec_LIBRARIES} )
-	list (APPEND OPTIONAL_LIBRARIES ${avformat_LIBRARIES} )
-	list (APPEND OPTIONAL_LIBRARIES ${avutil_LIBRARIES} )
+	list (APPEND OBJECT_TARGETS     readerffmpeg )
+	list (APPEND REQUIRED_OBJECTS   $<TARGET_OBJECTS:readerffmpeg> )
+	list (APPEND REQUIRED_LIBRARIES ${avcodec_LIBRARIES} )
+	list (APPEND REQUIRED_LIBRARIES ${avformat_LIBRARIES} )
+	list (APPEND REQUIRED_LIBRARIES ${avutil_LIBRARIES} )
 
 else (WITH_FFMPEG)
 
@@ -359,7 +292,7 @@ endif (WITH_FFMPEG)
 
 ## --- Optional: Add libsndfile (default: OFF)
 
-if (WITH_LIBSNDFILE)
+if (WITH_LIBSNDFILE )
 
 	message (STATUS "Build with libsndfile support" )
 
@@ -367,41 +300,26 @@ if (WITH_LIBSNDFILE)
 
 	add_library (readersndfile OBJECT ${PROJECT_SOURCE_DIR}/readersndfile.cpp )
 	target_include_directories (readersndfile
-		PRIVATE ${libsndfile_INCLUDE_DIRS})
+		PRIVATE ${libsndfile_INCLUDE_DIRS} )
 
-	## We want to link this object into a shared object
-	#set_property (TARGET readersndfile PROPERTY POSITION_INDEPENDENT_CODE ON )
+	list (APPEND OBJECT_TARGETS     readersndfile )
+	list (APPEND REQUIRED_OBJECTS   $<TARGET_OBJECTS:readersndfile> )
+	list (APPEND REQUIRED_LIBRARIES ${libsndfile_LIBRARIES} )
 
-	set_target_properties (readersndfile PROPERTIES
-		POSITION_INDEPENDENT_CODE ON
-		CXX_STANDARD  14 )
-
-	if (WITH_NATIVE )
-
-		target_compile_options (readersndfile
-			PUBLIC ${FLAGS_WARNINGS} ${FLAGS_OPTIMIZE} )
-	else ()
-
-		target_compile_options (readersndfile PUBLIC ${FLAGS_WARNINGS} )
-	endif (WITH_NATIVE )
-
-	list (APPEND OPTIONAL_OBJECTS   $<TARGET_OBJECTS:readersndfile> )
-	list (APPEND OPTIONAL_LIBRARIES ${libsndfile_LIBRARIES} )
-
-else (WITH_LIBSNDFILE)
+else (WITH_LIBSNDFILE )
 
 	message (STATUS "Build without libsndfile support" )
-endif (WITH_LIBSNDFILE)
+endif (WITH_LIBSNDFILE )
 
 
 ## --- Optional: Add include-what-you-use support (default: OFF)
 
-if (IWYU)
+if (IWYU )
 
 	message (STATUS "Program include-what-you-use requested" )
 	find_program (IWYU_PATH NAMES include-what-you-use iwyu )
 
-	if (IWYU_PATH)
+	if (IWYU_PATH )
 
 		## Set for all subsequent targets
 		set (CMAKE_CXX_INCLUDE_WHAT_YOU_USE ${IWYU_PATH} )
@@ -412,12 +330,12 @@ if (IWYU)
 
 		message (STATUS "Program include-what-you-use found: ${IWYU_PATH}" )
 
-	else (IWYU_PATH)
+	else (IWYU_PATH )
 
 		message (WARNING "Program include-what-you-use not found" )
 
-	endif (IWYU_PATH)
-endif (IWYU)
+	endif (IWYU_PATH )
+endif (IWYU )
 
 
 ## --- Configured files by CMake
@@ -425,9 +343,9 @@ endif (IWYU)
 ## Configure all .in files producing C++ headers files
 
 set (CONFIGURED_HEADERS
-	audioformats.hpp
-	metaformats.hpp
-	version.hpp )
+		audioformats.hpp
+		metaformats.hpp
+		version.hpp )
 
 foreach (_header IN LISTS CONFIGURED_HEADERS )
 
@@ -465,7 +383,6 @@ list (APPEND EXPORTED_HEADERS "${PROJECT_SOURCE_DIR}/sampleproc.hpp" )
 add_library (${PROJECT_NAME} SHARED
 	${SOURCES}
 	${REQUIRED_OBJECTS}
-	${OPTIONAL_OBJECTS}
 )
 
 ## Include location for generated sources to search path
@@ -476,15 +393,24 @@ target_include_directories (${PROJECT_NAME} PRIVATE ${PROJECT_BINARY_DIR} )
 ## Link required and optional libs to project target
 
 target_link_libraries (${PROJECT_NAME} PRIVATE ${REQUIRED_LIBRARIES} )
-target_link_libraries (${PROJECT_NAME} PRIVATE ${OPTIONAL_LIBRARIES} )
 
 ## Configure properties for project target
 
 set_target_properties (${PROJECT_NAME} PROPERTIES
-	CXX_STANDARD  14
 	PUBLIC_HEADER "${EXPORTED_HEADERS}"
 	VERSION       "${PROJECT_VERSION_STRING_WITHOUT_SUFFIX}"
 	SOVERSION     "${PROJECT_VERSION_STRING_WITHOUT_SUFFIX}" )
+
+
+## --- Set common properties for all object targets
+
+foreach (_object ${OBJECT_TARGETS} )
+
+	target_compile_options (${_object} PUBLIC ${CUSTOM_CXX_FLAGS} )
+
+	set_target_properties (${_object} PROPERTIES
+		POSITION_INDEPENDENT_CODE ON )
+endforeach()
 
 
 ## --- Install binary and exported header files
@@ -512,11 +438,6 @@ if (CMAKE_COMPILER_IS_GNUCXX
 		OR CMAKE_CXX_COMPILER MATCHES ".*clang"
 		OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang" )
 
-	## Activate Warnings
-
-	target_compile_options (${PROJECT_NAME}
-		PUBLIC -Wall -Wextra -Wold-style-cast -Wpedantic -Weffc++ )
-
 	## Platform specific optimizations (default ON for Release, otherwise OFF)
 
 	if (CMAKE_BUILD_TYPE STREQUAL "Release" )
@@ -526,17 +447,28 @@ if (CMAKE_COMPILER_IS_GNUCXX
 
 	endif (CMAKE_BUILD_TYPE STREQUAL "Release" )
 
+
 	if (WITH_NATIVE )
 
 		message (STATUS "Build with platform specific optimization" )
 
-		target_compile_options (${PROJECT_NAME}
-			PUBLIC -march=native -mtune=generic )
-	else()
+		set (CUSTOM_CXX_FLAGS ${FLAGS_WARNINGS} ${FLAGS_OPTIMIZE} )
+
+	else ()
 
 		message (STATUS "Build without platform specific optimization" )
 
+		set (CUSTOM_CXX_FLAGS ${FLAGS_WARNINGS} )
+
 	endif (WITH_NATIVE )
+
+
+	target_compile_options (${PROJECT_NAME} PUBLIC ${CUSTOM_CXX_FLAGS} )
+
+	foreach (_object ${OBJECT_TARGETS} )
+
+		target_compile_options (${_object} PUBLIC ${CUSTOM_CXX_FLAGS} )
+	endforeach()
 
 else()
 
