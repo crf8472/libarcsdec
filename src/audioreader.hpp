@@ -73,7 +73,7 @@ inline namespace v_1_0_0
  * @{
  */
 
-using arcs::AudioSize;
+using arcstk::AudioSize;
 
 /**
  * Service class providing methods to convert short byte sequences to

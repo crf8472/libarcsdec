@@ -25,7 +25,7 @@ namespace arcsdec
 inline namespace v_1_0_0
 {
 
-using arcs::TOC;
+using arcstk::TOC;
 
 /**
  * \internal \defgroup metaparser Level 0 API: Reading and Validating Metadata Files

@@ -53,9 +53,9 @@ inline namespace v_1_0_0
 namespace
 {
 
-using arcs::InvalidMetadataException;
-using arcs::TOC;
-using arcs::make_toc;
+using arcstk::InvalidMetadataException;
+using arcstk::TOC;
+using arcstk::make_toc;
 
 
 /**

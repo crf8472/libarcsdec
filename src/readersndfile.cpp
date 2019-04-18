@@ -34,10 +34,10 @@ namespace arcsdec
 inline namespace v_1_0_0
 {
 
-using arcs::PCMForwardIterator;
-using arcs::AudioSize;
-using arcs::CDDA;
-using arcs::SampleSequence;
+using arcstk::PCMForwardIterator;
+using arcstk::AudioSize;
+using arcstk::CDDA;
+using arcstk::SampleSequence;
 
 
 namespace

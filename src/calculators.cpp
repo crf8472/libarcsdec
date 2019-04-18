@@ -43,14 +43,14 @@ namespace arcsdec
 inline namespace v_1_0_0
 {
 
-using arcs::TOC;
-using arcs::ARId;
-using arcs::Calculation;
-using arcs::Checksums;
-using arcs::ChecksumSet;
-using arcs::make_arid;
-using arcs::make_context;
-using arcs::make_empty_arid;
+using arcstk::TOC;
+using arcstk::ARId;
+using arcstk::Calculation;
+using arcstk::Checksums;
+using arcstk::ChecksumSet;
+using arcstk::make_arid;
+using arcstk::make_context;
+using arcstk::make_empty_arid;
 
 
 // TOCParser
@@ -265,7 +265,7 @@ public:
 		const bool &last_track_with_skip);
 
 	/**
-	 * Calculate a \ref arcs::ChecksumSet for the given audio file
+	 * Calculate checksums for the given audio file
 	 *
 	 * The flags skip_front and skip_back control whether the track is processed
 	 * as first or last track of an album. If skip_front is set to TRUE, the

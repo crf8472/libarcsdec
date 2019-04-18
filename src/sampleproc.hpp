@@ -26,9 +26,9 @@ inline namespace v_1_0_0
  * @{
  */
 
-using arcs::PCMForwardIterator;
-using arcs::AudioSize;
-using arcs::Calculation;
+using arcstk::PCMForwardIterator;
+using arcstk::AudioSize;
+using arcstk::Calculation;
 
 /**
  * \brief Symbolic constants for certain block sizes

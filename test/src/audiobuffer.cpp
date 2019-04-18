@@ -21,6 +21,9 @@
 
 TEST_CASE ( "BlockAccumulator", "[audiobuffer] [blockaccumulator]" )
 {
+	using arcstk::CDDA;
+	using arcstk::SampleSequence;
+
 	arcsdec::BlockAccumulator accumulator; // Capacity: BLOCKSIZE.DEFAULT
 
 	REQUIRE ( accumulator.samples_appended()   == 0 );
@@ -33,9 +36,9 @@ TEST_CASE ( "BlockAccumulator", "[audiobuffer] [blockaccumulator]" )
 		samples.resize(4096); // smaller than BLOCKSIZE.DEFAULT
 
 		// Configure sequence "adapter" for actual samples
-		arcs::SampleSequence<int32_t, false> sequence; // left 0, right 1
+		SampleSequence<int32_t, false> sequence; // left 0, right 1
 		sequence.reset(samples.data(),
-				samples.size() / arcs::CDDA.NUMBER_OF_CHANNELS);
+				samples.size() / CDDA.NUMBER_OF_CHANNELS);
 
 		// We can append those sequences without registering a processor
 		// because the won't trigger a flush()

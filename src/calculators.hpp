@@ -49,10 +49,10 @@ inline namespace v_1_0_0
  * @{
  */
 
-using arcs::TOC;
-using arcs::ARId;
-using arcs::Checksums;
-using arcs::ChecksumSet;
+using arcstk::TOC;
+using arcstk::ARId;
+using arcstk::Checksums;
+using arcstk::ChecksumSet;
 
 
 /**
