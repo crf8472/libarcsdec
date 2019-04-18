@@ -13,6 +13,9 @@
 
 #include <sndfile.hh>
 
+#ifndef __LIBARCSTK_CALCULATE_HPP__
+#include <arcstk/calculate.hpp>
+#endif
 #ifndef __LIBARCSTK_SAMPLES_HPP__
 #include <arcstk/samples.hpp>
 #endif
@@ -22,9 +25,6 @@
 
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__
 #include "audioreader.hpp"
-#endif
-#ifndef __LIBARCSDEC_AUDIOBUFFER_HPP__
-#include "audiobuffer.hpp"
 #endif
 
 

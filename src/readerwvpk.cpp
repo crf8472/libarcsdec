@@ -20,7 +20,7 @@ extern "C" {
 #include <string>
 
 #ifndef __LIBARCSTK_CALCULATE_HPP__
-#include <arcstk/calculate.hpp> // from .h
+#include <arcstk/calculate.hpp>
 #endif
 #ifndef __LIBARCSTK_SAMPLES_HPP__
 #include <arcstk/samples.hpp>
@@ -30,10 +30,7 @@ extern "C" {
 #endif
 
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__
-#include "audioreader.hpp" // from .h
-#endif
-#ifndef __LIBARCSDEC_AUDIOBUFFER_HPP__
-#include "audiobuffer.hpp"
+#include "audioreader.hpp"
 #endif
 
 
