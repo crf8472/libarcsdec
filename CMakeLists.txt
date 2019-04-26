@@ -366,18 +366,18 @@ set (CONFIGURED_HEADERS
 foreach (_header IN LISTS CONFIGURED_HEADERS )
 
 	configure_file (
-	  "${PROJECT_SOURCE_DIR}/${_header}.in"
-	  "${PROJECT_BUILD_SOURCE_DIR}/${_header}"
-	  @ONLY
+		"${PROJECT_SOURCE_DIR}/${_header}.in"
+		"${PROJECT_BUILD_SOURCE_DIR}/${_header}"
+		@ONLY
 	)
 endforeach()
 
 ## Configure .pc file for pkg-info
 
 configure_file (
-  "${CMAKE_CURRENT_SOURCE_DIR}/libarcsdec.pc.in"
-  "${PROJECT_BUILD_SOURCE_DIR}/libarcsdec.pc"
-  @ONLY
+	"${CMAKE_CURRENT_SOURCE_DIR}/libarcsdec.pc.in"
+	"${PROJECT_BUILD_SOURCE_DIR}/libarcsdec.pc"
+	@ONLY
 )
 
 
