@@ -443,7 +443,7 @@ if (NOT SKIP_INSTALL_ALL)
 
 	if (NOT SKIP_INSTALL_FILES)
 
-		install (FILES "${PROJECT_BINARY_DIR}/libarcsdec.pc"
+		install (FILES "${PROJECT_BUILD_SOURCE_DIR}/libarcsdec.pc"
 			DESTINATION "${INSTALL_PKGCONFIG_DIR}" )
 	endif()
 
