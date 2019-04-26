@@ -390,6 +390,9 @@ list (APPEND EXPORTED_HEADERS "${PROJECT_SOURCE_DIR}/calculators.hpp" )
 list (APPEND EXPORTED_HEADERS "${PROJECT_SOURCE_DIR}/descriptors.hpp" )
 list (APPEND EXPORTED_HEADERS "${PROJECT_SOURCE_DIR}/metaparser.hpp" )
 list (APPEND EXPORTED_HEADERS "${PROJECT_SOURCE_DIR}/sampleproc.hpp" )
+list (APPEND EXPORTED_HEADERS "${PROJECT_BUILD_SOURCE_DIR}/descriptors_audio.hpp" )
+list (APPEND EXPORTED_HEADERS "${PROJECT_BUILD_SOURCE_DIR}/descriptors_metadata.hpp" )
+list (APPEND EXPORTED_HEADERS "${PROJECT_BUILD_SOURCE_DIR}/version.hpp" )
 
 
 ## --- Add and configure project target

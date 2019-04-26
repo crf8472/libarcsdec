@@ -1,10 +1,11 @@
 /**
- * \file version.hpp.in Provide version and name information for libarcsdec.
+ * \file
+ *
+ * \brief Provide version and name information for libarcsdec.
  *
  * This file is used as a blueprint for cmake to generate a header file
  * containing the cmake-controlled version and name information for the project.
  * It is made accessible at build time for program scope.
- *
  */
 
 
