@@ -25,7 +25,7 @@ namespace arcsdec
 inline namespace v_1_0_0
 {
 
-/// \defgroup descriptors Level 0 API: Create a FileReader for a Given File
+/// \defgroup descriptors API for creating a FileReader for a specified file
 
 /**
  * \brief Framework for creating specialized FileReaders for a specified file.
@@ -63,12 +63,12 @@ class FileReader
 public:
 
 	/**
-	 * Default constructor
+	 * \brief Default constructor.
 	 */
 	FileReader();
 
 	/**
-	 * Virtual default destructor
+	 * \brief Virtual default destructor.
 	 */
 	virtual ~FileReader() noexcept;
 };
@@ -89,14 +89,14 @@ class FileReadException final : public std::runtime_error
 public:
 
 	/**
-	 * Constructor
+	 * \brief Constructor.
 	 *
 	 * \param[in] what_arg What argument
 	 */
 	explicit FileReadException(const std::string &what_arg);
 
 	/**
-	 * Constructor
+	 * \brief Constructor.
 	 *
 	 * The byte position marks the error. This implies that byte_pos - 1 bytes
 	 * have been read without error.
@@ -107,8 +107,8 @@ public:
 	FileReadException(const std::string &what_arg, const int64_t &byte_pos);
 
 	/**
-	 * Byte position on which the error occurred or a negative value if the
-	 * position is not known.
+	 * \brief Byte position on which the error occurred or a negative value if
+	 * the position is not known.
 	 *
 	 * This entails that byte_pos - 1 bytes have been read without error.
 	 *
@@ -120,7 +120,7 @@ public:
 private:
 
 	/**
-	 * Internal byte position.
+	 * \brief Internal byte position.
 	 */
 	int64_t byte_pos_;
 };
@@ -148,19 +148,19 @@ class FileReaderDescriptor
 public:
 
 	/**
-	 * Virtual default destructor
+	 * \brief Virtual default destructor.
 	 */
 	virtual ~FileReaderDescriptor() noexcept;
 
 	/**
-	 * Name of this FileReaderDescriptor
+	 * \brief Name of this FileReaderDescriptor.
 	 *
 	 * \return A human-readable name of this FileReaderDescriptor
 	 */
 	std::string name() const;
 
 	/**
-	 * Check whether this descriptor matches the given input bytes.
+	 * \brief Check whether this descriptor matches the given input bytes.
 	 *
 	 * \param[in] bytes  Sequence of consecutive bytes in the file
 	 * \param[in] offset Offset of the first byte of this sequence
@@ -171,7 +171,8 @@ public:
 			const uint64_t &offset) const;
 
 	/**
-	 * Check whether this descriptor is known to have the specified suffix.
+	 * \brief Check whether this descriptor is known to have the specified
+	 * suffix.
 	 *
 	 * \param[in] suffix The suffix of the filename to test for
 	 *
@@ -180,14 +181,14 @@ public:
 	bool accepts_suffix(const std::string &suffix) const;
 
 	/**
-	 * Create an opaque reader for the specified file
+	 * \brief Create an opaque reader for the specified file.
 	 *
 	 * \return A FileReader that can read this FileReaderDescriptor
 	 */
 	std::unique_ptr<FileReader> create_reader() const;
 
 	/**
-	 * Clone this instance.
+	 * \brief Clone this instance.
 	 *
 	 * Method clone() allows to duplicate an instance without knowing its
 	 * static type.
@@ -197,7 +198,7 @@ public:
 	std::unique_ptr<FileReaderDescriptor> clone() const;
 
 	/**
-	 * Equality
+	 * \brief Equality.
 	 *
 	 * \param[in] rhs The right hand side of the comparison
 	 *
@@ -207,7 +208,7 @@ public:
 	bool operator == (const FileReaderDescriptor &rhs) const;
 
 	/**
-	 * Inequality
+	 * \brief Inequality.
 	 *
 	 * \param[in] rhs The right hand side of the comparison
 	 *
@@ -220,7 +221,7 @@ public:
 private:
 
 	/**
-	 * Implements FileReaderDescriptor::name()
+	 * \brief Implements FileReaderDescriptor::name().
 	 *
 	 * \return A human-readable name of this FileReaderDescriptor
 	 */
@@ -228,7 +229,7 @@ private:
 	= 0;
 
 	/**
-	 * Implements FileReaderDescriptor::accepts_bytes()
+	 * \brief Implements FileReaderDescriptor::accepts_bytes().
 	 *
 	 * \param[in] bytes  Sequence of consecutive bytes in the file
 	 * \param[in] offset Offset of the first byte of this sequence
@@ -240,7 +241,7 @@ private:
 	= 0;
 
 	/**
-	 * Implements FileReaderDescriptor::accepts_suffix()
+	 * \brief Implements FileReaderDescriptor::accepts_suffix().
 	 *
 	 * \param[in] suffix The suffix of the filename to test for
 	 *
@@ -250,7 +251,7 @@ private:
 	= 0;
 
 	/**
-	 * Implements FileReaderDescriptor::create_reader()
+	 * \brief Implements FileReaderDescriptor::create_reader().
 	 *
 	 * \return A FileReader that can read this FileReaderDescriptor
 	 */
@@ -258,7 +259,7 @@ private:
 	= 0;
 
 	/**
-	 * Implements FileReaderDescriptor::clone()
+	 * \brief Implements FileReaderDescriptor::clone().
 	 *
 	 * \return A deep copy of the instance
 	 */
@@ -266,7 +267,7 @@ private:
 	= 0;
 
 	/**
-	 * Implements FileReaderDescriptor::operator ==
+	 * \brief Implements FileReaderDescriptor::operator ==.
 	 */
 	virtual bool do_operator_equals(const FileReaderDescriptor &rhs) const;
 };
@@ -281,38 +282,39 @@ class FileTest
 public:
 
 	/**
-	 * Constructor
+	 * \brief Constructor.
 	 */
 	FileTest();
 
 	/**
-	 * Constructor
+	 * \brief Constructor.
 	 *
 	 * \param[in] filename The filename to test
 	 */
 	explicit FileTest(const std::string &filename);
 
 	/**
-	 * Virtual default destructor
+	 * \brief Virtual default destructor.
 	 */
 	virtual ~FileTest() noexcept;
 
 	/**
-	 * Set the filename to test.
+	 * \brief Set the filename to test.
 	 *
 	 * \param[in] filename The filename to test
 	 */
 	void set_filename(const std::string &filename);
 
 	/**
-	 * Returns the filename tested by this test.
+	 * \brief Returns the filename tested by this test.
 	 *
 	 * \return Filename to test
 	 */
 	const std::string& filename() const;
 
 	/**
-	 * Test a given descriptor instance for matching the criteria of this test
+	 * \brief Test a given descriptor instance for matching the criteria of this
+	 * test.
 	 *
 	 * \param[in] desc The FileReaderDescriptor to test
 	 *
@@ -324,7 +326,7 @@ public:
 private:
 
 	/**
-	 * Implements FileTest::matches()
+	 * \brief Implements FileTest::matches().
 	 *
 	 * \param[in] desc The FileReaderDescriptor to test
 	 *
@@ -334,7 +336,7 @@ private:
 	= 0;
 
 	/**
-	 * Filename tested by this test.
+	 * \brief Filename tested by this test.
 	 */
 	std::string filename_;
 };
@@ -352,7 +354,7 @@ class FileTestBytes final : public FileTest
 public:
 
 	/**
-	 * Constructor
+	 * \brief Constructor.
 	 *
 	 * \param[in] offset The offset in bytes where this sequence starts
 	 * \param[in] length Number of bytes in the sequence
@@ -365,7 +367,7 @@ private:
 	bool do_matches(const FileReaderDescriptor &desc) const override;
 
 	/**
-	 * Read length bytes from position offset in file filename.
+	 * \brief Read length bytes from position offset in file filename.
 	 *
 	 * \param[in] filename Filename to test
 	 * \param[in] offset   The offset in bytes where this sequence starts
@@ -380,12 +382,12 @@ private:
 		const uint64_t &offset, const uint32_t &length) const;
 
 	/**
-	 * Byte offset of the byte sequence in the file
+	 * \brief Byte offset of the byte sequence in the file.
 	 */
 	uint64_t offset_;
 
 	/**
-	 * Number of bytes to read from the start position
+	 * \brief Number of bytes to read from the start position.
 	 */
 	uint16_t length_;
 };
@@ -402,7 +404,7 @@ private:
 	bool do_matches(const FileReaderDescriptor &desc) const override;
 
 	/**
-	 * Provides the suffix of a given filename.
+	 * \brief Provides the suffix of a given filename.
 	 *
 	 * The suffix is the part of filename following the last occurrence of ".".
 	 * If filename does not contain the character ".", the entire filename is
@@ -431,13 +433,13 @@ class FileReaderSelector {
 public:
 
 	/**
-	 * Virtual default destructor
+	 * \brief Virtual default destructor.
 	 */
 	virtual ~FileReaderSelector() noexcept;
 
 	/**
-	 * Selects the descriptor with the lowest index position from descriptors
-	 * that passes all tests.
+	 * \brief Selects the descriptor with the lowest index position from
+	 * descriptors that passes all tests.
 	 *
 	 * \param[in] tests Set of tests to perform
 	 * \param[in] descs Set of descriptors to select from
@@ -453,7 +455,7 @@ public:
 private:
 
 	/**
-	 * Implements FileReaderSelector::select()
+	 * \brief Implements FileReaderSelector::select().
 	 *
 	 * \param[in] tests Set of tests to perform
 	 * \param[in] descs List of descriptors to select from
@@ -466,7 +468,7 @@ private:
 		const;
 
 	/**
-	 * Test whether a descriptor matches the criteria of this selector
+	 * \brief Test whether a descriptor matches the criteria of this selector.
 	 *
 	 * \param[in] tests Set of tests to perform
 	 * \param[in] desc  The descriptor to check
@@ -488,7 +490,7 @@ class FileReaderSelection
 public:
 
 	/**
-	 * Constructor
+	 * \brief Constructor.
 	 */
 	FileReaderSelection();
 
@@ -498,21 +500,21 @@ public:
 	// TODO Move constructor
 
 	/**
-	 * Virtual default destructor
+	 * \brief Virtual default destructor.
 	 */
 	virtual ~FileReaderSelection() noexcept;
 
 	/**
-	 * Add a descriptor to the list of descriptors for which a FileReader can be
-	 * created
+	 * \brief Add a descriptor to the list of descriptors for which a FileReader
+	 * can be created.
 	 *
 	 * \param[in] desc The FileReaderDescriptor to support
 	 */
 	void add_descriptor(std::unique_ptr<FileReaderDescriptor> desc);
 
 	/**
-	 * Remove all descriptors that qualify as equivalent to the given descriptor
-	 * by '==' from the list of descriptors.
+	 * \brief Remove all descriptors that qualify as equivalent to the given
+	 * descriptor by '==' from the list of descriptors.
 	 *
 	 * \param[in] desc The FileReaderDescriptor to be removed
 	 *
@@ -521,14 +523,15 @@ public:
 	int remove_descriptor(const FileReaderDescriptor * desc);
 
 	/**
-	 * Register a test for a FileReaderDescriptor for the specified filename.
+	 * \brief Register a test for a FileReaderDescriptor for the specified
+	 * filename.
 	 *
 	 * \param[in] testobj The test to be registered
 	 */
 	void register_test(std::unique_ptr<FileTest> testobj);
 
 	/**
-	 * Remove all tests that qualify as equivalent to the given test by
+	 * \brief Remove all tests that qualify as equivalent to the given test by
 	 * '==' from the list of test.
 	 *
 	 * \param[in] testobj The FileTest to be removed
@@ -538,26 +541,26 @@ public:
 	int unregister_test(const FileTest * testobj);
 
 	/**
-	 * Removes all tests registered to this instance.
+	 * \brief Removes all tests registered to this instance.
 	 */
 	void remove_all_tests();
 
 	/**
-	 * Set the FileReaderSelector for this instance
+	 * \brief Set the FileReaderSelector for this instance.
 	 *
 	 * \param[in] selector The FileReaderSelector for this instance
 	 */
 	void set_selector(std::unique_ptr<FileReaderSelector> selector);
 
 	/**
-	 * Return the FileReaderSelector of this instance
+	 * \brief Return the FileReaderSelector of this instance.
 	 *
 	 * \return The FileReaderSelector of this instance
 	 */
 	const FileReaderSelector& selector() const;
 
 	/**
-	 * Determine a matching FileReaderDescriptor for the specified file.
+	 * \brief Determine a matching FileReaderDescriptor for the specified file.
 	 *
 	 * \param[in] filename Name of the file to determine a descriptor for
 	 *
@@ -567,7 +570,7 @@ public:
 			const std::string &filename) const;
 
 	/**
-	 * Create an opaque FileReader for the given file.
+	 * \brief Create an opaque FileReader for the given file.
 	 *
 	 * Will return nullptr if the file does not exist or cannot be read or the
 	 * filename is empty.
@@ -579,7 +582,7 @@ public:
 	std::unique_ptr<FileReader> for_file(const std::string &filename) const;
 
 	/**
-	 * Return the FileReader specified by its name.
+	 * \brief Return the FileReader specified by its name.
 	 *
 	 * If the selection does not contain a FileReader with the specified name,
 	 * \c nullptr will be returned.
@@ -591,7 +594,7 @@ public:
 	std::unique_ptr<FileReader> by_name(const std::string &name) const;
 
 	/**
-	 * Reset this instance to its initial state, removing all tests and
+	 * \brief Reset this instance to its initial state, removing all tests and
 	 * descriptors.
 	 */
 	void reset();
@@ -608,7 +611,7 @@ private:
 	class Impl;
 
 	/**
-	 * Private implementation of this FileReaderFactory
+	 * \brief Private implementation of this FileReaderSelection.
 	 */
 	std::unique_ptr<FileReaderSelection::Impl> impl_;
 };

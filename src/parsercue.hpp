@@ -44,20 +44,20 @@ class DescriptorCUE : public FileReaderDescriptor
 public:
 
 	/**
-	 * Virtual default destructor
+	 * \brief Virtual default destructor.
 	 */
 	virtual ~DescriptorCUE() noexcept;
 
 	/**
-	 * Returns "CUESheet"
+	 * \brief Returns "CUESheet".
 	 *
 	 * \return "CUESheet"
 	 */
 	std::string do_name() const;
 
 	/**
-	 * Always returns TRUE since CUESheets cannot be recognized by a certain
-	 * byte sequence in a certain offset.
+	 * \brief Always returns TRUE since CUESheets cannot be recognized by a
+	 * certain byte sequence in a certain offset.
 	 *
 	 * \param[in] bytes  (ignored)
 	 * \param[in] offset (ignored)
@@ -68,18 +68,16 @@ public:
 			const uint64_t &offset) const;
 
 	/**
-	 * Returns TRUE if the suffix matches a CUE sheet suffix
+	 * \brief Returns TRUE if the suffix matches a CUE sheet suffix.
 	 *
 	 * \return TRUE iff suffix is case-insensitively equal to suffix otherwise
 	 * FALSE
 	 */
 	bool do_accepts_suffix(const std::string &suffix) const;
 
-	// Override
-	std::unique_ptr<FileReader> do_create_reader() const;
+	std::unique_ptr<FileReader> do_create_reader() const override;
 
-	// Override
-	std::unique_ptr<FileReaderDescriptor> do_clone() const;
+	std::unique_ptr<FileReaderDescriptor> do_clone() const override;
 };
 
 /// @}

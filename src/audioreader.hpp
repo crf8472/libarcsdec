@@ -2,7 +2,9 @@
 #define __LIBARCSDEC_AUDIOREADER_HPP__
 
 /**
- * \file audioreader.hpp Toolkit for reading and validating audio files
+ * \file
+ *
+ * API for reading and validating audio files
  */
 
 #include <functional>
@@ -21,10 +23,8 @@
 #include "sampleproc.hpp"
 #endif
 
-
 namespace arcsdec
 {
-
 inline namespace v_1_0_0
 {
 
@@ -76,7 +76,7 @@ inline namespace v_1_0_0
 using arcstk::AudioSize;
 
 /**
- * Service class providing methods to convert short byte sequences to
+ * \brief Service class providing methods to convert short byte sequences to
  * integers.
  *
  * ByteConverter can be used to parse integers from an input stream of bytes.
@@ -89,13 +89,13 @@ class ByteConverter
 public:
 
 	/**
-	 * Virtual default destructor
+	 * \brief Virtual default destructor
 	 */
 	virtual ~ByteConverter() noexcept;
 
 	/**
-	 * Service method: Interpret a single byte as a 8 bit unsigned integer with
-	 * storage as-is.
+	 * \brief Service method: Interpret a single byte as a 8 bit unsigned
+	 * integer with storage as-is.
 	 *
 	 * \param[in] b Input byte
 	 *
@@ -104,7 +104,7 @@ public:
 	uint8_t byte_to_uint8(const char &b) const;
 
 	/**
-	 * Service method: Interpret 2 bytes as a 16 bit (signed) integer
+	 * \brief Service method: Interpret 2 bytes as a 16 bit (signed) integer
 	 * with little endian storage, which means that the bits of b2 become the
 	 * most significant bits of the result.
 	 *
@@ -118,7 +118,7 @@ public:
 	int16_t le_bytes_to_int16(const char &b1, const char &b2) const;
 
 	/**
-	 * Service method: Interpret 2 bytes as a 16 bit unsigned integer
+	 * \brief Service method: Interpret 2 bytes as a 16 bit unsigned integer
 	 * with little endian storage, which means that the bits of b2 become the
 	 * most significant bits of the result.
 	 *
@@ -132,7 +132,7 @@ public:
 	uint16_t le_bytes_to_uint16(const char &b1, const char &b2) const;
 
 	/**
-	 * Service method: Interpret 4 bytes as a 32 bit (signed) integer
+	 * \brief Service method: Interpret 4 bytes as a 32 bit (signed) integer
 	 * with little endian storage, which means that the bits of b4 become the
 	 * most significant bits of the result.
 	 *
@@ -153,7 +153,7 @@ public:
 			const char &b4) const;
 
 	/**
-	 * Service method: Interpret 4 bytes as a 32 bit unsigned integer
+	 * \brief Service method: Interpret 4 bytes as a 32 bit unsigned integer
 	 * with little endian storage, which means that the bits of b4 become the
 	 * most significant bits of the result.
 	 *
@@ -174,7 +174,7 @@ public:
 			const char &b4) const;
 
 	/**
-	 * Service method: Interpret 4 bytes as a 32 bit (signed) integer
+	 * \brief Service method: Interpret 4 bytes as a 32 bit (signed) integer
 	 * with big endian storage, which means that the bits of b1 become the
 	 * most significant bits of the result.
 	 *
@@ -195,7 +195,7 @@ public:
 			const char &b4) const;
 
 	/**
-	 * Service method: Interpret 4 bytes as a 32 bit unsigned integer
+	 * \brief Service method: Interpret 4 bytes as a 32 bit unsigned integer
 	 * with big endian storage, which means that the bits of b1 become the
 	 * most significant bits of the result.
 	 *
@@ -245,12 +245,12 @@ class CDDAValidator
 public:
 
 	/**
-	 * Destructor stub
+	 * \brief Virtual destructor.
 	 */
 	virtual ~CDDAValidator() noexcept;
 
 	/**
-	 * Return TRUE iff the number of bits per sample conforms to CDDA
+	 * \brief Return TRUE iff the number of bits per sample conforms to CDDA.
 	 *
 	 * \param[in] bits_per_sample The actual number of bits per sample
 	 *
@@ -260,7 +260,7 @@ public:
 	bool bits_per_sample(const uint32_t &bits_per_sample);
 
 	/**
-	 * Return TRUE iff the number of channels conforms to CDDA
+	 * \brief Return TRUE iff the number of channels conforms to CDDA.
 	 *
 	 * \param[in] num_channels The actual number of channels
 	 *
@@ -270,7 +270,7 @@ public:
 	bool num_channels(const uint32_t &num_channels);
 
 	/**
-	 * Return TRUE if the sample rate conforms to CDDA
+	 * \brief Return TRUE if the sample rate conforms to CDDA.
 	 *
 	 * \param[in] samples_per_second The actual number of samples per second
 	 *
@@ -282,7 +282,8 @@ public:
 
 
 /**
- * \brief Base class for validation handlers for @link AudioReaderImpl AudioReaderImpls @endlink.
+ * \brief Base class for validation handlers for
+ * @link AudioReaderImpl AudioReaderImpls @endlink.
  *
  * Implements a class that just provides some assert methods that get a label, a
  * current value, a proper value and an error message. The validating handler
@@ -295,7 +296,7 @@ class ReaderValidatingHandler
 public:
 
 	/**
-	 * Default constructor
+	 * \brief Default constructor.
 	 */
 	ReaderValidatingHandler();
 
@@ -305,33 +306,33 @@ public:
 	// TODO move constructor
 
 	/**
-	 * Virtual default destructor
+	 * \brief Virtual default destructor.
 	 */
 	virtual ~ReaderValidatingHandler() noexcept;
 
 	/**
-	 * Add an error to the internal error list
+	 * \brief Add an error to the internal error list.
 	 *
 	 * \param[in] msg The error message to be added to the error list
 	 */
 	void error(const std::string &msg);
 
 	/**
-	 * Returns TRUE iff there are any errors occurred so far
+	 * \brief Returns TRUE iff there are any errors occurred so far.
 	 *
 	 * \return TRUE iff there are errors in the internal error list
 	 */
 	bool has_errors();
 
 	/**
-	 * Returns the current error list
+	 * \brief Returns the current error list.
 	 *
 	 * \return Current list of errors
 	 */
 	std::vector<std::string> get_errors(); // TODO type leak, list?
 
 	/**
-	 * Returns the last error that occurred
+	 * \brief Returns the last error that occurred.
 	 *
 	 * \return The last error that occurred
 	 */
@@ -347,9 +348,10 @@ public:
 protected:
 
 	/**
-	 * Returns TRUE iff value == proper_value. Always prints the label. Iff
-	 * the comparison is not TRUE, error_msg is printed and a new error
-	 * is added to the error list.
+	 * \brief Returns TRUE iff value == proper_value.
+	 *
+	 * Always prints the label. Iff the comparison is not TRUE, error_msg is
+	 * printed and a new error is added to the error list.
 	 *
 	 * \param[in] label Label to log for this test
 	 * \param[in] value Value to be checked
@@ -366,9 +368,10 @@ protected:
 		const std::string error_msg);
 
 	/**
-	 * Returns TRUE iff value >= proper_value. Always prints the label. Iff
-	 * the comparison is not TRUE, error_msg is printed and a new error
-	 * is added to the error list.
+	 * \brief Returns TRUE iff value >= proper_value.
+	 *
+	 * Always prints the label. Iff the comparison is not TRUE, error_msg is
+	 * printed and a new error is added to the error list.
 	 *
 	 * \param[in] label Label to log for this test
 	 * \param[in] value Value to be checked
@@ -385,9 +388,10 @@ protected:
 		const std::string error_msg);
 
 	/**
-	 * Returns TRUE iff value <= proper_value. Always prints the label. Iff
-	 * the comparison is not TRUE, error_msg is printed and a new error
-	 * is added to the error list.
+	 * \brief Returns TRUE iff value <= proper_value.
+	 *
+	 * Always prints the label. Iff the comparison is not TRUE, error_msg is
+	 * printed and a new error is added to the error list.
 	 *
 	 * \param[in] label Label to log for this test
 	 * \param[in] value Value to be checked
@@ -404,9 +408,10 @@ protected:
 		const std::string error_msg);
 
 	/**
-	 * Returns TRUE iff value is true. Always prints the label. Iff
-	 * the comparison is not TRUE, error_msg is printed and a new error
-	 * is added to the error list.
+	 * \brief Returns TRUE iff value is true.
+	 *
+	 * Always prints the label. Iff the comparison is not TRUE, error_msg is
+	 * printed and a new error is added to the error list.
 	 *
 	 * \param[in] label Label to log for this test
 	 * \param[in] value Value to be checked for being TRUE
@@ -423,7 +428,7 @@ protected:
 private:
 
 	/**
-	 * Result: List of errors in the validated input
+	 * \brief Result: List of errors in the validated input
 	 */
 	std::vector<std::string> errors_;
 };
@@ -441,12 +446,12 @@ class AudioReaderImpl : public virtual SampleProvider
 public:
 
 	/**
-	 * Default constructor
+	 * \brief Default constructor.
 	 */
 	AudioReaderImpl();
 
 	/**
-	 * Virtual default destructor
+	 * \brief Virtual default destructor.
 	 */
 	virtual ~AudioReaderImpl() noexcept;
 
@@ -456,7 +461,7 @@ public:
 	// TODO Move constructor
 
 	/**
-	 * Provides implementation for acquire_size() of a AudioReader
+	 * \brief Provides implementation for acquire_size() of a AudioReader.
 	 *
 	 * \param[in] filename The filename of the file to process
 	 *
@@ -467,7 +472,7 @@ public:
 	std::unique_ptr<AudioSize> acquire_size(const std::string &filename);
 
 	/**
-	 * Provides implementation for process_file() of some AudioReader
+	 * \brief Provides implementation for process_file() of some AudioReader.
 	 *
 	 * \param[in] filename The filename of the file to process
 	 *
@@ -478,21 +483,22 @@ public:
 	void process_file(const std::string &filename);
 
 	/**
-	 * Returns TRUE if the number of samples to read at once is configurable.
+	 * \brief Returns TRUE if the number of samples to read at once is
+	 * configurable.
 	 *
 	 * \return TRUE if the number of samples to read at once is configurable.
 	 */
 	bool configurable_read_buffer() const;
 
 	/**
-	 * Set the number of samples to read in one read operation.
+	 * \brief Set the number of samples to read in one read operation.
 	 *
 	 * The default is BLOCKSIZE::DEFAULT.
 	 */
 	void set_samples_per_read(const uint32_t &samples_per_read);
 
 	/**
-	 * Return the number of samples to read in one read operation.
+	 * \brief Return the number of samples to read in one read operation.
 	 *
 	 * \return Number of samples per read operation.
 	 */
@@ -507,28 +513,29 @@ public:
 private:
 
 	/**
-	 * Returns TRUE if the number of samples to read at once is configurable.
+	 * \brief Returns TRUE if the number of samples to read at once is
+	 * configurable.
 	 *
 	 * \return TRUE if the number of samples to read at once is configurable.
 	 */
 	virtual bool do_configurable_read_buffer() const;
 
 	/**
-	 * Set the number of samples to read in one read operation.
+	 * \brief Set the number of samples to read in one read operation.
 	 *
 	 * The default is BLOCKSIZE::DEFAULT.
 	 */
 	virtual void do_set_samples_per_read(const uint32_t &samples_per_read);
 
 	/**
-	 * Return the number of samples to read in one read operation.
+	 * \brief Return the number of samples to read in one read operation.
 	 *
 	 * \return Number of samples per read operation.
 	 */
 	virtual uint32_t do_samples_per_read() const;
 
 	/**
-	 * Provides implementation for \c acquire_size() of an \ref AudioReader
+	 * \brief Provides implementation for \c acquire_size() of an AudioReader.
 	 *
 	 * \param[in] filename The filename of the file to process
 	 *
@@ -541,7 +548,7 @@ private:
 	= 0;
 
 	/**
-	 * Provides implementation for process_file() of some AudioReader
+	 * \brief Provides implementation for process_file() of some AudioReader.
 	 *
 	 * \param[in] filename The filename of the file to process
 	 *
@@ -563,17 +570,17 @@ class BufferedAudioReaderImpl : public AudioReaderImpl
 public:
 
 	/**
-	 *
+	 * \brief Constructor.
 	 */
 	BufferedAudioReaderImpl();
 
 	/**
-	 * Constructor with read size
+	 * \brief Constructor with read size
 	 */
 	explicit BufferedAudioReaderImpl(const uint32_t samples_per_read);
 
 	/**
-	 *
+	 * \brief Destructor
 	 */
 	~BufferedAudioReaderImpl() noexcept override;
 
@@ -591,7 +598,7 @@ private:
 	uint32_t do_samples_per_read() const final;
 
 	/**
-	 * Number of samples to be read in one block
+	 * \brief Number of samples to be read in one block
 	 */
 	uint32_t samples_per_read_;
 };
@@ -609,7 +616,7 @@ class AudioReader : public FileReader
 public:
 
 	/**
-	 * Constructor with a concrete implementation and a SampleProcessor
+	 * \brief Constructor with a concrete implementation and a SampleProcessor.
 	 *
 	 * \param[in] impl AudioReader implementation to use
 	 * \param[in] proc SampleProcessor to use
@@ -617,7 +624,7 @@ public:
 	AudioReader(std::unique_ptr<AudioReaderImpl> impl, SampleProcessor &proc);
 
 	/**
-	 * Constructor with a concrete implementation
+	 * \brief Constructor with a concrete implementation
 	 *
 	 * \param[in] impl The implementation of this instance
 	 */
@@ -629,12 +636,12 @@ public:
 	// TODO move constructor
 
 	/**
-	 * Default destructor
+	 * \brief Default destructor.
 	 */
 	~AudioReader() noexcept override;
 
 	/**
-	 * Check if the read buffer size can be specified.
+	 * \brief Check if the read buffer size can be specified.
 	 *
 	 * Returns TRUE if it can be specified which amount the reader should read
 	 * in one pass.
@@ -644,21 +651,23 @@ public:
 	bool configurable_read_buffer() const;
 
 	/**
-	 * Set the number of samples to read in one read operation.
+	 * \brief Set the number of samples to read in one read operation.
 	 *
 	 * The default is BLOCKSIZE::DEFAULT.
+	 *
+	 * \param[in] samples_per_read The number of 32 bit PCM samples per read
 	 */
 	void set_samples_per_read(const uint32_t &samples_per_read);
 
 	/**
-	 * Return the number of samples to read in one read operation.
+	 * \brief Return the number of samples to read in one read operation.
 	 *
 	 * \return Number of samples per read operation.
 	 */
 	uint32_t samples_per_read() const;
 
 	/**
-	 * Acquire the AudioSize of a file.
+	 * \brief Acquire the AudioSize of a file.
 	 *
 	 * Acquiring the AudioSize includes validation.
 	 *
@@ -671,7 +680,7 @@ public:
 	std::unique_ptr<AudioSize> acquire_size(const std::string &filename) const;
 
 	/**
-	 * Process the file and return ARCSs v1 and v2 for all tracks.
+	 * \brief Process the file and return ARCSs v1 and v2 for all tracks.
 	 *
 	 * \param[in] filename The filename of the file to process
 	 *
@@ -682,7 +691,7 @@ public:
 	void process_file(const std::string &filename);
 
 	/**
-	 * Register a SampleProcessor instance to pass the read samples to.
+	 * \brief Register a SampleProcessor instance to pass the read samples to.
 	 *
 	 * \param[in] processor SampleProcessor to use
 	 *
@@ -701,7 +710,7 @@ private:
 	class Impl;
 
 	/**
-	 * Private implementation of this AudioReader
+	 * \brief Private implementation of this AudioReader.
 	 */
 	std::unique_ptr<AudioReader::Impl> impl_;
 };
@@ -716,17 +725,17 @@ class AudioReaderSelection : public FileReaderSelection
 public:
 
 	/**
-	 * Constructor
+	 * \brief Constructor.
 	 */
 	AudioReaderSelection();
 
 	/**
-	 * Virtual default destructor
+	 * \brief Virtual default destructor.
 	 */
 	~AudioReaderSelection() noexcept override;
 
 	/**
-	 * Create an AudioReader for the specified file
+	 * \brief Create an AudioReader for the specified file.
 	 *
 	 * \param[in] filename The filename to create an AudioReader for
 	 *
@@ -735,7 +744,7 @@ public:
 	std::unique_ptr<AudioReader> for_file(const std::string &filename) const;
 
 	/**
-	 * Return the AudioReader specified by its name.
+	 * \brief Return the AudioReader specified by its name.
 	 *
 	 * If the selection does not contain an AudioReader with the specified name,
 	 * \c nullptr will be returned.
@@ -750,7 +759,7 @@ public:
 protected:
 
 	/**
-	 * Turns a FileReader to an AudioReader.
+	 * \brief Turns a FileReader to an AudioReader.
 	 *
 	 * \param[in] filereader The FileReader to cast
 	 *

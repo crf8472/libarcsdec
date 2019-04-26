@@ -48,7 +48,7 @@ class DescriptorFlac : public FileReaderDescriptor
 public:
 
 	/**
-	 * Virtual default destructor
+	 * \brief Virtual default destructor.
 	 */
 	~DescriptorFlac() noexcept override;
 
@@ -56,14 +56,14 @@ public:
 private:
 
 	/**
-	 * Returns "Flac".
+	 * \brief Returns "Flac".
 	 *
 	 * \return "Flac"
 	 */
 	std::string do_name() const override;
 
 	/**
-	 * Test if this format is recognized on the given input bytes.
+	 * \brief Test if this format is recognized on the given input bytes.
 	 *
 	 * The test is made against a slice of at least 4 bytes with offset from
 	 * the beginning of the file. The following three tests are performed:
@@ -78,7 +78,7 @@ private:
 			const uint64_t &offset) const override;
 
 	/**
-	 * Test whether suffix is case insensitively equal to "flac"
+	 * \brief Test whether suffix is case insensitively equal to "flac".
 	 *
 	 * \param[in] suffix The suffix to test
 	 *

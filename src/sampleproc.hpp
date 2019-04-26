@@ -75,7 +75,7 @@ class SampleProcessor
 public:
 
 	/**
-	 * Virtual default constructor
+	 * \brief Virtual default constructor.
 	 */
 	virtual ~SampleProcessor() noexcept;
 
@@ -123,38 +123,38 @@ public:
 private:
 
 	/**
-	 * Implements SampleProcessor::append_samples(PCMForwardIterator begin, PCMForwardIterator end)
+	 * \brief Implements SampleProcessor::append_samples(PCMForwardIterator begin, PCMForwardIterator end)
 	 */
 	virtual void do_append_samples(PCMForwardIterator begin,
 			PCMForwardIterator end)
 	= 0;
 
 	/**
-	 * Implements SampleProcessor::update_audiosize(const AudioSize &size)
+	 * \brief Implements SampleProcessor::update_audiosize(const AudioSize &size)
 	 */
 	virtual void do_update_audiosize(const AudioSize &size)
 	= 0;
 
 	/**
-	 * Implements SampleProcessor::end_input(const uint32_t last_sample_index)
+	 * \brief Implements SampleProcessor::end_input(const uint32_t last_sample_index)
 	 */
 	virtual void do_end_input(const uint32_t last_sample_index)
 	= 0;
 
 	/**
-	 * Sequence counter
+	 * \brief Sequence counter.
 	 */
 	int64_t total_sequences_ = 0;
 
 	/**
-	 * PCM 32 Bit Sample counter
+	 * \brief PCM 32 Bit Sample counter.
 	 */
 	int64_t total_samples_ = 0;
 };
 
 
 /**
- * Unbuffered wrapper for a Calculation.
+ * \brief Unbuffered wrapper for a Calculation.
  */
 class SampleProcessorAdapter : virtual public SampleProcessor
 {
@@ -171,7 +171,7 @@ public:
 	SampleProcessorAdapter(const SampleProcessorAdapter &rhs) = delete;
 
 	/**
-	 * Virtual default destructor
+	 * \brief Virtual default destructor.
 	 */
 	~SampleProcessorAdapter() noexcept override;
 
@@ -189,7 +189,7 @@ private:
 	void do_end_input(const uint32_t last_sample_index) override;
 
 	/**
-	 * Internal pointer to the calculation to wrap
+	 * \brief Internal pointer to the calculation to wrap.
 	 */
 	Calculation *calculation_;
 };
@@ -204,12 +204,12 @@ class ISampleProvider
 public:
 
 	/**
-	 * Virtual default destructor
+	 * \brief Virtual default destructor.
 	 */
 	virtual ~ISampleProvider() noexcept;
 
 	/**
-	 * Register a function callback called as \c append_samples().
+	 * \brief Register a function callback called as \c append_samples().
 	 *
 	 * \param[in] f
 	 */
@@ -218,7 +218,7 @@ public:
 	= 0;
 
 	/**
-	 * Register a function callback called as \c update_audiosize().
+	 * \brief Register a function callback called as \c update_audiosize().
 	 *
 	 * \param[in] f
 	 */
@@ -226,7 +226,7 @@ public:
 	= 0;
 
 	/**
-	 * Register a function callback called as \c end_input().
+	 * \brief Register a function callback called as \c end_input().
 	 *
 	 * \param[in] f The function to register
 	 */
@@ -234,7 +234,7 @@ public:
 	= 0;
 
 	/**
-	 * Register a SampleProcessor.
+	 * \brief Register a SampleProcessor.
 	 *
 	 * This will register all callback methods of the \c processor. Already
 	 * registered callbacks will be overwritten by this method.
@@ -248,7 +248,7 @@ public:
 	= 0;
 
 	/**
-	 * Return the registered SampleProcessor.
+	 * \brief Return the registered SampleProcessor.
 	 *
 	 * \return The SampleProcessor the reader uses
 	 */
@@ -259,7 +259,7 @@ public:
 private:
 
 	/**
-	 * Call the registered \c append_samples() callback.
+	 * \brief Call the registered \c append_samples() callback.
 	 *
 	 * \param[in] begin Iterator pointing to the begin of the sequence
 	 * \param[in] end   Iterator pointing to the end of the sequence
@@ -269,7 +269,7 @@ private:
 	= 0;
 
 	/**
-	 * Call the registered \c update_audiosize() callback.
+	 * \brief Call the registered \c update_audiosize() callback.
 	 *
 	 * The actual method call is just passed to the registered SampleProcessor.
 	 *
@@ -279,7 +279,7 @@ private:
 	= 0;
 
 	/**
-	 * Call the registered \c end_input() callback.
+	 * \brief Call the registered \c end_input() callback.
 	 *
 	 * \param[in] last_sample_index The 0-based index of the last sample.
 	 */
@@ -297,7 +297,7 @@ class SampleProvider : public ISampleProvider
 public:
 
 	/**
-	 * Constructor
+	 * \brief Constructor
 	 */
 	SampleProvider();
 
@@ -321,7 +321,7 @@ public:
 protected:
 
 	/**
-	 * Default destructor.
+	 * \brief Default destructor.
 	 */
 	~SampleProvider() noexcept;
 
@@ -338,28 +338,28 @@ protected:
 private:
 
 	/**
-	 * Hook to be called before leaving register_processor().
+	 * \brief Hook to be called before leaving register_processor().
 	 */
 	virtual void hook_post_register_processor();
 
 	/**
-	 * Callback pointer for appending samples sequences to processing
+	 * \brief Callback pointer for appending samples sequences to processing.
 	 */
 	std::function<void(PCMForwardIterator begin, PCMForwardIterator end)>
 		append_samples_;
 
 	/**
-	 * Callback pointer for updateing the AudioSize
+	 * \brief Callback pointer for updateing the AudioSize.
 	 */
 	std::function<void(const AudioSize &size)> update_audiosize_;
 
 	/**
-	 * Callback pointer for indicating the end of the sample input
+	 * \brief Callback pointer for indicating the end of the sample input.
 	 */
 	std::function<void(const uint32_t last_sample_index)> end_input_;
 
 	/**
-	 * Internal pointer to the SampleProcessor.
+	 * \brief Internal pointer to the SampleProcessor.
 	 */
 	SampleProcessor* processor_;
 };

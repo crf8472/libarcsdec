@@ -69,7 +69,7 @@ class DescriptorFFmpeg : public FileReaderDescriptor
 public:
 
 	/**
-	 * Virtual default destructor
+	 * \brief Virtual default destructor.
 	 */
 	~DescriptorFFmpeg() noexcept override;
 
@@ -77,14 +77,15 @@ public:
 private:
 
 	/**
-	 * Returns "unknown (handled by ffmpeg)"
+	 * \brief Returns "unknown (handled by ffmpeg)".
 	 *
 	 * \return "unknown (handled by ffmpeg)"
 	 */
 	std::string do_name() const override;
 
 	/**
-	 * Returns TRUE for every input implying this format matches all files.
+	 * \brief Returns TRUE for every input implying this format matches all
+	 * files.
 	 *
 	 * \param[in] bytes  The byte sequence to check (ignored)
 	 * \param[in] offset The offset to byte 0 in the file (ignored)
@@ -95,7 +96,8 @@ private:
 			const uint64_t &offset) const override;
 
 	/**
-	 * Returns TRUE for every input implying this format matches all files.
+	 * \brief Returns TRUE for every input implying this format matches all
+	 * files.
 	 *
 	 * \param[in] suffix The file suffix to check (ignored)
 	 *

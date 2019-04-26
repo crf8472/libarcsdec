@@ -42,19 +42,19 @@ class DescriptorCdio : public FileReaderDescriptor
 public:
 
 	/**
-	 * Virtual default destructor
+	 * \brief Virtual default destructor.
 	 */
 	virtual ~DescriptorCdio() noexcept;
 
 	/**
-	 * Returns "physical device"
+	 * \brief Returns "physical device".
 	 *
 	 * \return "physical device"
 	 */
 	std::string do_name() const;
 
 	/**
-	 * Always returns TRUE since CDs cannot be recognized by a certain
+	 * \brief Always returns TRUE since CDs cannot be recognized by a certain
 	 * byte sequence in a certain offset.
 	 *
 	 * \param[in] bytes  (ignored)
@@ -66,17 +66,15 @@ public:
 			const uint64_t &offset) const;
 
 	/**
-	 * Returns FALSE since CD devices do not have suffices
+	 * \brief Returns FALSE since CD devices do not have suffices
 	 *
 	 * \return FALSE
 	 */
 	bool do_accepts_suffix(const std::string &suffix) const;
 
-	// Override
-	std::unique_ptr<FileReader> do_create_reader() const;
+	std::unique_ptr<FileReader> do_create_reader() const override;
 
-	// Override
-	std::unique_ptr<FileReaderDescriptor> do_clone() const;
+	std::unique_ptr<FileReaderDescriptor> do_clone() const override;
 };
 
 /// @}

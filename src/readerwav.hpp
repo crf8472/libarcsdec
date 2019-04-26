@@ -50,7 +50,7 @@ public:
 
 
 	/**
-	 * Virtual default destructor
+	 * \brief Virtual default destructor
 	 */
 	~DescriptorWavPCM() noexcept override;
 
@@ -58,14 +58,14 @@ public:
 private:
 
 	/**
-	 * Returns "RIFF/WAV (PCM)"
+	 * \brief Returns "RIFF/WAV (PCM)".
 	 *
 	 * \return "RIFF/WAV (PCM)"
 	 */
 	std::string do_name() const override;
 
 	/**
-	 * Test if this format is recognized on the given input bytes.
+	 * \brief Test if this format is recognized on the given input bytes.
 	 *
 	 * The test is made against a slice of at least 24 bytes with offset 0 (from
 	 * the beginning of the file).

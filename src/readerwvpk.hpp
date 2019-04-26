@@ -50,7 +50,7 @@ public:
 
 
 	/**
-	 * Virtual default destructor
+	 * \brief Virtual default destructor.
 	 */
 	~DescriptorWavpack() noexcept override;
 
@@ -58,14 +58,14 @@ public:
 private:
 
 	/**
-	 * Returns "Wavpack"
+	 * \brief Returns "Wavpack".
 	 *
 	 * \return "Wavpack"
 	 */
 	std::string do_name() const override;
 
 	/**
-	 * Test if this format is recognized on the given input bytes.
+	 * \brief Test if this format is recognized on the given input bytes.
 	 *
 	 * The test is made against a slice of at least 4 bytes with offset 0
 	 * (from the beginning of the file). The following test is performed:

@@ -55,12 +55,12 @@ class MetadataParserImpl
 public:
 
 	/**
-	 * Virtual default destructor
+	 * \brief Virtual default destructor.
 	 */
 	virtual ~MetadataParserImpl() noexcept;
 
 	/**
-	 * Parses a metadata file
+	 * \brief Parses a metadata file.
 	 *
 	 * \param[in] filename The file to parse
 	 *
@@ -75,7 +75,7 @@ public:
 private:
 
 	/**
-	 * Implements parse()
+	 * \brief Implements parse().
 	 *
 	 * \param[in] filename The file to parse
 	 *
@@ -98,19 +98,19 @@ class MetadataParser : public FileReader
 public:
 
 	/**
-	 * Constructor
+	 * \brief Constructor.
 	 *
 	 * \param[in] impl The concrete implementation of the MetadataParser
 	 */
 	MetadataParser(std::unique_ptr<MetadataParserImpl> impl);
 
 	/**
-	 * Default destructor
+	 * \brief Default destructor.
 	 */
 	virtual ~MetadataParser() noexcept;
 
 	/**
-	 * Parses a metadata file
+	 * \brief Parses a metadata file.
 	 *
 	 * \param[in] filename The file to parse
 	 *
@@ -125,7 +125,7 @@ public:
 private:
 
 	/**
-	 * Implementation of a MetadataParser
+	 * \brief Implementation of a MetadataParser.
 	 */
 	std::unique_ptr<MetadataParserImpl> impl_;
 };
@@ -140,7 +140,7 @@ class MetadataParseException final : public std::runtime_error
 public:
 
 	/**
-	 * Constructor
+	 * \brief Constructor.
 	 *
 	 * \param[in] what_arg What argument
 	 */
@@ -149,7 +149,8 @@ public:
 
 
 /**
- * \brief Selects and builds @link MetadataParser MetadataParsers @endlink for given inputs.
+ * \brief Selects and builds 
+ * @link MetadataParser MetadataParsers @endlink for given inputs.
  */
 class MetadataParserSelection : public FileReaderSelection
 {
@@ -157,17 +158,17 @@ class MetadataParserSelection : public FileReaderSelection
 public:
 
 	/**
-	 * Constructor
+	 * \brief Constructor.
 	 */
 	MetadataParserSelection();
 
 	/**
-	 * Virtual default destructor
+	 * \brief Virtual default destructor.
 	 */
 	~MetadataParserSelection() noexcept override;
 
 	/**
-	 * Create a MetadataParser for the specified file
+	 * \brief Create a MetadataParser for the specified file.
 	 *
 	 * \param[in] metafilename The filename to create MetadataParser for
 	 *
@@ -179,7 +180,7 @@ public:
 		const;
 
 	/**
-	 * Return the MetadataParser specified by its name.
+	 * \brief Return the MetadataParser specified by its name.
 	 *
 	 * If the selection does not contain a MetadataParser with the specified
 	 * name, \c nullptr will be returned.
@@ -195,7 +196,7 @@ public:
 protected:
 
 	/**
-	 * Turns a FileReader to a MetadataParser.
+	 * \brief Turns a FileReader to a MetadataParser.
 	 *
 	 * \param[in] file_reader_uptr The FileReader to cast
 	 *

@@ -2,7 +2,9 @@
 #define __LIBARCSDEC_AUDIOBUFFER_HPP__
 
 /**
- * \file audiobuffer.hpp Toolkit for buffering audio samples
+ * \file
+ *
+ * \brief Toolkit for buffering audio samples
  */
 
 #include <chrono>
@@ -21,30 +23,13 @@
 #include "sampleproc.hpp"
 #endif
 
-
-//// forward declarations
-//namespace arcsdec
-//{
-//inline namespace v_1_0_0
-//{
-//
-//// from arcs/calculate.hpp
-//class AudioSize;
-//class Calculation;
-//class PCMForwardIterator;
-//
-//} // namespace v_1_0_0
-//} // namespace arcsdec
-
-
 namespace arcsdec
 {
-
 inline namespace v_1_0_0
 {
 
 /**
- * \internal \defgroup audiobuffer Level 0 API: Basic Audio Sample buffering
+ * \internal \defgroup audiobuffer Basic audio sample buffer
  *
  * \brief Tool classes for buffering audio samples.
  *
@@ -109,12 +94,12 @@ class BlockCreator
 public:
 
 	/**
-	 * Constructs a BlockCreator with buffer of size BLOCKSIZE::DEFAULT
+	 * \brief Constructs a BlockCreator with buffer of size BLOCKSIZE::DEFAULT
 	 */
 	BlockCreator();
 
 	/**
-	 * Constructs a BlockCreator with buffer of size samples_per_block.
+	 * \brief Constructs a BlockCreator with buffer of size samples_per_block.
 	 *
 	 * \param[in] samples_per_block Number of 32 bit PCM samples in one block
 	 */
@@ -126,12 +111,12 @@ public:
 	// TODO Move constructor
 
 	/**
-	 * Virtual default destructor
+	 * \brief Virtual default destructor
 	 */
 	virtual ~BlockCreator() noexcept;
 
 	/**
-	 * Set the maximal number of samples a block can contain.
+	 * \brief Set the maximal number of samples a block can contain.
 	 *
 	 * \param[in] samples_per_block
 	 *     The number of 32 bit PCM samples in one block
@@ -139,7 +124,7 @@ public:
 	void set_samples_per_block(const uint32_t &samples_per_block);
 
 	/**
-	 * Return the maximal number of samples a block can contain.
+	 * \brief Return the maximal number of samples a block can contain.
 	 *
 	 * \return The number of 32 bit PCM samples that the block can store
 	 */
@@ -154,22 +139,22 @@ public:
 protected:
 
 	/**
-	 * Returns the minimum block size of this instance
+	 * \brief Returns the minimum block size of this instance
 	 *
 	 * \return Minimum number of samples per block
 	 */
 	virtual uint32_t min_samples_per_block() const;
 
 	/**
-	 * Returns the maximum block size of this instance
+	 * \brief Returns the maximum block size of this instance
 	 *
 	 * \return Maximum number of samples per block
 	 */
 	virtual uint32_t max_samples_per_block() const;
 
 	/**
-	 * Clip the parameter to be between the values of min_samples_per_block()
-	 * and max_samples_per_block()
+	 * \brief Clip the parameter to be between the values of
+	 * min_samples_per_block() and max_samples_per_block().
 	 *
 	 * \param[in] samples_per_block Requested number of samples per block
 	 *
@@ -181,14 +166,14 @@ protected:
 private:
 
 	/**
-	 * Number of 32bit PCM samples per block
+	 * \brief Number of 32bit PCM samples per block
 	 */
 	uint32_t samples_per_block_;
 };
 
 
 /**
- * \brief Basic buffer: creates sample blocks of specified size and flushes
+ * \brief Basic buffer: specify size, fill with samples and then flush.
  *
  * Accumulates SampleSequences to the configured block size and passes the
  * block to a consumer as soon as it is filled completely.
@@ -208,14 +193,14 @@ class BlockAccumulator : public virtual BlockCreator
 public:
 
 	/**
-	 * Default constructor.
+	 * \brief Default constructor.
 	 *
 	 * Constructs a BlockAccumulator with buffer of size BLOCKSIZE::DEFAULT
 	 */
 	BlockAccumulator();
 
 	/**
-	 * Constructs a BlockAccumulator with buffer of size
+	 * \brief Constructs a BlockAccumulator with buffer of size
 	 * samples_per_block.
 	 *
 	 * \param[in] samples_per_block Number of 32 bit PCM samples in one block
@@ -228,12 +213,12 @@ public:
 	// TODO Move constructor
 
 	/**
-	 * Virtual default destructor
+	 * \brief Virtual default destructor
 	 */
 	~BlockAccumulator() noexcept override;
 
 	/**
-	 * Registers a consuming method for sample sequences.
+	 * \brief Registers a consuming method for sample sequences.
 	 *
 	 * \param[in] func The functor to be registered as sample consumer.
 	 */
@@ -241,12 +226,12 @@ public:
 			PCMForwardIterator begin, PCMForwardIterator end)> &func);
 
 	/**
-	 * Call this method before passing the first sample sequence
+	 * \brief Call this method before passing the first sample sequence
 	 */
 	void init();
 
 	/**
-	 * Appends a sample sequence to the buffer.
+	 * \brief Appends a sample sequence to the buffer.
 	 *
 	 * It is guaranteed that the entire sequence is appended. However,
 	 * if the sequence is longer than the remaining buffer capacity, the buffer
@@ -259,12 +244,12 @@ public:
 	void append_to_block(PCMForwardIterator begin, PCMForwardIterator end);
 
 	/**
-	 * Call this method after having passed the last sample sequence
+	 * \brief Call this method after having passed the last sample sequence
 	 */
 	void flush();
 
 	/**
-	 * Returns the number of samples processed
+	 * \brief Returns the number of samples processed
 	 *
 	 * \return Number of samples processed since init() was called
 	 */
@@ -279,8 +264,8 @@ public:
 protected:
 
 	/**
-	 * Reinitialize internal buffer to specified size as number of 32 bit PCM
-	 * samples.
+	 * \brief Reinitialize internal buffer to specified size as number of 32 bit
+	 * PCM samples.
 	 *
 	 * \param[in] total_samples Reinitialize buffer for new block
 	 */
@@ -290,22 +275,22 @@ protected:
 private:
 
 	/**
-	 * Implementation of init()
+	 * \brief Implementation of init()
 	 */
 	virtual void do_init();
 
 	/**
-	 * Implementation of flush()
+	 * \brief Implementation of flush()
 	 */
 	virtual void do_flush();
 
 	/**
-	 * Reinitialize internal buffer to configured block size.
+	 * \brief Reinitialize internal buffer to configured block size.
 	 */
 	virtual void init_buffer();
 
 	/**
-	 * Registered callback method to consume a block.
+	 * \brief Registered callback method to consume a block.
 	 *
 	 * Called by block_complete().
 	 */
@@ -313,12 +298,12 @@ private:
 		consume_;
 
 	/**
-	 * Internal sample buffer
+	 * \brief Internal sample buffer
 	 */
 	std::vector<uint32_t> samples_;
 
 	/**
-	 * Number of samples processed
+	 * \brief Number of samples processed
 	 */
 	uint64_t samples_appended_;
 };
@@ -340,30 +325,32 @@ class SampleBuffer  : public  virtual SampleProvider
 public:
 
 	/**
-	 * Default constructor
+	 * \brief Default constructor
 	 */
 	SampleBuffer();
 
 	/**
-	 * Constructs a SampleBuffer with buffer of size samples_per_block.
+	 * \brief Constructs a SampleBuffer with buffer of size samples_per_block.
 	 *
 	 * \param[in] samples_per_block Number of 32 bit PCM samples in one block
 	 */
 	explicit SampleBuffer(const uint32_t samples_per_block);
 
 	/**
-	 * Default destructor
+	 * \brief Default destructor
 	 */
 	virtual ~SampleBuffer() noexcept;
 
 	/**
-	 * Reset the buffer to its initial state, thereby discarding its content.
+	 * \brief Reset the buffer to its initial state, thereby discarding its
+	 * content.
+	 *
 	 * The current buffer capacity is preserved.
 	 */
 	void reset();
 
 	/**
-	 * Flush the buffer.
+	 * \brief Flush the buffer.
 	 */
 	void flush();
 

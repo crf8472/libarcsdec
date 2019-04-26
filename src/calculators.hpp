@@ -25,13 +25,13 @@
 
 
 /**
- * Main namespace for libarcsdec
+ * \brief Main namespace for libarcsdec
  */
 namespace arcsdec
 {
 
 /**
- * Version namespace
+ * \brief Version namespace
  */
 inline namespace v_1_0_0
 {
@@ -64,12 +64,12 @@ class TOCParser
 public:
 
 	/**
-	 * Virtual default destructor
+	 * \brief Virtual default destructor.
 	 */
 	virtual ~TOCParser() noexcept;
 
 	/**
-	 * Parse the metadata file to a TOC object.
+	 * \brief Parse the metadata file to a TOC object.
 	 *
 	 * \param[in] metafilename Name of the metadatafile
 	 *
@@ -88,17 +88,17 @@ class ARIdCalculator
 public:
 
 	/**
-	 * Constructor
+	 * \brief Constructor.
 	 */
 	ARIdCalculator();
 
 	/**
-	 * Virtual default destructor
+	 * \brief Virtual default destructor.
 	 */
 	virtual ~ARIdCalculator() noexcept;
 
 	/**
-	 * Calculate ARId using the specified metadata file
+	 * \brief Calculate ARId using the specified metadata file.
 	 *
 	 * \param[in] metafilename Name of the metadata file
 	 *
@@ -107,8 +107,8 @@ public:
 	std::unique_ptr<ARId> calculate(const std::string &metafilename);
 
 	/**
-	 * Calculate ARId using the specified metadata file and the specified
-	 * audio file
+	 * \brief Calculate ARId using the specified metadata file and the specified
+	 * audio file.
 	 *
 	 * \param[in] audiofilename Name of the audiofile
 	 * \param[in] metafilename  Name of the metadata file
@@ -125,7 +125,7 @@ private:
 	class Impl;
 
 	/**
-	 * Internal implementation instance
+	 * \brief Internal implementation instance.
 	 */
 	std::unique_ptr<Impl> impl_;
 };
@@ -143,18 +143,18 @@ class ARCSCalculator
 public:
 
 	/**
-	 * Constructor
+	 * \brief Constructor.
 	 */
 	ARCSCalculator();
 
 	/**
-	 * Virtual default destructor
+	 * \brief Virtual default destructor.
 	 */
 	virtual ~ARCSCalculator() noexcept;
 
 	/**
-	 * Calculate ARCS values for the given audio file, using the metadata from
-	 * the given TOC.
+	 * \brief Calculate ARCS values for the given audio file, using the metadata 
+	 * from the given TOC.
 	 *
 	 * The TOC is supposed to contain the offsets of all tracks represented
 	 * in the audio file. It is not required to be <tt>complete()</tt>.
@@ -173,7 +173,7 @@ public:
 			const TOC &toc);
 
 	/**
-	 * Calculate ARCSs for the given audio files.
+	 * \brief Calculate ARCSs for the given audio files.
 	 *
 	 * It can be specified that the sequence of audiofiles forms an album by
 	 * passing <tt>true</tt> for both boolean parameters.
@@ -200,7 +200,7 @@ public:
 			const bool &last_file_with_skip);
 
 	/**
-	 * Calculate a single ARCS for the given audio file.
+	 * \brief Calculate a single ARCS for the given audio file.
 	 *
 	 * The flags skip_front and skip_back control whether the track is processed
 	 * as first or last track of an album. If \c skip_front is set to TRUE, the
@@ -219,14 +219,14 @@ public:
 		const bool &skip_front, const bool &skip_back);
 
 	/**
-	 * Set the AudioReaderSelection for this instance.
+	 * \brief Set the AudioReaderSelection for this instance.
 	 *
 	 * \param[in] selection The AudioReaderSelection to use
 	 */
 	void set_selection(std::unique_ptr<AudioReaderSelection> selection);
 
 	/**
-	 * Get the AudioReaderSelection used by this instance.
+	 * \brief Get the AudioReaderSelection used by this instance.
 	 *
 	 * \return The AudioReaderSelection used by this instance
 	 */
@@ -239,7 +239,7 @@ private:
 	class Impl;
 
 	/**
-	 * Internal implementation instance
+	 * \brief Internal implementation instance.
 	 */
 	std::unique_ptr<Impl> impl_;
 };
