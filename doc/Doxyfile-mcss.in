@@ -1,4 +1,7 @@
-@INCLUDE           = Doxyfile
+## Include the main Doxyfile also used for Doxygen's stock HTML output
+
+@INCLUDE = Doxyfile
+
 
 ## Override the following values from included Doxyfile
 
@@ -43,7 +46,7 @@ GENERATE_LATEX         = NO  # Override libarcsdec Doxyfile
 # captures the structure of the code including all documentation.
 # The default value is: NO.
 
-GENERATE_XML           = YES
+GENERATE_XML           = YES  # Override libarcsdec Doxyfile
 
 # If the XML_PROGRAMLISTING tag is set to YES, doxygen will dump the program
 # listings (including syntax highlighting and cross-referencing information) to
@@ -52,7 +55,7 @@ GENERATE_XML           = YES
 # The default value is: YES.
 # This tag requires that the tag GENERATE_XML is set to YES.
 
-XML_PROGRAMLISTING     = NO
+XML_PROGRAMLISTING     = NO   # m.css default
 
 # If the XML_NS_MEMB_FILE_SCOPE tag is set to YES, doxygen will include
 # namespace members in file scope as well, matching the HTML output.
@@ -60,22 +63,26 @@ XML_PROGRAMLISTING     = NO
 
 XML_NS_MEMB_FILE_SCOPE = YES
 
-# The OUTPUT_DIRECTORY tag is used to specify the (relative or absolute) path
-# into which the generated documentation will be written. If a relative path is
-# entered, it will be relative to the location where doxygen was started. If
-# left blank the current directory will be used.
-
-OUTPUT_DIRECTORY       = "@PROJECT_BUILD_DOC_DIR@-mcss"
-
 # It is currently not possible to link to private virtual methods.
 # This comes with: https://github.com/doxygen/doxygen/pull/6729
 # See: https://github.com/doxygen/doxygen/commit/7f40e488e27bcea4bb15045df05479dc5fbd9d6d
 #EXTRACT_PRIV_VIRTUAL   = YES
 
-## For m.css specific options see https://mcss.mosra.cz/doxygen/#configuration
+
+## M.CSS Specific
+
+
+## For m.css specific options see https://mcss.mosra.cz/documentation/doxygen/#configuration
 
 # If set and PROJECT_BRIEF is al­so set, then PROJECT_NAME in the top navbar
-# will link to this URL and PROJECT_BRIEF in­to the doc­u­men­ta­tion main page,
-# sim­i­lar­ly as shown here.
+# will link to this URL and PROJECT_BRIEF in­to the documentation main page,
+# similarly as shown here.
 #
 ##! M_MAIN_PROJECT_URL   = "@PROJECT_URL@"
+
+## Left and right navbar links
+#
+##! M_LINKS_NAVBAR1 = pages modules
+#
+##! M_LINKS_NAVBAR2 = namespaces annotated files
+

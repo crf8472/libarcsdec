@@ -61,10 +61,26 @@ message (STATUS "Build type: ${CMAKE_BUILD_TYPE}" )
 
 ## --- Project Directory Layout
 
-set (PROJECT_BINARY_DIR     "${CMAKE_CURRENT_SOURCE_DIR}/build" )
-set (PROJECT_SOURCE_DIR     "${CMAKE_CURRENT_SOURCE_DIR}/src" )
-set (PROJECT_TEST_DIR       "${CMAKE_CURRENT_SOURCE_DIR}/test" )
-set (PROJECT_DOC_DIR        "${CMAKE_CURRENT_SOURCE_DIR}/doc" )
+## "Root directory for out-of-source build"
+set (PROJECT_BINARY_DIR       "${CMAKE_CURRENT_SOURCE_DIR}/build" )
+
+## "Root directory for sources"
+set (PROJECT_SOURCE_DIR       "${CMAKE_CURRENT_SOURCE_DIR}/src" )
+
+## "Root directory for testcases and testdata"
+set (PROJECT_TEST_DIR         "${CMAKE_CURRENT_SOURCE_DIR}/test" )
+
+## "Root directory for documentation config and sources" )
+set (PROJECT_DOC_DIR          "${CMAKE_CURRENT_SOURCE_DIR}/doc" )
+
+## "Target directory for non-cmake logs"
+set (PROJECT_LOG_DIR          "${PROJECT_BINARY_DIR}/log" )
+
+## "Target directory for generated sources and configuration"
+set (PROJECT_BUILD_SOURCE_DIR "${PROJECT_BINARY_DIR}/generated-sources" )
+
+## "Target directory for generated documentation"
+set (PROJECT_BUILD_DOC_DIR    "${PROJECT_BINARY_DIR}/generated-docs" )
 
 set (INSTALL_LIBRARY_DIR   "${CMAKE_INSTALL_PREFIX}/lib"
 	CACHE PATH "Installation directory for library (.so) files" )
@@ -351,7 +367,7 @@ foreach (_header IN LISTS CONFIGURED_HEADERS )
 
 	configure_file (
 	  "${PROJECT_SOURCE_DIR}/${_header}.in"
-	  "${PROJECT_BINARY_DIR}/${_header}"
+	  "${PROJECT_BUILD_SOURCE_DIR}/${_header}"
 	  @ONLY
 	)
 endforeach()
@@ -360,7 +376,7 @@ endforeach()
 
 configure_file (
   "${CMAKE_CURRENT_SOURCE_DIR}/libarcsdec.pc.in"
-  "${PROJECT_BINARY_DIR}/libarcsdec.pc"
+  "${PROJECT_BUILD_SOURCE_DIR}/libarcsdec.pc"
   @ONLY
 )
 
@@ -388,7 +404,8 @@ add_library (${PROJECT_NAME} SHARED
 ## Include location for generated sources to search path
 ## (required to find version.hpp and the other configured headers)
 
-target_include_directories (${PROJECT_NAME} PRIVATE ${PROJECT_BINARY_DIR} )
+target_include_directories (${PROJECT_NAME}
+	PRIVATE ${PROJECT_BUILD_SOURCE_DIR} )
 
 ## Link required and optional libs to project target
 
