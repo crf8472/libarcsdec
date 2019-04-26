@@ -380,6 +380,10 @@ configure_file (
 	@ONLY
 )
 
+## Create log directory
+
+file (MAKE_DIRECTORY ${PROJECT_LOG_DIR} )
+
 
 ## --- Specify Exported headers
 
