@@ -1,5 +1,7 @@
 /**
- * \file calculators.cpp Implementing high-level API for calculating ARCSs of files.
+ * \file
+ *
+ * \brief Implementing high-level API for calculating ARCSs of files.
  */
 
 #ifndef __LIBARCSDEC_CALCULATORS_HPP__
@@ -53,6 +55,179 @@ using arcstk::make_context;
 using arcstk::make_empty_arid;
 
 
+
+/**
+ * \internal \defgroup calculatorsImpl Implementation
+ *
+ * \ingroup calculators
+ *
+ * \brief Implementation details of \ref calculators
+ *
+ * Contains the private implementations of ARCSCalculator and ARIdCalculator.
+ * @{
+ */
+
+
+/**
+ * \brief Private implementation of an ARIdCalculator.
+ */
+class ARIdCalculator::Impl final
+{
+
+public:
+
+	/**
+	 * \brief Calculate ARId using the specified metadata file.
+	 *
+	 * \param[in] metafilename Name of the metadata file
+	 *
+	 * \return The AccurateRip id for this medium
+	 */
+	std::unique_ptr<ARId> calculate(const std::string &metafilename);
+
+	/**
+	 * \brief Calculate ARId using the specified metadata file and the specified
+	 * audio file.
+	 *
+	 * \param[in] audiofilename Name of the audiofile
+	 * \param[in] metafilename  Name of the metadata file
+	 *
+	 * \return The AccurateRip id for this medium
+	 */
+	std::unique_ptr<ARId> calculate(const std::string &audiofilename,
+			const std::string &metafilename);
+};
+
+
+/**
+ * \brief Private implementation of an ARCSCalculator.
+ */
+class ARCSCalculator::Impl final
+{
+
+public:
+
+	/**
+	 * \brief Empty constructor.
+	 */
+	Impl();
+
+	/**
+	 * \brief Calculate ARCS values for the given audio file, using the metadata
+	 * from the given TOC.
+	 *
+	 * The TOC is supposed to contain the offsets of all tracks represented
+	 * in the audio file. The result will contain ARCS v1 and v2 for all tracks
+	 * specified in the TOC.
+	 *
+	 * \param[in] audiofilename Name of the audiofile
+	 * \param[in] toc           Metadata for the audiofile
+	 *
+	 * \return AccurateRip checksums of all tracks specified in the TOC
+	 */
+	std::pair<Checksums, ARId> calculate(
+		const std::string &audiofilename, const TOC &toc);
+
+	/**
+	 * \brief Calculate <tt>ChecksumSet</tt>s for the given audio files.
+	 *
+	 * The ARCSs in the result will have the same order as the input files,
+	 * so for any index i: 0 <= i < audiofilenames.size(), result[i] will be the
+	 * result for audiofilenames[i]. The result will have the same size as
+	 * audiofilenames.
+	 *
+	 * \param[in] audiofilenames       Names of the audiofiles
+	 * \param[in] first_file_with_skip Process first file as first track
+	 * \param[in] last_file_with_skip  Process last file as last track
+	 *
+	 * \return AccurateRip checksums of the input files
+	 */
+	Checksums calculate(const std::vector<std::string> &audiofilenames,
+		const bool &first_track_with_skip,
+		const bool &last_track_with_skip);
+
+	/**
+	 * \brief Calculate checksums for the given audio file.
+	 *
+	 * The flags skip_front and skip_back control whether the track is processed
+	 * as first or last track of an album. If skip_front is set to TRUE, the
+	 * first 2939 samples are skipped in the calculation. If skip_back
+	 * is set to TRUE, the last 5 frames of are skipped in the calculation.
+	 *
+	 * \param[in] audiofilename  Name  of the audiofile
+	 * \param[in] skip_front     Skip front samples of first track
+	 * \param[in] skip_back      Skip back samples of last track
+	 *
+	 * \return The AccurateRip checksum of this track
+	 */
+	ChecksumSet calculate(const std::string &audiofilename,
+		const bool &skip_front, const bool &skip_back);
+
+	/**
+	 * \brief Set the AudioReaderSelection for this instance.
+	 *
+	 * \param[in] selection The AudioReaderSelection to use
+	 */
+	void set_selection(std::unique_ptr<AudioReaderSelection> selection);
+
+	/**
+	 * \brief Get the AudioReaderSelection used by this instance.
+	 *
+	 * \return The AudioReaderSelection used by this instance
+	 */
+	const AudioReaderSelection& selection() const;
+
+
+protected:
+
+	/**
+	 * \brief Worker: process a file and calculate the results.
+	 *
+	 * The \c buffer_size is specified as number of 32 bit PCM samples. It is
+	 * applied to the created AudioReader's read buffer iff it has a
+	 * configurable_read_buffer(). In this case, parameter \c use_cbuffer will
+	 * stay irrelevant.
+	 *
+	 * If the AudioReader has no configurable_read_buffer(), the behaviour
+	 * depends on the parameter \c use_cbuffer. If it is FALSE, this renders
+	 * \c buffer_size without effect. If it is TRUE, a buffering in the
+	 * specified \c buffer-size will be enforced. Thus, parameter \c use_cbuffer
+	 * controls whether buffering is enforced.
+	 *
+	 * \param[in] audiofilename  Name  of the audiofile
+	 * \param[in] calc           The Calculation to use
+	 * \param[in] buffer_size    Buffer size in number of samples
+	 * \param[in] use_cbuffer    Enforce a converting buffer
+	 */
+	void process_file(const std::string &audiofilename, Calculation& calc,
+		const uint32_t buffer_size, const bool use_cbuffer) const;
+
+
+private:
+
+	/**
+	 * \brief Worker method: calculating the ARCS of a single audiofile.
+	 *
+	 * \param[in] audiofilename Name of the audiofile
+	 *
+	 * \return The AccurateRip checksum of this track
+	 */
+	ChecksumSet calculate_track(const std::string &audiofilename,
+		const bool &skip_front, const bool &skip_back);
+
+	/**
+	 * \brief Internal AudioReaderSelection.
+	 */
+	std::unique_ptr<AudioReaderSelection> selection_;
+};
+
+
+/** @} */
+
+
+/// \cond UNDOC_FUNCTION_BODIES
+
+
 // TOCParser
 
 
@@ -88,54 +263,7 @@ TOC TOCParser::parse(const std::string &metafilename)
 }
 
 
-
-/**
- * \cond IMPL_ONLY
- *
- * \internal \defgroup calculatorsImpl Implementation details of the Calc API
- *
- * \ingroup calculators
- *
- * \brief Implementation details of the \ref calc
- *
- * Contains the private implementations of ARCSCalculator and ARIdCalculator.
- * @{
- */
-
-
-/**
- * Private implementation of an ARIdCalculator
- */
-class ARIdCalculator::Impl final
-{
-
-public:
-
-	/**
-	 * Calculate ARId using the specified metadata file
-	 *
-	 * \param[in] metafilename Name of the metadata file
-	 *
-	 * \return The AccurateRip id for this medium
-	 */
-	std::unique_ptr<ARId> calculate(const std::string &metafilename);
-
-	/**
-	 * Calculate ARId using the specified metadata file and the specified
-	 * audio file
-	 *
-	 * \param[in] audiofilename Name of the audiofile
-	 * \param[in] metafilename  Name of the metadata file
-	 *
-	 * \return The AccurateRip id for this medium
-	 */
-	std::unique_ptr<ARId> calculate(const std::string &audiofilename,
-			const std::string &metafilename);
-};
-
-
-/// @}
-/// \endcond IMPL_ONLY
+// ARIdCalculator::Impl
 
 
 std::unique_ptr<ARId> ARIdCalculator::Impl::calculate(
@@ -212,136 +340,7 @@ std::unique_ptr<ARId> ARIdCalculator::Impl::calculate(
 }
 
 
-/// \cond IMPL_ONLY
-/// \internal \addtogroup calculatorsImpl
-/// @{
-
-
-/**
- * Private implementation of an ARCSCalculator.
- */
-class ARCSCalculator::Impl final
-{
-
-public:
-
-	/**
-	 * Empty constructor
-	 */
-	Impl();
-
-	/**
-	 * Calculate ARCS values for the given audio file, using the metadata from
-	 * the given TOC.
-	 *
-	 * The TOC is supposed to contain the offsets of all tracks represented
-	 * in the audio file. The result will contain ARCS v1 and v2 for all tracks
-	 * specified in the TOC.
-	 *
-	 * \param[in] audiofilename Name of the audiofile
-	 * \param[in] toc           Metadata for the audiofile
-	 *
-	 * \return AccurateRip checksums of all tracks specified in the TOC
-	 */
-	std::pair<Checksums, ARId> calculate(
-		const std::string &audiofilename, const TOC &toc);
-
-	/**
-	 * Calculate <tt>ChecksumSet</tt>s for the given audio files.
-	 *
-	 * The ARCSs in the result will have the same order as the input files,
-	 * so for any index i: 0 <= i < audiofilenames.size(), result[i] will be the
-	 * result for audiofilenames[i]. The result will have the same size as
-	 * audiofilenames.
-	 *
-	 * \param[in] audiofilenames       Names of the audiofiles
-	 * \param[in] first_file_with_skip Process first file as first track
-	 * \param[in] last_file_with_skip  Process last file as last track
-	 *
-	 * \return AccurateRip checksums of the input files
-	 */
-	Checksums calculate(const std::vector<std::string> &audiofilenames,
-		const bool &first_track_with_skip,
-		const bool &last_track_with_skip);
-
-	/**
-	 * Calculate checksums for the given audio file
-	 *
-	 * The flags skip_front and skip_back control whether the track is processed
-	 * as first or last track of an album. If skip_front is set to TRUE, the
-	 * first 2939 samples are skipped in the calculation. If skip_back
-	 * is set to TRUE, the last 5 frames of are skipped in the calculation.
-	 *
-	 * \param[in] audiofilename  Name  of the audiofile
-	 * \param[in] skip_front     Skip front samples of first track
-	 * \param[in] skip_back      Skip back samples of last track
-	 *
-	 * \return The AccurateRip checksum of this track
-	 */
-	ChecksumSet calculate(const std::string &audiofilename,
-		const bool &skip_front, const bool &skip_back);
-
-	/**
-	 * Set the AudioReaderSelection for this instance.
-	 *
-	 * \param[in] selection The AudioReaderSelection to use
-	 */
-	void set_selection(std::unique_ptr<AudioReaderSelection> selection);
-
-	/**
-	 * Get the AudioReaderSelection used by this instance.
-	 *
-	 * \return The AudioReaderSelection used by this instance
-	 */
-	const AudioReaderSelection& selection() const;
-
-
-protected:
-
-	/**
-	 * Worker: process a file and calculate the results.
-	 *
-	 * The \c buffer_size is specified as number of 32 bit PCM samples. It is
-	 * applied to the created AudioReader's read buffer iff it has a
-	 * configurable_read_buffer(). In this case, parameter \c use_cbuffer will
-	 * stay irrelevant.
-	 *
-	 * If the AudioReader has no configurable_read_buffer(), the behaviour
-	 * depends on the parameter \c use_cbuffer. If it is FALSE, this renders
-	 * \c buffer_size without effect. If it is TRUE, a buffering in the
-	 * specified \c buffer-size will be enforced. Thus, parameter \c use_cbuffer
-	 * controls whether buffering is enforced.
-	 *
-	 * \param[in] audiofilename  Name  of the audiofile
-	 * \param[in] calc           The Calculation to use
-	 * \param[in] buffer_size    Buffer size in number of samples
-	 * \param[in] use_cbuffer    Enforce a converting buffer
-	 */
-	void process_file(const std::string &audiofilename, Calculation& calc,
-		const uint32_t buffer_size, const bool use_cbuffer) const;
-
-
-private:
-
-	/**
-	 * Worker method: calculating the ARCS of a single audiofile.
-	 *
-	 * \param[in] audiofilename Name of the audiofile
-	 *
-	 * \return The AccurateRip checksum of this track
-	 */
-	ChecksumSet calculate_track(const std::string &audiofilename,
-		const bool &skip_front, const bool &skip_back);
-
-	/**
-	 * Internal AudioReaderSelection
-	 */
-	std::unique_ptr<AudioReaderSelection> selection_;
-};
-
-
-/// @}
-/// \endcond IMPL_ONLY
+// ARCSCalculator::Impl
 
 
 ARCSCalculator::Impl::Impl()
@@ -625,6 +624,8 @@ const AudioReaderSelection& ARCSCalculator::selection() const
 {
 	return impl_->selection();
 }
+
+/// \endcond
 
 } // namespace v_1_0_0
 

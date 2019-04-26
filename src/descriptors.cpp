@@ -29,6 +29,158 @@ inline namespace v_1_0_0
 {
 
 
+/**
+ * \brief Implementation of FileReaderSelection.
+ */
+class FileReaderSelection::Impl
+{
+
+public:
+
+	/**
+	 * \brief Default constructor.
+	 */
+	Impl();
+
+	// class is non-copy-constructible
+	Impl(const Impl &) = delete;
+
+	/**
+	 * \brief Virtual default destructor.
+	 */
+	virtual ~Impl() noexcept;
+
+	/**
+	 * \brief Add a file descriptor for which a reader can be created.
+	 *
+	 * \param[in] desc A FileReaderDescriptor
+	 */
+	void add_descriptor(std::unique_ptr<FileReaderDescriptor> desc);
+
+	/**
+	 * \brief Remove all descriptors that qualify as equivalent to the given
+	 * descriptor by '==' from the list of descriptors.
+	 *
+	 * \param[in] desc The FileReaderDescriptor to be removed
+	 *
+	 * \return Number of descriptors instances removed.
+	 */
+	int remove_descriptor(const FileReaderDescriptor* desc);
+
+	/**
+	 * \brief Register a test for a FileReaderDescriptor for the specified
+	 * filename.
+	 *
+	 * \param[in] testobj The test to be registered
+	 */
+	void register_test(std::unique_ptr<FileTest> testobj);
+
+	/**
+	 * \brief Remove all tests that qualify as equivalent to the given test by
+	 * '==' from the list of test.
+	 *
+	 * \param[in] testobj The FileTest to be removed
+	 *
+	 * \return Number of test instances removed.
+	 */
+	int unregister_test(const FileTest * testobj);
+
+	/**
+	 * \brief Removes all tests registered to this instance.
+	 */
+	void remove_all_tests();
+
+	/**
+	 * \brief Sets the FileReaderSelector for this instance.
+	 *
+	 * \param[in] selector The FileReaderSelector for this instance
+	 */
+	void set_selector(std::unique_ptr<FileReaderSelector> selector);
+
+	/**
+	 * \brief Returns the internal FileReaderSelector of this instance.
+	 *
+	 * \return The FileReaderSelector of this instance
+	 */
+	const FileReaderSelector& selector() const;
+
+	/**
+	 * \brief Determine a matching FileReaderDescriptor for the specified file.
+	 *
+	 * \param[in] filename Name of the file to determine a descriptor for
+	 *
+	 * \return A FileReaderDescriptor for the specified file
+	 */
+	std::unique_ptr<FileReaderDescriptor> descriptor(
+			const std::string &filename) const;
+
+	/**
+	 * \brief Create an opaque FileReader for the given file.
+	 *
+	 * Will return nullptr if the file does not exist or cannot be read or the
+	 * filename is empty.
+	 *
+	 * \param[in] filename Name of the file to create the reader for
+	 *
+	 * \return A FileReader for the specified file
+	 */
+	std::unique_ptr<FileReader> for_file(const std::string &filename) const;
+
+	/**
+	 * \brief Return the FileReader specified by its name.
+	 *
+	 * If the selection does not contain a FileReader with the specified name,
+	 * \c nullptr will be returned.
+	 *
+	 * \param[in] name The name of the FileReader.
+	 *
+	 * \return A FileReader with the specified name
+	 */
+	std::unique_ptr<FileReader> by_name(const std::string &name) const;
+
+	/**
+	 * \brief Reset this instance to its initial state, removing all tests and
+	 * descriptors.
+	 */
+	void reset();
+
+	// class is non-copy-assignable
+	Impl& operator = (const Impl &) = delete;
+
+
+protected:
+
+	/**
+	 * \brief Return the FileReaderSelector of this instance for use in
+	 * subclasses.
+	 *
+	 * \return The FileReaderSelector of this instance
+	 */
+	FileReaderSelector& use_selector();
+
+
+private:
+
+	/**
+	 * \brief Internal FileReaderSelector
+	 */
+	std::unique_ptr<FileReaderSelector> selector_;
+
+	/**
+	 * \brief Internal set of FileTests to performed by the selector_
+	 */
+	std::set<std::unique_ptr<FileTest>> tests_;
+
+	/**
+	 * \brief Internal list of FileReaderDescriptors to match by the selector_
+	 */
+	std::list<std::unique_ptr<FileReaderDescriptor>> descriptors_;
+};
+
+
+/// \cond UNDOC_FUNCTION_BODIES
+
+
 // FileReader
 
 
@@ -310,8 +462,6 @@ bool FileReaderSelector::matches(
 
 
 /**
- * \cond IMPL_ONLY
- *
  * \internal \defgroup descriptorsImpl Implementation details for building and selecting file types
  *
  * \ingroup descriptors
@@ -319,155 +469,9 @@ bool FileReaderSelector::matches(
  */
 
 
-/**
- * Implementation of FileReaderSelection
- */
-class FileReaderSelection::Impl
-{
-
-public:
-
-	/**
-	 * Default constructor
-	 */
-	Impl();
-
-	// class is non-copy-constructible
-	Impl(const Impl &) = delete;
-
-	/**
-	 * Virtual default destructor
-	 */
-	virtual ~Impl() noexcept;
-
-	/**
-	 * Add a file descriptor for which a reader can be created
-	 *
-	 * \param[in] desc A FileReaderDescriptor
-	 */
-	void add_descriptor(std::unique_ptr<FileReaderDescriptor> desc);
-
-	/**
-	 * Remove all descriptors that qualify as equivalent to the given descriptor
-	 * by '==' from the list of descriptors.
-	 *
-	 * \param[in] desc The FileReaderDescriptor to be removed
-	 *
-	 * \return Number of descriptors instances removed.
-	 */
-	int remove_descriptor(const FileReaderDescriptor* desc);
-
-	/**
-	 * Register a test for a FileReaderDescriptor for the specified filename.
-	 *
-	 * \param[in] testobj The test to be registered
-	 */
-	void register_test(std::unique_ptr<FileTest> testobj);
-
-	/**
-	 * Remove all tests that qualify as equivalent to the given test by
-	 * '==' from the list of test.
-	 *
-	 * \param[in] testobj The FileTest to be removed
-	 *
-	 * \return Number of test instances removed.
-	 */
-	int unregister_test(const FileTest * testobj);
-
-	/**
-	 * Removes all tests registered to this instance.
-	 */
-	void remove_all_tests();
-
-	/**
-	 * Sets the FileReaderSelector for this instance
-	 *
-	 * \param[in] selector The FileReaderSelector for this instance
-	 */
-	void set_selector(std::unique_ptr<FileReaderSelector> selector);
-
-	/**
-	 * Returns the internal FileReaderSelector of this instance
-	 *
-	 * \return The FileReaderSelector of this instance
-	 */
-	const FileReaderSelector& selector() const;
-
-	/**
-	 * Determine a matching FileReaderDescriptor for the specified file.
-	 *
-	 * \param[in] filename Name of the file to determine a descriptor for
-	 *
-	 * \return A FileReaderDescriptor for the specified file
-	 */
-	std::unique_ptr<FileReaderDescriptor> descriptor(
-			const std::string &filename) const;
-
-	/**
-	 * Create an opaque FileReader for the given file.
-	 *
-	 * Will return nullptr if the file does not exist or cannot be read or the
-	 * filename is empty.
-	 *
-	 * \param[in] filename Name of the file to create the reader for
-	 *
-	 * \return A FileReader for the specified file
-	 */
-	std::unique_ptr<FileReader> for_file(const std::string &filename) const;
-
-	/**
-	 * Return the FileReader specified by its name.
-	 *
-	 * If the selection does not contain a FileReader with the specified name,
-	 * \c nullptr will be returned.
-	 *
-	 * \param[in] name The name of the FileReader.
-	 *
-	 * \return A FileReader with the specified name
-	 */
-	std::unique_ptr<FileReader> by_name(const std::string &name) const;
-
-	/**
-	 * Reset this instance to its initial state, removing all tests and
-	 * descriptors.
-	 */
-	void reset();
-
-	// class is non-copy-assignable
-	Impl& operator = (const Impl &) = delete;
 
 
-protected:
-
-	/**
-	 * Return the FileReaderSelector of this instance for use in subclasses.
-	 *
-	 * \return The FileReaderSelector of this instance
-	 */
-	FileReaderSelector& use_selector();
-
-
-private:
-
-	/**
-	 * Internal FileReaderSelector
-	 */
-	std::unique_ptr<FileReaderSelector> selector_;
-
-	/**
-	 * Internal set of FileTests to performed by the selector_
-	 */
-	std::set<std::unique_ptr<FileTest>> tests_;
-
-	/**
-	 * Internal list of FileReaderDescriptors to match by the selector_
-	 */
-	std::list<std::unique_ptr<FileReaderDescriptor>> descriptors_;
-};
-
-
-/// @}
-/// \endcond IMPL_ONLY
+// FileReaderSelection
 
 
 FileReaderSelection::Impl::Impl()
@@ -704,6 +708,8 @@ void FileReaderSelection::reset()
 {
 	impl_->reset();
 }
+
+/// \endcond
 
 } // namespace v_1_0_0
 

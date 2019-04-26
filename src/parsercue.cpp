@@ -59,8 +59,6 @@ using arcstk::make_toc;
 
 
 /**
- * \cond IMPL_ONLY
- *
  * \internal \defgroup parserCueImpl Implementation details of CUESheet parsing
  *
  * \ingroup parsercue
@@ -235,7 +233,9 @@ private:
 
 
 /// @}
-/// \endcond IMPL_ONLY
+
+
+/// \cond UNDOC_FUNCTION_BODIES
 
 
 CueOpenFile::CueOpenFile(const std::string &filename)
@@ -464,8 +464,8 @@ void CueInfo::append_track(
 	++track_count_;
 }
 
+/// \endcond
 
-/// \cond IMPL_ONLY
 /// \internal \addtogroup parserCueImpl
 /// @{
 
@@ -518,7 +518,9 @@ private:
 
 
 /// @}
-/// \endcond IMPL_ONLY
+
+
+/// \cond UNDOC_FUNCTION_BODIES
 
 
 // CueParserImpl
@@ -622,6 +624,8 @@ std::unique_ptr<FileReaderDescriptor> DescriptorCUE::do_clone() const
 {
 	return std::make_unique<DescriptorCUE>();
 }
+
+/// \endcond
 
 } // namespace v_1_0_0
 

@@ -24,13 +24,13 @@ inline namespace v_1_0_0
 {
 
 /**
- * \internal \defgroup readerflac Audio: FLAC
+ * \internal \defgroup readerflac Audio: fLaC by libFLAC++
  *
- * \brief An AudioReader for FLAC/FLAC files.
+ * \brief An AudioReader for fLaC/fLaC files.
  *
- * The Flac AudioReader will only read files in FLAC file format. FLAC/Ogg is
+ * The Flac AudioReader will only read files in fLaC file format. fLaC/Ogg is
  * currently not supported. Validation requires CDDA conform samples. Embedded
- * CUEsheets are ignored.
+ * CUESheets are ignored.
  *
  * @{
  */

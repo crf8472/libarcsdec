@@ -1,7 +1,8 @@
 /**
- * \file readerffmpeg.cpp Implements ffmpeg-based generic audio reader
+ * \file
+ *
+ * \brief Implements ffmpeg-based generic audio reader.
  */
-
 
 #ifndef __LIBARCSDEC_READERFFMPEG_HPP__
 #include "readerffmpeg.hpp"
@@ -51,9 +52,7 @@ namespace
 {
 
 /**
- * \cond IMPL_ONLY
- *
- * \internal \defgroup readerffmpegImpl Implementation details for the ffmpeg reader
+ * \internal \defgroup readerffmpegImpl Implementation
  *
  * \ingroup readerffmpeg
  *
@@ -64,7 +63,7 @@ extern "C"
 {
 
 /**
- * A logger callback for the ffmpeg logging API.
+ * \brief A logger callback for the ffmpeg logging API.
  *
  * It logs ffmpeg messages leveled as errors, warnings and informations by the
  * libarcstk logging interface. Messages leveled as debug, trace or other are
@@ -125,7 +124,7 @@ void arcs_av_log(void* /*v*/, int lvl, const char* msg, va_list /*l*/)
 
 
 /**
- * List of supported sample formats
+ * \brief List of supported sample formats.
  */
 class FFmpegSampleFormatList final
 {
@@ -133,7 +132,7 @@ class FFmpegSampleFormatList final
 public:
 
 	/**
-	 * Informs about whether a sample format is supported
+	 * \brief Informs about whether a sample format is supported.
 	 *
 	 * \param[in] id Id of the sample format
 	 *
@@ -144,7 +143,7 @@ public:
 
 
 /**
- * List of supported codecs.
+ * \brief List of supported codecs.
  *
  * The list of supported codecs and sample formats contains FLAC, ALAC,
  * APE as well as the PCM formats PCM_S16BE, PCM_S16LE and PCM_S16LE_PLANAR.
@@ -167,7 +166,7 @@ class FFmpegCodecList final
 public:
 
 	/**
-	 * Informs about whether a codec is supported
+	 * \brief Informs about whether a codec is supported
 	 *
 	 * \param[in] id Id of the codec
 	 *
@@ -190,7 +189,7 @@ class FFmpegFileLoader final
 public:
 
 	/**
-	 * Load a file with ffmpeg
+	 * \brief Load a file with ffmpeg.
 	 *
 	 * \param[in] filename The file to load
 	 */
@@ -200,6 +199,7 @@ public:
 private:
 
 	/**
+	 * \brief Acquire an AVFormatContext for the specified file.
 	 *
 	 * \param[in] filename Name of the file to load
 	 * \return The AVFormatContext for this file
@@ -209,6 +209,7 @@ private:
 		const;
 
 	/**
+	 * \brief Identify the AVCodec and the relevant AudioStream
 	 *
 	 * \param[out] stream_idx Index of the audio stream of interest
 	 * \param[in]  fctx The AVFormatContext to work with
@@ -219,6 +220,7 @@ private:
 			::AVFormatContext* fctx) const;
 
 	/**
+	 * \brief Allocate and initialize the AVCodecContext
 	 *
 	 * \param[in] codec AVCodec to create context for
 	 * \param[in] stream The stream to derive the AVCodecContext from
@@ -229,15 +231,15 @@ private:
 			::AVCodec* codec, ::AVStream* stream) const;
 
 	/**
-	 * Validates stream for CDDA compliance.
+	 * \brief Validates stream for CDDA compliance.
 	 *
 	 * \param[in] cctx The AVCodecContext to analyze
 	 */
 	bool validate_cdda(::AVCodecContext* cctx) const;
 
 	/**
-	 * Estimate the total number of samples from the the information provided by
-	 * stream and codec context.
+	 * \brief Estimate the total number of samples from the the information
+	 * provided by stream and codec context.
 	 *
 	 * Given a constant frame size, the estimation helps to recognize the last
 	 * frame. Without the estimation we could only check for a frame with a
@@ -260,21 +262,21 @@ private:
 		const;
 
 	/**
-	 * Log some information about the format
+	 * \brief Log some information about the format.
 	 *
 	 * \param[in] fctx The AVFormatContext to analyze
 	 */
 	void log_format_info(::AVFormatContext* fctx) const;
 
 	/**
-	 * Log some information about the codec
+	 * \brief Log some information about the codec.
 	 *
 	 * \param[in] cctx The AVCodecContext to analyze
 	 */
 	void log_codec_info(::AVCodecContext* cctx) const;
 
 	/**
-	 * Log some information about the stream
+	 * \brief Log some information about the stream.
 	 *
 	 * \param[in] stream The AVStream to analyze
 	 */
@@ -308,12 +310,12 @@ public:
 	// TODO Move constructor
 
 	/**
-	 * Default destructor
+	 * \brief Default destructor.
 	 */
 	virtual ~FFmpegAudioFile() noexcept;
 
 	/**
-	 * Return total number of 32 bit PCM samples in file.
+	 * \brief Return total number of 32 bit PCM samples in file.
 	 *
 	 * Note that this number may differ from the total number of samples
 	 * processed. Some codecs like ALAC insert "remainder frames" as a padding
@@ -331,22 +333,22 @@ public:
 	uint32_t total_samples() const;
 
 	/**
-	 * Return the sample format of this file
+	 * \brief Return the sample format of this file.
 	 *
 	 * \return The sample format of this file
 	 */
 	SAMPLE_FORMAT sample_format() const;
 
 	/**
-	 * Return the channel layout of this file.
+	 * \brief Return the channel layout of this file.
 	 *
 	 * \return TRUE for left0/right1, FALSE otherwise
 	 */
 	bool channels_swapped() const;
 
 	/**
-	 * Traverse all 16 bit samples in the file, thereby accumulating 32 bit
-	 * samples in a buffer and automatically flushing it once it is full.
+	 * \brief Traverse all 16 bit samples in the file, thereby accumulating 32
+	 * bit samples in a buffer and automatically flushing it once it is full.
 	 *
 	 * Returns the number of samples processed. Note that this number may differ
 	 * from the number initially returned by total_samples(). Once
@@ -359,7 +361,7 @@ public:
 	uint32_t traverse_samples();
 
 	/**
-	 * Register the append_samples() method.
+	 * \brief Register the append_samples() method.
 	 *
 	 * \param[in] func The append_samples() method to use while reading
 	 */
@@ -368,7 +370,7 @@ public:
 			func);
 
 	/**
-	 * Register the update_audiosize() method.
+	 * \brief Register the update_audiosize() method.
 	 *
 	 * \param[in] func The update_audiosize() method to use while reading
 	 */
@@ -384,7 +386,7 @@ public:
 private:
 
 	/**
-	 * Decode a single packet completely.
+	 * \brief Decode a single packet completely.
 	 *
 	 * \param[in]  packet    The packet to decode (call-by-value ensures copy)
 	 * \param[in]  frame     The frame pointer to use for decoding
@@ -398,7 +400,7 @@ private:
 			uint32_t* samples16, uint32_t* frames, uint32_t* bytes);
 
 	/**
-	 * Pass a sequence of samples to consumer
+	 * \brief Pass a sequence of samples to consumer.
 	 *
 	 * \param[in] ch0 Samples for channel 0 (all samples in non-planar layout)
 	 * \param[in] ch1 Samples for channel 1 (nullptr in non-planar layout)
@@ -410,22 +412,24 @@ private:
 		const uint32_t bytes_per_plane);
 
 	/**
-	 * Internal format context pointer
+	 * \brief Internal format context pointer.
 	 */
 	::AVFormatContext* formatContext_;
 
 	/**
-	 * Internal codec context pointer
+	 * \brief Internal codec context pointer.
 	 */
 	::AVCodecContext* codecContext_;
 
 	/**
-	 * Internal pointer to the audio stream
+	 * \brief Internal pointer to the audio stream.
 	 */
 	::AVStream* audioStream_;
 
 	/**
-	 * Total number of 32 bit PCM samples in the file. The actual value may
+	 * \brief Total number of 32 bit PCM samples in the file.
+	 *
+	 * The actual value may
 	 * be an estimation and may deviate from the factual total number of
 	 * samples. This will occurr for files for which padding frames contribute
 	 * to the duration or in cases where the duration or time base is broken.
@@ -433,41 +437,42 @@ private:
 	uint32_t total_samples_;
 
 	/**
-	 * Number of planes
+	 * \brief Number of planes
 	 * (1 for interleaved data, CDDA.NUMBER_OF_CHANNELS for planar data)
 	 */
 	uint8_t num_planes_;
 
 	/**
-	 * Sample format of this file
+	 * \brief Sample format of this file.
 	 */
 	SAMPLE_FORMAT format_;
 
 	/**
-	 * True indicates left0/right1, false otherwise
+	 * \brief True indicates left0/right1, false otherwise.
 	 */
 	bool channels_swapped_;
 
 	/**
-	 * Callback for notifying outside world about the correct AudioSize
+	 * \brief Callback for notifying outside world about the correct AudioSize.
 	 */
 	std::function<void(const AudioSize &size)> update_audiosize_;
 
 	/**
-	 * Callback for notifying outside world about a new sequence of samples
+	 * \brief Callback for notifying outside world about a new sequence of
+	 * samples.
 	 */
 	std::function<void(PCMForwardIterator begin, PCMForwardIterator end)>
 		append_samples_;
 
 	/**
-	 * Constructor
+	 * \brief Constructor.
 	 */
 	FFmpegAudioFile();
 };
 
 
 /**
- * Format and codec independent audio file reader.
+ * \brief Format and codec independent audio file reader.
  *
  * This is a AudioReader implementation by libavformat and libavcodec. It can
  * open files in virtually every combination of container and audio format that
@@ -484,12 +489,12 @@ class FFmpegAudioReaderImpl : public AudioReaderImpl
 public:
 
 	/**
-	 * Default constructor
+	 * \brief Default constructor.
 	 */
 	FFmpegAudioReaderImpl();
 
 	/**
-	 * Virtual default destructor
+	 * \brief Virtual default destructor.
 	 */
 	~FFmpegAudioReaderImpl() noexcept override;
 
@@ -501,6 +506,11 @@ private:
 
 	void do_process_file(const std::string &filename) override;
 };
+
+
+/// @}
+
+/// \cond UNDOC_FUNCTION_BODIES
 
 
 // FFmpegSampleFormatList
@@ -1607,10 +1617,6 @@ uint32_t FFmpegAudioFile::traverse_samples()
 }
 
 
-/// @}
-/// \endcond IMPL_ONLY
-
-
 // FFmpegAudioReaderImpl
 
 
@@ -1701,8 +1707,11 @@ void FFmpegAudioReaderImpl::do_process_file(const std::string &filename)
 	ARCS_LOG_DEBUG << "Finished processing";
 }
 
+/// \endcond
 
 } // namespace
+
+/// \cond UNDOC_FUNCTION_BODIES
 
 
 // DescriptorFFmpeg
@@ -1743,6 +1752,8 @@ std::unique_ptr<FileReaderDescriptor> DescriptorFFmpeg::do_clone() const
 {
 	return std::make_unique<DescriptorFFmpeg>();
 }
+
+/// \endcond
 
 } // namespace v_1_0_0
 

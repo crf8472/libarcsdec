@@ -24,7 +24,7 @@ inline namespace v_1_0_0
 {
 
 /**
- * \internal \defgroup readersndfile Audio: Generic Audio Reading with Libsndfile
+ * \internal \defgroup readersndfile Audio: Generic by libsndfile
  *
  * \brief A generic AudioReader for losslessly encoded audio files.
  *

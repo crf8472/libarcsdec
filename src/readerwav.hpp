@@ -26,7 +26,7 @@ inline namespace v_1_0_0
 /**
  * \internal \defgroup readerwav Audio: RIFF/WAV with PCM encoding
  *
- * \brief An AudioReader for RIFF/WAV files with CDDA-compliant PCM data.
+ * \brief AudioReader for RIFF/WAV files with CDDA-compliant PCM data.
  *
  * Additional fields in the format subchunk are not supported. Validation
  * requires CDDA conform samples in PCM format. Non-standard subchunks are

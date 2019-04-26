@@ -15,6 +15,10 @@ namespace arcsdec
 inline namespace v_1_0_0
 {
 
+
+/// \cond UNDOC_FUNCTION_BODIES
+
+
 const BLOCKSIZE_t BLOCKSIZE;
 
 
@@ -189,6 +193,8 @@ void SampleProvider::hook_post_register_processor()
 {
 	// empty
 }
+
+/// \endcond
 
 } // namespace v_1_0_0
 

@@ -28,9 +28,10 @@ inline namespace v_1_0_0
 using arcstk::TOC;
 
 /**
- * \internal \defgroup metaparser Level 0 API: Reading and Validating Metadata Files
+ * \internal \defgroup metaparser API for parsing metadata/toc files
  *
- * \brief Interface for implementing and creating MetadataParsers
+ * \brief Interface for implementing and creating
+ * @link MetadataParser MetadataParsers @endlink.
  *
  * The interface for reading audio files is provided by class MetadataParser
  * that internally holds a concrete instance of MetadataParserImpl.
@@ -47,7 +48,7 @@ using arcstk::TOC;
 
 
 /**
- * \brief Implementation of a MetadataParser
+ * \brief Implementation of a MetadataParser.
  */
 class MetadataParserImpl
 {
@@ -149,7 +150,7 @@ public:
 
 
 /**
- * \brief Selects and builds 
+ * \brief Selects and builds
  * @link MetadataParser MetadataParsers @endlink for given inputs.
  */
 class MetadataParserSelection : public FileReaderSelection

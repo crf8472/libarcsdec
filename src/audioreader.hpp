@@ -29,7 +29,7 @@ inline namespace v_1_0_0
 {
 
 /**
- * \internal \defgroup audioreader Level 0 API: Reading and Validating Audio Files
+ * \internal \defgroup audioreader API for reading and validating audio files
  *
  * \brief Interface for implementing and creating AudioReaders
  *

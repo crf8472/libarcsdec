@@ -1,10 +1,12 @@
+/**
+ * \file
+ *
+ * \brief Implements Libsndfile-based generic audio reader.
+ */
+
 #ifndef __LIBARCSDEC_READERSNDFILE_HPP__
 #include "readersndfile.hpp"
 #endif
-
-/**
- * \file readersndfile.cpp Implements Libsndfile-based generic audio reader
- */
 
 #include <cstdint>
 #include <memory>
@@ -45,9 +47,7 @@ namespace
 
 
 /**
- * \cond IMPL_ONLY
- *
- * \internal \defgroup readersndfileImpl Implementation details for the libsndfile reader
+ * \internal \defgroup readersndfileImpl Implementation
  *
  * \ingroup readersndfile
  *
@@ -56,7 +56,7 @@ namespace
 
 
 /**
- * Format independent audio file reader.
+ * \brief Format independent audio file reader.
  *
  * Currently, this class is implemented by libsndfile and can open every
  * combination of file and audio format that libsndfile supports.
@@ -69,7 +69,7 @@ class LibsndfileAudioReaderImpl : public BufferedAudioReaderImpl
 public:
 
 	/**
-	 * Virtual default destructor
+	 * \brief Virtual default destructor.
 	 */
 	virtual ~LibsndfileAudioReaderImpl() noexcept;
 
@@ -84,7 +84,11 @@ private:
 
 
 /// @}
-/// \endcond IMPL_ONLY
+
+/// \cond UNDOC_FUNCTION_BODIES
+
+
+// LibsndfileAudioReaderImpl
 
 
 LibsndfileAudioReaderImpl::~LibsndfileAudioReaderImpl() noexcept = default;
@@ -209,9 +213,11 @@ void LibsndfileAudioReaderImpl::do_process_file(const std::string &filename)
 	}
 }
 
+/// \endcond
 
 } // namespace
 
+/// \cond UNDOC_FUNCTION_BODIES
 
 // DescriptorSndfile
 
@@ -251,6 +257,8 @@ std::unique_ptr<FileReaderDescriptor> DescriptorSndfile::do_clone() const
 {
 	return std::make_unique<DescriptorSndfile>();
 }
+
+/// \endcond
 
 } // namespace v_1_0_0
 

@@ -43,8 +43,6 @@ using arcstk::make_toc;
 
 
 /**
- * \cond IMPL_ONLY
- *
  * \internal \defgroup parserCdioImpl Implementation details of CUESheet parsing
  *
  * \ingroup parsercdio
@@ -84,7 +82,9 @@ private:
 
 
 /// @}
-/// \endcond IMPL_ONLY
+
+
+/// \cond UNDOC_FUNCTION_BODIES
 
 
 // DevParserImpl
@@ -330,6 +330,8 @@ std::unique_ptr<FileReaderDescriptor> DescriptorCdio::do_clone() const
 {
 	return std::make_unique<DescriptorCdio>();
 }
+
+/// \endcond
 
 } // namespace v_1_0_0
 

@@ -25,13 +25,13 @@
 
 
 /**
- * \brief Main namespace for libarcsdec
+ * \brief Main namespace for libarcsdec.
  */
 namespace arcsdec
 {
 
 /**
- * \brief Version namespace
+ * \brief API version 1.0.0.
  */
 inline namespace v_1_0_0
 {
@@ -39,8 +39,7 @@ inline namespace v_1_0_0
 /**
  * \defgroup calculators Calculators for AccurateRip Checksums and IDs
  *
- * \brief Calculators for the AccurateRip ID and the AccurateRip checksums of
- * a medium
+ * \brief Calculators for AccurateRip checksums and IDs.
  *
  * ARIdCalculator is a calculator for the AccurateRip id of a given medium
  * description. ARCSCalculator is a calculator for the ARCSs for each audio
