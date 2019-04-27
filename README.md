@@ -129,5 +129,5 @@ build switches.
 - No sufficient unit tests yet
 
 
-[1]: https://codeberg.org/tristero/libarcs
+[1]: https://codeberg.org/tristero/libarcstk
 
