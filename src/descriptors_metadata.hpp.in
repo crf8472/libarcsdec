@@ -17,18 +17,6 @@
 #include "@PROJECT_SOURCE_DIR@/parsercue.hpp"
 
 
-// Configure available features
-
-
-// Device (via libcdio)
-
-#cmakedefine WITH_LIBCDIO  // will be defined iff compiled with libcdio support
-
-#ifdef WITH_LIBCDIO
-	#include "@PROJECT_SOURCE_DIR@/parsercdio.hpp"
-#endif
-
-
 namespace arcsdec
 {
 
@@ -65,10 +53,6 @@ public:
 		formats_.reserve(2);
 
 		formats_.push_back(std::make_unique<DescriptorCUE>());
-
-#ifdef WITH_LIBCDIO
-		formats_.push_back(std::make_unique<DescriptorCdio>());
-#endif
 	}
 
 	/**
@@ -131,13 +115,6 @@ private:
 } // namespace v_1_0_0
 
 } // namespace arcsdec
-
-
-// Restrict scope of cmake-controlled variables to this file
-
-#ifdef WITH_LIBCDIO
-	#undef WITH_LIBCDIO
-#endif
 
 #endif
 

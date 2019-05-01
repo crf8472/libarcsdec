@@ -106,11 +106,9 @@ list (APPEND SOURCES "${PROJECT_SOURCE_DIR}/audiobuffer.cpp" )
 list (APPEND SOURCES "${PROJECT_SOURCE_DIR}/audioreader.cpp" )
 list (APPEND SOURCES "${PROJECT_SOURCE_DIR}/descriptors.cpp" )
 list (APPEND SOURCES "${PROJECT_SOURCE_DIR}/metaparser.cpp" )
-## parsercdio.cpp     is optional and default OFF, depends on libcdio
 ## parsercue.cpp     is required, depends on libcue
 ## readerffmpeg.cpp  is optional and default ON,  depends on parts of ffmpeg
 ## readerflac.cpp    is optional and default ON,  depends on FLAC
-## readersndfile.cpp is optional and default OFF, depends on libsndfile
 list (APPEND SOURCES "${PROJECT_SOURCE_DIR}/readerwav.cpp" )
 ## readerwvpk.cpp    is optional and default ON,  depends on libwavpack
 list (APPEND SOURCES "${PROJECT_SOURCE_DIR}/sampleproc.cpp" )
@@ -148,13 +146,6 @@ option (WITH_FLAC    "Add FLAC reading capability"     ON )
 option (WITH_WAVPACK "Add WavPack reading capability"  ON )
 option (WITH_FFMPEG  "Add ffmpeg reading capabilities" ON )
 
-## libsndfile is not yet fully supported and experimental
-
-option (WITH_LIBSNDFILE "Add libsndfile reading capabilities" OFF )
-
-## libcdio is not yet fully supported and experimental
-
-option (WITH_LIBCDIO    "Add libcdio reading capabilities" OFF )
 
 ## include-what-you-use is helpful when (re-)organizing headers
 
@@ -173,27 +164,6 @@ target_include_directories (parsercue PRIVATE ${libcue_INCLUDE_DIRS} )
 list (APPEND OBJECT_TARGETS     parsercue )
 list (APPEND REQUIRED_OBJECTS   $<TARGET_OBJECTS:parsercue> )
 list (APPEND REQUIRED_LIBRARIES ${libcue_LIBRARIES} )
-
-
-## --- Optional object target: parsercdio (requires libcdio, default: OFF)
-
-if (WITH_LIBCDIO )
-
-	message (STATUS "Build with libcdio parsing capability" )
-
-	add_library (parsercdio OBJECT ${PROJECT_SOURCE_DIR}/parsercdio.cpp )
-
-	find_package (libcdio 2.0.0 REQUIRED )
-	target_include_directories (parsercdio PRIVATE ${libcdio_INCLUDE_DIRS} )
-
-	list (APPEND OBJECT_TARGETS     parsercdio )
-	list (APPEND REQUIRED_OBJECTS   $<TARGET_OBJECTS:parsercdio> )
-	list (APPEND REQUIRED_LIBRARIES ${libcdio_LIBRARIES} )
-
-else (WITH_LIBCDIO )
-
-	message (STATUS "Build without libcdio parsing capability" )
-endif (WITH_LIBCDIO )
 
 
 ## --- Optional: Add FLAC (requires FLAC++, default: ON)
@@ -304,28 +274,6 @@ else (WITH_FFMPEG)
 
 	message (STATUS "Build without ffmpeg support" )
 endif (WITH_FFMPEG)
-
-
-## --- Optional: Add libsndfile (default: OFF)
-
-if (WITH_LIBSNDFILE )
-
-	message (STATUS "Build with libsndfile support" )
-
-	find_package (libsndfile 1.0.17 REQUIRED )
-
-	add_library (readersndfile OBJECT ${PROJECT_SOURCE_DIR}/readersndfile.cpp )
-	target_include_directories (readersndfile
-		PRIVATE ${libsndfile_INCLUDE_DIRS} )
-
-	list (APPEND OBJECT_TARGETS     readersndfile )
-	list (APPEND REQUIRED_OBJECTS   $<TARGET_OBJECTS:readersndfile> )
-	list (APPEND REQUIRED_LIBRARIES ${libsndfile_LIBRARIES} )
-
-else (WITH_LIBSNDFILE )
-
-	message (STATUS "Build without libsndfile support" )
-endif (WITH_LIBSNDFILE )
 
 
 ## --- Optional: Add include-what-you-use support (default: OFF)
@@ -561,5 +509,4 @@ unset (USE_MCSS           CACHE)
 unset (WITH_FLAC          CACHE)
 unset (WITH_WAVPACK       CACHE)
 unset (WITH_FFMPEG        CACHE)
-unset (WITH_LIBSNDFILE    CACHE)
 

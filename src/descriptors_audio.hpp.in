@@ -47,15 +47,6 @@
 #endif
 
 
-// libsndfile Generic Reader
-
-#cmakedefine WITH_LIBSNDFILE
-
-#ifdef WITH_LIBSNDFILE
-	#include "@PROJECT_SOURCE_DIR@/readersndfile.hpp"
-#endif
-
-
 namespace arcsdec
 {
 
@@ -103,10 +94,6 @@ public:
 
 #ifdef WITH_FFMPEG
 		formats_.push_back(std::make_unique<DescriptorFFmpeg>());
-#endif
-
-#ifdef WITH_LIBSNDFILE
-		formats_.push_back(std::make_unique<DescriptorSndfile>());
 #endif
 	}
 
@@ -184,10 +171,6 @@ private:
 
 #ifdef WITH_FFMPEG
 	#undef WITH_FFMPEG
-#endif
-
-#ifdef WITH_LIBSNDFILE
-	#undef WITH_LIBSNDFILE
 #endif
 
 #endif

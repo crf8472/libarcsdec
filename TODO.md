@@ -10,7 +10,8 @@ expect that I really do anything of what I noted here any time soon.
 - Implement TOC metadata format used by cdrdao
 - Make selection of readers configurable (best, fastest, name...)
 - Select reader by name
-- Add/Improve libsndfile support
+- Add libsndfile support
+- Add libcdio support
 - endianess-independent reading?
 
 
