@@ -961,8 +961,6 @@ public:
 
 private:
 
-	//bool do_has_read_buffer() const override;
-
 	std::unique_ptr<AudioSize> do_acquire_size(const std::string &filename)
 		override;
 
@@ -1856,14 +1854,14 @@ uint64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 			ARCS_LOG_INFO << "Total samples: " <<
 				(total_pcm_bytes / CDDA.BYTES_PER_SAMPLE);
 
-			AudioSize audiosize;
-			audiosize.set_pcm_byte_count(subchunk_header.size);
-			this->process_audiosize(audiosize);
-
 			audio_handler_->subchunk_data(subchunk_header.size);
 
 			if (calculate)
 			{
+				AudioSize audiosize;
+				audiosize.set_pcm_byte_count(subchunk_header.size);
+				this->process_audiosize(audiosize);
+
 				// Read audio bytes in blocks
 
 				PCMBlockReader block_reader(this->samples_per_read());
