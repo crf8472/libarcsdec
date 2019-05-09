@@ -152,13 +152,14 @@ public:
 	virtual ~ARCSCalculator() noexcept;
 
 	/**
-	 * \brief Calculate ARCS values for the given audio file, using the metadata 
+	 * \brief Calculate ARCS values for the given audio file, using the metadata
 	 * from the given TOC.
 	 *
 	 * The TOC is supposed to contain the offsets of all tracks represented
 	 * in the audio file. It is not required to be <tt>complete()</tt>.
 	 *
-	 * Any audio file names in the TOC are ignored in favor of \c audiofilename.
+	 * Any audio file name(s) in the TOC are ignored in favor of
+	 * \c audiofilename.
 	 *
 	 * The result will contain ARCS v1 and v2 for all tracks specified in the
 	 * TOC.
