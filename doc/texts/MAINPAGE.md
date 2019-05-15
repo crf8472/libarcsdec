@@ -1,7 +1,9 @@
 \mainpage libarcsdec - A library with audio decoder and TOC parser adapters for libarcstk
 
 
-Home: https://codeberg.org/tristero/libarcsdec
+\section Home
+
+See the project home [on codeberg.org](https://codeberg.org/tristero/libarcsdec).
 
 
 \section features Features
