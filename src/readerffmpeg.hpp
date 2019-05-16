@@ -7,18 +7,10 @@
 #ifndef __LIBARCSDEC_READERFFMPEG_HPP__
 #define __LIBARCSDEC_READERFFMPEG_HPP__
 
-#include <chrono> // for debugging
-#include <functional>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
-
-extern "C"
-{
-#include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
-#include <libavutil/avutil.h>
-}
 
 #ifndef __LIBARCSDEC_DESCRIPTORS_HPP__
 #include "descriptors.hpp"

@@ -8,8 +8,8 @@
 #include "readerflac.hpp"
 #endif
 
-#include "FLAC++/decoder.h"
-#include "FLAC++/metadata.h"
+#include <FLAC++/decoder.h>
+#include <FLAC++/metadata.h>
 
 #include <cstdint>
 #include <locale>       // for locale

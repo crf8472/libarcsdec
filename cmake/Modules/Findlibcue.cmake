@@ -19,18 +19,22 @@ find_package (PkgConfig QUIET )
 
 if (PkgConfig_FOUND )
 
-	PKG_CHECK_MODULES (PC_LIBCUE QUIET libcue )
+	PKG_CHECK_MODULES (PC_LIBCUE QUIET libcue cue )
 
 	set (libcue_VERSION ${PC_LIBCUE_VERSION} )
 endif (PkgConfig_FOUND )
 
 ## 2: find includes
 
+file (GLOB PATHS_WITH_VERSION "/usr/include/libcue-*" )
+
 find_path (LIBCUE_INCLUDE_DIR
-	NAMES libcue/libcue.h libcue.h
+	NAMES libcue.h
 	HINTS
 	${PC_LIBCUE_INCLUDEDIR}
 	${PC_LIBCUE_INCLUDE_DIRS}
+	${PATHS_WITH_VERSION}
+	PATH_SUFFIXES libcue
 )
 
 ## 3: find library
