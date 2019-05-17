@@ -75,7 +75,6 @@ macro (find_component _component _pkgconfigname _header)
 			"Location of lib${_component} headers"
 	)
 
-
 	find_library (${_component}_LIBRARIES
 		NAMES ${_component} ${_pkgconfigname}
 		PATHS
@@ -100,7 +99,7 @@ macro (find_component _component _pkgconfigname _header)
 
 		## Magical knowledge about how ffmpeg provides its version number macros
 
-		string(TOUPPER ${_component} TMP_NAME )
+		string (TOUPPER ${_component} TMP_NAME )
 
 		set (${_component}_VERSION_INFO_REGEX
 			"#define[ \t]+LIB${TMP_NAME}_VERSION_M[AJINORC]+[ \t]+([0-9]+)" )
