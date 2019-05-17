@@ -71,19 +71,6 @@ macro (find_component _component _pkgconfigname _header)
 		PATHS
 			${PC_${_component}_INCLUDEDIR}
 			${PC_${_component}_INCLUDE_DIRS}
-## Commented out: unnecessary, but won't loose the collection
-#			$ENV{FFMPEG_DIR}/include
-#			$ENV{OSGDIR}/include
-#			$ENV{OSG_ROOT}/include
-#			~/Library/Frameworks
-#			/Library/Frameworks
-#			/usr/local/include
-#			/usr/include
-#			/sw/include        ## Fink
-#			/opt/local/include ## DarwinPorts
-#			/opt/csw/include   ## Blastwave
-#			/opt/include
-#			/usr/freeware/include
 		DOC
 			"Location of lib${_component} headers"
 	)
@@ -118,6 +105,8 @@ macro (find_component _component _pkgconfigname _header)
 		set (${_component}_VERSION_INFO_REGEX
 			"#define[ \t]+LIB${TMP_NAME}_VERSION_M[AJINORC]+[ \t]+([0-9]+)" )
 
+		unset (TMP_NAME )
+
 		## Try to find the version.h header and parse version numbers
 
 		find_path (${_component}_VERSIONPATH
@@ -141,7 +130,6 @@ macro (find_component _component _pkgconfigname _header)
 			"${${_component}_TMP_VERSION}" )
 
 		mark_as_advanced (
-			TMP_NAME
 			${_component}_VERSION_INFO_REGEX
 			${_component}_VERSIONPATH
 			${_component}_VERSION_INFO
@@ -183,18 +171,6 @@ endmacro()
 if (NOT FFMPEG_LIBRARIES )
 
 	find_package (PkgConfig QUIET )
-
-	## Check for the required components
-
-	## ffmpeg 3.1:
-	## API Change: deprecated avcodec_decode_audio4() from ffmpeg 0.9 in favor
-	## of avcodec_send_packet()/avcodec_receive_frame()
-	#set (MIN_AVCODEC_VERSION  "57.37.100" ) ## 2016-04-21
-	#set (MIN_AVFORMAT_VERSION "57.33.100" ) ## 2016-04-11
-	#set (MIN_AVUTIL_VERSION   "55.22.100" ) ## 2016-04-14
-	#find_component(avcodec  "57.37.100" libavcodec/avcodec.h   libavcodec  )
-	#find_component(avformat "57.33.100" libavformat/avformat.h libavformat )
-	#find_component(avutil   "55.22.100" libavutil/avutil.h     libavutil   )
 
 	## Add the includes, libraries and definitions of the required components
 	## to the ffmpeg variables
