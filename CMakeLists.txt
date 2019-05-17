@@ -214,52 +214,41 @@ if (WITH_FFMPEG)
 
 	message (STATUS "Build with ffmpeg support" )
 
+	## Verify the required versions of ffmpeg libs
+	macro (at_least_version _required _actual )
+
+		if (${_actual} VERSION_LESS ${_required})
+
+			message (FATAL_ERROR
+			"Actual version is ${_actual}, required is at least ${_required}." )
+
+		endif()
+
+	endmacro()
+
+	## find_package does not respect versions for components but the ffmpeg
+	## version is not trivial to access in a Find module.
+	## Thus, instead of REQUIREing the lib versions, we verify them manually.
+
 	find_package (ffmpeg REQUIRED COMPONENTS avcodec avformat avutil )
 
-	## find_package does not respect versions for components but ffmpeg
-	## version is not accessible, so instead of REQUIREing, we check manually
-
-	## --- Determine relevant part of ffmpeg API version
-
-	## Note: This is currently only used for printing the API version. We have
-	## to distinguish between the API from 3.1 to 4.0 and the API of 4.0 and
-	## above and maybe more versions. FFmpeg provides some macros to check the
-	## module versions at buildtime.
-
-	## ffmpeg 3.1:
+	## ffmpeg 3.1 < x < 4.0:
 	## API Change: deprecated avcodec_decode_audio4() from ffmpeg 0.9 in favor
 	## of avcodec_send_packet()/avcodec_receive_frame()
-	set (MIN_AVCODEC_VERSION  "57.37.100" ) ## 2016-04-21
-	set (MIN_AVFORMAT_VERSION "57.33.100" ) ## 2016-04-11
-	set (MIN_AVUTIL_VERSION   "55.22.100" ) ## 2016-04-14
+	at_least_version ("57.37.100" ${avcodec_VERSION}  ) ## 2016-04-21
+	at_least_version ("57.33.100" ${avformat_VERSION} ) ## 2016-04-11
+	at_least_version ("55.22.100" ${avutil_VERSION}   ) ## 2016-04-14
 
-	if (${avcodec_VERSION} VERSION_LESS ${MIN_AVCODEC_VERSION} )
-		message (FATAL_ERROR
-		"libavcodec has version ${avcodec_VERSION} but requires at least ${MIN_AVCODEC_VERSION}")
-	endif()
-
-	if (${avformat_VERSION} VERSION_LESS ${MIN_AVFORMAT_VERSION} )
-		message (FATAL_ERROR
-		"libavformat has version ${avformat_VERSION} but requires at least ${MIN_AVFORMAT_VERSION}")
-	endif()
-
-	if (${avutil_VERSION} VERSION_LESS ${MIN_AVUTIL_VERSION} )
-		message (FATAL_ERROR
-		"libavutils has version ${avutils_VERSION} but requires at least ${MIN_AVUTIL_VERSION}")
-	endif()
-
-	## Commented out: check for ffmpeg 4.0 with API changes
-	### ffmpeg 4.0:
-	### API Change: deprecated av_register_all() in favor of av_muxer_iterate()
-	### and av_demuxer_iterate(), registering is obsolete
-	#if (${avcodec_VERSION}  VERSION_GREATER_EQUAL 58.17.100 AND ## 2018-04-11
-	#	${avformat_VERSION} VERSION_GREATER_EQUAL 58.9.100  AND ## 2018-04-01
-	#	${avutil_VERSION}   VERSION_GREATER_EQUAL 56.13.100 )   ## 2018-04-03
-	#
-	#	set (FFMPEG_API_VERSION 4.0 )
-	#endif()
+	## Commented out, API change is small, can be distinguished in source.
+	## ffmpeg x >= 4.0:
+	## API Change: deprecated av_register_all() in favor of av_muxer_iterate()
+	## and av_demuxer_iterate(), registering is obsolete
+	#ffmpeg_verify_version ("58.17.100" ${avcodec_VERSION} )  ## 2018-04-11
+	#ffmpeg_verify_version ("58.9.100"  ${avformat_VERSION} ) ## 2018-04-01
+	#ffmpeg_verify_version ("56.13.100" ${avutil_VERSION} )   ## 2018-04-03
 
 	add_library (readerffmpeg OBJECT ${PROJECT_SOURCE_DIR}/readerffmpeg.cpp )
+
 	target_include_directories (readerffmpeg PRIVATE ${avcodec_INCLUDE_DIRS} )
 	target_include_directories (readerffmpeg PRIVATE ${avformat_INCLUDE_DIRS} )
 	target_include_directories (readerffmpeg PRIVATE ${avutil_INCLUDE_DIRS} )

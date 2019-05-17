@@ -29,12 +29,11 @@ endif (PkgConfig_FOUND )
 file (GLOB PATHS_WITH_VERSION "/usr/include/libcue-*" )
 
 find_path (LIBCUE_INCLUDE_DIR
-	NAMES libcue.h
+	NAMES libcue/libcue.h
 	HINTS
 	${PC_LIBCUE_INCLUDEDIR}
 	${PC_LIBCUE_INCLUDE_DIRS}
 	${PATHS_WITH_VERSION}
-	PATH_SUFFIXES libcue
 )
 
 ## 3: find library
