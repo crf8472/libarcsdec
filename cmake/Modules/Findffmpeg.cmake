@@ -92,10 +92,14 @@ macro (find_component _component _pkgconfigname _header)
 
 	## Version number
 
-	set (${_component}_VERSION ${PC_${_component}_VERSION}
-			CACHE STRING "Version number of ${_component}" )
+	set (${_component}_VERSIONVAR_TEXT "Version number of lib${_component}" )
 
-	if (NOT ${_component}_VERSION ) ## PKGConfig not available or didn't help
+	set (${_component}_VERSION ${PC_${_component}_VERSION}
+			CACHE STRING "${${_component}_VERSIONVAR_TEXT}" )
+
+	## If we have everything but the version, PkgConfig is not
+	## available or couldn't help. Get the version "manually".
+	if (${_component}_FOUND AND NOT ${_component}_VERSION )
 
 		## Magical knowledge about how ffmpeg provides its version number macros
 
@@ -106,15 +110,16 @@ macro (find_component _component _pkgconfigname _header)
 
 		unset (TMP_NAME )
 
+
 		## Try to find the version.h header and parse version numbers
 
-		find_path (${_component}_VERSIONPATH
+		find_path (${_component}_VERSIONFILE_PATH
 			NAMES "version.h"
 			PATHS ${${_component}_INCLUDE_DIRS}
 			PATH_SUFFIXES ${_component} ${_pkgconfigname}
 		)
 
-		file (STRINGS "${${_component}_VERSIONPATH}/version.h"
+		file (STRINGS "${${_component}_VERSIONFILE_PATH}/version.h"
 			${_component}_VERSION_INFO
 			LIMIT_COUNT 3
 			REGEX ${${_component}_VERSION_INFO_REGEX}
@@ -128,11 +133,17 @@ macro (find_component _component _pkgconfigname _header)
 		string (REPLACE ";" "." ${_component}_VERSION
 			"${${_component}_TMP_VERSION}" )
 
+		unset (${_component}_VERSION_INFO_REGEX )
+		unset (${_component}_VERSION_INFO )
+		unset (${_component}_TMP_VERSION )
+
+
+		## Force the updated version value to cache
+		set (${_component}_VERSION "${${_component}_VERSION}"
+			CACHE STRING "${${_component}_VERSIONVAR_TEXT}" FORCE )
+
 		mark_as_advanced (
-			${_component}_VERSION_INFO_REGEX
-			${_component}_VERSIONPATH
-			${_component}_VERSION_INFO
-			${_component}_TMP_VERSION
+			${_component}_VERSIONFILE_PATH
 		)
 
 	endif()
@@ -141,7 +152,7 @@ macro (find_component _component _pkgconfigname _header)
 	## Flags
 
 	set (${_component}_DEFINITIONS ${PC_${_component}_CFLAGS_OTHER}
-			CACHE STRING "CFLAGS for binding ${_component}" )
+			CACHE STRING "CFLAGS for binding lib${_component}" )
 
 
 	if (${${_component}_FOUND} )
