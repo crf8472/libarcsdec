@@ -150,9 +150,9 @@ endif()
 ## Build libarcsdec shared library as project target
 
 add_library (${PROJECT_NAME} SHARED
-	"${PROJECT_SOURCE_DIR}/calculators.cpp"
 	"${PROJECT_SOURCE_DIR}/audiobuffer.cpp"
 	"${PROJECT_SOURCE_DIR}/audioreader.cpp"
+	"${PROJECT_SOURCE_DIR}/calculators.cpp"
 	"${PROJECT_SOURCE_DIR}/descriptors.cpp"
 	"${PROJECT_SOURCE_DIR}/metaparser.cpp"
 	## parsercue.cpp     is required, depends on libcue
@@ -164,23 +164,26 @@ add_library (${PROJECT_NAME} SHARED
 )
 
 target_include_directories (${PROJECT_NAME}
-	PRIVATE ${PROJECT_BUILD_SOURCE_DIR} ) ## find version.hpp
+	PUBLIC $<BUILD_INTERFACE:${PROJECT_BUILD_SOURCE_DIR}> ) ## find version.hpp
 
 target_compile_options (${PROJECT_NAME}
 	PRIVATE ${CUSTOM_CXX_FLAGS} )
 
+list (APPEND PROJECT_PUBLIC_HEADERS
+	${PROJECT_SOURCE_DIR}/audioreader.hpp
+	${PROJECT_SOURCE_DIR}/calculators.hpp
+	${PROJECT_SOURCE_DIR}/descriptors.hpp
+	${PROJECT_SOURCE_DIR}/metaparser.hpp
+	${PROJECT_SOURCE_DIR}/sampleproc.hpp
+	${PROJECT_BUILD_SOURCE_DIR}/descriptors_audio.hpp
+	${PROJECT_BUILD_SOURCE_DIR}/descriptors_metadata.hpp
+	${PROJECT_BUILD_SOURCE_DIR}/version.hpp )
+
 set_target_properties (${PROJECT_NAME}
 	PROPERTIES
-	PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/audioreader.hpp
-	PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/calculators.hpp
-	PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/descriptors.hpp
-	PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/metaparser.hpp
-	PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/sampleproc.hpp
-	PUBLIC_HEADER ${PROJECT_BUILD_SOURCE_DIR}/descriptors_audio.hpp
-	PUBLIC_HEADER ${PROJECT_BUILD_SOURCE_DIR}/descriptors_metadata.hpp
-	PUBLIC_HEADER ${PROJECT_BUILD_SOURCE_DIR}/version.hpp
-	VERSION    "${PROJECT_VERSION_STRING_WITHOUT_SUFFIX}"
-	SOVERSION  "${PROJECT_VERSION_STRING_WITHOUT_SUFFIX}" )
+	PUBLIC_HEADER "${PROJECT_PUBLIC_HEADERS}"
+	VERSION       "${PROJECT_VERSION_STRING_WITHOUT_SUFFIX}"
+	SOVERSION     "${PROJECT_VERSION_STRING_WITHOUT_SUFFIX}" )
 
 
 
@@ -326,30 +329,68 @@ foreach (_header IN LISTS CONFIGURED_HEADERS )
 	)
 endforeach()
 
-## Configure .pc file for pkg-info
-
-configure_file (
-	"${CMAKE_CURRENT_SOURCE_DIR}/libarcsdec.pc.in"
-	"${PROJECT_BUILD_SOURCE_DIR}/libarcsdec.pc"
-	@ONLY
-)
-
 
 ## --- Install binary and exported header files
 
 if (NOT SKIP_INSTALL_ALL )
 
-	install (TARGETS ${PROJECT_NAME} EXPORT "${PROJECT_NAME}Targets"
+	install (TARGETS ${PROJECT_NAME} EXPORT "Lib${PROJECT_NAME}Targets"
 		LIBRARY        DESTINATION  "${INSTALL_LIBRARY_DIR}"
 		PUBLIC_HEADER  DESTINATION  "${INSTALL_INCLUDE_DIR}/arcsdec" )
 
-	install (EXPORT "${PROJECT_NAME}Targets"
+	install (EXPORT "Lib${PROJECT_NAME}Targets"
+		NAMESPACE libarcsdec::
 		DESTINATION "${INSTALL_LIBRARY_DIR}" )
+
 
 	if (NOT SKIP_INSTALL_FILES )
 
-		install (FILES "${PROJECT_BUILD_SOURCE_DIR}/libarcsdec.pc"
+		## support pkgconfig
+
+		set (PROJECT_PKGCONFIG_FILE
+			"${PROJECT_BUILD_SOURCE_DIR}/libarcsdec.pc" )
+
+		configure_file (
+			"${CMAKE_CURRENT_SOURCE_DIR}/libarcsdec.pc.in"
+			"${PROJECT_PKGCONFIG_FILE}"
+			@ONLY
+		)
+
+		install (FILES
+			"${PROJECT_PKGCONFIG_FILE}"
 			DESTINATION "${INSTALL_PKGCONFIG_DIR}" )
+
+		## support cmake
+
+		include (CMakePackageConfigHelpers )
+
+		set (PROJECT_CONFIG_FILE
+			"Lib${PROJECT_NAME}Config.cmake"
+		)
+
+		configure_package_config_file (
+			"${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_CONFIG_FILE}.in"
+			"${PROJECT_CONFIG_FILE}"
+			PATH_VARS INSTALL_INCLUDE_DIR
+			INSTALL_DESTINATION "${INSTALL_LIBRARY_DIR}"
+		)
+
+		set (PROJECT_CONFIG_VERSION_FILE
+			"Lib${PROJECT_NAME}ConfigVersion.cmake"
+		)
+
+		write_basic_package_version_file (
+			"${PROJECT_CONFIG_VERSION_FILE}"
+			VERSION			${PROJECT_VERSION_STRING_WITHOUT_SUFFIX}
+			COMPATIBILITY	SameMajorVersion
+		)
+
+		install (FILES
+			"${PROJECT_BINARY_DIR}/${PROJECT_CONFIG_FILE}"
+			"${PROJECT_BINARY_DIR}/${PROJECT_CONFIG_VERSION_FILE}"
+			DESTINATION "${INSTALL_LIBRARY_DIR}"
+		)
+
 	endif()
 
 endif (NOT SKIP_INSTALL_ALL)
