@@ -90,6 +90,10 @@ set (INSTALL_INCLUDE_DIR   "${CMAKE_INSTALL_PREFIX}/include"
 set (INSTALL_PKGCONFIG_DIR "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig"
 	CACHE PATH "Installation directory for pkgconfig (.pc) files" )
 
+set (INSTALL_CMAKECONFIG_DIR
+	"${CMAKE_INSTALL_PREFIX}/lib/cmake/lib${PROJECT_NAME}"
+	CACHE PATH "Installation directory for cmake package files" )
+
 set (CMAKE_MODULE_PATH     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules" )
 message (STATUS "Changed CMAKE_MODULE_PATH to: ${CMAKE_MODULE_PATH}" )
 
@@ -185,12 +189,14 @@ set_target_properties (${PROJECT_NAME}
 	VERSION       "${PROJECT_VERSION_STRING_WITHOUT_SUFFIX}"
 	SOVERSION     "${PROJECT_VERSION_STRING_WITHOUT_SUFFIX}" )
 
+set (PKG_REQUIRE_ARRAY )
 
 
 
 ## --- Required library: libarcstk
 
-find_package (libarcstk REQUIRED )
+find_package (libarcstk 0.1.0 REQUIRED )
+list (APPEND PKG_REQUIRE_ARRAY "libarcstk >= 0.1.0" )
 
 target_include_directories (${PROJECT_NAME} PRIVATE ${libarcstk_INCLUDE_DIRS} )
 target_link_libraries (${PROJECT_NAME} PRIVATE ${libarcstk_LIBRARIES} )
@@ -211,9 +217,10 @@ option (IWYU "Request use of include-what-you-use" OFF )
 ## --- Required: parsercue (requires libcue)
 
 find_package (libcue 2.0.0 REQUIRED )
+list (APPEND PKG_REQUIRE_ARRAY "libcue >= 2.0.0" )
 
 target_sources (${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/parsercue.cpp )
-target_include_directories (${PROJECT_NAME} PUBLIC ${libcue_INCLUDE_DIRS} )
+target_include_directories (${PROJECT_NAME} PRIVATE ${libcue_INCLUDE_DIRS} )
 target_link_libraries (${PROJECT_NAME} PUBLIC ${libcue_LIBRARIES} )
 
 
@@ -224,9 +231,10 @@ if (WITH_FLAC )
 	message (STATUS "Build with fLaC reading capability" )
 
 	find_package (FLAC 1.3.1 REQUIRED ) ## checks libFLAC as well as libFLAC++
+	list (APPEND PKG_REQUIRE_ARRAY "flac++ >= 1.3.1" )
 
 	target_sources (${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/readerflac.cpp )
-	target_include_directories (${PROJECT_NAME} PUBLIC ${FLAC_INCLUDE_DIRS} )
+	target_include_directories (${PROJECT_NAME} PRIVATE ${FLAC_INCLUDE_DIRS} )
 	target_link_libraries (${PROJECT_NAME} PUBLIC ${FLAC_LIBRARIES} )
 
 else (WITH_FLAC)
@@ -242,9 +250,10 @@ if (WITH_WAVPACK)
 	message (STATUS "Build with WavPack reading capability" )
 
 	find_package (libwavpack 5.0.0 REQUIRED )
+	list (APPEND PKG_REQUIRE_ARRAY "wavpack >= 5.0.0" )
 
 	target_sources (${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/readerwvpk.cpp )
-	target_include_directories (${PROJECT_NAME} PUBLIC ${libwavpack_INCLUDE_DIRS} )
+	target_include_directories (${PROJECT_NAME} PRIVATE ${libwavpack_INCLUDE_DIRS} )
 	target_link_libraries (${PROJECT_NAME} PUBLIC ${libwavpack_LIBRARIES} )
 
 else (WITH_WAVPACK)
@@ -283,6 +292,9 @@ if (WITH_FFMPEG)
 	at_least_version ("57.37.100" ${avcodec_VERSION}  ) ## 2016-04-21
 	at_least_version ("57.33.100" ${avformat_VERSION} ) ## 2016-04-11
 	at_least_version ("55.22.100" ${avutil_VERSION}   ) ## 2016-04-14
+	list (APPEND PKG_REQUIRE_ARRAY "libavcodec >= 57.37.100" )
+	list (APPEND PKG_REQUIRE_ARRAY "libavformat >= 57.33.100" )
+	list (APPEND PKG_REQUIRE_ARRAY "libavutil >= 55.22.100" )
 
 	## Commented out, API change is small, can be distinguished in source.
 	## ffmpeg x >= 4.0:
@@ -296,9 +308,9 @@ if (WITH_FFMPEG)
 		PRIVATE ${PROJECT_SOURCE_DIR}/readerffmpeg.cpp )
 
 	target_include_directories (${PROJECT_NAME}
-		PUBLIC ${avcodec_INCLUDE_DIRS}
-		PUBLIC ${avformat_INCLUDE_DIRS}
-		PUBLIC ${avutil_INCLUDE_DIRS} )
+		PRIVATE ${avcodec_INCLUDE_DIRS}
+		PRIVATE ${avformat_INCLUDE_DIRS}
+		PRIVATE ${avutil_INCLUDE_DIRS} )
 
 	target_link_libraries (${PROJECT_NAME}
 		PUBLIC ${avcodec_LIBRARIES}
@@ -334,18 +346,23 @@ endforeach()
 
 if (NOT SKIP_INSTALL_ALL )
 
-	install (TARGETS ${PROJECT_NAME} EXPORT "Lib${PROJECT_NAME}Targets"
+	set (EXPORT_MAIN_TARGET "lib${PROJECT_NAME}" )
+
+	install (TARGETS ${PROJECT_NAME}
+		EXPORT "${EXPORT_MAIN_TARGET}-targets"
 		LIBRARY        DESTINATION  "${INSTALL_LIBRARY_DIR}"
 		PUBLIC_HEADER  DESTINATION  "${INSTALL_INCLUDE_DIR}/arcsdec" )
 
-	install (EXPORT "Lib${PROJECT_NAME}Targets"
+	install (EXPORT ${EXPORT_MAIN_TARGET}-targets
 		NAMESPACE libarcsdec::
-		DESTINATION "${INSTALL_LIBRARY_DIR}" )
+		DESTINATION "${INSTALL_CMAKECONFIG_DIR}" )
 
 
 	if (NOT SKIP_INSTALL_FILES )
 
 		## support pkgconfig
+
+		string (REPLACE ";" ", " PKG_REQUIRE "${PKG_REQUIRE_ARRAY}" )
 
 		set (PROJECT_PKGCONFIG_FILE
 			"${PROJECT_BUILD_SOURCE_DIR}/libarcsdec.pc" )
@@ -360,23 +377,25 @@ if (NOT SKIP_INSTALL_ALL )
 			"${PROJECT_PKGCONFIG_FILE}"
 			DESTINATION "${INSTALL_PKGCONFIG_DIR}" )
 
+		unset (PKG_REQUIRE )
+
 		## support cmake
 
 		include (CMakePackageConfigHelpers )
 
 		set (PROJECT_CONFIG_FILE
-			"Lib${PROJECT_NAME}Config.cmake"
+			"${EXPORT_MAIN_TARGET}-config.cmake"
+		)
+
+		set (PROJECT_CONFIG_VERSION_FILE
+			"${EXPORT_MAIN_TARGET}-config-version.cmake"
 		)
 
 		configure_package_config_file (
 			"${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_CONFIG_FILE}.in"
 			"${PROJECT_CONFIG_FILE}"
 			PATH_VARS INSTALL_INCLUDE_DIR
-			INSTALL_DESTINATION "${INSTALL_LIBRARY_DIR}"
-		)
-
-		set (PROJECT_CONFIG_VERSION_FILE
-			"Lib${PROJECT_NAME}ConfigVersion.cmake"
+			INSTALL_DESTINATION "${INSTALL_CMAKECONFIG_DIR}"
 		)
 
 		write_basic_package_version_file (
@@ -388,7 +407,7 @@ if (NOT SKIP_INSTALL_ALL )
 		install (FILES
 			"${PROJECT_BINARY_DIR}/${PROJECT_CONFIG_FILE}"
 			"${PROJECT_BINARY_DIR}/${PROJECT_CONFIG_VERSION_FILE}"
-			DESTINATION "${INSTALL_LIBRARY_DIR}"
+			DESTINATION "${INSTALL_CMAKECONFIG_DIR}"
 		)
 
 	endif()

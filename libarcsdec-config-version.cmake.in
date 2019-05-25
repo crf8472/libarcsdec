@@ -1,0 +1,2 @@
+## NOTE This is currently unused, libarcsdec-config-version.cmake is generated
+set (PACKAGE_VERSION      "@PROJECT_VERSION_STRING@" )
