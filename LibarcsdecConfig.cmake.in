@@ -1,4 +1,0 @@
-@PACKAGE_INIT@
-set_and_check (libarcsdec_INCLUDE_DIR "${PACKAGE_INSTALL_INCLUDE_DIR}")
-#set_and_check (libarcsdec_LIBRARIES   "${PACKAGE_LIBRARIES}")
-#set_and_check (libarcsdec_DEFINITIONS "${PACKAGE_DEFINITIONS}")
