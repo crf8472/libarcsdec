@@ -1,13 +1,18 @@
 ## Try to find required ffmpeg components
 ##
+## This module accepts a REQUIRED ffmpeg version but cannot detect the ffmpeg
+## package version (e.g. 3.1). Only versions of the component libs are relevant
+## and can be detected (quite) safely. The find_package command does not
+## accept required versions for components. So the module just returns the lib
+## versions and the caller has to check them on her own.
+##
 ## This module defines the following variables
 ##
 ##  FFMPEG_FOUND
 ##  FFMPEG_INCLUDE_DIRS
 ##  FFMPEG_LIBRARIES
-##  FFMPEG_DEFINITIONS
 ##
-## It tries to find the following components:
+## It tries to find the following components by default:
 ##
 ##  - libavcodec
 ##  - libavformat
@@ -19,7 +24,6 @@
 ##  ${component}_VERSION
 ##  ${component}_INCLUDE_DIRS
 ##  ${component}_LIBRARIES
-##  ${component}_DEFINITIONS
 ##
 ## The following components are ignored by default since libarcsdec does not
 ## use them, but can explicitly be requested as COMPONENTS:
@@ -31,27 +35,20 @@
 ##   - swresample
 
 
-if (NOT ffmpeg_FIND_COMPONENTS )
-
-	## libavformat, libavcodec and libavutil are the explicit dependencies
-
-	set (ffmpeg_FIND_COMPONENTS avcodec avformat avutil )
-endif()
-
-if (ffmpeg_FIND_VERSION )
-
-	message (WARNING
-	"Find ffmpeg but ignore request for specific version ${ffmpeg_FIND_VERSION}."
-	)
-endif()
-
-
 ## Macro: find_component
 ##
-## Find the component _component with the pkgconfig-name _pkgconfigname that you
-## whish to include by the specific header _header (along with path)
+## Finds a component by its name.
 ##
-macro (find_component _component _pkgconfigname _header)
+## Arguments:
+##		_component: filename without "lib"
+##		_pkgconfigname: component name used by pkg-config
+##
+## Sets the variables:
+##		${_component}_VERSION
+##		${_component}_INCLUDE_DIRS
+##		${_component}_LIBRARIES
+##
+macro (find_component _component _pkgconfigname )
 
 	if (PkgConfig_FOUND)
 
@@ -67,12 +64,12 @@ macro (find_component _component _pkgconfigname _header)
 	## message (STATUS "        library: ${PC_${_component}_LIBDIR}" )
 
 	find_path (${_component}_INCLUDE_DIRS
-		NAMES ${_header}
+		NAMES "lib${_component}/${_component}.h"
 		PATHS
 			${PC_${_component}_INCLUDEDIR}
 			${PC_${_component}_INCLUDE_DIRS}
 		DOC
-			"Location of lib${_component} headers"
+			"Header path required to include <lib${_component}/${_component}.h>"
 	)
 
 	find_library (${_component}_LIBRARIES
@@ -117,6 +114,7 @@ macro (find_component _component _pkgconfigname _header)
 			NAMES "version.h"
 			PATHS ${${_component}_INCLUDE_DIRS}
 			PATH_SUFFIXES ${_component} ${_pkgconfigname}
+			DOC "Path to ${_component}'s 'version.h'"
 		)
 
 		file (STRINGS "${${_component}_VERSIONFILE_PATH}/version.h"
@@ -149,21 +147,20 @@ macro (find_component _component _pkgconfigname _header)
 	endif()
 
 
-	## Flags
-
-	set (${_component}_DEFINITIONS ${PC_${_component}_CFLAGS_OTHER}
-			CACHE STRING "CFLAGS for binding lib${_component}" )
-
+	## Debug output
 
 	if (${${_component}_FOUND} )
+
 		if (NOT PC_${_component}_VERSION )
+
 			message (STATUS "  lib${_component} found" )
 			message (STATUS "    version: ${${_component}_VERSION}" )
 		endif()
+
 		message (STATUS "    library: ${${_component}_LIBRARIES}" )
 		message (STATUS "    include: ${${_component}_INCLUDE_DIRS}" )
-		message (STATUS "    flags:   ${${_component}_DEFINITIONS}" )
 	else()
+
 		message (WARNING "${_component} not found!" )
 	endif()
 
@@ -171,9 +168,26 @@ macro (find_component _component _pkgconfigname _header)
 		${_component}_INCLUDE_DIRS
 		${_component}_LIBRARIES
 		${_component}_VERSION
-		${_component}_DEFINITIONS )
+	)
 
 endmacro()
+
+
+## Check arguments
+
+if (NOT ffmpeg_FIND_COMPONENTS )
+
+	## libavformat, libavcodec and libavutil are the explicit dependencies
+
+	set (ffmpeg_FIND_COMPONENTS "avcodec" "avformat" "avutil" )
+endif()
+
+if (ffmpeg_FIND_VERSION )
+
+	message (WARNING
+	"Ignore constraint for specific ffmpeg version ${ffmpeg_FIND_VERSION}."
+	)
+endif()
 
 
 ## Check for cached results
@@ -182,24 +196,24 @@ if (NOT FFMPEG_LIBRARIES )
 
 	find_package (PkgConfig QUIET )
 
+	if (NOT PkgConfig_FOUND )
+
+		message (WARNING
+		"Consider installing pkg-config to find ffmpeg libraries correctly" )
+	endif()
+
 	## Add the includes, libraries and definitions of the required components
 	## to the ffmpeg variables
 
 	foreach (_component ${ffmpeg_FIND_COMPONENTS})
 
-		find_component(${_component}
-			"lib${_component}"
-			"lib${_component}/${_component}.h" )
+		find_component(${_component} "lib${_component}" )
 
 		if (${_component}_FOUND)
 
 			list (APPEND FFMPEG_INCLUDE_DIRS ${${_component}_INCLUDE_DIRS} )
 
-			set (FFMPEG_LIBRARIES
-				${FFMPEG_LIBRARIES} ${${_component}_LIBRARIES} )
-
-			set (FFMPEG_DEFINITIONS
-				${FFMPEG_DEFINITIONS} ${${_component}_DEFINITIONS} )
+			list (APPEND FFMPEG_LIBRARIES    ${${_component}_LIBRARIES} )
 
 		endif()
 
@@ -214,31 +228,28 @@ if (NOT FFMPEG_LIBRARIES )
 	# Cache the ffmpeg variables
 
 	set (FFMPEG_INCLUDE_DIRS ${FFMPEG_INCLUDE_DIRS}
-		CACHE STRING "ffmpeg: include directories" )
+		CACHE STRING "Header path required to include <libav.../av....h>" )
 
 	set (FFMPEG_LIBRARIES    ${FFMPEG_LIBRARIES}
-		CACHE STRING "ffmpeg: libraries" )
-
-	set (FFMPEG_DEFINITIONS  ${FFMPEG_DEFINITIONS}
-		CACHE STRING "ffmpeg: cflags" )
+		CACHE STRING "Location of ffmpeg libraries" )
 
 	mark_as_advanced (
 		FFMPEG_INCLUDE_DIRS
 		FFMPEG_LIBRARIES
-		FFMPEG_DEFINITIONS )
+	)
 
 endif (NOT FFMPEG_LIBRARIES )
 
 
-## Compile the list of required variables
+## List of required variables' names
 
 set (_ffmpeg_REQUIRED_VARS FFMPEG_LIBRARIES FFMPEG_INCLUDE_DIRS )
 
 foreach (_component ${ffmpeg_FIND_COMPONENTS} )
 
 	list (APPEND _ffmpeg_REQUIRED_VARS ${_component}_VERSION )
-
-	## One could also add ${_component}_INCLUDE_DIRS and ${_component}_LIBRARIES
+	list (APPEND _ffmpeg_REQUIRED_VARS ${_component}_INCLUDE_DIRS )
+	list (APPEND _ffmpeg_REQUIRED_VARS ${_component}_LIBRARIES )
 
 endforeach()
 
@@ -247,5 +258,10 @@ endforeach()
 
 include (FindPackageHandleStandardArgs )
 
-find_package_handle_standard_args (ffmpeg DEFAULT_MSG ${_ffmpeg_REQUIRED_VARS} )
+find_package_handle_standard_args (ffmpeg
+	REQUIRED_VARS ${_ffmpeg_REQUIRED_VARS}
+    FAIL_MESSAGE  DEFAULT_MSG
+)
+
+unset (_ffmpeg_REQUIRED_VARS )
 
