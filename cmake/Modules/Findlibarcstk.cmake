@@ -15,11 +15,14 @@ find_package (PkgConfig QUIET )
 
 if (PkgConfig_FOUND )
 
-	PKG_CHECK_MODULES (PC_LIBARCSTK QUIET libarcstk )
+	pkg_check_modules (PC_LIBARCSTK QUIET libarcstk )
 
 	set (LIBARCSTK_VERSION ${PC_LIBARCSTK_VERSION} )
+else()
 
+	message (WARNING "You will need pkg-config to correctly detect libarcstk" )
 endif ()
+
 
 find_path (LIBARCSTK_INCLUDE_DIR
 	NAME "arcstk/calculate.hpp"
@@ -34,12 +37,13 @@ find_library (LIBARCSTK_LIBRARY
 	PATHS
 		${PC_LIBARCSTK_LIBDIR}
 		${PC_LIBARCSTK_LIBRARY_DIRS}
-	DOC "Lib path for libarcstk"
+	DOC "Link library for libarcstk"
 )
 
 mark_as_advanced (
 	LIBARCSTK_INCLUDE_DIR
 	LIBARCSTK_LIBRARY
+	LIBARCSTK_VERSION
 )
 
 include (FindPackageHandleStandardArgs )
@@ -51,9 +55,9 @@ find_package_handle_standard_args (libarcstk
 
 ## Export oldstyle variables for backwards compatibility
 if (libarcstk_FOUND )
-    set (libarcstk_VERSION      "${LIBARCSTK_VERSION}" )
-    set (libarcstk_LIBRARIES    "${LIBARCSTK_LIBRARY}" )
-    set (libarcstk_INCLUDE_DIRS "${LIBARCSTK_INCLUDE_DIR}" )
+	set (libarcstk_VERSION      "${LIBARCSTK_VERSION}" )
+	set (libarcstk_LIBRARIES    "${LIBARCSTK_LIBRARY}" )
+	set (libarcstk_INCLUDE_DIRS "${LIBARCSTK_INCLUDE_DIR}" )
 endif()
 
 ## Export "modern" target
