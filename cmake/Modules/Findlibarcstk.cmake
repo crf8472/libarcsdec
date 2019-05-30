@@ -49,8 +49,6 @@ find_package_handle_standard_args (libarcstk
 	VERSION_VAR   LIBARCSTK_VERSION
 )
 
-message (STATUS "FOUND: ${libarcstk_FOUND}" )
-
 ## Export oldstyle variables for backwards compatibility
 if (libarcstk_FOUND )
     set (libarcstk_VERSION      "${LIBARCSTK_VERSION}" )
