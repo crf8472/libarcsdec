@@ -11,11 +11,11 @@ cmake_policy (SET CMP0048 NEW)
 cmake_policy (SET CMP0057 NEW)
 
 
-project (arcsdec VERSION 0.1.0 LANGUAGES CXX )
+project (libarcsdec VERSION 0.1.0 LANGUAGES CXX )
 
 set (PROJECT_BRIEF_DESC "Audio decoder and TOC parser adapters for libarcstk" )
 
-set (PROJECT_URL "https://codeberg.org/tristero/libarcsdec/" )
+set (PROJECT_URL "https://codeberg.org/tristero/${PROJECT_NAME}/" )
 
 set (PROJECT_VERSION_SUFFIX "alpha.1" )
 
@@ -42,7 +42,7 @@ if (PROJECT_VERSION_SUFFIX)
 		"${PROJECT_VERSION_STRING}-${PROJECT_VERSION_SUFFIX}" )
 endif(PROJECT_VERSION_SUFFIX)
 
-message (STATUS "Building lib${PROJECT_NAME} ${PROJECT_VERSION_STRING}" )
+message (STATUS "Building ${PROJECT_NAME} ${PROJECT_VERSION_STRING}" )
 
 
 ## --- Setup Default Build Type
@@ -84,14 +84,14 @@ set (PROJECT_BUILD_DOC_DIR    "${PROJECT_BINARY_DIR}/generated-docs" )
 set (INSTALL_LIBRARY_DIR   "${CMAKE_INSTALL_PREFIX}/lib"
 	CACHE PATH "Installation directory for library (.so) files" )
 
-set (INSTALL_INCLUDE_DIR   "${CMAKE_INSTALL_PREFIX}/include"
+set (INSTALL_INCLUDE_DIR   "${CMAKE_INSTALL_PREFIX}/include/arcsdec"
 	CACHE PATH "Installation directory for include (.hpp) files" )
 
 set (INSTALL_PKGCONFIG_DIR "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig"
 	CACHE PATH "Installation directory for pkgconfig (.pc) files" )
 
 set (INSTALL_CMAKECONFIG_DIR
-	"${CMAKE_INSTALL_PREFIX}/lib/cmake/lib${PROJECT_NAME}"
+	"${CMAKE_INSTALL_PREFIX}/lib/cmake/${PROJECT_NAME}"
 	CACHE PATH "Installation directory for cmake package files" )
 
 set (CMAKE_MODULE_PATH     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules" )
@@ -183,9 +183,10 @@ list (APPEND PROJECT_PUBLIC_HEADERS
 	${PROJECT_BUILD_SOURCE_DIR}/descriptors_metadata.hpp
 	${PROJECT_BUILD_SOURCE_DIR}/version.hpp )
 
-set_target_properties (${PROJECT_NAME}
-	PROPERTIES
+set_target_properties (${PROJECT_NAME} PROPERTIES
+	## CXX_STANDARD  14 ## Commented out: already set globally
 	PUBLIC_HEADER "${PROJECT_PUBLIC_HEADERS}"
+	PREFIX        "" ## No 'lib' prefix in soname, PROJECT_NAME is prefixed
 	VERSION       "${PROJECT_VERSION_STRING_WITHOUT_SUFFIX}"
 	SOVERSION     "${PROJECT_VERSION_STRING_WITHOUT_SUFFIX}" )
 
@@ -195,11 +196,15 @@ set (PKG_REQUIRE_ARRAY )
 
 ## --- Required library: libarcstk
 
+## Commented out: coming with 3.14.5 ?
+# set (CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE )
+
 find_package (libarcstk 0.1.0 REQUIRED )
 list (APPEND PKG_REQUIRE_ARRAY "libarcstk >= 0.1.0" )
 
 target_include_directories (${PROJECT_NAME} PRIVATE ${libarcstk_INCLUDE_DIRS} )
 target_link_libraries (${PROJECT_NAME} PRIVATE ${libarcstk_LIBRARIES} )
+#target_link_libraries (${PROJECT_NAME} PRIVATE libarcstk::libarcstk )
 
 
 ## --- Configure optional features
@@ -346,12 +351,12 @@ endforeach()
 
 if (NOT SKIP_INSTALL_ALL )
 
-	set (EXPORT_MAIN_TARGET "lib${PROJECT_NAME}" )
+	set (EXPORT_MAIN_TARGET "${PROJECT_NAME}" )
 
 	install (TARGETS ${PROJECT_NAME}
 		EXPORT "${EXPORT_MAIN_TARGET}-targets"
 		LIBRARY        DESTINATION  "${INSTALL_LIBRARY_DIR}"
-		PUBLIC_HEADER  DESTINATION  "${INSTALL_INCLUDE_DIR}/arcsdec" )
+		PUBLIC_HEADER  DESTINATION  "${INSTALL_INCLUDE_DIR}" )
 
 	install (EXPORT ${EXPORT_MAIN_TARGET}-targets
 		NAMESPACE libarcsdec::
