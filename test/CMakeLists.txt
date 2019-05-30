@@ -46,9 +46,9 @@ foreach (_testcase ${TEST_SETS} )
 		PRIVATE ${PROJECT_BINARY_DIR} ) ## version.hpp + CMake controlled stuff
 
 	target_link_libraries (${_testcase}_test
-		Catch2::Catch2           ## Catch2
-		${PROJECT_NAME}          ## project binaries
-		${libarcstk_LIBRARIES} ) ## libarcstk as a dependency
+		Catch2::Catch2
+		libarcstk::libarcstk
+		${PROJECT_NAME} )        ## project binaries
 
 
 	## Add test to ctest set

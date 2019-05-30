@@ -202,9 +202,7 @@ set (PKG_REQUIRE_ARRAY )
 find_package (libarcstk 0.1.0 REQUIRED )
 list (APPEND PKG_REQUIRE_ARRAY "libarcstk >= 0.1.0" )
 
-target_include_directories (${PROJECT_NAME} PRIVATE ${libarcstk_INCLUDE_DIRS} )
-target_link_libraries (${PROJECT_NAME} PRIVATE ${libarcstk_LIBRARIES} )
-#target_link_libraries (${PROJECT_NAME} PRIVATE libarcstk::libarcstk )
+target_link_libraries (${PROJECT_NAME} PRIVATE libarcstk::libarcstk )
 
 
 ## --- Configure optional features
