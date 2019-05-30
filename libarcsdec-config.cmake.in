@@ -1,6 +1,6 @@
 @PACKAGE_INIT@
 
-## TODO Use find_dependency to search for the libraries libarcsdec depends on
-## This information should be already captured in the imported targets. (?)
+## Import targets exported by the project
+get_filename_component(_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+include (${_DIR}/libarcsdec-targets.cmake )
 
-include (${CMAKE_CURRENT_LIST_DIR}/libarcsdec-targets.cmake )
