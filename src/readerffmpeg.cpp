@@ -614,8 +614,8 @@ std::unique_ptr<FFmpegAudioFile> FFmpegFileLoader::load(
 			::av_free(format_ctx);
 		}
 
-		ARCS_LOG_ERROR << "Failed to acquire format context for file "
-			<< filename.c_str();
+		//ARCS_LOG_ERROR << "Failed to acquire format context for file "
+		//	<< filename.c_str();
 
 		throw;
 	}
@@ -646,8 +646,8 @@ std::unique_ptr<FFmpegAudioFile> FFmpegFileLoader::load(
 			::av_free(format_ctx);
 		}
 
-		ARCS_LOG_ERROR << "Failed to acquire codec and stream information "
-			<< "for file " << filename;
+		//ARCS_LOG_ERROR << "Failed to acquire codec and stream information "
+		//	<< "for file " << filename;
 
 		throw;
 	}

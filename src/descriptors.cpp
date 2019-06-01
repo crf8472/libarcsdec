@@ -366,7 +366,7 @@ std::vector<char> FileTestBytes::read_bytes(const std::string &filename,
 	{
 		int64_t total_bytes_read = in.gcount();
 
-		ARCS_LOG_ERROR << "Failed to read from file: " << f.what();
+		//ARCS_LOG_ERROR << "Failed to read from file: " << f.what();
 		bytes.resize(0);
 
 		throw FileReadException(f.what(), total_bytes_read + 1);

@@ -1662,7 +1662,7 @@ uint64_t PCMBlockReader::read_blocks(std::ifstream &in,
 		{
 			total_bytes_read += in.gcount();
 
-			ARCS_LOG_ERROR << "Failed to read from file: " << f.what();
+			//ARCS_LOG_ERROR << "Failed to read from file: " << f.what();
 
 			throw FileReadException(f.what(), total_bytes_read + 1);
 		}
@@ -1749,8 +1749,8 @@ uint64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 	{
 		total_bytes_read += in.gcount();
 
-		ARCS_LOG_ERROR << "Failed to read chunk descriptor from file: "
-				<< f.what();
+		//ARCS_LOG_ERROR << "Failed to read chunk descriptor from file: "
+		//		<< f.what();
 
 		throw FileReadException(f.what(), total_bytes_read + 1);
 	}
@@ -1781,8 +1781,8 @@ uint64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 		{
 			total_bytes_read += in.gcount();
 
-			ARCS_LOG_ERROR << "Failed to read subchunk header from file: "
-					<< f.what();
+			//ARCS_LOG_ERROR << "Failed to read subchunk header from file: "
+			//		<< f.what();
 
 			throw FileReadException(f.what(), total_bytes_read + 1);
 		}
@@ -1828,8 +1828,8 @@ uint64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 			{
 				total_bytes_read += in.gcount();
 
-				ARCS_LOG_ERROR << "Failed to read format subchunk from file: "
-					<< f.what();
+				//ARCS_LOG_ERROR << "Failed to read format subchunk from file: "
+				//	<< f.what();
 
 				throw FileReadException(f.what(), total_bytes_read + 1);
 			}
@@ -1969,7 +1969,7 @@ void WavAudioReaderImpl::process_file(const std::string &filename,
 	{
 		int64_t total_bytes_read = in.gcount();
 
-		ARCS_LOG_ERROR << "Failed to open audio file: " << f.what();
+		//ARCS_LOG_ERROR << "Failed to open audio file: " << f.what();
 
 		throw FileReadException(f.what(), total_bytes_read + 1);
 	}
@@ -1987,7 +1987,7 @@ void WavAudioReaderImpl::process_file(const std::string &filename,
 	}
 	catch (const std::ifstream::failure& f)
 	{
-		ARCS_LOG_ERROR << "Failed to close audio file: " << f.what();
+		//ARCS_LOG_ERROR << "Failed to close audio file: " << f.what();
 		throw FileReadException(f.what());
 	}
 
