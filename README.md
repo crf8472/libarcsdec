@@ -87,6 +87,19 @@ Build and install to just use the libarcsdec API:
 	$ cd libarcsdec     # your libarcsdec root directory where README.md resides
 	$ mkdir build && cd build
 	$ cmake -DCMAKE_BUILD_TYPE=Release ..  # use any build switches you need
+
+If this issues an error that reads
+
+	"Could NOT find libarcstk (missing: LIBARCSTK_VERSION)",
+
+the cause may be that pkg-config is either not installed or cannot find the
+installed .pc-file of libarcstk, e.g. because CMAKE does not respect /usr/local
+while searching for files. Try:
+
+	$ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/usr/local ..
+
+And proceed:
+
 	$ cmake --build .
 	$ sudo make install # installs to /usr/local
 
