@@ -83,7 +83,7 @@ public:
 	 *
 	 * \return The AccurateRip id for this medium
 	 */
-	std::unique_ptr<ARId> calculate(const std::string &metafilename);
+	std::unique_ptr<ARId> calculate(const std::string &metafilename) const;
 
 	/**
 	 * \brief Calculate ARId using the specified metadata file and the specified
@@ -95,7 +95,22 @@ public:
 	 * \return The AccurateRip id for this medium
 	 */
 	std::unique_ptr<ARId> calculate(const std::string &audiofilename,
-			const std::string &metafilename);
+			const std::string &metafilename) const;
+
+
+private:
+
+	/**
+	 * \brief Worker: calculate ID from TOC while taking leadout from audio
+	 * file.
+	 *
+	 * \param[in] toc           TOC of the image
+	 * \param[in] audiofilename Name of the image audiofile
+	 *
+	 * \return The AccurateRip id for this medium
+	 */
+	std::unique_ptr<ARId> calculate(const TOC &toc,
+			const std::string &audiofilename) const;
 };
 
 
@@ -234,7 +249,7 @@ private:
 TOCParser::~TOCParser() noexcept = default;
 
 
-TOC TOCParser::parse(const std::string &metafilename)
+std::unique_ptr<TOC> TOCParser::parse(const std::string &metafilename) const
 {
 	if (metafilename.empty())
 	{
@@ -248,18 +263,9 @@ TOC TOCParser::parse(const std::string &metafilename)
 	MetadataParserSelection selection;
 	std::unique_ptr<MetadataParser> parser = selection.for_file(metafilename);
 
-	ARCS_LOG_INFO << "Start to parse metadata input";
+	ARCS_LOG_DEBUG << "Start to parse metadata input";
 
-	std::unique_ptr<TOC> toc { parser->parse(metafilename) };
-
-	if (!toc)
-	{
-		ARCS_LOG_ERROR << "Parser did not provide a TOC";
-
-		// TODO Throw Exception? If parse() did not throw, toc won't be null
-	}
-
-	return *toc;
+	return parser->parse(metafilename);
 }
 
 
@@ -267,76 +273,114 @@ TOC TOCParser::parse(const std::string &metafilename)
 
 
 std::unique_ptr<ARId> ARIdCalculator::Impl::calculate(
-		const std::string &metafilename)
+		const std::string &metafilename) const
 {
-	std::unique_ptr<TOC> toc;
+	TOCParser parser;
+	auto toc = parser.parse(metafilename);
+
+	if (toc->complete())
 	{
-		TOCParser parser;
-		toc = std::make_unique<TOC>(parser.parse(metafilename));
+		return make_arid(*toc);
 	}
 
-	if (not toc->complete())
-	{
-		ARCS_LOG_ERROR <<
-			"Incomplete TOC and no audio file provided. Bail out.";
+	ARCS_LOG_INFO <<
+		"Incomplete TOC and no audio file provided."
+		" Try to find audio file references in TOC.";
 
-		return make_empty_arid();
+	// Check whether TOC references exactly one audio file.
+	// (Other cases are currently unsupported.)
+
+	auto audiofilenames { arcstk::toc::get_filenames(*toc) };
+
+	if (audiofilenames.empty())
+	{
+		throw std::runtime_error("Incomplete TOC, no audio file provided "
+				"and TOC does not seem to reference any audio file.");
+	} else
+	{
+		std::unordered_set<std::string> name_set;
+		for (const auto& name : audiofilenames) { name_set.insert(name); }
+		if (name_set.size() != 1)
+		{
+			throw std::runtime_error("Incomplete TOC, no audio file provided "
+					"and TOC does not reference exactly one audio file.");
+		}
 	}
 
-	return make_arid(*toc);
+	auto audiofile { audiofilenames[0] };
+
+	// Use path from metafile (if any) as search path for the audio file
+
+	auto pos = metafilename.find_last_of("/\\");
+
+	if (pos != std::string::npos)
+	{
+		// If pos+1 would be illegal, already parser.parse() would have thrown
+		audiofile = metafilename.substr(0, pos + 1).append(audiofile);
+	}
+
+	// single audio file guaranteed, just take first
+	return this->calculate(*toc, audiofile);
 }
 
 
 std::unique_ptr<ARId> ARIdCalculator::Impl::calculate(
-		const std::string &audiofilename, const std::string &metafilename)
+		const std::string &audiofilename, const std::string &metafilename) const
 {
-	std::unique_ptr<TOC> toc;
+	if (audiofilename.empty())
 	{
-		TOCParser parser;
-		toc = std::make_unique<TOC>(parser.parse(metafilename));
+		return this->calculate(metafilename);
 	}
 
-	// If TOC is incomplete, analyze audio data to derive leadout
+	TOCParser parser;
+	auto toc = parser.parse(metafilename);
 
-	uint32_t leadout = toc->leadout();
-
-	if (not toc->complete())
+	if (toc->complete())
 	{
-		// A complete multitrack configuration of the \ref Calculation requires
-		// two informations:
-		// 1.) the LBA offset of each track_count
-		//	=> which are known at this point by inspecting the TOC
-		// 2.) at least one of the following three:
-		//	a) the LBA track index of the leadout frame
-		//	b) the total number of 16bit samples in <audiofilename>
-		//	c) the total number bytes in <audiofilename> representing samples
-		//	=> which may or may not be represented in the TOC
-
-		// A TOC is the result of parsing a TOC providing file. Not all TOC
-		// providing file formats contain sufficient information to calculate
-		// the leadout (certain CUESheets for example do not). Therefore, TOCs
-		// are accepted to be incomplete up to this point.
-
-		// However, this means we have to inspect the audio file to get the
-		// missing information and pass it to make_arid().
-
-		// The total PCM byte count is exclusively known to the AudioReader in
-		// the process of reading the audio file. (We cannot deduce it from the
-		// mere file size.) We get the information by acquiring a CalcContext
-		// from the audio file, although we do now intend to read the audio
-		// samples.
-
-		// The builder has to check its input values either way when it is
-		// requested to start processing.
-
-		AudioReaderSelection selection;
-		std::unique_ptr<AudioReader> reader = selection.for_file(audiofilename);
-		auto audiosize = reader->acquire_size(audiofilename);
-
-		leadout = audiosize->leadout_frame();
+		return make_arid(*toc);
 	}
 
-	return make_arid(*toc, leadout);
+	// If TOC is incomplete, analyze audio file passed
+
+	return this->calculate(*toc, audiofilename);
+}
+
+
+std::unique_ptr<ARId> ARIdCalculator::Impl::calculate(const TOC &toc,
+		const std::string &audiofilename) const
+{
+	// A complete multitrack configuration of the Calculation requires
+	// two informations:
+	// 1.) the LBA offset of each track_count
+	//	=> which are known at this point by inspecting the TOC
+	// 2.) at least one of the following three:
+	//	a) the LBA track index of the leadout frame
+	//	b) the total number of 16bit samples in <audiofilename>
+	//	c) the total number of bytes in <audiofilename> representing samples
+	//	=> which may or may not be represented in the TOC
+
+	// A TOC is the result of parsing a TOC providing file. Not all TOC
+	// providing file formats contain sufficient information to calculate
+	// the leadout (simple CUESheets for example do not). Therefore, TOCs
+	// are accepted to be incomplete up to this point.
+
+	// However, this means we have to inspect the audio file to get the
+	// missing information and pass it to make_arid().
+
+	// The total PCM byte count is exclusively known to the AudioReader in
+	// the process of reading the audio file. (We cannot deduce it from the
+	// mere file size.) We get the information by acquiring a CalcContext
+	// from the audio file, although we do now intend to read the audio
+	// samples.
+
+	// The builder has to check its input values either way when it is
+	// requested to start processing.
+
+	AudioReaderSelection selection;
+	std::unique_ptr<AudioReader> reader = selection.for_file(audiofilename);
+	auto audiosize = reader->acquire_size(audiofilename);
+
+	return make_arid(toc, audiosize->leadout_frame());
 }
 
 

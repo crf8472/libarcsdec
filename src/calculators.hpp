@@ -74,7 +74,7 @@ public:
 	 *
 	 * \return The parsed TOC
 	 */
-	TOC parse(const std::string &metafilename);
+	std::unique_ptr<TOC> parse(const std::string &metafilename) const;
 };
 
 
