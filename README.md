@@ -2,6 +2,7 @@
 
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![C++14](https://img.shields.io/badge/C++-14-darkred.svg)](./API.md)
+[![Latest](https://img.shields.io/badge/dynamic/json.svg?url=https://codeberg.org/api/v1/repos/tristero/libarcsdec/releases&label=latest&query=$.0.name&color=yellowgreen)](https://codeberg.org/tristero/libarcsdec/releases)
 
 
 
@@ -93,12 +94,13 @@ If this issues an error that reads
 	"Could NOT find libarcstk (missing: LIBARCSTK_VERSION)",
 
 the cause may be that pkg-config is either not installed or cannot find the
-installed .pc-file of libarcstk, e.g. because CMAKE does not respect /usr/local
-while searching for files. Try:
+installed .pc-file of libarcstk, e.g. because cmake does not respect /usr/local
+while searching for files. The latter could be fixed by giving cmake a hint
+like:
 
 	$ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/usr/local ..
 
-And proceed:
+Proceed:
 
 	$ cmake --build .
 	$ sudo make install # installs to /usr/local
@@ -109,9 +111,10 @@ build switches.
 
 ## How to Use
 
+- Consult the [example application](./examples). It illustrates the supported
+  usecases.
 - [Build the API documentation](BUILD.md#building-the-api-documentation) and
   view it in a browser
-- Have a look at the [examples](./examples)
 
 
 ## Current Limitations
