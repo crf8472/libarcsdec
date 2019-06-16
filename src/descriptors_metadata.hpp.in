@@ -14,7 +14,9 @@
 #include <memory>
 #include <vector>
 
-#include "@PROJECT_SOURCE_DIR@/parsercue.hpp"
+#ifndef __LIBARCSDEC_PARSERCUE_HPP__
+#include "parsercue.hpp"
+#endif
 
 
 namespace arcsdec

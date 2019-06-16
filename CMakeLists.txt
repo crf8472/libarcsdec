@@ -168,6 +168,7 @@ add_library (${PROJECT_NAME} SHARED
 )
 
 target_include_directories (${PROJECT_NAME}
+	PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
 	PUBLIC $<BUILD_INTERFACE:${PROJECT_BUILD_SOURCE_DIR}> ) ## find version.hpp
 
 target_compile_options (${PROJECT_NAME}

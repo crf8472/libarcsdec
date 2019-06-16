@@ -14,7 +14,9 @@
 #include <memory>
 #include <vector>
 
-#include "@PROJECT_SOURCE_DIR@/readerwav.hpp"
+#ifndef __LIBARCSDEC_READERWAV_HPP__
+#include "readerwav.hpp"
+#endif
 
 
 // Configure available features
@@ -25,7 +27,9 @@
 #cmakedefine WITH_FLAC     // will be defined iff compiled with FLAC support
 
 #ifdef WITH_FLAC
-	#include "@PROJECT_SOURCE_DIR@/readerflac.hpp"
+	#ifndef __LIBARCSDEC_READERFLAC_HPP__
+	#include "readerflac.hpp"
+	#endif
 #endif
 
 
@@ -34,7 +38,9 @@
 #cmakedefine WITH_WAVPACK
 
 #ifdef WITH_WAVPACK
-	#include "@PROJECT_SOURCE_DIR@/readerwvpk.hpp"
+	#ifndef __LIBARCSDEC_READERWVPK_HPP__
+	#include "readerwvpk.hpp"
+	#endif
 #endif
 
 
@@ -43,7 +49,9 @@
 #cmakedefine WITH_FFMPEG
 
 #ifdef WITH_FFMPEG
-	#include "@PROJECT_SOURCE_DIR@/readerffmpeg.hpp"
+	#ifndef __LIBARCSDEC_READERFFMPEG_HPP__
+	#include "readerffmpeg.hpp"
+	#endif
 #endif
 
 
