@@ -17,7 +17,7 @@
 
 
 // ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
-// NOTE! THIS IS EXAMPLE CODE! IT IS INTENDED TO DEMONSTRATE HOW LIBARCS COULD
+// NOTE! THIS IS EXAMPLE CODE! IT IS INTENDED TO DEMONSTRATE HOW LIBARCSTK COULD
 // BE USED. IT IS NOT INTENDED TO BE USED IN REAL LIFE PRODUCTION. IT IS IN NO
 // WAY TESTED FOR PRODUCTION. TAKE THIS AS A STARTING POINT TO YOUR OWN
 // SOLUTION, NOT AS A TOOL.
@@ -53,13 +53,13 @@ int main(int argc, char* argv[])
 	// to CUESheets. We require a CUESheet for this example since at the time of
 	// writing, CUESheet is the only actual input format implemented. :-)
 	arcsdec::TOCParser parser;
-	arcstk::TOC toc { parser.parse(metafilename) };
+	auto tocptr { parser.parse(metafilename) };
 
 	// Read the audio file and calculate the result.
 	// Note that technical details of the audio input are "abstracted away" by
 	// libarcsdec. ARCSCalculator takes some audio and gives you the ARCSs.
 	arcsdec::ARCSCalculator calculator;
-	auto result { calculator.calculate(audiofilename, toc) };
+	auto result { calculator.calculate(audiofilename, *tocptr) };
 
 	// The result is a tuple containing the checksums as well as the ARId.
 	// We print both to the command line. Of course you can use the URL to
