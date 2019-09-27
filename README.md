@@ -94,9 +94,10 @@ If this issues an error that reads
 	"Could NOT find libarcstk (missing: LIBARCSTK_VERSION)",
 
 the cause may be that pkg-config is either not installed or cannot find the
-installed .pc-file of libarcstk, e.g. because cmake does not respect /usr/local
-while searching for files. The latter could be fixed by giving cmake a hint
-like:
+installed .pc-file of libarcstk. A possible cause for the latter could be that
+you have installed libarcsdec to a directory that cmake does not respect while
+searching for files, e.g. ``/usr/local''. This can be fixed by giving
+cmake a hint to your install directory like:
 
 	$ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/usr/local ..
 
