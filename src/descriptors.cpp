@@ -139,6 +139,15 @@ public:
 	std::unique_ptr<FileReader> by_name(const std::string &name) const;
 
 	/**
+	 * \brief Traverse all available descriptors and apply the specified
+	 * function \c func on each of them.
+	 *
+	 * \param[in] func Function to apply to each descriptor.
+	 */
+	void traverse_descriptors(
+			std::function<void(const FileReaderDescriptor &)> func) const;
+
+	/**
 	 * \brief Reset this instance to its initial state, removing all tests and
 	 * descriptors.
 	 */
@@ -635,6 +644,16 @@ std::unique_ptr<FileReader> FileReaderSelection::Impl::by_name(
 }
 
 
+void FileReaderSelection::Impl::traverse_descriptors(
+			std::function<void(const FileReaderDescriptor &)> func) const
+{
+	for (const auto& desc : descriptors_)
+	{
+		func(*desc);
+	}
+}
+
+
 void FileReaderSelection::Impl::reset()
 {
 	tests_.clear();
@@ -723,6 +742,13 @@ std::unique_ptr<FileReader> FileReaderSelection::by_name(
 		const std::string &name) const
 {
 	return impl_->by_name(name);
+}
+
+
+void FileReaderSelection::traverse_descriptors(
+			std::function<void(const FileReaderDescriptor &)> func) const
+{
+	impl_->traverse_descriptors(func);
 }
 
 

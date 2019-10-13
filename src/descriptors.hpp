@@ -683,6 +683,15 @@ public:
 	std::unique_ptr<FileReader> by_name(const std::string &name) const;
 
 	/**
+	 * \brief Traverse all available descriptors and apply the specified
+	 * function \c func on each of them.
+	 *
+	 * \param[in] func Function to apply to each descriptor.
+	 */
+	void traverse_descriptors(
+			std::function<void(const FileReaderDescriptor &)> func) const;
+
+	/**
 	 * \brief Reset this instance to its initial state, removing all tests and
 	 * descriptors.
 	 */
