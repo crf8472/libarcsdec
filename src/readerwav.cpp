@@ -966,6 +966,8 @@ private:
 
 	void do_process_file(const std::string &filename) override;
 
+	std::unique_ptr<FileReaderDescriptor> do_descriptor() const override;
+
 	/**
 	 * \brief Service method: acquire the physical file size in bytes.
 	 *
@@ -2033,6 +2035,13 @@ void WavAudioReaderImpl::do_process_file(const std::string &audiofilename)
 }
 
 
+std::unique_ptr<FileReaderDescriptor> WavAudioReaderImpl::do_descriptor()
+	const
+{
+	return std::make_unique<DescriptorWavPCM>();
+}
+
+
 void WavAudioReaderImpl::register_audio_handler(
 		std::unique_ptr<WavAudioHandler> hndlr)
 {
@@ -2104,6 +2113,18 @@ std::unique_ptr<FileReader> DescriptorWavPCM::do_create_reader() const
 	impl->register_audio_handler(std::move(handler));
 
 	return std::make_unique<AudioReader>(std::move(impl));
+}
+
+
+bool DescriptorWavPCM::do_accepts(FileFormat format) const
+{
+	return format == FileFormat::RIFFWAV;
+}
+
+
+std::set<FileFormat> DescriptorWavPCM::do_formats() const
+{
+	return { FileFormat::RIFFWAV };
 }
 
 

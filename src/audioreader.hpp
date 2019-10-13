@@ -504,6 +504,13 @@ public:
 	 */
 	uint32_t samples_per_read() const;
 
+	/**
+	 * \brief Create a descriptor for this AudioReader implementation.
+	 *
+	 * \return Descriptor for this implementation.
+	 */
+	std::unique_ptr<FileReaderDescriptor> descriptor() const;
+
 	// make class non-copyable (2/2)
 	AudioReaderImpl& operator = (const AudioReaderImpl &) = delete;
 
@@ -557,6 +564,9 @@ private:
 	 * \throw FileReadException If the file could not be read
 	 */
 	virtual void do_process_file(const std::string &filename)
+	= 0;
+
+	virtual std::unique_ptr<FileReaderDescriptor> do_descriptor() const
 	= 0;
 };
 
@@ -713,6 +723,8 @@ private:
 	 * \brief Private implementation of this AudioReader.
 	 */
 	std::unique_ptr<AudioReader::Impl> impl_;
+
+	std::unique_ptr<FileReaderDescriptor> do_descriptor() const override;
 };
 
 

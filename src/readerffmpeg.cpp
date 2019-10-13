@@ -507,6 +507,8 @@ private:
 		override;
 
 	void do_process_file(const std::string &filename) override;
+
+	std::unique_ptr<FileReaderDescriptor> do_descriptor() const override;
 };
 
 
@@ -1709,6 +1711,13 @@ void FFmpegAudioReaderImpl::do_process_file(const std::string &filename)
 	ARCS_LOG_DEBUG << "Finished processing";
 }
 
+
+std::unique_ptr<FileReaderDescriptor> FFmpegAudioReaderImpl::do_descriptor()
+	const
+{
+	return std::make_unique<DescriptorFFmpeg>();
+}
+
 /// \endcond
 
 } // namespace
@@ -1739,6 +1748,18 @@ bool DescriptorFFmpeg::do_accepts_suffix(const std::string & /* suffix */)
 	const
 {
 	return true;
+}
+
+
+bool DescriptorFFmpeg::do_accepts(FileFormat format) const
+{
+	return is_audio_format(format);
+}
+
+
+std::set<FileFormat> DescriptorFFmpeg::do_formats() const
+{
+	return { FileFormat::ANY_AUDIO };
 }
 
 

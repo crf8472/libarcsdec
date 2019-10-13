@@ -13,6 +13,7 @@ set (MAIN_TEST_CPP   "${TEST_SOURCE_DIR}/main.test.cpp" )
 
 set (TEST_SETS )
 list (APPEND TEST_SETS audiobuffer )
+list (APPEND TEST_SETS descriptors )
 
 
 ## Provide main object file

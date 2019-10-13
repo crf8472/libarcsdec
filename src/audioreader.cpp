@@ -356,6 +356,12 @@ uint32_t AudioReaderImpl::do_samples_per_read() const
 }
 
 
+std::unique_ptr<FileReaderDescriptor> AudioReaderImpl::descriptor() const
+{
+	return this->do_descriptor();
+}
+
+
 // BufferedAudioReaderImpl
 
 
@@ -465,6 +471,13 @@ public:
 	void process_file(const std::string &filename);
 
 	/**
+	 * \brief Create a descriptor for this AudioReader implementation.
+	 *
+	 * \return Descriptor for this implementation.
+	 */
+	std::unique_ptr<FileReaderDescriptor> descriptor() const;
+
+	/**
 	 *
 	 * \return The reader interface implementation
 	 */
@@ -545,6 +558,12 @@ void AudioReader::Impl::process_file(const std::string &filename)
 }
 
 
+std::unique_ptr<FileReaderDescriptor> AudioReader::Impl::descriptor() const
+{
+	return readerimpl_->descriptor();
+}
+
+
 const AudioReaderImpl& AudioReader::Impl::readerimpl()
 {
 	return *readerimpl_;
@@ -618,6 +637,12 @@ void AudioReader::process_file(const std::string &filename)
 void AudioReader::set_processor(SampleProcessor &processor)
 {
 	impl_->set_processor(processor);
+}
+
+
+std::unique_ptr<FileReaderDescriptor> AudioReader::do_descriptor() const
+{
+	return impl_->descriptor();
 }
 
 

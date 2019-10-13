@@ -406,6 +406,8 @@ private:
 
 	void do_process_file(const std::string &filename) override;
 
+	std::unique_ptr<FileReaderDescriptor> do_descriptor() const override;
+
 	/**
 	 * \brief Perform the actual validation process.
 	 *
@@ -921,6 +923,13 @@ void WavpackAudioReaderImpl::do_process_file(const std::string &filename)
 }
 
 
+std::unique_ptr<FileReaderDescriptor> WavpackAudioReaderImpl::do_descriptor()
+	const
+{
+	return std::make_unique<DescriptorWavpack>();
+}
+
+
 void WavpackAudioReaderImpl::register_validate_handler(
 		std::unique_ptr<WavpackValidatingHandler> validator)
 {
@@ -975,6 +984,18 @@ bool DescriptorWavpack::do_accepts_suffix(const std::string &suffix) const
 {
 	std::locale locale;
 	return std::tolower(suffix, locale) == "wv";
+}
+
+
+bool DescriptorWavpack::do_accepts(FileFormat format) const
+{
+	return format == FileFormat::WV;
+}
+
+
+std::set<FileFormat> DescriptorWavpack::do_formats() const
+{
+	return { FileFormat::WV };
 }
 
 

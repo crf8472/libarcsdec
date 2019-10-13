@@ -4,6 +4,7 @@
  */
 
 
+#include "descriptors.hpp"
 #ifndef __LIBARCSDEC_PARSERCUE_HPP__
 #include "parsercue.hpp"
 #endif
@@ -510,6 +511,8 @@ private:
 
 	std::unique_ptr<TOC> do_parse(const std::string &filename) override;
 
+	std::unique_ptr<FileReaderDescriptor> do_descriptor() const override;
+
 	/**
 	 * Name of the last parsed CUE file
 	 */
@@ -560,6 +563,12 @@ std::unique_ptr<TOC> CueParserImpl::do_parse(const std::string &filename)
 			cue_info.offsets(),
 			cue_info.lengths(),
 			cue_info.audiofilenames());
+}
+
+
+std::unique_ptr<FileReaderDescriptor> CueParserImpl::do_descriptor() const
+{
+	return std::make_unique<DescriptorCUE>();
 }
 
 
@@ -620,6 +629,18 @@ std::unique_ptr<FileReader> DescriptorCUE::do_create_reader() const
 }
 
 
+bool DescriptorCUE::do_accepts(FileFormat format) const
+{
+	return format == FileFormat::CUE;
+}
+
+
+std::set<FileFormat> DescriptorCUE::do_formats() const
+{
+	return { FileFormat::CUE };
+}
+
+
 std::unique_ptr<FileReaderDescriptor> DescriptorCUE::do_clone() const
 {
 	return std::make_unique<DescriptorCUE>();
@@ -630,4 +651,3 @@ std::unique_ptr<FileReaderDescriptor> DescriptorCUE::do_clone() const
 } // namespace v_1_0_0
 
 } // namespace arcsdec
-

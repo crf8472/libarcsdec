@@ -87,6 +87,10 @@ private:
 	 */
 	bool do_accepts_suffix(const std::string &suffix) const override;
 
+	bool do_accepts(FileFormat format) const override;
+
+	std::set<FileFormat> do_formats() const override;
+
 	std::unique_ptr<FileReader> do_create_reader() const override;
 
 	std::unique_ptr<FileReaderDescriptor> do_clone() const override;

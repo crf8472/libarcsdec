@@ -187,6 +187,8 @@ private:
 
 	void do_process_file(const std::string &filename) override;
 
+	std::unique_ptr<FileReaderDescriptor> do_descriptor() const override;
+
 	/**
 	 * \brief Internal SampleSequence instance.
 	 */
@@ -435,6 +437,13 @@ void FlacAudioReaderImpl::do_process_file(const std::string &filename)
 }
 
 
+std::unique_ptr<FileReaderDescriptor> FlacAudioReaderImpl::do_descriptor()
+	const
+{
+	return std::make_unique<DescriptorFlac>();
+}
+
+
 void FlacAudioReaderImpl::register_validate_handler(
 		std::unique_ptr<FlacMetadataHandler> hndlr)
 {
@@ -488,6 +497,18 @@ std::unique_ptr<FileReader> DescriptorFlac::do_create_reader() const
 	impl->register_validate_handler(std::make_unique<FlacMetadataHandler>());
 
 	return std::make_unique<AudioReader>(std::move(impl));
+}
+
+
+bool DescriptorFlac::do_accepts(FileFormat format) const
+{
+	return format == FileFormat::FLAC;
+}
+
+
+std::set<FileFormat> DescriptorFlac::do_formats() const
+{
+	return { FileFormat::FLAC };
 }
 
 

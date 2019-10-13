@@ -181,6 +181,12 @@ private:
 /// \cond UNDOC_FUNCTION_BODIES
 
 
+bool is_audio_format(FileFormat format)
+{
+	return format <= FileFormat::ANY_AUDIO;
+}
+
+
 // FileReader
 
 
@@ -188,6 +194,12 @@ FileReader::FileReader() = default;
 
 
 FileReader::~FileReader() noexcept = default;
+
+
+std::unique_ptr<FileReaderDescriptor> FileReader::descriptor() const
+{
+	return this->do_descriptor();
+}
 
 
 // FileReadException
@@ -238,6 +250,16 @@ bool FileReaderDescriptor::accepts_bytes(const std::vector<char> &bytes,
 bool FileReaderDescriptor::accepts_suffix(const std::string &suffix) const
 {
 	return this->do_accepts_suffix(suffix);
+}
+
+bool FileReaderDescriptor::accepts(FileFormat format) const
+{
+	return this->do_accepts(format);
+}
+
+std::set<FileFormat> FileReaderDescriptor::formats() const
+{
+	return this->do_formats();
 }
 
 

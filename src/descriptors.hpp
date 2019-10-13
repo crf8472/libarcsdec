@@ -7,6 +7,7 @@
 
 #include <cstdint>
 #include <functional>  // for std::function
+#include <limits>
 #include <list>
 #include <memory>
 #include <set>
@@ -50,6 +51,47 @@ inline namespace v_1_0_0
 
 /// @{
 
+
+// forward declaration for FileReader
+class FileReaderDescriptor;
+
+
+enum class FileFormat : uint32_t
+{
+	UNKNOWN = 0,
+
+	// Audio Container
+	RIFFWAV = 1,
+	FLAC    = 2,
+	APE     = 3,
+	ALAC    = 4,
+	WMA     = 5,
+	M4A     = 6,
+	OGG     = 7,
+	AIFF    = 8,
+	CAF     = 9,
+	RAW     = 10,
+	WV      = 11,
+
+	ANY_AUDIO    = std::numeric_limits<uint32_t>::max() - 1001,
+	ANY_METADATA = std::numeric_limits<uint32_t>::max() - 1000,
+
+	// Metadata
+	CUE     = ANY_METADATA + 1,
+	TOC     = ANY_METADATA + 2
+};
+
+
+/**
+ * \brief Returns TRUE if \c format is an audio FileFormat, otherwise FALSE.
+ *
+ * \param[in] format The FileFormat to test
+ *
+ * \return TRUE iff \c format is an audio format, otherwise FALSE.
+ */
+bool is_audio_format(FileFormat format);
+
+
 /**
  * \brief Abstract base class for all FileReaders, acts as tag.
  *
@@ -59,6 +101,8 @@ inline namespace v_1_0_0
  */
 class FileReader
 {
+
+// TODO FileReader should inform about libs in its implementation
 
 public:
 
@@ -71,6 +115,17 @@ public:
 	 * \brief Virtual default destructor.
 	 */
 	virtual ~FileReader() noexcept;
+
+	/**
+	 * \brief Get a descriptor for this FileReader.
+	 */
+	std::unique_ptr<FileReaderDescriptor> descriptor() const;
+
+
+private:
+
+	virtual std::unique_ptr<FileReaderDescriptor> do_descriptor() const
+	= 0;
 };
 
 
@@ -181,6 +236,22 @@ public:
 	bool accepts_suffix(const std::string &suffix) const;
 
 	/**
+	 * \brief Check for acceptance of the specified format
+	 *
+	 * \param[in] format The format to check for
+	 *
+	 * \return TRUE if \c format is accepted, otherwise FALSE
+	 */
+	bool accepts(FileFormat format) const;
+
+	/**
+	 * \brief @link FileFormat FileFormats @endlink accepted by the FileReader.
+	 *
+	 * \return @link FileFormat FileFormats @endlink accepted by the FileReader
+	 */
+	std::set<FileFormat> formats() const;
+
+	/**
 	 * \brief Create an opaque reader for the specified file.
 	 *
 	 * \return A FileReader that can read this FileReaderDescriptor
@@ -248,6 +319,24 @@ private:
 	 * \return TRUE iff the suffix matches the suffix of the descriptor
 	 */
 	virtual bool do_accepts_suffix(const std::string &suffix) const
+	= 0;
+
+	/**
+	 * \brief Check for acceptance of the specified format
+	 *
+	 * \param[in] format The format to check for
+	 *
+	 * \return TRUE if \c format is accepted, otherwise FALSE
+	 */
+	virtual bool do_accepts(FileFormat format) const
+	= 0;
+
+	/**
+	 * \brief @link FileFormat FileFormats @endlink accepted by the FileReader.
+	 *
+	 * \return @link FileFormat FileFormats @endlink accepted by the FileReader
+	 */
+	virtual std::set<FileFormat> do_formats() const
 	= 0;
 
 	/**

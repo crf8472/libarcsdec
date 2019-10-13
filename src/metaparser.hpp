@@ -72,6 +72,13 @@ public:
 	 */
 	std::unique_ptr<TOC> parse(const std::string &filename);
 
+	/**
+	 * \brief Create a descriptor for this MetadataParser implementation.
+	 *
+	 * \return Descriptor for this implementation.
+	 */
+	std::unique_ptr<FileReaderDescriptor> descriptor() const;
+
 
 private:
 
@@ -86,6 +93,14 @@ private:
 	 * \throw MetadataParseException If the metadata could not be parsed
 	 */
 	virtual std::unique_ptr<TOC> do_parse(const std::string &filename)
+	= 0;
+
+	/**
+	 * \brief Provides implementation for \c descriptor() of a MetadataParser.
+	 *
+	 * \return A FileReaderDescriptor for this MetadataParser
+	 */
+	virtual std::unique_ptr<FileReaderDescriptor> do_descriptor() const
 	= 0;
 };
 
@@ -129,6 +144,8 @@ private:
 	 * \brief Implementation of a MetadataParser.
 	 */
 	std::unique_ptr<MetadataParserImpl> impl_;
+
+	std::unique_ptr<FileReaderDescriptor> do_descriptor() const override;
 };
 
 

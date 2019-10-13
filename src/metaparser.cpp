@@ -42,6 +42,12 @@ std::unique_ptr<TOC> MetadataParserImpl::parse(const std::string &filename)
 }
 
 
+std::unique_ptr<FileReaderDescriptor> MetadataParserImpl::descriptor() const
+{
+	return this->do_descriptor();
+}
+
+
 // MetadataParser
 
 
@@ -58,6 +64,12 @@ MetadataParser::~MetadataParser() noexcept = default;
 std::unique_ptr<TOC> MetadataParser::parse(const std::string &filename)
 {
 	return impl_->parse(filename);
+}
+
+
+std::unique_ptr<FileReaderDescriptor> MetadataParser::do_descriptor() const
+{
+	return impl_->descriptor();
 }
 
 
