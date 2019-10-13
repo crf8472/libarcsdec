@@ -5,7 +5,7 @@
 #endif
 
 /**
- * \file calculators.test.cpp Tests for all API classes exported by calculators.hpp
+ * \file calculators.cpp Tests for all API classes exported by calculators.hpp
  */
 
 TEST_CASE ( "Test stub 1 (does nothing)", "[calculators]" )
