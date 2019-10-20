@@ -3,6 +3,7 @@
  */
 
 
+#include <type_traits>
 #ifndef __LIBARCSDEC_DESCRIPTORS_HPP__
 #include "descriptors.hpp"
 #endif
@@ -204,9 +205,15 @@ private:
 /// \cond UNDOC_FUNCTION_BODIES
 
 
+std::string name(FileFormat format)
+{
+	return names.at(format);
+}
+
+
 bool is_audio_format(FileFormat format)
 {
-	return format <= FileFormat::ANY_AUDIO;
+	return format < FileFormat::ANY_AUDIO;
 }
 
 
@@ -800,4 +807,3 @@ bool FileReaderSelection::empty() const
 } // namespace v_1_0_0
 
 } // namespace arcsdec
-

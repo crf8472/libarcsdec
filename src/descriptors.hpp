@@ -64,14 +64,13 @@ enum class FileFormat : uint32_t
 	WAVPCM  = 1,
 	FLAC    = 2,
 	APE     = 3,
-	ALAC    = 4,
+	CAF     = 4,
 	WMA     = 5,
 	M4A     = 6,
 	OGG     = 7,
 	AIFF    = 8,
-	CAF     = 9,
+	WV      = 9,
 	RAW     = 10,
-	WV      = 11,
 
 	ANY_AUDIO    = std::numeric_limits<uint32_t>::max() - 1001,
 	ANY_METADATA = std::numeric_limits<uint32_t>::max() - 1000,
@@ -80,6 +79,39 @@ enum class FileFormat : uint32_t
 	CUE     = ANY_METADATA + 1,
 	TOC     = ANY_METADATA + 2
 };
+
+
+/**
+ * \brief Iterable sequence of type names
+ */
+static const std::map<FileFormat, std::string> names
+{
+	{ FileFormat::UNKNOWN, "UNKNOWN" },
+	{ FileFormat::WAVPCM,  "WAVPCM"  },
+	{ FileFormat::FLAC,    "FLAC"    },
+	{ FileFormat::APE,     "APE"     },
+	{ FileFormat::CAF,     "CAF"     },
+	{ FileFormat::WMA,     "WMA"     },
+	{ FileFormat::M4A,     "M4A"     },
+	{ FileFormat::OGG,     "OGG"     },
+	{ FileFormat::AIFF,    "AIFF"    },
+	{ FileFormat::WV,      "WV"      },
+	{ FileFormat::RAW,     "RAW"     },
+	{ FileFormat::ANY_AUDIO,    "ANY_AUDIO"    },
+	{ FileFormat::ANY_METADATA, "ANY_METADATA" },
+	{ FileFormat::CUE,     "CUE" },
+	{ FileFormat::TOC,     "TOC" }
+};
+
+
+/**
+ * \brief Return the name of a FileFormat.
+ *
+ * \param[in] format Type to get name of
+ *
+ * \return Name of type
+ */
+std::string name(FileFormat format);
 
 
 /**
