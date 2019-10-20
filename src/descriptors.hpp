@@ -517,7 +517,8 @@ private:
  * descriptor list passed that passes all tests. Subclassing FileReaderSelector
  * can implement different selection policies.
  */
-class FileReaderSelector {
+class FileReaderSelector
+{
 
 public:
 
