@@ -61,7 +61,7 @@ enum class FileFormat : uint32_t
 	UNKNOWN = 0,
 
 	// Audio Container
-	RIFFWAV = 1,
+	WAVPCM  = 1,
 	FLAC    = 2,
 	APE     = 3,
 	ALAC    = 4,
