@@ -5,6 +5,7 @@
  * \file calculators.hpp A high-level API for calculating ARCSs and IDs.
  */
 
+#include "metaparser.hpp"
 #include <memory>
 #include <set>
 #include <string>
@@ -63,6 +64,11 @@ class TOCParser
 public:
 
 	/**
+	 * \brief Constructor.
+	 */
+	TOCParser();
+
+	/**
 	 * \brief Virtual default destructor.
 	 */
 	virtual ~TOCParser() noexcept;
@@ -75,6 +81,31 @@ public:
 	 * \return The parsed TOC
 	 */
 	std::unique_ptr<TOC> parse(const std::string &metafilename) const;
+
+	/**
+	 * \brief Set the MetadataParserSelection for this instance.
+	 *
+	 * \param[in] selection The MetadataParserSelection to use
+	 */
+	void set_selection(std::unique_ptr<MetadataParserSelection> selection);
+
+	/**
+	 * \brief Get the MetadataParserSelection used by this instance.
+	 *
+	 * \return The MetadataParserSelection used by this instance
+	 */
+	const MetadataParserSelection& selection() const;
+
+
+private:
+
+	// Forward declaration for private implementation.
+	class Impl;
+
+	/**
+	 * \brief Internal implementation instance.
+	 */
+	std::unique_ptr<Impl> impl_;
 };
 
 

@@ -69,6 +69,52 @@ using arcstk::make_empty_arid;
 
 
 /**
+ * \brief Private implementation of a TOCParser.
+ */
+class TOCParser::Impl final
+{
+
+public:
+
+	/**
+	 * \brief Constructor.
+	 */
+	Impl();
+
+	/**
+	 * \brief Parse the metadata file to a TOC object.
+	 *
+	 * \param[in] metafilename Name of the metadatafile
+	 *
+	 * \return The parsed TOC
+	 */
+	std::unique_ptr<TOC> parse(const std::string &metafilename) const;
+
+	/**
+	 * \brief Set the MetadataParserSelection for this instance.
+	 *
+	 * \param[in] selection The MetadataParserSelection to use
+	 */
+	void set_selection(std::unique_ptr<MetadataParserSelection> selection);
+
+	/**
+	 * \brief Get the MetadataParserSelection used by this instance.
+	 *
+	 * \return The MetadataParserSelection used by this instance
+	 */
+	const MetadataParserSelection& selection() const;
+
+
+private:
+
+	/**
+	 * \brief Internal MetadataParserSelection.
+	 */
+	std::unique_ptr<MetadataParserSelection> selection_;
+};
+
+
+/**
  * \brief Private implementation of an ARIdCalculator.
  */
 class ARIdCalculator::Impl final
@@ -243,13 +289,18 @@ private:
 /// \cond UNDOC_FUNCTION_BODIES
 
 
-// TOCParser
+// TOCParser::Impl
 
 
-TOCParser::~TOCParser() noexcept = default;
+TOCParser::Impl::Impl()
+	: selection_(std::make_unique<MetadataParserSelection>())
+{
+	// empty
+}
 
 
-std::unique_ptr<TOC> TOCParser::parse(const std::string &metafilename) const
+std::unique_ptr<TOC> TOCParser::Impl::parse(const std::string &metafilename)
+	const
 {
 	if (metafilename.empty())
 	{
@@ -266,6 +317,19 @@ std::unique_ptr<TOC> TOCParser::parse(const std::string &metafilename) const
 	ARCS_LOG_DEBUG << "Start to parse metadata input";
 
 	return parser->parse(metafilename);
+}
+
+
+void TOCParser::Impl::set_selection(
+		std::unique_ptr<MetadataParserSelection> selection)
+{
+	selection_ = std::move(selection);
+}
+
+
+const MetadataParserSelection& TOCParser::Impl::selection() const
+{
+	return *selection_;
 }
 
 
@@ -588,6 +652,38 @@ void ARCSCalculator::Impl::set_selection(
 const AudioReaderSelection& ARCSCalculator::Impl::selection() const
 {
 	return *selection_;
+}
+
+
+// TOCParser
+
+
+TOCParser::TOCParser()
+	: impl_(std::make_unique<TOCParser::Impl>())
+{
+	// empty
+}
+
+
+TOCParser::~TOCParser() noexcept = default;
+
+
+std::unique_ptr<TOC> TOCParser::parse(const std::string &metafilename) const
+{
+	return impl_->parse(metafilename);
+}
+
+
+void TOCParser::set_selection(
+		std::unique_ptr<MetadataParserSelection> selection)
+{
+	this->impl_->set_selection(std::move(selection));
+}
+
+
+const MetadataParserSelection& TOCParser::selection() const
+{
+	return impl_->selection();
 }
 
 
