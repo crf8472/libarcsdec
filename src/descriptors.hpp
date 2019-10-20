@@ -698,6 +698,20 @@ public:
 	 */
 	void reset();
 
+	/**
+	 * \brief Number of descriptors.
+	 *
+	 * \return The number of descriptors in this selection.
+	 */
+	std::size_t size() const;
+
+	/**
+	 * \brief TRUE if this selection contains no descriptors.
+	 *
+	 * \return TRUE if this selection contains no descriptors.
+	 */
+	bool empty() const;
+
 	// class is non-copy-assignable
 	FileReaderSelection& operator = (const FileReaderSelection &) = delete;
 

@@ -153,6 +153,20 @@ public:
 	 */
 	void reset();
 
+	/**
+	 * \brief Number of descriptors.
+	 *
+	 * \return The number of descriptors in this selection.
+	 */
+	std::size_t size() const;
+
+	/**
+	 * \brief TRUE if this selection contains no descriptors.
+	 *
+	 * \return TRUE if this selection contains no descriptors.
+	 */
+	bool empty() const;
+
 	// class is non-copy-assignable
 	Impl& operator = (const Impl &) = delete;
 
@@ -661,6 +675,18 @@ void FileReaderSelection::Impl::reset()
 }
 
 
+std::size_t FileReaderSelection::Impl::size() const
+{
+	return descriptors_.size();
+}
+
+
+bool FileReaderSelection::Impl::empty() const
+{
+	return descriptors_.empty();
+}
+
+
 FileReaderSelector& FileReaderSelection::Impl::use_selector()
 {
 	return *selector_;
@@ -755,6 +781,18 @@ void FileReaderSelection::traverse_descriptors(
 void FileReaderSelection::reset()
 {
 	impl_->reset();
+}
+
+
+std::size_t FileReaderSelection::size() const
+{
+	return impl_->size();
+}
+
+
+bool FileReaderSelection::empty() const
+{
+	return impl_->empty();
 }
 
 /// \endcond
