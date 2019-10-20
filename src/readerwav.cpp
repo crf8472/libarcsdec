@@ -2064,7 +2064,7 @@ DescriptorWavPCM::~DescriptorWavPCM() noexcept = default;
 
 std::string DescriptorWavPCM::do_name() const
 {
-	return "RIFF/WAV (PCM)";
+	return "RIFF/WAV(PCM)";
 }
 
 
@@ -2118,13 +2118,13 @@ std::unique_ptr<FileReader> DescriptorWavPCM::do_create_reader() const
 
 bool DescriptorWavPCM::do_accepts(FileFormat format) const
 {
-	return format == FileFormat::RIFFWAV;
+	return format == FileFormat::WAVPCM;
 }
 
 
 std::set<FileFormat> DescriptorWavPCM::do_formats() const
 {
-	return { FileFormat::RIFFWAV };
+	return { FileFormat::WAVPCM };
 }
 
 
