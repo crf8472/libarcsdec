@@ -53,7 +53,7 @@ public:
 	 *
 	 * \return "CUESheet"
 	 */
-	std::string do_name() const;
+	std::string do_name() const override;
 
 	/**
 	 * \brief Always returns TRUE since CUESheets cannot be recognized by a
@@ -65,7 +65,7 @@ public:
 	 * \return TRUE
 	 */
 	bool do_accepts_bytes(const std::vector<char> &bytes,
-			const uint64_t &offset) const;
+			const uint64_t &offset) const override;
 
 	/**
 	 * \brief Returns TRUE if the suffix matches a CUE sheet suffix.
@@ -73,7 +73,7 @@ public:
 	 * \return TRUE iff suffix is case-insensitively equal to suffix otherwise
 	 * FALSE
 	 */
-	bool do_accepts_suffix(const std::string &suffix) const;
+	bool do_accepts_suffix(const std::string &suffix) const override;
 
 	bool do_accepts(FileFormat format) const override;
 
