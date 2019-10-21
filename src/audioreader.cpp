@@ -685,15 +685,14 @@ AudioReaderSelection::~AudioReaderSelection() noexcept = default;
 std::unique_ptr<AudioReader> AudioReaderSelection::for_file(
 	const std::string &filename) const
 {
-	return this->safe_cast(std::move(
-				FileReaderSelection::for_file(filename)));
+	return this->safe_cast(FileReaderSelection::for_file(filename));
 }
 
 
 std::unique_ptr<AudioReader> AudioReaderSelection::by_name(
 	const std::string &name) const
 {
-	return this->safe_cast(std::move(FileReaderSelection::by_name(name)));
+	return this->safe_cast(FileReaderSelection::by_name(name));
 }
 
 

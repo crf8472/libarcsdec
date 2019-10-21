@@ -121,15 +121,14 @@ MetadataParserSelection::~MetadataParserSelection() noexcept = default;
 std::unique_ptr<MetadataParser> MetadataParserSelection::for_file(
 	const std::string &filename) const
 {
-	return this->safe_cast(std::move(
-				FileReaderSelection::for_file(filename)));
+	return this->safe_cast(FileReaderSelection::for_file(filename));
 }
 
 
 std::unique_ptr<MetadataParser> MetadataParserSelection::by_name(
 	const std::string &name) const
 {
-	return this->safe_cast(std::move(FileReaderSelection::by_name(name)));
+	return this->safe_cast(FileReaderSelection::by_name(name));
 }
 
 
