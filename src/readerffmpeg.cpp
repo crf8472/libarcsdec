@@ -1728,7 +1728,7 @@ std::unique_ptr<FileReaderDescriptor> FFmpegAudioReaderImpl::do_descriptor()
 // DescriptorFFmpeg
 
 
-DescriptorFFmpeg::~DescriptorFFmpeg() = default;
+DescriptorFFmpeg::~DescriptorFFmpeg() noexcept = default;
 
 
 std::string DescriptorFFmpeg::do_name() const
