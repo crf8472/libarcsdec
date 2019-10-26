@@ -101,11 +101,52 @@ message (STATUS "Changed CMAKE_MODULE_PATH to: ${CMAKE_MODULE_PATH}" )
 
 ## --- Define compiler switches
 
-## G++/Clang++: Warnings
-set (FLAGS_WARNINGS -Wall -Wextra -Wold-style-cast -Wpedantic -Weffc++ )
+## g++: Warnings
+set (PROJECT_CXX_GNU_FLAGS_WARNINGS
+	-Wall -Wextra -Wpedantic -Weffc++
+	-Wold-style-cast
+	-Wsuggest-override
+	-Wcast-align
+	-Wcast-qual
+	-Wctor-dtor-privacy
+	-Wdisabled-optimization
+	-Wformat=2
+	-Wlogical-op
+	-Wmissing-declarations
+	-Wmissing-include-dirs
+	-Wnoexcept
+	-Woverloaded-virtual
+	-Wredundant-decls
+	-Wshadow
+	-Wsign-conversion
+	-Wsign-promo
+	-Wstrict-null-sentinel
+	-Wstrict-overflow=5
+	-Wswitch-default
+	-Wundef
+	-Wuseless-cast
+	-Wzero-as-null-pointer-constant
+	)
+
+## clang++: Warnings
+set (PROJECT_CXX_CLANG_FLAGS_WARNINGS
+	-Wall -Wextra -Wpedantic -Weffc++
+	-Wold-style-cast
+	-Wcast-align
+	-Wcast-qual
+	-Wformat=2
+	-Wshadow
+	-Wsign-conversion
+	-Wundef
+	-Wunused
+	-Wzero-as-null-pointer-constant
+	# -- clang specific --
+	-Winconsistent-missing-destructor-override
+	#-Wimplicit-exception-spec-mismatch
+	)
 
 ## G++/Clang++: Optimize flags
-set (FLAGS_OPTIMIZE -march=native -mtune=generic )
+set (PROJECT_CXX_FLAGS_OPTIMIZE -march=native -mtune=generic )
 
 
 
@@ -116,6 +157,20 @@ set (FLAGS_OPTIMIZE -march=native -mtune=generic )
 if (CMAKE_COMPILER_IS_GNUCXX
 		OR CMAKE_CXX_COMPILER MATCHES ".*clang"
 		OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang" )
+
+	## Select compiler specific warnings
+
+	if (CMAKE_COMPILER_IS_GNUCXX )
+
+		message (STATUS "Select compile flags for g++" )
+
+		set (PROJECT_CXX_FLAGS_WARNINGS ${PROJECT_CXX_GNU_FLAGS_WARNINGS} )
+	else ()
+
+		#message (STATUS "Select compile flags for clang++" )
+
+		#set (PROJECT_CXX_FLAGS_WARNINGS ${PROJECT_CXX_CLANG_FLAGS_WARNINGS} )
+	endif (CMAKE_COMPILER_IS_GNUCXX )
 
 	## Platform specific optimizations (default ON for Release, otherwise OFF)
 
@@ -131,13 +186,14 @@ if (CMAKE_COMPILER_IS_GNUCXX
 
 		message (STATUS "Build with platform specific optimization" )
 
-		set (CUSTOM_CXX_FLAGS ${FLAGS_WARNINGS} ${FLAGS_OPTIMIZE} )
+		set (PROJECT_CXX_FLAGS
+			${PROJECT_CXX_FLAGS_WARNINGS} ${PROJECT_CXX_FLAGS_OPTIMIZE} )
 
 	else ()
 
 		message (STATUS "Build without platform specific optimization" )
 
-		set (CUSTOM_CXX_FLAGS ${FLAGS_WARNINGS} )
+		set (PROJECT_CXX_FLAGS ${PROJECT_CXX_FLAGS_WARNINGS} )
 
 	endif (WITH_NATIVE )
 
@@ -171,8 +227,8 @@ target_include_directories (${PROJECT_NAME}
 	PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
 	PUBLIC $<BUILD_INTERFACE:${PROJECT_BUILD_SOURCE_DIR}> ) ## find version.hpp
 
-target_compile_options (${PROJECT_NAME}
-	PRIVATE ${CUSTOM_CXX_FLAGS} )
+target_compile_options (${PROJECT_NAME} PRIVATE ${PROJECT_CXX_FLAGS} )
+message (STATUS "Project C++ flags: ${PROJECT_CXX_FLAGS}" ) ## FIXME debug
 
 list (APPEND PROJECT_PUBLIC_HEADERS
 	${PROJECT_SOURCE_DIR}/audioreader.hpp
