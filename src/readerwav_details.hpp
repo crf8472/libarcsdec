@@ -192,24 +192,26 @@ private:
 	 */
 	static constexpr unsigned char WAVPCM_HEADER_[44] = {
 
-		0x52, 0x49, 0x46, 0x46, // 'R', 'I', 'F', 'F'
-		0xFF, 0xFF, 0xFF, 0xFF, // filesize in bytes - 8 (0xFF means: any byte)
-		0x57, 0x41, 0x56, 0x45, // 'W', 'A', 'V', 'E'
-		0x66, 0x6D, 0x74, 0x20, // Format Subchunk Header: 'f', 'm', 't', ' '
-		0x00, 0x00, 0x00, 0x10, // Format Subchunk Size: '16'
-		0x00, 0x01, 0x00, 0x02, // wFormatTag: '1'(PCM), wChannels: '2'(stereo)
-		0x00, 0x00, 0xAC, 0x44, // dwSamplesPerSec:  '44100'
-		0x00, 0x02, 0xB1, 0x10, // dwAvgBytesPerSec: '176400'
-		0x00, 0x04, 0x00, 0x10, // wBlockAlign: '4', wBitsPerSample: '16'
-		0x64, 0x61, 0x74, 0x61, // Data Subchunk Header: 'd', 'a', 't', 'a'
-		0xFF, 0xFF, 0xFF, 0xFF  // Data Subchunk Size
+		0x52, 0x49, 0x46, 0x46, // BE: 'R','I','F','F'
+		0xFF, 0xFF, 0xFF, 0xFF, // LE: filesize in bytes - 8 (0xFF means: any)
+		0x57, 0x41, 0x56, 0x45, // BE: 'W','A','V','E'
+		0x66, 0x6D, 0x74, 0x20, // BE: Format Subchunk Header: 'f','m','t',' '
+		0x10, 0x00, 0x00, 0x00, // LE: Format Subchunk Size: '16'
+		0x01, 0x00,             // LE: wFormatTag: 1 (means: PCM),
+		0x02, 0x00,             // LE: wChannels: 2 (means: stereo)
+		0x44, 0xAC, 0x00, 0x00, // LE: dwSamplesPerSec:  44100
+		0x10, 0xB1, 0x02, 0x00, // LE: dwAvgBytesPerSec: 176400
+		0x04, 0x00,             // LE: wBlockAlign: 4
+		0x10, 0x00,             // LE: wBitsPerSample: 16
+		0x64, 0x61, 0x74, 0x61, // BE: Data Subchunk Header: 'd','a','t','a'
+		0xFF, 0xFF, 0xFF, 0xFF  // LE: Data Subchunk Size
 	};
 
 
 	/**
 	 * \brief Offsets and lengths for interpreting a RIFF WAVE header.
 	 */
-	static constexpr int BYTE_OFFSET_[HEADER_FIELD_COUNT_][2] = {
+	static constexpr unsigned int BYTES_[HEADER_FIELD_COUNT_][2] = {
 		{  0, 4}, // Chunk descriptor id 'RIFF'
 		{  4, 4}, // Filesize - 8
 		{  8, 4}, // Chunk descriptor format 'WAVE'
@@ -227,7 +229,7 @@ private:
 
 
 	/**
-	 * \brief Encodes access to \c BYTE_OFFSET_[i]
+	 * \brief Encodes access to \c BYTES_[i]
 	 */
 	enum BYTES : int
 	{
@@ -368,10 +370,10 @@ public:
 	 * \param format    File format declared by the chunk descriptor
 	 */
 	WavChunkDescriptor(
-			const uint32_t &id,
-			const uint32_t &size,
-			const uint32_t &file_size,
-			const uint32_t &format
+			uint32_t id,
+			uint32_t size,
+			uint32_t file_size,
+			uint32_t format
 			);
 
 	/**
@@ -430,7 +432,7 @@ public:
 	 * \param id   Id of the subchunk header
 	 * \param size Size in bytes of the subchunk
 	 */
-	WavSubchunkHeader(const uint32_t &id, const uint32_t &size);
+	WavSubchunkHeader(uint32_t id, uint32_t size);
 
 	/**
 	 * \brief Virtual default destructor.
@@ -473,12 +475,12 @@ public:
 	 */
 	WavFormatSubchunk(
 			const WavSubchunkHeader &header,
-			const uint16_t &wFormatTag,
-			const uint16_t &wChannels,
-			const uint32_t &dwSamplesPerSec,
-			const uint32_t &dwAvgBytesPerSec,
-			const uint16_t &wBlockAlign,
-			const uint16_t &wBitsPerSample
+			uint16_t wFormatTag,
+			uint16_t wChannels,
+			uint32_t dwSamplesPerSec,
+			uint32_t dwAvgBytesPerSec,
+			uint16_t wBlockAlign,
+			uint16_t wBitsPerSample
 			);
 
 	/**

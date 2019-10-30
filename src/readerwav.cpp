@@ -19,6 +19,7 @@ extern "C" {
 #include <cstdint>
 #include <fstream>
 #include <functional>
+#include <iomanip>    // for debug
 #include <locale>     // for tolower
 #include <memory>
 #include <sstream>
@@ -76,9 +77,8 @@ WAV_CDDA_t::~WAV_CDDA_t() noexcept = default;
 // RIFFWAV_PCM_CDDA_t
 
 
-//constexpr uint32_t RIFFWAV_PCM_CDDA_t::WAV_CDDA_[11][3];
 constexpr unsigned char RIFFWAV_PCM_CDDA_t::WAVPCM_HEADER_[44];
-constexpr int           RIFFWAV_PCM_CDDA_t::BYTE_OFFSET_[13][2];
+constexpr unsigned int  RIFFWAV_PCM_CDDA_t::BYTES_[13][2];
 constexpr int           RIFFWAV_PCM_CDDA_t::HEADER_FIELD_COUNT_;
 
 
@@ -87,14 +87,31 @@ RIFFWAV_PCM_CDDA_t::~RIFFWAV_PCM_CDDA_t() noexcept = default;
 
 uint32_t RIFFWAV_PCM_CDDA_t::header(FIELD field) const
 {
-	int offset = BYTE_OFFSET_[field][BYTES::OFFSET];
-	int endpos = BYTE_OFFSET_[field][BYTES::LENGTH] - 1;
+	auto offset = BYTES_[field][OFFSET];
+	auto endpos = BYTES_[field][LENGTH] - 1;
 
 	uint32_t field_val = 0;
 
-	for (int i = endpos; i >= 0; --i)
+	switch (field)
 	{
-		field_val |= WAVPCM_HEADER_[offset + i] << (endpos - i) * 8;
+		case RIFF:
+		case WAVE:
+		case FMT_SC_NAME:
+		case DATA_SC_NAME:
+			// Big endian decode
+			for (unsigned int i = endpos; i < BYTES_[field][LENGTH]; --i)
+			{
+				field_val |= static_cast<uint32_t>(
+						WAVPCM_HEADER_[offset + i] << (endpos - i) * 8);
+			}
+			break;
+		default:
+			// Little endian decode
+			for (unsigned int i = endpos; i < BYTES_[field][LENGTH]; --i)
+			{
+				field_val |= static_cast<uint32_t>(
+						WAVPCM_HEADER_[offset + i] << i * 8);
+			}
 	}
 
 	return field_val;
@@ -171,11 +188,13 @@ bool RIFFWAV_PCM_CDDA_t::match(std::vector<char> bytes, uint64_t offset)
 {
 	if (bytes.empty())
 	{
+		ARCS_LOG(DEBUG1) << "Test bytes empty, no match";
 		return false; // TODO Exception?
 	}
 
 	if (offset > 44u) // Test Bytes Beyond Canonical Part?
 	{
+		ARCS_LOG(DEBUG1) << "Test bytes beyond WAV header, match";
 		return true;
 	}
 
@@ -183,11 +202,23 @@ bool RIFFWAV_PCM_CDDA_t::match(std::vector<char> bytes, uint64_t offset)
 	unsigned char refbyte = 0;
 
 	const auto max_size = 44u - offset;
-	const int size = bytes.size() > max_size ? max_size : bytes.size();
+	const unsigned int size = bytes.size() > max_size ? max_size : bytes.size();
 
-	for (int i = 0; i < size; ++i)
+	ARCS_LOG(DEBUG1) << "Test bytes offset: " << offset;
+	ARCS_LOG(DEBUG1) << "Test bytes length: " << bytes.size();
+	ARCS_LOG(DEBUG1) << "Compared bytes: " << size;
+
+	for (unsigned int i = 0; i < size; ++i)
 	{
 		refbyte = WAVPCM_HEADER_[offset + i];
+
+		std::stringstream msg;
+		msg << "Position " << std::setw(2) << std::setfill(' ') << i
+			<< ": reference byte ";
+		msg << std::hex << std::showbase << static_cast<int>(refbyte);
+		msg << " input byte ";
+		msg << std::hex << std::showbase << static_cast<int>(bytes[i]);
+		ARCS_LOG(DEBUG1) << msg.str();
 
 		if (refbyte != static_cast<unsigned char>(bytes[i]))
 		{
@@ -203,15 +234,15 @@ bool RIFFWAV_PCM_CDDA_t::match(std::vector<char> bytes, uint64_t offset)
 
 
 WavChunkDescriptor::WavChunkDescriptor(
-			const uint32_t &id,
-			const uint32_t &size,
-			const uint32_t &file_size,
-			const uint32_t &format
+			uint32_t id_,
+			uint32_t size_,
+			uint32_t file_size_,
+			uint32_t format_
 			)
-	: id(id)
-	, size(size)
-	, file_size(file_size)
-	, format(format)
+	: id(id_)
+	, size(size_)
+	, file_size(file_size_)
+	, format(format_)
 {
 	// empty
 }
@@ -223,9 +254,9 @@ WavChunkDescriptor::~WavChunkDescriptor() noexcept = default;
 // WavSubchunkHeader
 
 
-WavSubchunkHeader::WavSubchunkHeader(const uint32_t &id, const uint32_t &size)
-	: id(id)
-	, size(size)
+WavSubchunkHeader::WavSubchunkHeader(uint32_t id_, uint32_t size_)
+	: id(id_)
+	, size(size_)
 {
 	// empty
 }
@@ -254,21 +285,21 @@ std::string WavSubchunkHeader::name() const
 
 WavFormatSubchunk::WavFormatSubchunk(
 			const WavSubchunkHeader &header,
-			const uint16_t &wFormatTag,
-			const uint16_t &wChannels,
-			const uint32_t &dwSamplesPerSec,
-			const uint32_t &dwAvgBytesPerSec,
-			const uint16_t &wBlockAlign,
-			const uint16_t &wBitsPerSample
+			uint16_t wFormatTag_,
+			uint16_t wChannels_,
+			uint32_t dwSamplesPerSec_,
+			uint32_t dwAvgBytesPerSec_,
+			uint16_t wBlockAlign_,
+			uint16_t wBitsPerSample_
 			)
 	: id(header.id)
 	, size(header.size)
-	, wFormatTag(wFormatTag)
-	, wChannels(wChannels)
-	, dwSamplesPerSec(dwSamplesPerSec)
-	, dwAvgBytesPerSec(dwAvgBytesPerSec)
-	, wBlockAlign(wBlockAlign)
-	, wBitsPerSample(wBitsPerSample)
+	, wFormatTag(wFormatTag_)
+	, wChannels(wChannels_)
+	, dwSamplesPerSec(dwSamplesPerSec_)
+	, dwAvgBytesPerSec(dwAvgBytesPerSec_)
+	, wBlockAlign(wBlockAlign_)
+	, wBitsPerSample(wBitsPerSample_)
 {
 	// empty
 }
@@ -317,7 +348,7 @@ WavChunkDescriptor WavPartParser::chunk_descriptor(
 		WAV_BYTES_PER_RIFF_HEADER,
 
 		// parse file size declaration
-		convert_.le_bytes_to_int32 (bytes[4], bytes[5], bytes[ 6], bytes[ 7]),
+		convert_.le_bytes_to_uint32(bytes[4], bytes[5], bytes[ 6], bytes[ 7]),
 
 		// parse file format declaration ("WAVE")
 		convert_.be_bytes_to_uint32(bytes[8], bytes[9], bytes[10], bytes[11])
@@ -819,7 +850,7 @@ uint64_t WavAudioReaderImpl::retrieve_file_size_bytes(
 		static_cast<void>(rc);
 	}
 
-	return stat_buf.st_size;
+	return static_cast<uint64_t>(stat_buf.st_size);
 }
 
 
@@ -827,14 +858,14 @@ uint64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 		const bool &calculate,
 		uint64_t &total_pcm_bytes)
 {
-	uint64_t total_bytes_read = 0;
+	uint32_t total_bytes_read = 0;
 
 	// Read the first bytes and parse them as chunk descriptor.
 	// NOTE: ifstream's exceptions (fail|bad)bit must be activated
 
 	std::vector<char> bytes(WavPartParser::WAV_BYTES_PER_RIFF_HEADER);
 
-	uint64_t bytes_to_read =
+	std::streamsize bytes_to_read =
 		WavPartParser::WAV_BYTES_PER_RIFF_HEADER * sizeof(bytes[0]);
 	try
 	{
@@ -842,14 +873,14 @@ uint64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 	}
 	catch (const std::ifstream::failure& f)
 	{
-		total_bytes_read += in.gcount();
+		total_bytes_read += static_cast<uint64_t>(in.gcount());
 
 		//ARCS_LOG_ERROR << "Failed to read chunk descriptor from file: "
 		//		<< f.what();
 
 		throw FileReadException(f.what(), total_bytes_read + 1);
 	}
-	total_bytes_read += bytes_to_read;
+	total_bytes_read += static_cast<uint64_t>(bytes_to_read);
 
 	WavPartParser parser;
 
@@ -874,14 +905,14 @@ uint64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 		}
 		catch (const std::ifstream::failure& f)
 		{
-			total_bytes_read += in.gcount();
+			total_bytes_read += static_cast<uint64_t>(in.gcount());
 
 			//ARCS_LOG_ERROR << "Failed to read subchunk header from file: "
 			//		<< f.what();
 
 			throw FileReadException(f.what(), total_bytes_read + 1);
 		}
-		total_bytes_read += bytes_to_read;
+		total_bytes_read += static_cast<uint64_t>(bytes_to_read);
 		++subchunk_counter;
 
 		WavSubchunkHeader subchunk_header = parser.subchunk_header(bytes);
@@ -921,14 +952,14 @@ uint64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 			}
 			catch (const std::ifstream::failure& f)
 			{
-				total_bytes_read += in.gcount();
+				total_bytes_read += static_cast<uint64_t>(in.gcount());
 
 				//ARCS_LOG_ERROR << "Failed to read format subchunk from file: "
 				//	<< f.what();
 
 				throw FileReadException(f.what(), total_bytes_read + 1);
 			}
-			total_bytes_read += bytes_to_read;
+			total_bytes_read += static_cast<uint64_t>(bytes_to_read);
 
 			ARCS_LOG(DEBUG1) << "Format subchunk read successfully";
 

@@ -48,9 +48,9 @@ TEST_CASE ( "RIFFWAV_PCM_CDDA_t match()", "[readerwav]" )
 	CHECK (  w.match( {'W', 'A', 'V', 'E'}, 8) );
 	CHECK ( !w.match( {'W', 'A', 'V', 'E'}, 9) );
 
-	CHECK (  w.match( { 0, 0, 0, 16, 0, 1, 0, 2, 0, 0 }, 16) );
-	CHECK (  w.match( { 0, 0, static_cast<char>(172), 68}, 24));
-	CHECK (  w.match( { 0, 2, static_cast<char>(177), 16}, 28));
+	CHECK (  w.match( { 16, 0, 0, 0, 1, 0, 2, 0, 68, static_cast<char>(172) }, 16) );
+	CHECK (  w.match( { 68, static_cast<char>(172), 0, 0}, 24));
+	CHECK (  w.match( { 16, static_cast<char>(177), 2, 0}, 28));
 	CHECK ( !w.match( { 0, 0, 0, 16, 0, 1, 0, 2, 0, 0 }, 15) );
 	CHECK ( !w.match( { 0, 0, 0, 16, 0, 1, 1, 2, 0, 0 }, 16) );
 }
