@@ -139,9 +139,9 @@ public:
 
 
 /**
- * \brief Implements reference values for CDDA compliant WAVPACK of integer PCM.
+ * \brief Reference values for CDDA conforming Wavepack with integer PCM.
  */
-class WAVPACK_CDDA_WAV_PCM_t : public WAVPACK_CDDA_t
+class WAVPACK_WAV_PCM_CDDA_t : public WAVPACK_CDDA_t
 {
 
 public:
@@ -149,14 +149,14 @@ public:
 	/**
 	 * \brief Default destructor.
 	 */
-	virtual ~WAVPACK_CDDA_WAV_PCM_t() noexcept;
+	virtual ~WAVPACK_WAV_PCM_CDDA_t() noexcept;
 
 	/**
 	 * \brief Specifies WAV format as exclusively required.
 	 *
 	 * \return TRUE
 	 */
-	bool wav_format_only() const;
+	bool wav_format_only() const override;
 
 	/**
 	 * \brief Specifies float samples as not supported.
@@ -165,7 +165,7 @@ public:
 	 *
 	 * \return FALSE
 	 */
-	virtual bool floats_ok() const;
+	virtual bool floats_ok() const override;
 };
 
 
@@ -235,7 +235,7 @@ public:
 	 *
 	 * \return Number of channels
 	 */
-	uint16_t num_channels() const;
+	uint32_t num_channels() const;
 
 	/**
 	 * \brief Returns the sampling rate as number of samples per second.
@@ -266,6 +266,23 @@ public:
 	 * \return TRUE iff the channel ordering is left/right, otherwise FALSE.
 	 */
 	bool channel_order() const;
+
+	/**
+	 * \brief Returns channel mask (expect 3 to indicate stereo for CDDA).
+	 *
+	 * \return The channel mask of the wavepack file
+	 */
+	int channel_mask() const;
+
+	/**
+	 * \brief Indicates whether the core audio file needs channel reorder.
+	 *
+	 * The core audio file may have a different channel ordering than the
+	 * Wavepack container.
+	 *
+	 * \return TRUE if the channels have to be reordered, otherwise FALSE
+	 */
+	bool needs_channel_reorder() const;
 
 	/**
 	 * \brief Read the specified number of 32 bit PCM samples.
@@ -457,19 +474,19 @@ uint16_t WAVPACK_CDDA_t::bytes_per_sample() const
 }
 
 
-// WAVPACK_CDDA_WAV_PCM_t
+// WAVPACK_WAV_PCM_CDDA_t
 
 
-WAVPACK_CDDA_WAV_PCM_t::~WAVPACK_CDDA_WAV_PCM_t() noexcept = default;
+WAVPACK_WAV_PCM_CDDA_t::~WAVPACK_WAV_PCM_CDDA_t() noexcept = default;
 
 
-bool WAVPACK_CDDA_WAV_PCM_t::wav_format_only() const
+bool WAVPACK_WAV_PCM_CDDA_t::wav_format_only() const
 {
 	return true;
 }
 
 
-bool WAVPACK_CDDA_WAV_PCM_t::floats_ok() const
+bool WAVPACK_WAV_PCM_CDDA_t::floats_ok() const
 {
 	return false;
 }
@@ -550,9 +567,10 @@ uint16_t WavpackOpenFile::bits_per_sample() const
 }
 
 
-uint16_t WavpackOpenFile::num_channels() const
+uint32_t WavpackOpenFile::num_channels() const
 {
-	return WavpackGetNumChannels(context_);
+	auto num_channels = WavpackGetNumChannels(context_);
+	return (num_channels > 0) ? static_cast<uint32_t>(num_channels) : 0;
 }
 
 
@@ -594,78 +612,79 @@ uint32_t WavpackOpenFile::total_pcm_samples() const
 
 bool WavpackOpenFile::channel_order() const
 {
-	// TODO Correctly determine whether the channel ordering is not left/right
+	const int num_channels = WavpackGetNumChannels(context_);
 
-	// Channel mask
-
-	int channel_mask = WavpackGetChannelMask(context_);
-	ARCS_LOG_DEBUG << "Channel mask: " << channel_mask;
-	// '3' should indicate stereo (countercheck necessary??)
-
-	// Channel layout
-
-// Commented out: unclear to me whether layout is of use
-//
-//  // Extract layout, counter-check channel number and test for reordering
-//
-//	int channels = 0;
-//
-//	{
-//		unsigned char* reorder_str;
-//
-//		uint32_t channel_layout =
-//			WavpackGetChannelLayout(context_, reorder_str);
-//
-//		ARCS_LOG_DEBUG << "Channel layout: " << channel_layout;
-//
-//		if (reorder_str)
-//		{
-//			ARCS_LOG_DEBUG << "Channel reorder: " << reorder_str;
-//		} else
-//		{
-//			ARCS_LOG_DEBUG << "No reordering defined";
-//		}
-//
-//		// Count channels in layout
-//
-//		int bits = 16;
-//		while (channel_layout && bits > 0)
-//		{
-//			channels += channel_layout & 1;
-//			channel_layout >>= 1;
-//			--bits;
-//		}
-//		ARCS_LOG_INFO << "Number of channels declared in layout: " << channels;
-//	}
-
-	// Channel identities
-
-	// Validation has already guaranteed two channels.
-
-	if (channel_mask == 3)
+	if (num_channels != 2)
 	{
-		unsigned char identities[3] = { '0', '0', '\0' };
+		std::stringstream msg;
+		msg << "Expected 2 channels but got " << num_channels
+			<< ", input does not seem to be CDDA compliant (stereo)";
 
-		WavpackGetChannelIdentities(context_, identities);
-
-		if (identities)
-		{
-			auto first  { identities[0] };
-			auto second { identities[1] };
-
-			ARCS_LOG_DEBUG << "Channel identities: channel 0 = '"
-				<< std::to_string(first)
-				<< "', channel 1 = '" << std::to_string(second) << "'";
-
-			if (first == 1 and second == 2)
-			{
-				ARCS_LOG_INFO << "Channel assignment: left/right";
-				return true;
-			}
-		}
+		throw InvalidAudioException(msg.str());
 	}
 
+	std::vector<unsigned char> identities(
+			static_cast<unsigned int>(num_channels + 1)); // +1 for \0
+
+	WavpackGetChannelIdentities(context_, identities.data());
+
+	if (identities.empty() or identities.size() < 2)
+	{
+		std::stringstream msg;
+		msg << "Expected 2 channels but got not enough identities ("
+			<< identities.size()
+			<< "), input does not seem to be CDDA compliant (stereo)";
+
+		throw InvalidAudioException(msg.str());
+	}
+
+	if (identities[0] == 1 && identities[1] == 2)
+	{
+		ARCS_LOG_INFO << "Channel order: left/right";
+		return true;
+	}
+
+	ARCS_LOG_DEBUG << "Channel order: channel 0 = '" << identities[0]
+		<< "', channel 1 = '" << identities[1] << "'";
+
 	return false;
+}
+
+
+int WavpackOpenFile::channel_mask() const
+{
+	// stereo == 3
+	return WavpackGetChannelMask(context_);
+}
+
+
+bool WavpackOpenFile::needs_channel_reorder() const
+{
+	// Channel layout of the core audio file
+
+	unsigned char* reorder_str = nullptr;
+	auto channel_layout = WavpackGetChannelLayout(context_, reorder_str);
+
+	if (!reorder_str)
+	{
+		return false;
+	}
+
+	unsigned int channel_count = 0;
+
+	while (channel_layout > 0)
+	{
+		channel_count += channel_layout & 1;
+		channel_layout >>= 1;
+	}
+
+	ARCS_LOG_DEBUG << "Number of channels declared in layout: "
+		<< channel_count;
+	ARCS_LOG_DEBUG << "Channel layout:  " << channel_layout
+		<< " (uint32_t))";
+	ARCS_LOG_DEBUG << "Channel reorder: " << reorder_str;
+
+	return true;
 }
 
 
@@ -759,6 +778,27 @@ bool WavpackValidatingHandler::validate_cdda(const WavpackOpenFile &file)
 	if (not this->assert_true("Test: Channels",
 		validate.num_channels(file.num_channels()),
 		"Number of channels does not conform to CDDA"))
+	{
+		ARCS_LOG_ERROR << this->last_error();
+		return false;
+	}
+
+	if (file.channel_mask() < 0)
+	{
+		ARCS_LOG_ERROR << "Negative channel mask"; // FIXME Use error stack
+		return false;
+	}
+	if (not this->assert_equals("Test: Channel Mask",
+		static_cast<unsigned int>(file.channel_mask()), 3,
+		"Channel mask does not conform to CDDA"))
+	{
+		ARCS_LOG_ERROR << this->last_error();
+		return false;
+	}
+
+	if (not this->assert_true("Test: No channel reordering",
+		not file.needs_channel_reorder(),
+		"Channel reordering required, but not implemented yet"))
 	{
 		ARCS_LOG_ERROR << this->last_error();
 		return false;
@@ -880,7 +920,7 @@ void WavpackAudioReaderImpl::do_process_file(const std::string &filename)
 			this->samples_per_read() / CDDA.NUMBER_OF_CHANNELS;
 		uint32_t samples_read    = 0;
 
-		for (int32_t i = total_samples; i > 0; i -= wv_sample_count)
+		for (int64_t i = total_samples; i > 0; i -= wv_sample_count)
 		{
 			ARCS_LOG_DEBUG << "READ SEQUENCE, remaining samples " << i;
 
@@ -1004,7 +1044,7 @@ std::unique_ptr<FileReader> DescriptorWavpack::do_create_reader() const
 	auto impl = std::make_unique<WavpackAudioReaderImpl>();
 
 	std::unique_ptr<WAVPACK_CDDA_t> valid =
-		std::make_unique<WAVPACK_CDDA_WAV_PCM_t>();
+		std::make_unique<WAVPACK_WAV_PCM_CDDA_t>();
 	auto validator =
 		std::make_unique<WavpackValidatingHandler>(std::move(valid));
 
