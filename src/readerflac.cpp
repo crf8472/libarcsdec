@@ -420,6 +420,9 @@ void FlacAudioReaderImpl::do_process_file(const std::string &filename)
 		case FLAC__CHANNEL_ASSIGNMENT_MID_SIDE:
 			ARCS_LOG_INFO << "Channel assignment: mid/side stereo";
 			break;
+
+		default:
+			ARCS_LOG_WARNING << "Could not determine channel assignment";
 	}
 	// end channel order stuff
 
