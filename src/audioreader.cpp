@@ -51,7 +51,8 @@ uint8_t ByteConverter::byte_to_uint8(const char &b) const
 int16_t ByteConverter::le_bytes_to_int16(const char &b1,
 		const char &b2) const
 {
-	return	static_cast<uint16_t>(b2 & 0xFF) << 8 |
+	uint16_t val =
+			static_cast<uint16_t>(b2 & 0xFF) << 8 |
 			static_cast<uint16_t>(b1 & 0xFF);
 
 	// NOTE: This should also work without static_cast.
@@ -77,6 +78,9 @@ int16_t ByteConverter::le_bytes_to_int16(const char &b1,
 	// safe to rely on the implicit cast when returning the result.
 	// In case the cast is free of effect, the optimizer should remove it, but
 	// it is unsatisfying to not be sure what's going on.
+
+	return static_cast<int16_t>(val);
+	// separate explicit cast to avoid -Wsign-conversion firing
 }
 
 
@@ -92,12 +96,15 @@ int32_t ByteConverter::le_bytes_to_int32(const char &b1,
 		const char &b3,
 		const char &b4) const
 {
-	return	static_cast<uint32_t>(b4 & 0xFF) << 24 |
+	uint32_t val =
+			static_cast<uint32_t>(b4 & 0xFF) << 24 |
 			static_cast<uint32_t>(b3 & 0xFF) << 16 |
 			static_cast<uint32_t>(b2 & 0xFF) <<  8 |
 			static_cast<uint32_t>(b1 & 0xFF);
 
 	// NOTE Same note as in le_bytes_to_int16() applies
+	return static_cast<int32_t>(val);
+	// separate explicit cast to avoid -Wsign-conversion firing
 }
 
 
@@ -106,7 +113,7 @@ uint32_t ByteConverter::le_bytes_to_uint32(const char &b1,
 		const char &b3,
 		const char &b4) const
 {
-	return le_bytes_to_int32(b1, b2, b3, b4) & 0xFFFFFFFF;
+	return static_cast<uint32_t>(le_bytes_to_int32(b1, b2, b3, b4));
 }
 
 
@@ -115,12 +122,18 @@ int32_t ByteConverter::be_bytes_to_int32(const char &b1,
 		const char &b3,
 		const char &b4) const
 {
-	return	static_cast<uint32_t>(b1 & 0xFF) << 24 |
+	return le_bytes_to_int32(b4, b3, b2, b1);
+	/*
+	uint32_t val =
+			static_cast<uint32_t>(b1 & 0xFF) << 24 |
 			static_cast<uint32_t>(b2 & 0xFF) << 16 |
 			static_cast<uint32_t>(b3 & 0xFF) <<  8 |
 			static_cast<uint32_t>(b4 & 0xFF);
 
 	// NOTE Same note as in le_bytes_to_int16() applies
+	return static_cast<int32_t>(val);
+	// separate cast to avoid -Wsign-conversion firing
+	*/
 }
 
 
@@ -129,7 +142,8 @@ uint32_t ByteConverter::be_bytes_to_uint32(const char &b1,
 		const char &b3,
 		const char &b4) const
 {
-	return be_bytes_to_int32(b1, b2, b3, b4) & 0xFFFFFFFF;
+	//return be_bytes_to_int32(b1, b2, b3, b4) & 0xFFFFFFFF;
+	return static_cast<uint32_t>(be_bytes_to_int32(b1, b2, b3, b4));
 }
 
 
@@ -652,10 +666,13 @@ std::unique_ptr<FileReaderDescriptor> AudioReader::do_descriptor() const
 AudioReaderSelection::AudioReaderSelection()
 {
 	std::unique_ptr<FileTestBytes> test =
-		std::make_unique<FileTestBytes>(0, 24);
-	// 24 is a sufficient number of bytes for recognition (at the moment)
-	// Note: RIFF/WAV needs only the first 12 bytes for identification and PCM
-	// format is encoded in byte 20 + 21, but 24 is such a beautiful number...
+		std::make_unique<FileTestBytes>(0, 44);
+	// Why 44? We want to recognize container format, codec and CDDA format.
+	// Consider RIFFWAVE/PCM: the first 12 bytes identify the container format,
+	// PCM format is encoded in bytes 20+21, but validating CDDA requires to
+	// read the entire format chunk (up to and including byte 36). Bytes 37-40
+	// are the data subchunk id and 41-44 the data subchunk size. This length
+	// is also sufficient to identify all other formats currently supported.
 
 	this->register_test(std::move(test));
 
