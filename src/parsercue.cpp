@@ -15,6 +15,7 @@ extern "C" {
 
 #include <cstdio>    // for fopen, fclose, FILE
 #include <iomanip>   // for debug
+#include <limits>    // for numeric_limits
 #include <sstream>   // for debug
 #include <stdexcept>
 #include <string>    // from .h
@@ -111,14 +112,17 @@ public:
 protected:
 
 	/**
-	 * Service method: Convert a signed long to uint32_t, clipping negative
-	 * values and larger values to 0.
+	 * Service method: Convert a long value to int32_t.
 	 *
 	 * \param[in] value The value to convert
+	 * \param[in] name  Name of the value to show in error message
+	 *
+	 * \throw InvalidMetadataException If \c value negative or too big
 	 *
 	 * \return The converted value
 	 */
-	uint32_t signed_long_to_uint32(const signed long &value) const;
+	int32_t cast_or_throw(const signed long &value, const std::string &name)
+		const;
 
 
 private:
@@ -165,7 +169,7 @@ public:
 	 *
 	 * \return Number of tracks according to the CUEsheet
 	 */
-	int track_count() const;
+	uint16_t track_count() const;
 
 	/**
 	 * Return the frame offsets specified in the CUE file
@@ -305,12 +309,9 @@ CueOpenFile::~CueOpenFile() noexcept
 
 CueInfo CueOpenFile::parse_info()
 {
-	// return types according to libcue-API
-	long trk_offset = 0;
-	long trk_length = 0;
-	uint16_t track_count = ::cd_get_ntrack(cd_info_);
+	int track_count = ::cd_get_ntrack(cd_info_);
 
-	if (track_count <= 0)
+	if (track_count < 0 or track_count > 99)
 	{
 		std::stringstream ss;
 		ss << "Invalid number of tracks: " << track_count;
@@ -320,8 +321,13 @@ CueInfo CueOpenFile::parse_info()
 		throw MetadataParseException(ss.str());
 	}
 
-	Track* trk = nullptr;
 	CueInfo cue_info;
+
+	// return types according to libcue-API
+	long trk_offset = 0;
+	long trk_length = 0;
+
+	Track* trk = nullptr;
 
 	// Read offset, length + filename for each track in CUE file
 
@@ -339,7 +345,26 @@ CueInfo CueOpenFile::parse_info()
 		}
 
 		trk_offset = ::track_get_start(trk);
+
+		if (trk_offset < 0)
+		{
+			std::stringstream msg;
+			msg << "Offset for track " << i
+				<< " is not expected to be negative: " << trk_offset;
+			throw InvalidMetadataException(msg.str());
+		}
+
 		trk_length = ::track_get_length(trk);
+
+		// Length of last track is allowed to be -1.
+		if (i < track_count and trk_length < 0)
+		{
+			std::stringstream msg;
+			msg << "Length for track " << i
+				<< " is not expected to be negative: " << trk_length;
+			throw InvalidMetadataException(msg.str());
+		}
+
 		std::string audiofilename(::track_get_filename(trk));
 
 		// Log the contents
@@ -362,54 +387,34 @@ CueInfo CueOpenFile::parse_info()
 		// offset of the non-existent following track.
 
 		cue_info.append_track(
-			signed_long_to_uint32(trk_offset),
-			signed_long_to_uint32(trk_length),
-			audiofilename);
+				cast_or_throw(trk_offset, "track offset"),
+				cast_or_throw(trk_length, "track length"),
+				audiofilename);
 	}
 
 	// Basic verification
 
-	if (track_count != cue_info.offsets().size())
+	if (static_cast<uint16_t>(track_count) != cue_info.track_count())
 	{
 		ARCS_LOG_WARNING << "Expected " << track_count << " tracks, but parsed "
-			<< cue_info.offsets().size() << " offsets "
-			<< "(" << std::abs(static_cast<int32_t>(
-					track_count - cue_info.offsets().size()))
-			<< (track_count < cue_info.offsets().size() ? " more" : " less")
-			<< ")";
-	}
-	if (track_count != cue_info.lengths().size())
-	{
-		ARCS_LOG_WARNING << "Expected " << track_count << " tracks, but parsed "
-			<< cue_info.lengths().size() << " lengths "
-			<< "(" << std::abs(static_cast<int32_t>(
-					track_count - cue_info.lengths().size()))
-			<< (track_count < cue_info.lengths().size() ? " more" : " less")
-			<< ")";
+			<< cue_info.track_count() << " tracks ";
 	}
 
 	return cue_info;
 }
 
 
-uint32_t CueOpenFile::signed_long_to_uint32(const long &value) const
+int32_t CueOpenFile::cast_or_throw(const long &value, const std::string &name) const
 {
-	// Maximal value for uint32_t (== 0xFFFFFFFF);
-	static const uint32_t UINT32T_MAX = static_cast<uint32_t>(-1);
-
-	if (value < 0)
+	if (value > std::numeric_limits<int32_t>::max())
 	{
-		ARCS_LOG(DEBUG1) << "Value from CUE sheet is negative, clip to 0";
-		return 0;
+		std::stringstream msg;
+		msg << "Value '" << name << "': " << value << " too big for int32_t";
+
+		throw InvalidMetadataException(msg.str());
 	}
 
-	if (value < static_cast<int64_t>(UINT32T_MAX) + 1)
-	{
-		return static_cast<uint32_t>(value);
-	}
-
-	ARCS_LOG_ERROR << "Value from CUE sheet is larger than uint32 maximum";
-	return 0;
+	return static_cast<int32_t>(value);
 }
 
 
@@ -429,7 +434,7 @@ CueInfo::CueInfo()
 CueInfo::~CueInfo() noexcept = default;
 
 
-int CueInfo::track_count() const
+uint16_t CueInfo::track_count() const
 {
 	return track_count_;
 }
