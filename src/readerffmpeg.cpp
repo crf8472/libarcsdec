@@ -887,20 +887,43 @@ bool FFmpegFileLoader::validate_cdda(::AVCodecContext *ctx) const
 
 	CDDAValidator validator;
 
+	if (::av_get_bytes_per_sample(ctx->sample_fmt) < 0)
+	{
+		ARCS_LOG_ERROR << "Could not validate CDDA: negative bits per sample";
+		return false;
+	}
+
 	if (not validator.bits_per_sample(
-			::av_get_bytes_per_sample(ctx->sample_fmt) * CHAR_BIT))
+			static_cast<unsigned int>(
+				::av_get_bytes_per_sample(ctx->sample_fmt)) * CHAR_BIT))
 	{
 		ARCS_LOG_ERROR << "Not CDDA: not 16 bits per sample";
 		return false;
 	}
 
-	if (not validator.num_channels(ctx->channels))
+
+	if (ctx->channels < 0)
+	{
+		ARCS_LOG_ERROR
+			<< "Could not validate CDDA: negative number of channels";
+		return false;
+	}
+
+	if (not validator.num_channels(static_cast<unsigned int>(ctx->channels)))
 	{
 		ARCS_LOG_ERROR << "Not CDDA: not stereo";
 		return false;
 	}
 
-	if (not validator.samples_per_second(ctx->sample_rate))
+
+	if (ctx->sample_rate < 0)
+	{
+		ARCS_LOG_ERROR << "Could not validate CDDA: negative sample rate";
+		return false;
+	}
+
+	if (not validator.samples_per_second(
+				static_cast<unsigned int>(ctx->sample_rate)))
 	{
 		ARCS_LOG_ERROR << "Not CDDA: sample rate is not 44100 Hz";
 		return false;
@@ -1082,24 +1105,26 @@ void FFmpegFileLoader::log_codec_info(::AVCodecContext *ctx) const
 
 		// Codec is lossless ?
 
-		bool codec_cap_lossless =
-			ctx->codec->capabilities & AV_CODEC_CAP_LOSSLESS;
+		// FFmpeg seems either to lie about this for flac, wavpack,
+		// alac and ape or I just did not get what this capability means.
+		// FFmpeg does not qualify these codecs to have this capability,
+		// so it is probably useless to test for. Seems to be expressed by
+		// properties instead, see above.
+		// Code is commented out but kept for further research.
 
-		ARCS_LOG_DEBUG << "  CAP_LOSSLESS:            "
-			<< (codec_cap_lossless ? "yes" : "no");
-
-		if (not codec_cap_lossless)
-		{
-			// FFmpeg seems either to lie about this for flac, wavpack,
-			// alac and ape or I just did not get what this capability means.
-			// FFmpeg does not qualify these codecs to have this capability,
-			// so we just warn instead of an exception.
-			// Seems to be expressed by properties instead, see above.
-
-			ARCS_LOG_INFO <<
-				"  => Codec does not have the lossless capability."
-				<< " This is probably ok, though.";
-		}
+		//bool codec_cap_lossless =
+		//	ctx->codec->capabilities & AV_CODEC_CAP_LOSSLESS;
+        //
+		//ARCS_LOG_DEBUG << "  CAP_LOSSLESS:            "
+		//	<< (codec_cap_lossless ? "yes" : "no");
+        //
+		//if (not codec_cap_lossless)
+		//{
+        //
+		//	ARCS_LOG_INFO <<
+		//		"  => Codec does not have the lossless capability."
+		//		<< " This is probably ok, though.";
+		//}
 
 		// Analyze delay capability
 
@@ -1125,12 +1150,13 @@ void FFmpegFileLoader::log_codec_info(::AVCodecContext *ctx) const
 		ARCS_LOG(DEBUG1) << "  skip_bottom:      " << ctx->skip_bottom;
 		ARCS_LOG(DEBUG1) << "  frame_number:     " << ctx->frame_number;
 		ARCS_LOG(DEBUG1) << "  frame_size:       " << ctx->frame_size;
-		ARCS_LOG(DEBUG1) << "  skip_frame:       " << ctx->skip_frame;
 		ARCS_LOG(DEBUG1) << "  initial_padding:  " << ctx->initial_padding;
 		ARCS_LOG(DEBUG1) << "  trailing_padding: " << ctx->trailing_padding;
 
 		// Commented out these logs because they are mostly unnecessary
 		// for practical means, but I wanted to keep them at hand if needed.
+
+		//ARCS_LOG(DEBUG1) << "  skip_frame:       " << ctx->skip_frame;
 
 		//// applies for flac, alac, ape
 		//ARCS_LOG(DEBUG1) << "  CAP_DR1:            "
@@ -1277,7 +1303,7 @@ bool FFmpegAudioFile::decode_packet(::AVPacket packet, ::AVFrame *frame,
 		return false;
 	}
 
-	uint32_t sample16_count = 0;
+	int64_t  sample16_count = 0;
 	uint32_t frame_count    = 0;
 
 	// Track the frame size to recognize last frame
@@ -1321,14 +1347,15 @@ bool FFmpegAudioFile::decode_packet(::AVPacket packet, ::AVFrame *frame,
 
 		++frame_count;
 
-		sample16_count += frame->nb_samples * CDDA.NUMBER_OF_CHANNELS;
+		sample16_count += frame->nb_samples *
+			static_cast<int>(CDDA.NUMBER_OF_CHANNELS);
 
 		// For audio in general only linesize[0] will be defined since the
 		// planes have to be of identical size.
 
 		// For planar audio, the planes are just channels.
 
-		*bytes += frame->linesize[0] * num_planes_;
+		*bytes += static_cast<unsigned int>(frame->linesize[0]) * num_planes_;
 
 		// Track frame size to recognize last frame.
 		// Correct estimated number of total samples with counted samples.
@@ -1351,7 +1378,7 @@ bool FFmpegAudioFile::decode_packet(::AVPacket packet, ::AVFrame *frame,
 				uint32_t samples32_counted = (*samples16 + sample16_count) / 2;
 
 				// diff estimated total samples32 vs. counted samples32
-				int32_t total_diff = total_samples_ - samples32_counted;
+				int64_t total_diff = total_samples_ - samples32_counted;
 
 				// diff size of current frame against previous frame sizes
 				int32_t frame_diff = frame_size - frame->nb_samples;
@@ -1401,7 +1428,8 @@ bool FFmpegAudioFile::decode_packet(::AVPacket packet, ::AVFrame *frame,
 		}
 
 		// Push sample sequence to processing/buffering
-		this->pass_samples(frame->data[0], frame->data[1], frame->linesize[0]);
+		this->pass_samples(frame->data[0], frame->data[1],
+				static_cast<unsigned int>(frame->linesize[0]));
 	}
 
 	*frames    += frame_count;
