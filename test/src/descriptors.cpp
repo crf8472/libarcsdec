@@ -1,8 +1,8 @@
 #include "catch2/catch.hpp"
 
-// #ifndef __LIBARCSDEC_DESCRIPTORS_HPP__
-// #include "descriptors.hpp"
-// #endif
+#ifndef __LIBARCSDEC_DESCRIPTORS_HPP__
+#include "descriptors.hpp"
+#endif
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__
 #include "audioreader.hpp"
 #endif
