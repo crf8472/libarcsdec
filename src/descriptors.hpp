@@ -500,7 +500,7 @@ private:
 	 * read from the specified file and position
 	 */
 	std::vector<char> read_bytes(const std::string &filename,
-		const uint64_t &offset, const uint32_t &length) const;
+		const uint32_t &offset, const uint32_t &length) const;
 
 	/**
 	 * \brief Byte offset of the byte sequence in the file.
