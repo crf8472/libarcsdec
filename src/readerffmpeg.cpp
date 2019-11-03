@@ -772,7 +772,7 @@ AVFormatContext* FFmpegFileLoader::acquire_format_context(
 
 	::AVFormatContext* ctx = nullptr;
 
-	if (::avformat_open_input(&ctx , filename.c_str(), NULL, NULL) != 0)
+	if (::avformat_open_input(&ctx , filename.c_str(), nullptr, nullptr) != 0)
 	{
 		std::stringstream message;
 		message << "Error opening audio file: " << filename;
@@ -784,7 +784,7 @@ AVFormatContext* FFmpegFileLoader::acquire_format_context(
 	// Read some packets to acquire information about the streams
 	// (This is useful for formats without a header)
 
-	if (::avformat_find_stream_info(ctx, NULL) < 0)
+	if (::avformat_find_stream_info(ctx, nullptr) < 0)
 	{
 		::avformat_close_input(&ctx);
 
@@ -841,7 +841,7 @@ AVCodecContext* FFmpegFileLoader::alloc_and_init_codec_context(::AVCodec* codec,
 {
 	// Allocate CodecContext
 
-	::AVCodecContext* cctx = ::avcodec_alloc_context3(NULL);
+	::AVCodecContext* cctx = ::avcodec_alloc_context3(nullptr);
 
 	if (!cctx)
 	{
@@ -866,7 +866,7 @@ AVCodecContext* FFmpegFileLoader::alloc_and_init_codec_context(::AVCodec* codec,
 
 	// Open CodecContext
 
-	if (::avcodec_open2(cctx, codec, NULL) != 0)
+	if (::avcodec_open2(cctx, codec, nullptr) != 0)
 	{
 		::avcodec_close(cctx);
 		::avcodec_free_context(&cctx);
@@ -1299,7 +1299,7 @@ bool FFmpegAudioFile::decode_packet(::AVPacket packet, ::AVFrame *frame,
 
 	if (::avcodec_send_packet(codecContext_, &packet) < 0)
 	{
-		::av_log(NULL, AV_LOG_WARNING, "Error sending packet to decoder\n");
+		::av_log(nullptr, AV_LOG_WARNING, "Error sending packet to decoder\n");
 		return false;
 	}
 
@@ -1335,11 +1335,11 @@ bool FFmpegAudioFile::decode_packet(::AVPacket packet, ::AVFrame *frame,
 			{
 				// Unexpected end of file
 
-				::av_log(NULL, AV_LOG_ERROR, "Unexpected end of file\n");
+				::av_log(nullptr, AV_LOG_ERROR, "Unexpected end of file\n");
 				break;
 			}
 
-			::av_log(NULL, AV_LOG_ERROR, "Error receiving frame\n");
+			::av_log(nullptr, AV_LOG_ERROR, "Error receiving frame\n");
 			break;
 		}
 
