@@ -339,7 +339,7 @@ public:
 	/**
 	 * \brief Default destructor
 	 */
-	virtual ~SampleBuffer() noexcept;
+	virtual ~SampleBuffer() noexcept override;
 
 	/**
 	 * \brief Reset the buffer to its initial state, thereby discarding its

@@ -323,7 +323,7 @@ protected:
 	/**
 	 * \brief Default destructor.
 	 */
-	~SampleProvider() noexcept;
+	~SampleProvider() noexcept override;
 
 	void process_samples(PCMForwardIterator begin, PCMForwardIterator end)
 		override;
