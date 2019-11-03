@@ -943,7 +943,7 @@ public:
 	/**
 	 * \brief Virtual destructor.
 	 */
-	virtual ~WavAudioReaderImpl() noexcept;
+	virtual ~WavAudioReaderImpl() noexcept override;
 
 	/**
 	 * \brief Register a validation handler.

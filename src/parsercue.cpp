@@ -493,7 +493,7 @@ public:
 	/**
 	 * Default destructor
 	 */
-	virtual ~CueParserImpl() noexcept;
+	virtual ~CueParserImpl() noexcept override;
 
 	/**
 	 * Return CUE data.

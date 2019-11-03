@@ -149,7 +149,7 @@ public:
 	/**
 	 * \brief Default destructor.
 	 */
-	virtual ~WAVPACK_WAV_PCM_CDDA_t() noexcept;
+	virtual ~WAVPACK_WAV_PCM_CDDA_t() noexcept override;
 
 	/**
 	 * \brief Specifies WAV format as exclusively required.
@@ -406,7 +406,7 @@ public:
 	/**
 	 * \brief Default destructor.
 	 */
-	virtual ~WavpackAudioReaderImpl() noexcept;
+	virtual ~WavpackAudioReaderImpl() noexcept override;
 
 	/**
 	 * \brief Register a validating handler.

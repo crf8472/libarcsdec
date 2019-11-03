@@ -123,7 +123,7 @@ public:
 	/**
 	 * \brief Default destructor.
 	 */
-	virtual ~MetadataParser() noexcept;
+	virtual ~MetadataParser() noexcept override;
 
 	/**
 	 * \brief Parses a metadata file.

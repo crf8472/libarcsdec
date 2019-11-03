@@ -46,7 +46,7 @@ public:
 	/**
 	 * \brief Virtual default destructor.
 	 */
-	virtual ~DescriptorCUE() noexcept;
+	virtual ~DescriptorCUE() noexcept override;
 
 	/**
 	 * \brief Returns "CUESheet".
