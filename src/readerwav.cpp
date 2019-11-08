@@ -271,10 +271,10 @@ std::string WavSubchunkHeader::name() const
 
 	std::string name;
 
-	name += id >> 24 & mask;
-	name += id >> 16 & mask;
-	name += id >>  8 & mask;
-	name += id       & mask;
+	name += static_cast<char>(id >> 24u & mask);
+	name += static_cast<char>(id >> 16u & mask);
+	name += static_cast<char>(id >>  8u & mask);
+	name += static_cast<char>(id        & mask);
 
 	return name;
 }
