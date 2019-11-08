@@ -1015,11 +1015,11 @@ private:
 	std::unique_ptr<WavAudioHandler> audio_handler_;
 };
 
-/** @} */
-
 } // namespace v_1_0_0
 
 } // namespace arcsdec
+
+/** @} */
 
 #endif
 
