@@ -12,6 +12,7 @@
 #include <FLAC++/metadata.h>
 
 #include <cstdint>
+#include <limits>
 #include <locale>       // for locale
 #include <memory>
 #include <string>
@@ -229,22 +230,42 @@ bool FlacMetadataHandler::streaminfo(
 
 	CDDAValidator validate;
 
+	if (streaminfo.get_bits_per_sample() > std::numeric_limits<int>::max())
+	{
+		ARCS_LOG_ERROR << "Number of bits per sample exceeds size of int";
+		return false;
+	}
+
 	if (not this->assert_true("Test (CDDA): Bits per sample",
-		validate.bits_per_sample(streaminfo.get_bits_per_sample()),
+		validate.bits_per_sample(
+			static_cast<int>(streaminfo.get_bits_per_sample())),
 		"Number of bits per sample does not conform to CDDA"))
 	{
 		return false;
 	}
 
+	if (streaminfo.get_channels() > std::numeric_limits<int>::max())
+	{
+		ARCS_LOG_ERROR << "Number of channels exceeds size of int";
+		return false;
+	}
+
 	if (not this->assert_true("Test (CDDA): Channels",
-		validate.num_channels(streaminfo.get_channels()),
+		validate.num_channels(static_cast<int>(streaminfo.get_channels())),
 		"Number of channels does not conform to CDDA"))
 	{
 		return false;
 	}
 
+	if (streaminfo.get_sample_rate() > std::numeric_limits<int>::max())
+	{
+		ARCS_LOG_ERROR << "Sample rate exceeds size of int";
+		return false;
+	}
+
 	if (not this->assert_true("Test (CDDA): Samples per second",
-		validate.samples_per_second(streaminfo.get_sample_rate()),
+		validate.samples_per_second(
+			static_cast<int>(streaminfo.get_sample_rate())),
 		"Number of samples per second does not conform to CDDA"))
 	{
 		return false;
@@ -363,9 +384,11 @@ std::unique_ptr<AudioSize> FlacAudioReaderImpl::do_acquire_size(
 		return nullptr;
 	}
 
-	FLAC__uint64 total_samples = streaminfo.get_total_samples();
+	auto total_samples = streaminfo.get_total_samples();
+	auto max_samples = static_cast<unsigned int>(CDDA.SAMPLES_PER_FRAME) *
+			CDDA.MAX_BLOCK_ADDRESS;
 
-	if (total_samples > CDDA.MAX_BLOCK_ADDRESS * CDDA.SAMPLES_PER_FRAME)
+	if (total_samples > max_samples)
 	{
 		ARCS_LOG_WARNING << "Too many samples: "
 				<< "Counted " << total_samples
@@ -376,7 +399,7 @@ std::unique_ptr<AudioSize> FlacAudioReaderImpl::do_acquire_size(
 
 	std::unique_ptr<AudioSize> audiosize = std::make_unique<AudioSize>();
 
-	audiosize->set_sample_count(static_cast<uint32_t>(total_samples));
+	audiosize->set_sample_count(total_samples);
 
 	return audiosize;
 }
