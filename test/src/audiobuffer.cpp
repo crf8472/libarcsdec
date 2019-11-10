@@ -26,7 +26,7 @@ TEST_CASE ( "BlockAccumulator", "[audiobuffer] [blockaccumulator]" )
 
 	arcsdec::BlockAccumulator accumulator; // Capacity: BLOCKSIZE.DEFAULT
 
-	REQUIRE ( accumulator.samples_appended()   == 0 );
+	CHECK ( accumulator.samples_appended() == 0 );
 
 
 	SECTION ( "BlockAccumulator append works correct" )
@@ -45,11 +45,11 @@ TEST_CASE ( "BlockAccumulator", "[audiobuffer] [blockaccumulator]" )
 
 		accumulator.append_to_block(sequence.begin(), sequence.end());
 
-		REQUIRE ( accumulator.samples_appended()   == 1024 );
+		CHECK ( accumulator.samples_appended()   == 1024 );
 
 		accumulator.append_to_block(sequence.begin(), sequence.end());
 
-		REQUIRE ( accumulator.samples_appended()   == 2048 );
+		CHECK ( accumulator.samples_appended()   == 2048 );
 
 		//accumulator.flush();
 	}
@@ -60,6 +60,6 @@ TEST_CASE ( "SampleBuffer", "[audiobuffer] [samplebuffer]" )
 {
 	arcsdec::SampleBuffer buffer;
 
-	REQUIRE ( buffer.samples_processed() == 0 );
+	CHECK ( buffer.samples_processed() == 0 );
 }
 
