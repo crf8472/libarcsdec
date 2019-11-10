@@ -260,7 +260,7 @@ private:
 	 * \param[in] stream The AVStream to analyze
 	 * \return Estimated total number of 32 bit PCM samples
 	 */
-	uint32_t estimate_total_samples(::AVCodecContext* cctx, ::AVStream* stream)
+	int64_t estimate_total_samples(::AVCodecContext* cctx, ::AVStream* stream)
 		const;
 
 	/**
@@ -332,7 +332,7 @@ public:
 	 * \return Total number of 32 bit PCM samples in file (including priming and
 	 * remainder frames)
 	 */
-	uint32_t total_samples() const;
+	int64_t total_samples() const;
 
 	/**
 	 * \brief Return the sample format of this file.
@@ -360,7 +360,7 @@ public:
 	 * \return Number of 32 bit PCM samples enumerated.
 	 * \throw FileReadException If an error occurrs while reading the file
 	 */
-	uint32_t traverse_samples();
+	int64_t traverse_samples();
 
 	/**
 	 * \brief Register the append_samples() method.
@@ -399,7 +399,7 @@ private:
 	 * \return TRUE iff samples were decoded from the packet, otherwise FALSE
 	 */
 	bool decode_packet(::AVPacket packet, ::AVFrame* frame,
-			uint32_t* samples16, uint32_t* frames, uint32_t* bytes);
+			int64_t* samples16, int64_t* frames, int64_t* bytes);
 
 	/**
 	 * \brief Pass a sequence of samples to consumer.
@@ -411,7 +411,7 @@ private:
 	 * \return 0 on success, otherwise non-zero error code
 	 */
 	int pass_samples(const uint8_t* ch0, const uint8_t* ch1,
-		const uint32_t bytes_per_plane);
+		const int64_t bytes_per_plane);
 
 	/**
 	 * \brief Internal format context pointer.
@@ -436,13 +436,13 @@ private:
 	 * samples. This will occurr for files for which padding frames contribute
 	 * to the duration or in cases where the duration or time base is broken.
 	 */
-	uint32_t total_samples_;
+	int64_t total_samples_;
 
 	/**
 	 * \brief Number of planes
 	 * (1 for interleaved data, CDDA.NUMBER_OF_CHANNELS for planar data)
 	 */
-	uint8_t num_planes_;
+	int num_planes_;
 
 	/**
 	 * \brief Sample format of this file.
@@ -894,8 +894,7 @@ bool FFmpegFileLoader::validate_cdda(::AVCodecContext *ctx) const
 	}
 
 	if (not validator.bits_per_sample(
-			static_cast<unsigned int>(
-				::av_get_bytes_per_sample(ctx->sample_fmt)) * CHAR_BIT))
+				::av_get_bytes_per_sample(ctx->sample_fmt) * CHAR_BIT))
 	{
 		ARCS_LOG_ERROR << "Not CDDA: not 16 bits per sample";
 		return false;
@@ -909,7 +908,7 @@ bool FFmpegFileLoader::validate_cdda(::AVCodecContext *ctx) const
 		return false;
 	}
 
-	if (not validator.num_channels(static_cast<unsigned int>(ctx->channels)))
+	if (not validator.num_channels(ctx->channels))
 	{
 		ARCS_LOG_ERROR << "Not CDDA: not stereo";
 		return false;
@@ -922,8 +921,7 @@ bool FFmpegFileLoader::validate_cdda(::AVCodecContext *ctx) const
 		return false;
 	}
 
-	if (not validator.samples_per_second(
-				static_cast<unsigned int>(ctx->sample_rate)))
+	if (not validator.samples_per_second(ctx->sample_rate))
 	{
 		ARCS_LOG_ERROR << "Not CDDA: sample rate is not 44100 Hz";
 		return false;
@@ -933,10 +931,10 @@ bool FFmpegFileLoader::validate_cdda(::AVCodecContext *ctx) const
 }
 
 
-uint32_t FFmpegFileLoader::estimate_total_samples(::AVCodecContext* cctx,
+int64_t FFmpegFileLoader::estimate_total_samples(::AVCodecContext* cctx,
 		::AVStream* stream) const
 {
-	uint32_t total_samples = 0;
+	int64_t total_samples = 0;
 
 	{
 		// Deduce number of samples from duration, which should be accurate
@@ -1256,7 +1254,7 @@ FFmpegAudioFile::~FFmpegAudioFile() noexcept
 }
 
 
-uint32_t FFmpegAudioFile::total_samples() const
+int64_t FFmpegAudioFile::total_samples() const
 {
 	return total_samples_;
 }
@@ -1290,7 +1288,7 @@ void FFmpegAudioFile::register_update_audiosize(
 
 
 bool FFmpegAudioFile::decode_packet(::AVPacket packet, ::AVFrame *frame,
-		uint32_t *samples16, uint32_t *frames, uint32_t *bytes)
+		int64_t *samples16, int64_t *frames, int64_t *bytes)
 {
 	// This is incompatible to the old API from ffmpeg 0.9
 	// introduced by libavcodec version 53.25.0 in 2011-12-11.
@@ -1303,8 +1301,8 @@ bool FFmpegAudioFile::decode_packet(::AVPacket packet, ::AVFrame *frame,
 		return false;
 	}
 
-	int64_t  sample16_count = 0;
-	uint32_t frame_count    = 0;
+	int64_t sample16_count = 0;
+	int64_t frame_count    = 0;
 
 	// Track the frame size to recognize last frame
 	// (assumes fixed frame length)
@@ -1347,15 +1345,14 @@ bool FFmpegAudioFile::decode_packet(::AVPacket packet, ::AVFrame *frame,
 
 		++frame_count;
 
-		sample16_count += frame->nb_samples *
-			static_cast<int>(CDDA.NUMBER_OF_CHANNELS);
+		sample16_count += frame->nb_samples * CDDA.NUMBER_OF_CHANNELS;
 
 		// For audio in general only linesize[0] will be defined since the
 		// planes have to be of identical size.
 
 		// For planar audio, the planes are just channels.
 
-		*bytes += static_cast<unsigned int>(frame->linesize[0]) * num_planes_;
+		*bytes += frame->linesize[0] * num_planes_;
 
 		// Track frame size to recognize last frame.
 		// Correct estimated number of total samples with counted samples.
@@ -1375,7 +1372,7 @@ bool FFmpegAudioFile::decode_packet(::AVPacket packet, ::AVFrame *frame,
 
 				// This is the real total samples respected so far
 
-				uint32_t samples32_counted = (*samples16 + sample16_count) / 2;
+				int64_t samples32_counted = (*samples16 + sample16_count) / 2;
 
 				// diff estimated total samples32 vs. counted samples32
 				int64_t total_diff = total_samples_ - samples32_counted;
@@ -1428,8 +1425,7 @@ bool FFmpegAudioFile::decode_packet(::AVPacket packet, ::AVFrame *frame,
 		}
 
 		// Push sample sequence to processing/buffering
-		this->pass_samples(frame->data[0], frame->data[1],
-				static_cast<unsigned int>(frame->linesize[0]));
+		this->pass_samples(frame->data[0], frame->data[1], frame->linesize[0]);
 	}
 
 	*frames    += frame_count;
@@ -1440,7 +1436,7 @@ bool FFmpegAudioFile::decode_packet(::AVPacket packet, ::AVFrame *frame,
 
 
 int FFmpegAudioFile::pass_samples(const uint8_t* ch0, const uint8_t* ch1,
-		const uint32_t bytes_per_plane)
+		const int64_t bytes_per_plane)
 {
 	// Note:: ffmpeg "normalizes" the channel ordering away, so we will ignore
 	// it and process anything als lef0/right1
@@ -1450,7 +1446,7 @@ int FFmpegAudioFile::pass_samples(const uint8_t* ch0, const uint8_t* ch1,
 	if (SAMPLE_FORMAT::S16P == this->sample_format())
 	{
 		SampleSequence<int16_t, true> sequence;
-		sequence.wrap(ch0, ch1, bytes_per_plane);
+		sequence.wrap(ch0, ch1, static_cast<uint64_t>(bytes_per_plane));
 
 		append_samples_(sequence.begin(), sequence.end());
 
@@ -1460,7 +1456,7 @@ int FFmpegAudioFile::pass_samples(const uint8_t* ch0, const uint8_t* ch1,
 	if (SAMPLE_FORMAT::S16  == this->sample_format())
 	{
 		SampleSequence<int16_t, false> sequence;
-		sequence.wrap(ch0, bytes_per_plane);
+		sequence.wrap(ch0, static_cast<uint64_t>(bytes_per_plane));
 
 		append_samples_(sequence.begin(), sequence.end());
 
@@ -1470,7 +1466,7 @@ int FFmpegAudioFile::pass_samples(const uint8_t* ch0, const uint8_t* ch1,
 	if (SAMPLE_FORMAT::S32P == this->sample_format()) // e.g. flac reader
 	{
 		SampleSequence<int32_t, true> sequence;
-		sequence.wrap(ch0, ch1, bytes_per_plane);
+		sequence.wrap(ch0, ch1, static_cast<uint64_t>(bytes_per_plane));
 
 		append_samples_(sequence.begin(), sequence.end());
 
@@ -1480,7 +1476,7 @@ int FFmpegAudioFile::pass_samples(const uint8_t* ch0, const uint8_t* ch1,
 	if (SAMPLE_FORMAT::S32  == this->sample_format()) // e.g. wavpack reader
 	{
 		SampleSequence<int32_t, false> sequence;
-		sequence.wrap(ch0, bytes_per_plane);
+		sequence.wrap(ch0, static_cast<uint64_t>(bytes_per_plane));
 
 		append_samples_(sequence.begin(), sequence.end());
 
@@ -1491,17 +1487,17 @@ int FFmpegAudioFile::pass_samples(const uint8_t* ch0, const uint8_t* ch1,
 }
 
 
-uint32_t FFmpegAudioFile::traverse_samples()
+int64_t FFmpegAudioFile::traverse_samples()
 {
 	// This is incompatible to the old API from ffmpeg 0.9
 	// introduced by libavcodec version 53.25.0 in 2011-12-11.
 
 	// Counters
 
-	uint32_t sample16_count   = 0;
-	uint32_t frame_count      = 0;
-	uint32_t byte_count       = 0;
-	uint32_t packet_count     = 0;
+	int64_t sample16_count   = 0;
+	int64_t frame_count      = 0;
+	int64_t byte_count       = 0;
+	int64_t packet_count     = 0;
 
 	// Pointer to current frame
 
@@ -1582,10 +1578,10 @@ uint32_t FFmpegAudioFile::traverse_samples()
 	{
 		ARCS_LOG_DEBUG << "Flush buffered up frames (if any)";
 
-		uint32_t buf_sample16_count = 0;
-		uint32_t buf_frame_count    = 0;
-		uint32_t buf_byte_count     = 0;
-		uint32_t buf_packet_count   = 0;
+		int64_t buf_sample16_count = 0;
+		int64_t buf_frame_count    = 0;
+		int64_t buf_byte_count     = 0;
+		int64_t buf_packet_count   = 0;
 
 		bool has_packet = true;
 		int result = 0;
@@ -1728,8 +1724,7 @@ void FFmpegAudioReaderImpl::do_process_file(const std::string &filename)
 		ARCS_LOG_INFO << "Expected " << sample_count_expect
 					<< " samples, but encountered " << sample_count_fact
 					<< " ("
-					<< std::abs(static_cast<int64_t>(
-								sample_count_expect - sample_count_fact))
+					<< std::abs(sample_count_expect - sample_count_fact)
 					<< ((sample_count_expect < sample_count_fact)
 							? " more"
 							: " less")
