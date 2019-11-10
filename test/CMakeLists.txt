@@ -21,7 +21,7 @@ list (APPEND TEST_SETS descriptors )
 #list (APPEND TEST_SETS readerffmpeg )
 #list (APPEND TEST_SETS readerflac   )
 list (APPEND TEST_SETS readerwav   )
-#list (APPEND TEST_SETS readerwvpk   )
+list (APPEND TEST_SETS readerwvpk   )
 #list (APPEND TEST_SETS sampleproc )
 
 

@@ -7,6 +7,9 @@
 #ifndef __LIBARCSDEC_READERWVPK_HPP__
 #include "readerwvpk.hpp"
 #endif
+#ifndef __LIBARCSDEC_READERWVPK_DETAILS_HPP__
+#include "readerwvpk_details.hpp"
+#endif
 
 extern "C" {
 #include <wavpack/wavpack.h>
@@ -40,8 +43,6 @@ namespace arcsdec
 inline namespace v_1_0_0
 {
 
-namespace
-{
 
 using arcstk::PCMForwardIterator;
 using arcstk::AudioSize;
@@ -51,148 +52,26 @@ using arcstk::SampleSequence;
 
 
 /**
- * \internal \defgroup readerwvpkImpl Implementation
- *
- * \ingroup readerwvpk
- *
- * The Wavpack AudioReader will only read Wavpack files containing losslessly
- * compressed integer samples. Validation requires CDDA conform samples in PCM
- * format. Float samples are not supported. Original file formats other than
- * WAV are not supported
- *
- * @{
+ * \brief Private libwavpack-based implementation of WavpackOpenFile.
  */
-
-
-/**
- * \brief Represents an interface for different reference CDDA representations
- * for the WAV format.
- *
- * For a concrete format like RIFFWAV/PCM, this interface can just
- * be implemented.
- */
-class WAVPACK_CDDA_t
-{
-
-public:
-
-
-	/**
-	 * \brief Default destructor.
-	 */
-	virtual ~WAVPACK_CDDA_t() noexcept;
-
-	/**
-	 * \brief Declare whether WAV format is required.
-	 *
-	 * \return TRUE iff only WAV format is exclusively required, otherwise FALSE
-	 */
-	virtual bool wav_format_only() const = 0;
-
-	/**
-	 * \brief Expect lossless compression.
-	 *
-	 * This method is non-virtual because it
-	 * makes no sense to ever change this requirement.
-	 *
-	 * \return TRUE, since ARCS cannot be computed on lossly compressed files
-	 */
-	bool lossless() const;
-
-	/**
-	 * \brief Declare whether it is required to have samples represented as
-	 * integers.
-	 *
-	 * In future versions, it may be supported to process float samples.
-	 *
-	 * \return TRUE iff float samples can be processed, otherwise FALSE
-	 */
-	virtual bool floats_ok() const = 0;
-
-	/**
-	 * \brief Declare the least version of wavpack that is supported.
-	 *
-	 * Files with a lower version cannot be processed.
-	 *
-	 * \return The least version of wavpack supported
-	 */
-	virtual uint8_t at_least_version() const;
-
-	/**
-	 * \brief Declare the highest version of wavpack that is supported.
-	 *
-	 * Files with a higher version cannot be processed.
-	 *
-	 * \return The highest version of wavpack supported
-	 */
-	virtual uint8_t at_most_version() const;
-
-	/**
-	 * \brief Declare the required number of bytes per sample and channel.
-	 *
-	 * (For CDDA, this is 2 for 16 bit.)
-	 *
-	 * \return Require 2 bytes (for 16 bit).
-	 */
-	virtual uint16_t bytes_per_sample() const;
-};
-
-
-/**
- * \brief Reference values for CDDA conforming Wavepack with integer PCM.
- */
-class WAVPACK_WAV_PCM_CDDA_t : public WAVPACK_CDDA_t
+class WavpackOpenFile::Impl final
 {
 
 public:
 
 	/**
-	 * \brief Default destructor.
+	 * \brief The filename to open.
+	 *
+	 * \param[in] filename The filename to open
 	 */
-	virtual ~WAVPACK_WAV_PCM_CDDA_t() noexcept override;
+	Impl(const std::string &filename);
+
+	Impl(const Impl &impl) = delete;
 
 	/**
-	 * \brief Specifies WAV format as exclusively required.
-	 *
-	 * \return TRUE
+	 * \brief Destructor
 	 */
-	bool wav_format_only() const override;
-
-	/**
-	 * \brief Specifies float samples as not supported.
-	 *
-	 * (This in fact, restricts the support to integer samples.)
-	 *
-	 * \return FALSE
-	 */
-	virtual bool floats_ok() const override;
-};
-
-
-/**
- * \brief Represents an opened wavpack audio file.
- */
-class WavpackOpenFile
-{
-
-public:
-
-	/**
-	 * \brief Open wavpack file with the given name.
-	 *
-	 * This class does RAII and does not require you to manually close the
-	 * instance.
-	 *
-	 * \param[in] filename The file to open
-	 *
-	 * \throw FileReadException If file could not be opened
-	 */
-	explicit WavpackOpenFile(const std::string &filename);
-
-	/**
-	 * \brief Virtual default destructor.
-	 */
-	virtual ~WavpackOpenFile() noexcept;
+	~Impl() noexcept;
 
 	/**
 	 * \brief Returns TRUE if file is lossless.
@@ -300,6 +179,9 @@ public:
 	uint32_t read_pcm_samples(const uint32_t &pcm_samples_to_read,
 		std::vector<int32_t> *buffer) const;
 
+	// Delete copy assignment operator
+	WavpackOpenFile::Impl& operator = (WavpackOpenFile::Impl &file) = delete;
+
 
 private:
 
@@ -307,137 +189,6 @@ private:
 	 * \brief Internal WavpackContext.
 	 */
 	WavpackContext *context_;
-
-	/**
-	 * \brief Private copy constructor.
-	 *
-	 * Implemented empty. This class is non-copyable.
-	 */
-	WavpackOpenFile(const WavpackOpenFile &file) = delete;
-
-	/**
-	 * \brief Private copy assignment operator.
-	 *
-	 * Implemented empty. This class is non-copyable.
-	 */
-	WavpackOpenFile& operator = (WavpackOpenFile &file) = delete;
-};
-
-
-/**
- * \brief A handler to validate wavpack files for whether they can be processed
- * by this WavpackAudioReaderImpl.
- */
-class WavpackValidatingHandler : public ReaderValidatingHandler
-{
-
-public:
-
-	/**
-	 * \brief Constructor with reference values.
-	 */
-	explicit WavpackValidatingHandler(
-			std::unique_ptr<WAVPACK_CDDA_t> valid_values);
-
-	/**
-	 * \brief Virtual default destructor.
-	 */
-	virtual ~WavpackValidatingHandler() noexcept;
-
-	/**
-	 * \brief Validate the format of the wavpack file.
-	 *
-	 * \param[in] file The opened file
-	 *
-	 * \return TRUE if validation succeeded, otherwise FALSE
-	 */
-	bool validate_format(const WavpackOpenFile &file);
-
-	/**
-	 * \brief Validate properties expressed by the mode of the wavpack file.
-	 *
-	 * \param[in] file The opened file
-	 *
-	 * \return TRUE if validation succeeded, otherwise FALSE
-	 */
-	bool validate_mode(const WavpackOpenFile &file);
-
-	/**
-	 * \brief Validate audio content of the wavpack file for CDDA conformity.
-	 *
-	 * \param[in] file The opened file
-	 *
-	 * \return TRUE if validation succeeded, otherwise FALSE
-	 */
-	bool validate_cdda(const WavpackOpenFile &file);
-
-	/**
-	 * \brief Validate the wavpack version of the wavpack file.
-	 *
-	 * \param[in] file The opened file
-	 *
-	 * \return TRUE if validation succeeded, otherwise FALSE
-	 */
-	bool validate_version(const WavpackOpenFile &file);
-
-
-private:
-
-	/**
-	 * \brief Configuration: Reference values for validation.
-	 */
-	std::unique_ptr<WAVPACK_CDDA_t> valid_;
-};
-
-
-/**
- * \brief Implementation of a AudioReader for the Wavpack format.
- */
-class WavpackAudioReaderImpl : public BufferedAudioReaderImpl
-{
-
-public:
-
-	/**
-	 * \brief Default constructor.
-	 */
-	WavpackAudioReaderImpl();
-
-	/**
-	 * \brief Default destructor.
-	 */
-	virtual ~WavpackAudioReaderImpl() noexcept override;
-
-	/**
-	 * \brief Register a validating handler.
-	 *
-	 * \param[in] v The validating handler to register
-	 */
-	void register_validate_handler(std::unique_ptr<WavpackValidatingHandler> v);
-
-
-private:
-
-	std::unique_ptr<AudioSize> do_acquire_size(const std::string &filename)
-		override;
-
-	void do_process_file(const std::string &filename) override;
-
-	std::unique_ptr<FileReaderDescriptor> do_descriptor() const override;
-
-	/**
-	 * \brief Perform the actual validation process.
-	 *
-	 * \param[in] file The file to validate
-	 *
-	 * \return TRUE iff validation succeeded, otherwise FALSE
-	 */
-	bool perform_validations(const WavpackOpenFile &file);
-
-	/**
-	 * \brief Validating handler of this instance.
-	 */
-	std::unique_ptr<WavpackValidatingHandler> validate_handler_;
 };
 
 
@@ -495,7 +246,7 @@ bool WAVPACK_WAV_PCM_CDDA_t::floats_ok() const
 // WavpackOpenFile
 
 
-WavpackOpenFile::WavpackOpenFile(const std::string &filename)
+WavpackOpenFile::Impl::Impl(const std::string &filename)
 	: context_()
 {
 	int   flags = OPEN_WVC | OPEN_NO_CHECKSUM ;
@@ -505,21 +256,25 @@ WavpackOpenFile::WavpackOpenFile(const std::string &filename)
 
 	if (!context_)
 	{
+		std::string info = "Wavpack file could not be opened";
+		std::string error_msg;
+
 		if (error)
 		{
-			ARCS_LOG_ERROR << "Could not open file. Error was: "
-				+ std::string(error);
+			error_msg = std::string(error);
+
+			ARCS_LOG_ERROR << info << ": " << error_msg;
 
 			free(error);
 			error = nullptr;
 		}
 
-		throw FileReadException("Wavpack file could not be opened");
+		throw FileReadException("[libwavpack] " + info + ": " + error_msg);
 	}
 }
 
 
-WavpackOpenFile::~WavpackOpenFile() noexcept
+WavpackOpenFile::Impl::~Impl() noexcept
 {
 	if (context_)
 	{
@@ -537,56 +292,56 @@ WavpackOpenFile::~WavpackOpenFile() noexcept
 }
 
 
-bool WavpackOpenFile::is_lossless() const
+bool WavpackOpenFile::Impl::is_lossless() const
 {
 	return MODE_LOSSLESS & WavpackGetMode(context_);
 }
 
 
-bool WavpackOpenFile::has_wav_format() const
+bool WavpackOpenFile::Impl::has_wav_format() const
 {
 	return WP_FORMAT_WAV == WavpackGetFileFormat(context_);
 }
 
 
-bool WavpackOpenFile::has_float_samples() const
+bool WavpackOpenFile::Impl::has_float_samples() const
 {
 	return MODE_FLOAT & WavpackGetMode(context_);
 }
 
 
-uint8_t WavpackOpenFile::version() const
+uint8_t WavpackOpenFile::Impl::version() const
 {
 	return WavpackGetVersion(context_);
 }
 
 
-uint16_t WavpackOpenFile::bits_per_sample() const
+uint16_t WavpackOpenFile::Impl::bits_per_sample() const
 {
 	return WavpackGetBitsPerSample(context_);
 }
 
 
-uint32_t WavpackOpenFile::num_channels() const
+uint32_t WavpackOpenFile::Impl::num_channels() const
 {
 	auto num_channels = WavpackGetNumChannels(context_);
 	return (num_channels > 0) ? static_cast<uint32_t>(num_channels) : 0;
 }
 
 
-uint32_t WavpackOpenFile::samples_per_second() const
+uint32_t WavpackOpenFile::Impl::samples_per_second() const
 {
 	return WavpackGetSampleRate(context_);
 }
 
 
-uint16_t WavpackOpenFile::bytes_per_sample() const
+uint16_t WavpackOpenFile::Impl::bytes_per_sample() const
 {
 	return WavpackGetBytesPerSample(context_);
 }
 
 
-uint32_t WavpackOpenFile::total_pcm_samples() const
+uint32_t WavpackOpenFile::Impl::total_pcm_samples() const
 {
 	// We do not need to handle files with more than 0xFFFFFFFF samples
 	// since we only check compact disc images
@@ -610,7 +365,7 @@ uint32_t WavpackOpenFile::total_pcm_samples() const
 }
 
 
-bool WavpackOpenFile::channel_order() const
+bool WavpackOpenFile::Impl::channel_order() const
 {
 	const int num_channels = WavpackGetNumChannels(context_);
 
@@ -651,14 +406,14 @@ bool WavpackOpenFile::channel_order() const
 }
 
 
-int WavpackOpenFile::channel_mask() const
+int WavpackOpenFile::Impl::channel_mask() const
 {
 	// stereo == 3
 	return WavpackGetChannelMask(context_);
 }
 
 
-bool WavpackOpenFile::needs_channel_reorder() const
+bool WavpackOpenFile::Impl::needs_channel_reorder() const
 {
 	// Channel layout of the core audio file
 
@@ -688,7 +443,8 @@ bool WavpackOpenFile::needs_channel_reorder() const
 }
 
 
-uint32_t WavpackOpenFile::read_pcm_samples(const uint32_t &pcm_samples_to_read,
+uint32_t WavpackOpenFile::Impl::read_pcm_samples(
+		const uint32_t &pcm_samples_to_read,
 		std::vector<int32_t> *buffer) const
 {
 	if (buffer->size() < pcm_samples_to_read * CDDA.NUMBER_OF_CHANNELS)
@@ -710,6 +466,99 @@ uint32_t WavpackOpenFile::read_pcm_samples(const uint32_t &pcm_samples_to_read,
 
 	return samples_read;
 }
+
+
+// WavpackOpenFile
+
+
+WavpackOpenFile::WavpackOpenFile(const std::string &filename)
+	: impl_(std::make_unique<WavpackOpenFile::Impl>(filename))
+{
+	// empty
+}
+
+
+WavpackOpenFile::~WavpackOpenFile() noexcept = default;
+
+
+bool WavpackOpenFile::is_lossless() const
+{
+	return impl_->is_lossless();
+}
+
+
+bool WavpackOpenFile::has_wav_format() const
+{
+	return impl_->has_wav_format();
+}
+
+
+bool WavpackOpenFile::has_float_samples() const
+{
+	return impl_->has_float_samples();
+}
+
+
+uint8_t WavpackOpenFile::version() const
+{
+	return impl_->version();
+}
+
+
+uint16_t WavpackOpenFile::bits_per_sample() const
+{
+	return impl_->bits_per_sample();
+}
+
+
+uint32_t WavpackOpenFile::num_channels() const
+{
+	return impl_->num_channels();
+}
+
+
+uint32_t WavpackOpenFile::samples_per_second() const
+{
+	return impl_->samples_per_second();
+}
+
+
+uint16_t WavpackOpenFile::bytes_per_sample() const
+{
+	return impl_->bytes_per_sample();
+}
+
+
+uint32_t WavpackOpenFile::total_pcm_samples() const
+{
+	return impl_->total_pcm_samples();
+}
+
+
+bool WavpackOpenFile::channel_order() const
+{
+	return impl_->channel_order();
+}
+
+
+int WavpackOpenFile::channel_mask() const
+{
+	return impl_->channel_mask();
+}
+
+
+bool WavpackOpenFile::needs_channel_reorder() const
+{
+	return impl_->needs_channel_reorder();
+}
+
+
+uint32_t WavpackOpenFile::read_pcm_samples(const uint32_t &pcm_samples_to_read,
+		std::vector<int32_t> *buffer) const
+{
+	return impl_->read_pcm_samples(pcm_samples_to_read, buffer);
+}
+
 
 
 // WavpackValidatingHandler
@@ -989,7 +838,7 @@ bool WavpackAudioReaderImpl::perform_validations(const WavpackOpenFile &file)
 
 /// @}
 
-} // namespace
+//} // namespace
 
 
 /// \cond UNDOC_FUNCTION_BODIES
