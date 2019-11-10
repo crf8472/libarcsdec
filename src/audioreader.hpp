@@ -257,7 +257,7 @@ public:
 	 * \return TRUE iff the number of bits per sample is 16 (conforming to CDDA)
 	 * otherwise FALSE
 	 */
-	bool bits_per_sample(const uint32_t &bits_per_sample);
+	bool bits_per_sample(const int &bits_per_sample);
 
 	/**
 	 * \brief Return TRUE iff the number of channels conforms to CDDA.
@@ -267,7 +267,7 @@ public:
 	 * \return TRUE iff the number of channels is 2 (conforming to CDDA)
 	 * otherwise FALSE
 	 */
-	bool num_channels(const uint32_t &num_channels);
+	bool num_channels(const int &num_channels);
 
 	/**
 	 * \brief Return TRUE if the sample rate conforms to CDDA.
@@ -277,7 +277,7 @@ public:
 	 * \return TRUE iff the number of samples per second is 44100
 	 * (conforming to CDDA) otherwise FALSE
 	 */
-	bool samples_per_second(const uint32_t &samples_per_second);
+	bool samples_per_second(const int &samples_per_second);
 };
 
 
@@ -363,8 +363,28 @@ protected:
 	 */
 	bool assert_equals(
 		const std::string &label,
-		const uint32_t &value,
-		const uint32_t &proper_value,
+		int value,
+		int proper_value,
+		const std::string error_msg);
+
+	/**
+	 * \brief Returns TRUE iff value == proper_value.
+	 *
+	 * Always prints the label. Iff the comparison is not TRUE, error_msg is
+	 * printed and a new error is added to the error list.
+	 *
+	 * \param[in] label Label to log for this test
+	 * \param[in] value Value to be checked
+	 * \param[in] proper_value Value to check against
+	 * \param[in] error_msg Message to log in case value is not equal to
+	 * proper_value
+	 *
+	 * \return TRUE if value is equal to proper_value, otherwise FALSE
+	 */
+	bool assert_equals_u(
+		const std::string &label,
+		uint32_t value,
+		uint32_t proper_value,
 		const std::string error_msg);
 
 	/**
@@ -383,8 +403,8 @@ protected:
 	 */
 	bool assert_at_least(
 		const std::string &label,
-		const uint32_t &value,
-		const uint32_t &proper_value,
+		int value,
+		int proper_value,
 		const std::string error_msg);
 
 	/**
@@ -403,8 +423,8 @@ protected:
 	 */
 	bool assert_at_most(
 		const std::string &label,
-		const uint32_t &value,
-		const uint32_t &proper_value,
+		int value,
+		int proper_value,
 		const std::string error_msg);
 
 	/**
@@ -421,7 +441,7 @@ protected:
 	 */
 	bool assert_true(
 		const std::string &label,
-		const bool &value,
+		bool value,
 		const std::string error_msg);
 
 
@@ -495,14 +515,14 @@ public:
 	 *
 	 * The default is BLOCKSIZE::DEFAULT.
 	 */
-	void set_samples_per_read(const uint32_t &samples_per_read);
+	void set_samples_per_read(const int64_t &samples_per_read);
 
 	/**
 	 * \brief Return the number of samples to read in one read operation.
 	 *
 	 * \return Number of samples per read operation.
 	 */
-	uint32_t samples_per_read() const;
+	int64_t samples_per_read() const;
 
 	/**
 	 * \brief Create a descriptor for this AudioReader implementation.
@@ -532,14 +552,14 @@ private:
 	 *
 	 * The default is BLOCKSIZE::DEFAULT.
 	 */
-	virtual void do_set_samples_per_read(const uint32_t &samples_per_read);
+	virtual void do_set_samples_per_read(const int64_t &samples_per_read);
 
 	/**
 	 * \brief Return the number of samples to read in one read operation.
 	 *
 	 * \return Number of samples per read operation.
 	 */
-	virtual uint32_t do_samples_per_read() const;
+	virtual int64_t do_samples_per_read() const;
 
 	/**
 	 * \brief Provides implementation for \c acquire_size() of an AudioReader.
@@ -587,7 +607,7 @@ public:
 	/**
 	 * \brief Constructor with read size
 	 */
-	explicit BufferedAudioReaderImpl(const uint32_t samples_per_read);
+	explicit BufferedAudioReaderImpl(const int64_t samples_per_read);
 
 	/**
 	 * \brief Destructor
@@ -603,14 +623,14 @@ private:
 
 	bool do_configurable_read_buffer() const final;
 
-	void do_set_samples_per_read(const uint32_t &samples_per_read) final;
+	void do_set_samples_per_read(const int64_t &samples_per_read) final;
 
-	uint32_t do_samples_per_read() const final;
+	int64_t do_samples_per_read() const final;
 
 	/**
 	 * \brief Number of samples to be read in one block
 	 */
-	uint32_t samples_per_read_;
+	int64_t samples_per_read_;
 };
 
 
@@ -667,14 +687,14 @@ public:
 	 *
 	 * \param[in] samples_per_read The number of 32 bit PCM samples per read
 	 */
-	void set_samples_per_read(const uint32_t &samples_per_read);
+	void set_samples_per_read(const int64_t &samples_per_read);
 
 	/**
 	 * \brief Return the number of samples to read in one read operation.
 	 *
 	 * \return Number of samples per read operation.
 	 */
-	uint32_t samples_per_read() const;
+	int64_t samples_per_read() const;
 
 	/**
 	 * \brief Acquire the AudioSize of a file.

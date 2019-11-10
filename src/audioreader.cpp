@@ -153,19 +153,19 @@ uint32_t ByteConverter::be_bytes_to_uint32(const char &b1,
 CDDAValidator::~CDDAValidator() noexcept = default;
 
 
-bool CDDAValidator::bits_per_sample(const uint32_t &bits_per_sample)
+bool CDDAValidator::bits_per_sample(const int &bits_per_sample)
 {
 	return CDDA.BITS_PER_SAMPLE == bits_per_sample;
 }
 
 
-bool CDDAValidator::num_channels(const uint32_t &num_channels)
+bool CDDAValidator::num_channels(const int &num_channels)
 {
 	return CDDA.NUMBER_OF_CHANNELS == num_channels;
 }
 
 
-bool CDDAValidator::samples_per_second(const uint32_t &samples_per_second)
+bool CDDAValidator::samples_per_second(const int &samples_per_second)
 {
 	return CDDA.SAMPLES_PER_SECOND == samples_per_second;
 }
@@ -208,9 +208,38 @@ std::string ReaderValidatingHandler::last_error()
 }
 
 
-bool ReaderValidatingHandler::assert_equals(const std::string &label,
-	const uint32_t &value, const uint32_t &proper_value,
-	const std::string error_msg)
+bool ReaderValidatingHandler::assert_equals(
+		const std::string &label,
+		int value,
+		int proper_value,
+		const std::string error_msg)
+{
+	ARCS_LOG(DEBUG1) << label
+		<< "  ["
+		<< (value == proper_value ? "yes" : "no")
+		<< "]";
+
+	if (value != proper_value)
+	{
+		std::stringstream ss;
+
+		ss << error_msg;
+		ss << ". Expected " << std::to_string(proper_value)
+			<< " but is " << std::to_string(value);
+
+		errors_.push_back(ss.str());
+		return false;
+	}
+
+	return true;
+}
+
+
+bool ReaderValidatingHandler::assert_equals_u(
+		const std::string &label,
+		uint32_t value,
+		uint32_t proper_value,
+		const std::string error_msg)
 {
 	ARCS_LOG(DEBUG1) << label
 		<< "  ["
@@ -235,8 +264,8 @@ bool ReaderValidatingHandler::assert_equals(const std::string &label,
 
 bool ReaderValidatingHandler::assert_at_least(
 		const std::string &label,
-		const uint32_t &value,
-		const uint32_t &proper_value,
+		int value,
+		int proper_value,
 		const std::string error_msg)
 {
 	ARCS_LOG(DEBUG1) << label
@@ -262,8 +291,8 @@ bool ReaderValidatingHandler::assert_at_least(
 
 bool ReaderValidatingHandler::assert_at_most(
 		const std::string &label,
-		const uint32_t &value,
-		const uint32_t &proper_value,
+		int value,
+		int proper_value,
 		const std::string error_msg)
 {
 	ARCS_LOG(DEBUG1) << label
@@ -289,7 +318,7 @@ bool ReaderValidatingHandler::assert_at_most(
 
 bool ReaderValidatingHandler::assert_true(
 		const std::string &label,
-		const bool &value,
+		bool value,
 		const std::string error_msg)
 {
 	ARCS_LOG(DEBUG1) << label << "  [" << (value ? "yes" : "no") << "]";
@@ -324,13 +353,13 @@ bool AudioReaderImpl::configurable_read_buffer() const
 }
 
 
-void AudioReaderImpl::set_samples_per_read(const uint32_t &samples_per_read)
+void AudioReaderImpl::set_samples_per_read(const int64_t &samples_per_read)
 {
 	this->do_set_samples_per_read(samples_per_read);
 }
 
 
-uint32_t AudioReaderImpl::samples_per_read() const
+int64_t AudioReaderImpl::samples_per_read() const
 {
 	return this->do_samples_per_read();
 }
@@ -356,7 +385,7 @@ bool AudioReaderImpl::do_configurable_read_buffer() const
 
 
 void AudioReaderImpl::do_set_samples_per_read(
-		const uint32_t &/* samples_per_read */)
+		const int64_t &/* samples_per_read */)
 {
 	throw std::logic_error(
 		"Try to set read buffer size on an AudioReader that has "
@@ -364,7 +393,7 @@ void AudioReaderImpl::do_set_samples_per_read(
 }
 
 
-uint32_t AudioReaderImpl::do_samples_per_read() const
+int64_t AudioReaderImpl::do_samples_per_read() const
 {
 	return 0;
 }
@@ -387,7 +416,7 @@ BufferedAudioReaderImpl::BufferedAudioReaderImpl()
 
 
 BufferedAudioReaderImpl::BufferedAudioReaderImpl(
-		const uint32_t samples_per_read)
+		const int64_t samples_per_read)
 	: samples_per_read_(samples_per_read)
 {
 	// empty
@@ -404,7 +433,7 @@ bool BufferedAudioReaderImpl::do_configurable_read_buffer() const
 
 
 void BufferedAudioReaderImpl::do_set_samples_per_read(
-		const uint32_t &samples_per_read)
+		const int64_t &samples_per_read)
 {
 	samples_per_read_ = samples_per_read;
 
@@ -413,7 +442,7 @@ void BufferedAudioReaderImpl::do_set_samples_per_read(
 }
 
 
-uint32_t BufferedAudioReaderImpl::do_samples_per_read() const
+int64_t BufferedAudioReaderImpl::do_samples_per_read() const
 {
 	return samples_per_read_;
 }
@@ -463,14 +492,14 @@ public:
 	 *
 	 * The default is BLOCKSIZE.DEFAULT.
 	 */
-	void set_samples_per_read(const uint32_t &samples_per_read);
+	void set_samples_per_read(const int64_t &samples_per_read);
 
 	/**
 	 * Return the number of samples to read in one read operation.
 	 *
 	 * \return Number of samples per read operation.
 	 */
-	uint32_t samples_per_read() const;
+	int64_t samples_per_read() const;
 
 	/**
 	 *
@@ -547,13 +576,13 @@ bool AudioReader::Impl::configurable_read_buffer() const
 }
 
 
-void AudioReader::Impl::set_samples_per_read(const uint32_t &samples_per_read)
+void AudioReader::Impl::set_samples_per_read(const int64_t &samples_per_read)
 {
 	readerimpl_->set_samples_per_read(samples_per_read);
 }
 
 
-uint32_t AudioReader::Impl::samples_per_read() const
+int64_t AudioReader::Impl::samples_per_read() const
 {
 	return readerimpl_->samples_per_read();
 }
@@ -623,13 +652,13 @@ bool AudioReader::configurable_read_buffer() const
 }
 
 
-void AudioReader::set_samples_per_read(const uint32_t &samples_per_read)
+void AudioReader::set_samples_per_read(const int64_t &samples_per_read)
 {
 	impl_->set_samples_per_read(samples_per_read);
 }
 
 
-uint32_t AudioReader::samples_per_read() const
+int64_t AudioReader::samples_per_read() const
 {
 	return impl_->samples_per_read();
 }
