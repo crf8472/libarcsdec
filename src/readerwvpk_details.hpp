@@ -96,7 +96,7 @@ public:
 	 *
 	 * \return The least version of wavpack supported
 	 */
-	virtual uint8_t at_least_version() const;
+	virtual int at_least_version() const;
 
 	/**
 	 * \brief Declare the highest version of wavpack that is supported.
@@ -105,7 +105,7 @@ public:
 	 *
 	 * \return The highest version of wavpack supported
 	 */
-	virtual uint8_t at_most_version() const;
+	virtual int at_most_version() const;
 
 	/**
 	 * \brief Declare the required number of bytes per sample and channel.
@@ -114,7 +114,7 @@ public:
 	 *
 	 * \return Require 2 bytes (for 16 bit).
 	 */
-	virtual uint16_t bytes_per_sample() const;
+	virtual int bytes_per_sample() const;
 };
 
 
@@ -208,21 +208,21 @@ public:
 	 *
 	 * \return Number of bits per sample
 	 */
-	uint16_t bits_per_sample() const;
+	int bits_per_sample() const;
 
 	/**
 	 * \brief Returns the number of channels.
 	 *
 	 * \return Number of channels
 	 */
-	uint32_t num_channels() const;
+	int num_channels() const;
 
 	/**
 	 * \brief Returns the sampling rate as number of samples per second.
 	 *
 	 * \return Number of samples per second
 	 */
-	uint32_t samples_per_second() const;
+	int64_t samples_per_second() const;
 
 	/**
 	 * \brief Returns the bytes per sample (and channel, hence it is 2 for
@@ -230,14 +230,14 @@ public:
 	 *
 	 * \return Number of bytes per sample
 	 */
-	uint16_t bytes_per_sample() const;
+	int bytes_per_sample() const;
 
 	/**
 	 * \brief Returns the total number of 32bit PCM samples this file contains.
 	 *
 	 * \return Total number of 32bit PCM samples in this file
 	 */
-	uint32_t total_pcm_samples() const;
+	int64_t total_pcm_samples() const;
 
 	/**
 	 * \brief Returns TRUE iff the channel ordering is left/right, otherwise
@@ -277,7 +277,7 @@ public:
 	 *
 	 * \return Number of 32 bit PCM samples actually read
 	 */
-	uint32_t read_pcm_samples(const uint32_t &pcm_samples_to_read,
+	int64_t read_pcm_samples(const int64_t &pcm_samples_to_read,
 		std::vector<int32_t> *buffer) const;
 
 

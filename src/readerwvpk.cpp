@@ -107,21 +107,21 @@ public:
 	 *
 	 * \return Number of bits per sample
 	 */
-	uint16_t bits_per_sample() const;
+	int bits_per_sample() const;
 
 	/**
 	 * \brief Returns the number of channels.
 	 *
 	 * \return Number of channels
 	 */
-	uint32_t num_channels() const;
+	int num_channels() const;
 
 	/**
 	 * \brief Returns the sampling rate as number of samples per second.
 	 *
 	 * \return Number of samples per second
 	 */
-	uint32_t samples_per_second() const;
+	int64_t samples_per_second() const;
 
 	/**
 	 * \brief Returns the bytes per sample (and channel, hence it is 2 for
@@ -129,14 +129,14 @@ public:
 	 *
 	 * \return Number of bytes per sample
 	 */
-	uint16_t bytes_per_sample() const;
+	int bytes_per_sample() const;
 
 	/**
 	 * \brief Returns the total number of 32bit PCM samples this file contains.
 	 *
 	 * \return Total number of 32bit PCM samples in this file
 	 */
-	uint32_t total_pcm_samples() const;
+	int64_t total_pcm_samples() const;
 
 	/**
 	 * \brief Returns TRUE iff the channel ordering is left/right, otherwise
@@ -176,7 +176,7 @@ public:
 	 *
 	 * \return Number of 32 bit PCM samples actually read
 	 */
-	uint32_t read_pcm_samples(const uint32_t &pcm_samples_to_read,
+	int64_t read_pcm_samples(const int64_t &pcm_samples_to_read,
 		std::vector<int32_t> *buffer) const;
 
 	// Delete copy assignment operator
@@ -207,19 +207,19 @@ bool WAVPACK_CDDA_t::lossless() const
 }
 
 
-uint8_t WAVPACK_CDDA_t::at_least_version() const
+int WAVPACK_CDDA_t::at_least_version() const
 {
 	return 1;
 }
 
 
-uint8_t WAVPACK_CDDA_t::at_most_version() const
+int WAVPACK_CDDA_t::at_most_version() const
 {
 	return 5;
 }
 
 
-uint16_t WAVPACK_CDDA_t::bytes_per_sample() const
+int WAVPACK_CDDA_t::bytes_per_sample() const
 {
 	return 2; // Always require 16bit per sample and channel
 }
@@ -316,32 +316,31 @@ uint8_t WavpackOpenFile::Impl::version() const
 }
 
 
-uint16_t WavpackOpenFile::Impl::bits_per_sample() const
+int WavpackOpenFile::Impl::bits_per_sample() const
 {
 	return WavpackGetBitsPerSample(context_);
 }
 
 
-uint32_t WavpackOpenFile::Impl::num_channels() const
+int WavpackOpenFile::Impl::num_channels() const
 {
-	auto num_channels = WavpackGetNumChannels(context_);
-	return (num_channels > 0) ? static_cast<uint32_t>(num_channels) : 0;
+	return WavpackGetNumChannels(context_);
 }
 
 
-uint32_t WavpackOpenFile::Impl::samples_per_second() const
+int64_t WavpackOpenFile::Impl::samples_per_second() const
 {
 	return WavpackGetSampleRate(context_);
 }
 
 
-uint16_t WavpackOpenFile::Impl::bytes_per_sample() const
+int WavpackOpenFile::Impl::bytes_per_sample() const
 {
 	return WavpackGetBytesPerSample(context_);
 }
 
 
-uint32_t WavpackOpenFile::Impl::total_pcm_samples() const
+int64_t WavpackOpenFile::Impl::total_pcm_samples() const
 {
 	// We do not need to handle files with more than 0xFFFFFFFF samples
 	// since we only check compact disc images
@@ -443,11 +442,14 @@ bool WavpackOpenFile::Impl::needs_channel_reorder() const
 }
 
 
-uint32_t WavpackOpenFile::Impl::read_pcm_samples(
-		const uint32_t &pcm_samples_to_read,
+int64_t WavpackOpenFile::Impl::read_pcm_samples(
+		const int64_t &pcm_samples_to_read,
 		std::vector<int32_t> *buffer) const
 {
-	if (buffer->size() < pcm_samples_to_read * CDDA.NUMBER_OF_CHANNELS)
+	auto total_samples =
+		static_cast<uint64_t>(pcm_samples_to_read * CDDA.NUMBER_OF_CHANNELS);
+
+	if (buffer->size() < total_samples)
 	{
 		ARCS_LOG_ERROR << "Buffer size " << buffer->size()
 				<< " is too small for the requested "
@@ -459,7 +461,7 @@ uint32_t WavpackOpenFile::Impl::read_pcm_samples(
 		return 0;
 	}
 
-	uint32_t samples_read = WavpackUnpackSamples(context_, &((*buffer)[0]),
+	auto samples_read = WavpackUnpackSamples(context_, &((*buffer)[0]),
 			pcm_samples_to_read);
 
 	ARCS_LOG_DEBUG << "    Read " << samples_read << " PCM samples (32 bit)";
@@ -505,31 +507,31 @@ uint8_t WavpackOpenFile::version() const
 }
 
 
-uint16_t WavpackOpenFile::bits_per_sample() const
+int WavpackOpenFile::bits_per_sample() const
 {
 	return impl_->bits_per_sample();
 }
 
 
-uint32_t WavpackOpenFile::num_channels() const
+int WavpackOpenFile::num_channels() const
 {
 	return impl_->num_channels();
 }
 
 
-uint32_t WavpackOpenFile::samples_per_second() const
+int64_t WavpackOpenFile::samples_per_second() const
 {
 	return impl_->samples_per_second();
 }
 
 
-uint16_t WavpackOpenFile::bytes_per_sample() const
+int WavpackOpenFile::bytes_per_sample() const
 {
 	return impl_->bytes_per_sample();
 }
 
 
-uint32_t WavpackOpenFile::total_pcm_samples() const
+int64_t WavpackOpenFile::total_pcm_samples() const
 {
 	return impl_->total_pcm_samples();
 }
@@ -553,7 +555,7 @@ bool WavpackOpenFile::needs_channel_reorder() const
 }
 
 
-uint32_t WavpackOpenFile::read_pcm_samples(const uint32_t &pcm_samples_to_read,
+int64_t WavpackOpenFile::read_pcm_samples(const int64_t &pcm_samples_to_read,
 		std::vector<int32_t> *buffer) const
 {
 	return impl_->read_pcm_samples(pcm_samples_to_read, buffer);
@@ -638,7 +640,7 @@ bool WavpackValidatingHandler::validate_cdda(const WavpackOpenFile &file)
 		return false;
 	}
 	if (not this->assert_equals("Test: Channel Mask",
-		static_cast<unsigned int>(file.channel_mask()), 3,
+		file.channel_mask(), 3,
 		"Channel mask does not conform to CDDA"))
 	{
 		ARCS_LOG_ERROR << this->last_error();
@@ -743,7 +745,7 @@ void WavpackAudioReaderImpl::do_process_file(const std::string &filename)
 		ARCS_LOG_DEBUG << "Completed validation of Wavpack file";
 	}
 
-	uint32_t total_samples { file.total_pcm_samples() };
+	int64_t total_samples { file.total_pcm_samples() };
 	ARCS_LOG_INFO << "Total samples: " << total_samples;
 
 
@@ -761,13 +763,16 @@ void WavpackAudioReaderImpl::do_process_file(const std::string &filename)
 		SampleSequence<int32_t, false> sequence(file.channel_order());
 
 		std::vector<int32_t> samples;
-		samples.resize(this->samples_per_read());
+		auto num_samples = static_cast<decltype(samples)::size_type>(
+				this->samples_per_read());
+
+		samples.resize(num_samples);
 
 		// Request half the number of samples in a block, thus a sequence will
 		// have exactly the size of a block.
-		uint32_t wv_sample_count =
+		int64_t wv_sample_count =
 			this->samples_per_read() / CDDA.NUMBER_OF_CHANNELS;
-		uint32_t samples_read    = 0;
+		int64_t samples_read    = 0;
 
 		for (int64_t i = total_samples; i > 0; i -= wv_sample_count)
 		{
@@ -796,7 +801,10 @@ void WavpackAudioReaderImpl::do_process_file(const std::string &filename)
 					throw FileReadException(ss.str());
 				}
 
-				samples.resize(samples_read * CDDA.NUMBER_OF_CHANNELS);
+				num_samples = static_cast<decltype(samples)::size_type>(
+						samples_read * CDDA.NUMBER_OF_CHANNELS);
+
+				samples.resize(num_samples);
 			}
 
 			ARCS_LOG_DEBUG << "    Size: " << samples.size()
