@@ -475,12 +475,12 @@ public:
 	 */
 	WavFormatSubchunk(
 			const WavSubchunkHeader &header,
-			uint16_t wFormatTag,
-			uint16_t wChannels,
-			uint32_t dwSamplesPerSec,
-			uint32_t dwAvgBytesPerSec,
-			uint16_t wBlockAlign,
-			uint16_t wBitsPerSample
+			int wFormatTag,
+			int wChannels,
+			int64_t dwSamplesPerSec,
+			int64_t dwAvgBytesPerSec,
+			int wBlockAlign,
+			int wBitsPerSample
 			);
 
 	/**
@@ -496,37 +496,37 @@ public:
 	/**
 	 * \brief Parsed size of this format subchunk.
 	 */
-	const uint32_t size;
+	const std::size_t size;
 
 	/**
 	 * \brief Parsed format identifier.
 	 */
-	const uint16_t wFormatTag;
+	const int wFormatTag;
 
 	/**
 	 * \brief Parsed number of channels.
 	 */
-	const uint16_t wChannels;
+	const int wChannels;
 
 	/**
 	 * \brief Parsed number of samples per second.
 	 */
-	const uint32_t dwSamplesPerSec;
+	const int64_t dwSamplesPerSec;
 
 	/**
 	 * \brief Parsed average number of bytes per second.
 	 */
-	const uint32_t dwAvgBytesPerSec;
+	const int64_t dwAvgBytesPerSec;
 
 	/**
 	 * \brief Parsed number of bytes per sample block.
 	 */
-	const uint16_t wBlockAlign;
+	const int wBlockAlign;
 
 	/**
 	 * \brief Parsed number of bits per sample.
 	 */
-	const uint16_t wBitsPerSample;
+	const int wBitsPerSample;
 };
 
 
@@ -667,7 +667,7 @@ public:
 	 *
 	 * \return The physical file size
 	 */
-	uint64_t physical_file_size();
+	int64_t physical_file_size();
 
 	/**
 	 * \brief Handler method: Called by AudioReaderImpl on start of the reading
@@ -676,8 +676,7 @@ public:
 	 * \param[in] filename Name of the audio file started to parse
 	 * \param[in] phys_file_size Recognized physical file size
 	 */
-	void start_file(const std::string &filename,
-			const uint64_t &phys_file_size);
+	void start_file(const std::string &filename, const int64_t &phys_file_size);
 
 	/**
 	 * \brief Handler method: Called by AudioReaderImpl on EOF.
@@ -831,7 +830,7 @@ private:
 	 * This is required as a reference value for checking the
 	 * consistency of the file size declaration in the chunk descriptor.
 	 */
-	uint64_t phys_file_size_;
+	int64_t phys_file_size_;
 
 	/**
 	 * \brief Configuration: Reference values for validation.
@@ -900,7 +899,7 @@ public:
 	 *
 	 * \return The actual number of bytes read
 	 */
-	uint64_t read_blocks(std::ifstream &in, const uint64_t &total_pcm_bytes);
+	int64_t read_blocks(std::ifstream &in, const int64_t &total_pcm_bytes);
 
 	// make class non-copyable (2/2)
 	PCMBlockReader& operator = (const PCMBlockReader &) = delete;
@@ -969,7 +968,7 @@ private:
 	 *
 	 * \return The physical file size in bytes
 	 */
-	uint64_t retrieve_file_size_bytes(const std::string &filename) const;
+	int64_t retrieve_file_size_bytes(const std::string &filename) const;
 
 	/**
 	 * \brief Worker method for process_file(): Read WAV file and optionally
@@ -985,9 +984,9 @@ private:
 	 * \throw FileReadException If any problem occurred during reading from in
 	 * \throw InvalidAudioException In case of unexpected data
 	 */
-	uint64_t process_file_worker(std::ifstream &in,
+	int64_t process_file_worker(std::ifstream &in,
 			const bool &calculate,
-			uint64_t &total_pcm_bytes);
+			int64_t &total_pcm_bytes);
 
 	/**
 	 * \brief Read the WAV file and optionally validate it. This method provides
@@ -1007,7 +1006,7 @@ private:
 	void process_file(const std::string &filename,
 			const bool &validate,
 			const bool &calculate,
-			uint64_t &total_pcm_bytes);
+			int64_t &total_pcm_bytes);
 
 	/**
 	 * \brief Validator handler instance.

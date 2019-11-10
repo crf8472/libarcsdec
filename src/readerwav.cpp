@@ -285,12 +285,12 @@ std::string WavSubchunkHeader::name() const
 
 WavFormatSubchunk::WavFormatSubchunk(
 			const WavSubchunkHeader &header,
-			uint16_t wFormatTag_,
-			uint16_t wChannels_,
-			uint32_t dwSamplesPerSec_,
-			uint32_t dwAvgBytesPerSec_,
-			uint16_t wBlockAlign_,
-			uint16_t wBitsPerSample_
+			int wFormatTag_,
+			int wChannels_,
+			int64_t dwSamplesPerSec_,
+			int64_t dwAvgBytesPerSec_,
+			int wBlockAlign_,
+			int wBitsPerSample_
 			)
 	: id(header.id)
 	, size(header.size)
@@ -394,10 +394,14 @@ WavFormatSubchunk WavPartParser::format_subchunk(
 		convert_.le_bytes_to_uint16(bytes[ 2], bytes[ 3]),
 
 		// dwSamplesPerSec
-		convert_.le_bytes_to_uint32(bytes[ 4], bytes[ 5], bytes[ 6], bytes[ 7]),
+		static_cast<int>(
+		convert_.le_bytes_to_uint32(bytes[ 4], bytes[ 5], bytes[ 6], bytes[ 7])
+		),
 
 		// dwAvgBytesPerSec
-		convert_.le_bytes_to_uint32(bytes[ 8], bytes[ 9], bytes[10], bytes[11]),
+		static_cast<int>(
+		convert_.le_bytes_to_uint32(bytes[ 8], bytes[ 9], bytes[10], bytes[11])
+		),
 
 		// wBlockAlign
 		convert_.le_bytes_to_uint16(bytes[12], bytes[13]),
@@ -425,14 +429,14 @@ WavAudioHandler::WavAudioHandler(std::unique_ptr<WAV_CDDA_t> valid)
 WavAudioHandler::~WavAudioHandler() noexcept = default;
 
 
-uint64_t WavAudioHandler::physical_file_size()
+int64_t WavAudioHandler::physical_file_size()
 {
 	return phys_file_size_;
 }
 
 
 void WavAudioHandler::start_file(const std::string &filename,
-		const uint64_t &phys_file_size)
+		const int64_t &phys_file_size)
 {
 	ARCS_LOG_DEBUG << "Start validating WAV file: " << filename;
 
@@ -506,7 +510,7 @@ void WavAudioHandler::do_chunk_descriptor(
 		return;
 	}
 
-	if (not this->assert_equals("Test: RIFF Header present?",
+	if (not this->assert_equals_u("Test: RIFF Header present?",
 		descriptor.id, valid_->chunk_id(),
 		"Unexpected header start."))
 	{
@@ -518,7 +522,7 @@ void WavAudioHandler::do_chunk_descriptor(
 	// The magic value of 8 is the combined length of the 'RIFF' part and the
 	// file size declaration itself
 
-	if (not this->assert_equals(
+	if (not this->assert_equals_u(
 		"Test: Declared file size conforms to physical file size?",
 		descriptor.file_size + 2 * sizeof(uint32_t),
 		this->physical_file_size(),
@@ -528,7 +532,7 @@ void WavAudioHandler::do_chunk_descriptor(
 		return;
 	}
 
-	if (not this->assert_equals("Test: Header declares WAVE format?",
+	if (not this->assert_equals_u("Test: Header declares WAVE format?",
 		descriptor.format, valid_->format(),
 		"Header does not declare WAVE format."))
 	{
@@ -547,7 +551,7 @@ void WavAudioHandler::do_subchunk_format(
 {
 	ARCS_LOG(DEBUG1) << "Try to validate format subchunk";
 
-	if (not this->assert_equals("Test: id is 'fmt '?",
+	if (not this->assert_equals_u("Test: id is 'fmt '?",
 		format_subchunk.id, valid_->fmt_subchunk_id(),
 		"Id of subchunk is not 'fmt ' but "
 		+ std::to_string(format_subchunk.id)))
@@ -556,8 +560,9 @@ void WavAudioHandler::do_subchunk_format(
 		return;
 	}
 
-	if (not this->assert_equals("Test: format subchunk size",
-		format_subchunk.size, valid_->fmt_subchunk_size(),
+	if (not this->assert_equals_u("Test: format subchunk size",
+		format_subchunk.size,
+		valid_->fmt_subchunk_size(),
 		"Unexpected format subchunk size."))
 	{
 		ARCS_LOG_ERROR << this->last_error();
@@ -602,8 +607,9 @@ void WavAudioHandler::do_subchunk_format(
 		return;
 	}
 
-	if (not this->assert_equals("Test: dwAvgBytesPerSec is CDDA",
-		format_subchunk.dwAvgBytesPerSec, valid_->dwAvgBytesPerSec(),
+	if (not this->assert_equals_u("Test: dwAvgBytesPerSec is CDDA",
+		format_subchunk.dwAvgBytesPerSec,
+		valid_->dwAvgBytesPerSec(),
 		"dwAvgBytesPerSec is not CDDA."))
 	{
 		ARCS_LOG_ERROR << this->last_error();
@@ -611,7 +617,8 @@ void WavAudioHandler::do_subchunk_format(
 	}
 
 	if (not this->assert_equals("Test: wBlockAlign is CDDA",
-		format_subchunk.wBlockAlign, valid_->wBlockAlign(),
+		format_subchunk.wBlockAlign,
+		valid_->wBlockAlign(),
 		"wBlockAlign is not CDDA."))
 	{
 		ARCS_LOG_ERROR << this->last_error();
@@ -643,7 +650,7 @@ void WavAudioHandler::do_subchunk_data(const uint32_t &subchunk_size)
 	}
 
 	if (not this->assert_true("Test: regular data subchunk size?",
-		subchunk_size % CDDA.BYTES_PER_SAMPLE == 0,
+		static_cast<int>(subchunk_size) % CDDA.BYTES_PER_SAMPLE == 0,
 		"Incomplete samples, subchunk size is not a multiple of "
 		+ std::to_string(CDDA.BYTES_PER_SAMPLE)))
 	{
@@ -743,15 +750,15 @@ void PCMBlockReader::register_block_consumer(const std::function<void(
 }
 
 
-uint64_t PCMBlockReader::read_blocks(std::ifstream &in,
-		const uint64_t &total_pcm_bytes)
+int64_t PCMBlockReader::read_blocks(std::ifstream &in,
+		const int64_t &total_pcm_bytes)
 {
 	std::vector<uint32_t> samples(this->samples_per_block());
 
-	uint32_t bytes_per_block =
-			this->samples_per_block() * CDDA.BYTES_PER_SAMPLE;
+	int64_t bytes_per_block =
+		static_cast<int64_t>(this->samples_per_block()) * CDDA.BYTES_PER_SAMPLE;
 
-	uint32_t estimated_blocks = total_pcm_bytes / bytes_per_block
+	int estimated_blocks = total_pcm_bytes / bytes_per_block
 				+ (total_pcm_bytes % bytes_per_block ? 1 : 0);
 
 	ARCS_LOG_DEBUG << "START READING " << total_pcm_bytes
@@ -759,10 +766,11 @@ uint64_t PCMBlockReader::read_blocks(std::ifstream &in,
 		<< bytes_per_block << " bytes per block";
 
 	uint32_t samples_todo = total_pcm_bytes / CDDA.BYTES_PER_SAMPLE;
-	uint32_t total_bytes_read   = 0;
-	uint32_t total_blocks_read  = 0;
+	int64_t total_bytes_read   = 0;
+	int64_t total_blocks_read  = 0;
 
-	uint32_t read_bytes = this->samples_per_block() * sizeof(uint32_t);
+	int64_t read_bytes =
+		static_cast<int64_t>(this->samples_per_block() * sizeof(uint32_t));
 	// FIXME Use sample type!
 
 	while (total_bytes_read < total_pcm_bytes)
@@ -775,7 +783,8 @@ uint64_t PCMBlockReader::read_blocks(std::ifstream &in,
 			samples.resize(samples_todo);
 
 			//read_bytes = samples_todo * sizeof(samples.front());
-			read_bytes = samples_todo * sizeof(uint32_t); // FIXME Use sample type!
+			read_bytes = static_cast<int64_t>(samples_todo * sizeof(uint32_t));
+			// FIXME Use sample type!
 		}
 
 		// Actually read the bytes
@@ -837,7 +846,7 @@ WavAudioReaderImpl::WavAudioReaderImpl()
 WavAudioReaderImpl::~WavAudioReaderImpl() noexcept = default;
 
 
-uint64_t WavAudioReaderImpl::retrieve_file_size_bytes(
+int64_t WavAudioReaderImpl::retrieve_file_size_bytes(
 		const std::string &filename) const
 {
 	// TODO C-style stuff: Use C++17's std::filesystem in the future
@@ -850,15 +859,16 @@ uint64_t WavAudioReaderImpl::retrieve_file_size_bytes(
 		static_cast<void>(rc);
 	}
 
-	return static_cast<uint64_t>(stat_buf.st_size);
+	//return static_cast<uint64_t>(stat_buf.st_size);
+	return stat_buf.st_size;
 }
 
 
-uint64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
+int64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 		const bool &calculate,
-		uint64_t &total_pcm_bytes)
+		int64_t &total_pcm_bytes)
 {
-	uint32_t total_bytes_read = 0;
+	int64_t total_bytes_read = 0;
 
 	// Read the first bytes and parse them as chunk descriptor.
 	// NOTE: ifstream's exceptions (fail|bad)bit must be activated
@@ -873,14 +883,14 @@ uint64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 	}
 	catch (const std::ifstream::failure& f)
 	{
-		total_bytes_read += static_cast<uint64_t>(in.gcount());
+		total_bytes_read += in.gcount();
 
 		//ARCS_LOG_ERROR << "Failed to read chunk descriptor from file: "
 		//		<< f.what();
 
 		throw FileReadException(f.what(), total_bytes_read + 1);
 	}
-	total_bytes_read += static_cast<uint64_t>(bytes_to_read);
+	total_bytes_read += bytes_to_read;
 
 	WavPartParser parser;
 
@@ -905,14 +915,14 @@ uint64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 		}
 		catch (const std::ifstream::failure& f)
 		{
-			total_bytes_read += static_cast<uint64_t>(in.gcount());
+			total_bytes_read += in.gcount();
 
 			//ARCS_LOG_ERROR << "Failed to read subchunk header from file: "
 			//		<< f.what();
 
 			throw FileReadException(f.what(), total_bytes_read + 1);
 		}
-		total_bytes_read += static_cast<uint64_t>(bytes_to_read);
+		total_bytes_read += bytes_to_read;
 		++subchunk_counter;
 
 		WavSubchunkHeader subchunk_header = parser.subchunk_header(bytes);
@@ -952,14 +962,14 @@ uint64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 			}
 			catch (const std::ifstream::failure& f)
 			{
-				total_bytes_read += static_cast<uint64_t>(in.gcount());
+				total_bytes_read += in.gcount();
 
 				//ARCS_LOG_ERROR << "Failed to read format subchunk from file: "
 				//	<< f.what();
 
 				throw FileReadException(f.what(), total_bytes_read + 1);
 			}
-			total_bytes_read += static_cast<uint64_t>(bytes_to_read);
+			total_bytes_read += bytes_to_read;
 
 			ARCS_LOG(DEBUG1) << "Format subchunk read successfully";
 
@@ -997,7 +1007,7 @@ uint64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 						std::placeholders::_1, std::placeholders::_2)
 					);
 
-				uint64_t block_bytes_read =
+				auto block_bytes_read =
 					block_reader.read_blocks(in, total_pcm_bytes);
 
 				total_bytes_read += block_bytes_read;
@@ -1021,7 +1031,7 @@ uint64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 			{
 				ARCS_LOG_DEBUG << "Stop reading after data subchunk";
 
-				uint64_t remainder =
+				auto remainder =
 					audio_handler_->physical_file_size() - total_bytes_read;
 
 				if (remainder > 0)
@@ -1056,7 +1066,7 @@ uint64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 void WavAudioReaderImpl::process_file(const std::string &filename,
 		const bool &validate,
 		const bool &calculate,
-		uint64_t &total_pcm_bytes)
+		int64_t &total_pcm_bytes)
 {
 	if (filename.empty())
 	{
@@ -1100,7 +1110,7 @@ void WavAudioReaderImpl::process_file(const std::string &filename,
 		throw FileReadException(f.what(), total_bytes_read + 1);
 	}
 
-	uint64_t bytes_read =
+	int64_t bytes_read =
 		this->process_file_worker(in, calculate, total_pcm_bytes);
 
 	ARCS_LOG_DEBUG << "Read " << bytes_read << " bytes from audio file";
@@ -1124,7 +1134,7 @@ void WavAudioReaderImpl::process_file(const std::string &filename,
 std::unique_ptr<AudioSize> WavAudioReaderImpl::do_acquire_size(
 	const std::string &audiofilename)
 {
-	uint64_t total_pcm_bytes = 0;
+	int64_t total_pcm_bytes = 0;
 
 	try
 	{
@@ -1144,14 +1154,14 @@ std::unique_ptr<AudioSize> WavAudioReaderImpl::do_acquire_size(
 	}
 
 	std::unique_ptr<AudioSize> audiosize = std::make_unique<AudioSize>();
-	audiosize->set_pcm_byte_count(total_pcm_bytes);
+	audiosize->set_pcm_byte_count(static_cast<uint64_t>(total_pcm_bytes));
 	return audiosize;
 }
 
 
 void WavAudioReaderImpl::do_process_file(const std::string &audiofilename)
 {
-	uint64_t total_pcm_bytes = 0;
+	int64_t total_pcm_bytes = 0;
 
 	// Validate And Calculate
 
