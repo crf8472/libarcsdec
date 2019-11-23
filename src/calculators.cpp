@@ -263,6 +263,13 @@ protected:
 	void process_file(const std::string &audiofilename, Calculation& calc,
 		const uint32_t buffer_size, const bool use_cbuffer) const;
 
+	/**
+	 * \brief Worker: check samples_todo() and warn if < 0 and error if > 0
+	 *
+	 * \param[in] calc Calculation to check
+	 */
+	void log_completeness_check(const Calculation &calc) const;
+
 
 private:
 
@@ -469,13 +476,7 @@ std::pair<Checksums, ARId> ARCSCalculator::Impl::calculate(
 
 	this->process_file(audiofilename, *calc, BLOCKSIZE.DEFAULT, false);
 
-
-	// Sanity-check result
-
-	if (not calc->complete())
-	{
-		ARCS_LOG_ERROR << "Calculation is not complete after last sample";
-	}
+	this->log_completeness_check(*calc);
 
 	return std::make_pair(calc->result(), calc->context().id());
 }
@@ -624,10 +625,7 @@ ChecksumSet ARCSCalculator::Impl::calculate_track(
 
 	// Sanity-check result
 
-	if (not calc->complete())
-	{
-		ARCS_LOG_ERROR << "Calculation is not complete after last sample";
-	}
+	this->log_completeness_check(*calc);
 
 	auto track_checksums { calc->result() };
 
@@ -652,6 +650,26 @@ void ARCSCalculator::Impl::set_selection(
 const AudioReaderSelection& ARCSCalculator::Impl::selection() const
 {
 	return *selection_;
+}
+
+
+void ARCSCalculator::Impl::log_completeness_check(const Calculation &calc) const
+{
+	if (not calc.complete())
+	{
+		ARCS_LOG_ERROR << "Calculation not complete after last input sample: "
+			<< "Expected total samples:  " << calc.samples_expected()
+			<< " "
+			<< "Processed total samples: " << calc.samples_processed();
+	}
+
+	if (calc.samples_todo() < 0)
+	{
+		ARCS_LOG_WARNING << "More samples than expected. "
+			<< "Expected total samples:  " << calc.samples_expected()
+			<< " "
+			<< "Processed total samples: " << calc.samples_processed();
+	}
 }
 
 
