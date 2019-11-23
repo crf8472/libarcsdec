@@ -1108,21 +1108,19 @@ void FFmpegFileLoader::log_codec_info(::AVCodecContext *ctx) const
 		// FFmpeg does not qualify these codecs to have this capability,
 		// so it is probably useless to test for. Seems to be expressed by
 		// properties instead, see above.
-		// Code is commented out but kept for further research.
 
-		//bool codec_cap_lossless =
-		//	ctx->codec->capabilities & AV_CODEC_CAP_LOSSLESS;
-        //
-		//ARCS_LOG_DEBUG << "  CAP_LOSSLESS:            "
-		//	<< (codec_cap_lossless ? "yes" : "no");
-        //
-		//if (not codec_cap_lossless)
-		//{
-        //
-		//	ARCS_LOG_INFO <<
-		//		"  => Codec does not have the lossless capability."
-		//		<< " This is probably ok, though.";
-		//}
+		bool codec_cap_lossless = static_cast<unsigned long>
+			(ctx->codec->capabilities) & AV_CODEC_CAP_LOSSLESS;
+
+		ARCS_LOG_DEBUG << "  CAP_LOSSLESS:            "
+			<< (codec_cap_lossless ? "yes" : "no");
+
+		if (not codec_cap_lossless)
+		{
+			ARCS_LOG_INFO <<
+				"  => Codec is not declared with lossless capability."
+				<< " This is probably ok, though.";
+		}
 
 		// Analyze delay capability
 
@@ -1130,10 +1128,10 @@ void FFmpegFileLoader::log_codec_info(::AVCodecContext *ctx) const
 			bool codec_cap_delay =
 				ctx->codec->capabilities & AV_CODEC_CAP_DELAY;
 
-			ARCS_LOG_INFO << "  CAP_DELAY:               "
+			ARCS_LOG_INFO << "   CAP_DELAY:               "
 				<< (codec_cap_delay ? "yes" : "no");
 
-			ARCS_LOG_INFO << "  => Codec buffers frames";
+			//ARCS_LOG_INFO << "  => Codec buffers frames";
 		}
 
 		// Could also inspect:
