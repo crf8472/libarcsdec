@@ -658,7 +658,7 @@ void ARCSCalculator::Impl::log_completeness_check(const Calculation &calc) const
 	if (not calc.complete())
 	{
 		ARCS_LOG_ERROR << "Calculation not complete after last input sample: "
-			<< "Expected total samples:  " << calc.samples_expected()
+			<< "Expected total samples: " << calc.samples_expected()
 			<< " "
 			<< "Processed total samples: " << calc.samples_processed();
 	}
@@ -666,9 +666,9 @@ void ARCSCalculator::Impl::log_completeness_check(const Calculation &calc) const
 	if (calc.samples_todo() < 0)
 	{
 		ARCS_LOG_WARNING << "More samples than expected. "
-			<< "Expected total samples:  " << calc.samples_expected()
+			<< "Expected: " << calc.samples_expected()
 			<< " "
-			<< "Processed total samples: " << calc.samples_processed();
+			<< "Processed: " << calc.samples_processed();
 	}
 }
 
