@@ -385,6 +385,16 @@ public:
 	// TODO Move assignment
 
 
+protected:
+
+	/**
+	 * \brief Set the number of total samples
+	 *
+	 * \param[in] total_samples The new number of total PCM 32bit stereo samples
+	 */
+	void set_total_samples(int64_t total_samples);
+
+
 private:
 
 	/**
@@ -770,9 +780,11 @@ AVFormatContext* FFmpegFileLoader::acquire_format_context(
 {
 	// Open input stream of the file and read the header
 
-	::AVFormatContext* ctx = nullptr;
+	::AVFormatContext* ctx  = nullptr;
+	::AVInputFormat* detect = nullptr; // TODO Just a stub
+	::AVDictionary* options = nullptr; // TODO Just a stub
 
-	if (::avformat_open_input(&ctx , filename.c_str(), nullptr, nullptr) != 0)
+	if (::avformat_open_input(&ctx , filename.c_str(), detect, &options) != 0)
 	{
 		std::stringstream message;
 		message << "Error opening audio file: " << filename;
@@ -1118,7 +1130,7 @@ void FFmpegFileLoader::log_codec_info(::AVCodecContext *ctx) const
 		if (not codec_cap_lossless)
 		{
 			ARCS_LOG_INFO <<
-				"  => Codec is not declared with lossless capability."
+				"   => Codec is not declared with lossless capability."
 				<< " This is probably ok, though.";
 		}
 
@@ -1285,6 +1297,12 @@ void FFmpegAudioFile::register_update_audiosize(
 }
 
 
+void FFmpegAudioFile::set_total_samples(int64_t total_samples)
+{
+	total_samples_ = total_samples;
+}
+
+
 bool FFmpegAudioFile::decode_packet(::AVPacket packet, ::AVFrame *frame,
 		int64_t *samples16, int64_t *frames, int64_t *bytes)
 {
@@ -1395,21 +1413,29 @@ bool FFmpegAudioFile::decode_packet(::AVPacket packet, ::AVFrame *frame,
 					ARCS_LOG(DEBUG1)
 						<< "  total diff counted samples (32):   "
 						<< total_diff;
-					ARCS_LOG_DEBUG << "  frame diff to previous frame (16): "
+					ARCS_LOG(DEBUG1) << "  frame diff to previous frame (16): "
 						<< frame_diff;
 
 					// Correct total samples and update outside world
 
-					total_samples_ = samples32_counted;
-					// Does also work (subtract positive, add negative)
-					//total_samples_ -= total_diff;
+					if (samples32_counted != this->total_samples())
+					{
+						auto old_total = this->total_samples();
 
-					AudioSize size;
-					size.set_sample_count(total_samples_);
-					update_audiosize_(size);
+						this->set_total_samples(samples32_counted);
+						// Does also work (subtract positive, add negative)
+						//total_samples_ -= total_diff;
 
-					ARCS_LOG_INFO << "Correct total number of samples to: "
-							<< this->total_samples();
+						AudioSize newsize;
+						newsize.set_sample_count(this->total_samples());
+
+						ARCS_LOG_INFO << "Update total number of samples to: "
+								<< newsize.sample_count()
+								<< " (was "
+								<< old_total << " before)";
+
+						update_audiosize_(newsize);
+					}
 				}
 			}
 
