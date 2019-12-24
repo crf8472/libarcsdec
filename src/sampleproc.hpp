@@ -154,7 +154,7 @@ private:
 
 
 /**
- * \brief Unbuffered wrapper for a Calculation.
+ * \brief Adapter to wrap a Calculation in an unbuffered SampleProcessor.
  */
 class SampleProcessorAdapter : virtual public SampleProcessor
 {
