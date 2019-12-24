@@ -63,6 +63,9 @@ message (STATUS "Build type: ${CMAKE_BUILD_TYPE}" )
 ## "Root directory for out-of-source build"
 set (PROJECT_BINARY_DIR       "${CMAKE_CURRENT_SOURCE_DIR}/build" )
 
+## "Root directory for public/exported headers"
+set (PROJECT_INCLUDE_DIR       "${CMAKE_CURRENT_SOURCE_DIR}/include" )
+
 ## "Root directory for sources"
 set (PROJECT_SOURCE_DIR       "${CMAKE_CURRENT_SOURCE_DIR}/src" )
 
@@ -118,17 +121,17 @@ add_library (${PROJECT_NAME} SHARED
 )
 
 target_include_directories (${PROJECT_NAME}
-	PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
-	PUBLIC $<BUILD_INTERFACE:${PROJECT_BUILD_SOURCE_DIR}> ) ## find version.hpp
+	PUBLIC $<BUILD_INTERFACE:${PROJECT_INCLUDE_DIR}>
+	PUBLIC $<BUILD_INTERFACE:${PROJECT_BUILD_SOURCE_DIR}> ) ## version.hpp
 
 target_compile_options (${PROJECT_NAME} PRIVATE ${PROJECT_CXX_FLAGS} )
 
 list (APPEND PROJECT_PUBLIC_HEADERS
-	${PROJECT_SOURCE_DIR}/audioreader.hpp
-	${PROJECT_SOURCE_DIR}/calculators.hpp
-	${PROJECT_SOURCE_DIR}/descriptors.hpp
-	${PROJECT_SOURCE_DIR}/metaparser.hpp
-	${PROJECT_SOURCE_DIR}/sampleproc.hpp
+	${PROJECT_INCLUDE_DIR}/audioreader.hpp
+	${PROJECT_INCLUDE_DIR}/calculators.hpp
+	${PROJECT_INCLUDE_DIR}/descriptors.hpp
+	${PROJECT_INCLUDE_DIR}/metaparser.hpp
+	${PROJECT_INCLUDE_DIR}/sampleproc.hpp
 	${PROJECT_BUILD_SOURCE_DIR}/descriptors_audio.hpp
 	${PROJECT_BUILD_SOURCE_DIR}/descriptors_metadata.hpp
 	${PROJECT_BUILD_SOURCE_DIR}/version.hpp )
@@ -288,7 +291,7 @@ set (CONFIGURED_HEADERS
 foreach (_header IN LISTS CONFIGURED_HEADERS )
 
 	configure_file (
-		"${PROJECT_SOURCE_DIR}/${_header}.in"
+		"${PROJECT_INCLUDE_DIR}/${_header}.in"
 		"${PROJECT_BUILD_SOURCE_DIR}/${_header}"
 		@ONLY
 	)
