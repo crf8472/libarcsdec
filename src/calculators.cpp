@@ -347,11 +347,11 @@ std::unique_ptr<ARId> ARIdCalculator::Impl::calculate(
 		const std::string &metafilename) const
 {
 	TOCParser parser;
-	auto toc = parser.parse(metafilename);
+	auto toc { parser.parse(metafilename) };
 
 	if (toc->complete())
 	{
-		return make_arid(*toc);
+		return make_arid(toc);
 	}
 
 	ARCS_LOG_INFO <<
@@ -361,7 +361,7 @@ std::unique_ptr<ARId> ARIdCalculator::Impl::calculate(
 	// Check whether TOC references exactly one audio file.
 	// (Other cases are currently unsupported.)
 
-	auto audiofilenames { arcstk::toc::get_filenames(*toc) };
+	auto audiofilenames { arcstk::toc::get_filenames(toc) };
 
 	if (audiofilenames.empty())
 	{
@@ -408,7 +408,7 @@ std::unique_ptr<ARId> ARIdCalculator::Impl::calculate(
 
 	if (toc->complete())
 	{
-		return make_arid(*toc);
+		return make_arid(toc);
 	}
 
 	// If TOC is incomplete, analyze audio file passed
