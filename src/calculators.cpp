@@ -618,7 +618,7 @@ ChecksumSet ARCSCalculator::Impl::calculate_track(
 	// Configure Calculation
 
 	auto calc = std::make_unique<Calculation>(
-		make_context(audiofilename, skip_front, skip_back));
+		make_context(skip_front, skip_back, audiofilename));
 
 	this->process_file(audiofilename, *calc, BLOCKSIZE.DEFAULT, false);
 
