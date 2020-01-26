@@ -472,7 +472,7 @@ std::pair<Checksums, ARId> ARCSCalculator::Impl::calculate(
 	ARCS_LOG_DEBUG << "Calculate by TOC and single audiofilename: "
 		<< audiofilename;
 
-	auto calc = std::make_unique<Calculation>(make_context(audiofilename, toc));
+	auto calc = std::make_unique<Calculation>(make_context(toc, audiofilename));
 
 	this->process_file(audiofilename, *calc, BLOCKSIZE.DEFAULT, false);
 
