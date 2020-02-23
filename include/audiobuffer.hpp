@@ -13,7 +13,7 @@
 #include <memory>
 
 #ifndef __LIBARCSTK_CALCULATE_HPP__
-#include <arcstk/samples.hpp>   // AudioSize, Calculation, PCMForwardIterator
+#include <arcstk/samples.hpp>   // AudioSize, Calculation, SampleInputIterator
 #endif
 #ifndef __LIBARCSTK_SAMPLES_HPP__
 #include <arcstk/samples.hpp>   // SampleSequence
@@ -223,7 +223,7 @@ public:
 	 * \param[in] func The functor to be registered as sample consumer.
 	 */
 	void register_block_consumer(const std::function<void(
-			PCMForwardIterator begin, PCMForwardIterator end)> &func);
+			SampleInputIterator begin, SampleInputIterator end)> &func);
 
 	/**
 	 * \brief Call this method before passing the first sample sequence
@@ -241,7 +241,7 @@ public:
 	 * \param[in] begin Begin of the sample sequence
 	 * \param[in] end   End of the sample sequence
 	 */
-	void append_to_block(PCMForwardIterator begin, PCMForwardIterator end);
+	void append_to_block(SampleInputIterator begin, SampleInputIterator end);
 
 	/**
 	 * \brief Call this method after having passed the last sample sequence
@@ -294,7 +294,7 @@ private:
 	 *
 	 * Called by block_complete().
 	 */
-	std::function<void(PCMForwardIterator begin, PCMForwardIterator end)>
+	std::function<void(SampleInputIterator begin, SampleInputIterator end)>
 		consume_;
 
 	/**
@@ -357,7 +357,7 @@ public:
 
 private:
 
-	void do_append_samples(PCMForwardIterator begin, PCMForwardIterator end)
+	void do_append_samples(SampleInputIterator begin, SampleInputIterator end)
 		override;
 
 	void do_update_audiosize(const AudioSize &size) override;

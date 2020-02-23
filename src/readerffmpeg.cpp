@@ -41,7 +41,7 @@ namespace arcsdec
 inline namespace v_1_0_0
 {
 
-using arcstk::PCMForwardIterator;
+using arcstk::SampleInputIterator;
 using arcstk::AudioSize;
 using arcstk::Logging;
 using arcstk::InvalidAudioException;
@@ -368,7 +368,7 @@ public:
 	 * \param[in] func The append_samples() method to use while reading
 	 */
 	void register_append_samples(
-		std::function<void(PCMForwardIterator begin, PCMForwardIterator end)>
+		std::function<void(SampleInputIterator begin, SampleInputIterator end)>
 			func);
 
 	/**
@@ -473,7 +473,7 @@ private:
 	 * \brief Callback for notifying outside world about a new sequence of
 	 * samples.
 	 */
-	std::function<void(PCMForwardIterator begin, PCMForwardIterator end)>
+	std::function<void(SampleInputIterator begin, SampleInputIterator end)>
 		append_samples_;
 
 	/**
@@ -1283,8 +1283,8 @@ bool FFmpegAudioFile::channels_swapped() const
 
 
 void FFmpegAudioFile::register_append_samples(
-		std::function<void(PCMForwardIterator begin,
-			PCMForwardIterator end)> func)
+		std::function<void(SampleInputIterator begin,
+			SampleInputIterator end)> func)
 {
 	append_samples_ = func;
 }

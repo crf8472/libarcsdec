@@ -28,8 +28,8 @@ const BLOCKSIZE_t BLOCKSIZE;
 SampleProcessor::~SampleProcessor() noexcept = default;
 
 
-void SampleProcessor::append_samples(PCMForwardIterator begin,
-		PCMForwardIterator end)
+void SampleProcessor::append_samples(SampleInputIterator begin,
+		SampleInputIterator end)
 {
 	this->do_append_samples(begin, end);
 
@@ -76,7 +76,7 @@ SampleProcessorAdapter::~SampleProcessorAdapter() noexcept = default;
 
 
 void SampleProcessorAdapter::do_append_samples(
-		PCMForwardIterator begin, PCMForwardIterator end)
+		SampleInputIterator begin, SampleInputIterator end)
 {
 	calculation_->update(begin, end);
 }
@@ -117,8 +117,8 @@ SampleProvider::~SampleProvider() noexcept = default;
 
 
 void SampleProvider::register_appendsamples(
-		std::function<void(PCMForwardIterator begin,
-			PCMForwardIterator end)> func)
+		std::function<void(SampleInputIterator begin,
+			SampleInputIterator end)> func)
 {
 	this->append_samples_ = func;
 }
@@ -139,7 +139,7 @@ void SampleProvider::register_endinput(
 
 
 void SampleProvider::process_samples(
-		PCMForwardIterator begin, PCMForwardIterator end)
+		SampleInputIterator begin, SampleInputIterator end)
 {
 	this->append_samples_(begin, end);
 }

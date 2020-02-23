@@ -44,7 +44,7 @@ inline namespace v_1_0_0
 {
 
 
-using arcstk::PCMForwardIterator;
+using arcstk::SampleInputIterator;
 using arcstk::AudioSize;
 using arcstk::CDDA;
 using arcstk::InvalidAudioException;

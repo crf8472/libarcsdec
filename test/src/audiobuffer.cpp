@@ -9,7 +9,7 @@
 #include <arcstk/identifier.hpp> // for CDDA
 #endif
 #ifndef __LIBARCSTK_calculate_HPP__
-#include <arcstk/calculate.hpp> // for PCMForwardIterator implementation
+#include <arcstk/calculate.hpp> // for SampleInputIterator implementation
 #endif
 #ifndef __LIBARCSTK_IDENTIFIER_HPP__
 #include <arcstk/samples.hpp>

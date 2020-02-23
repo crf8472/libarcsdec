@@ -18,7 +18,7 @@
 #include <vector>
 
 #ifndef __LIBARCSTK_CALCULATE_HPP__
-#include <arcstk/calculate.hpp> // for AudioSize, Calculation, PCMForwardIterator
+#include <arcstk/calculate.hpp> // for AudioSize, Calculation, SampleInputIterator
 #endif
 #ifndef __LIBARCSTK_LOGGING_HPP__
 #include <arcstk/logging.hpp>
@@ -128,7 +128,7 @@ void BlockAccumulator::flush()
 
 
 void BlockAccumulator::register_block_consumer(const std::function<void(
-			PCMForwardIterator begin, PCMForwardIterator end
+			SampleInputIterator begin, SampleInputIterator end
 		)> &consume)
 {
 	consume_ = consume;
@@ -169,8 +169,8 @@ void BlockAccumulator::do_flush()
 }
 
 
-void BlockAccumulator::append_to_block(PCMForwardIterator begin,
-		PCMForwardIterator end)
+void BlockAccumulator::append_to_block(SampleInputIterator begin,
+		SampleInputIterator end)
 {
 	uint32_t seq_size         = std::distance(begin, end);
 	// TODO Verify size within legal bounds
@@ -301,8 +301,8 @@ void SampleBuffer::flush()
 //}
 
 
-void SampleBuffer::do_append_samples(PCMForwardIterator begin,
-		PCMForwardIterator end)
+void SampleBuffer::do_append_samples(SampleInputIterator begin,
+		SampleInputIterator end)
 {
 	this->append_to_block(begin, end);
 	// append_to_block calls process_samples() once the buffer is full

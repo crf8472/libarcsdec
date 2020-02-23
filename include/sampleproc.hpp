@@ -26,7 +26,7 @@ inline namespace v_1_0_0
  * @{
  */
 
-using arcstk::PCMForwardIterator;
+using arcstk::SampleInputIterator;
 using arcstk::AudioSize;
 using arcstk::Calculation;
 
@@ -85,7 +85,7 @@ public:
 	 * \param[in] begin Begin of the sample sequence
 	 * \param[in] end   End of the sample sequence
 	 */
-	void append_samples(PCMForwardIterator begin, PCMForwardIterator end);
+	void append_samples(SampleInputIterator begin, SampleInputIterator end);
 
 	/**
 	 * \brief Callback for AudioSize.
@@ -123,10 +123,10 @@ public:
 private:
 
 	/**
-	 * \brief Implements SampleProcessor::append_samples(PCMForwardIterator begin, PCMForwardIterator end)
+	 * \brief Implements SampleProcessor::append_samples(SampleInputIterator begin, SampleInputIterator end)
 	 */
-	virtual void do_append_samples(PCMForwardIterator begin,
-			PCMForwardIterator end)
+	virtual void do_append_samples(SampleInputIterator begin,
+			SampleInputIterator end)
 	= 0;
 
 	/**
@@ -181,7 +181,7 @@ public:
 
 private:
 
-	void do_append_samples(PCMForwardIterator begin, PCMForwardIterator end)
+	void do_append_samples(SampleInputIterator begin, SampleInputIterator end)
 		override;
 
 	void do_update_audiosize(const AudioSize &size) override;
@@ -214,7 +214,7 @@ public:
 	 * \param[in] f
 	 */
 	virtual void register_appendsamples(
-			std::function<void(PCMForwardIterator, PCMForwardIterator)> f)
+			std::function<void(SampleInputIterator, SampleInputIterator)> f)
 	= 0;
 
 	/**
@@ -265,7 +265,7 @@ private:
 	 * \param[in] end   Iterator pointing to the end of the sequence
 	 */
 	virtual void process_samples(
-			PCMForwardIterator begin, PCMForwardIterator end)
+			SampleInputIterator begin, SampleInputIterator end)
 	= 0;
 
 	/**
@@ -304,7 +304,7 @@ public:
 	SampleProvider(const SampleProvider &rhs) = delete;
 
 	void register_appendsamples(
-			std::function<void(PCMForwardIterator, PCMForwardIterator)> f)
+			std::function<void(SampleInputIterator, SampleInputIterator)> f)
 		final;
 
 	void register_updatesize(std::function<void(const AudioSize &size)>) final;
@@ -325,7 +325,7 @@ protected:
 	 */
 	~SampleProvider() noexcept override;
 
-	void process_samples(PCMForwardIterator begin, PCMForwardIterator end)
+	void process_samples(SampleInputIterator begin, SampleInputIterator end)
 		override;
 
 	void process_audiosize(const AudioSize &size) override;
@@ -345,7 +345,7 @@ private:
 	/**
 	 * \brief Callback pointer for appending samples sequences to processing.
 	 */
-	std::function<void(PCMForwardIterator begin, PCMForwardIterator end)>
+	std::function<void(SampleInputIterator begin, SampleInputIterator end)>
 		append_samples_;
 
 	/**

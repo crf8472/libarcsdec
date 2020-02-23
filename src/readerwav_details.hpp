@@ -882,7 +882,7 @@ public:
 	 * \param[in] func The functor to be registered as block consumer.
 	 */
 	void register_block_consumer(const std::function<void(
-				PCMForwardIterator begin, PCMForwardIterator end)>
+				SampleInputIterator begin, SampleInputIterator end)>
 			&func);
 
 	/**
@@ -914,7 +914,7 @@ private:
 	 *
 	 * Called by block_complete().
 	 */
-	std::function<void(PCMForwardIterator begin, PCMForwardIterator end)>
+	std::function<void(SampleInputIterator begin, SampleInputIterator end)>
 		consume_;
 };
 

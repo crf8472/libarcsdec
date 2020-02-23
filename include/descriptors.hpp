@@ -16,7 +16,7 @@
 #include <vector>
 
 #ifndef __LIBARCSTK_CALCULATE_HPP__
-#include <arcstk/calculate.hpp> // for PCMForwardIterator
+#include <arcstk/calculate.hpp> // for SampleInputIterator
 #endif
 
 

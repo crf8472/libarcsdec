@@ -43,7 +43,7 @@ namespace arcsdec
 inline namespace v_1_0_0
 {
 
-using arcstk::PCMForwardIterator;
+using arcstk::SampleInputIterator;
 using arcstk::AudioSize;
 using arcstk::CDDA;
 using arcstk::InvalidAudioException;
@@ -743,7 +743,7 @@ PCMBlockReader::~PCMBlockReader() noexcept = default;
 
 
 void PCMBlockReader::register_block_consumer(const std::function<void(
-			PCMForwardIterator begin, PCMForwardIterator end
+			SampleInputIterator begin, SampleInputIterator end
 		)> &consume)
 {
 	consume_ = consume;
