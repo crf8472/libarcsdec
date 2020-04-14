@@ -311,7 +311,7 @@ void FlacAudioReaderImpl::metadata_callback(
 
 			// Inform calculator instance about sample count
 
-			size.set_sample_count(metadata->data.stream_info.total_samples);
+			size.set_total_samples(metadata->data.stream_info.total_samples);
 			this->process_audiosize(size);
 
 			// Streaminfo could already have been validated explicitly
@@ -399,7 +399,7 @@ std::unique_ptr<AudioSize> FlacAudioReaderImpl::do_acquire_size(
 
 	std::unique_ptr<AudioSize> audiosize = std::make_unique<AudioSize>();
 
-	audiosize->set_sample_count(total_samples);
+	audiosize->set_total_samples(total_samples);
 
 	return audiosize;
 }

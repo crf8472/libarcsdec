@@ -717,7 +717,7 @@ std::unique_ptr<AudioSize> WavpackAudioReaderImpl::do_acquire_size(
 
 	WavpackOpenFile file(filename);
 
-	audiosize->set_sample_count(file.total_pcm_samples());
+	audiosize->set_total_samples(file.total_pcm_samples());
 
 	return audiosize;
 }
@@ -753,7 +753,7 @@ void WavpackAudioReaderImpl::do_process_file(const std::string &filename)
 
 	{
 		AudioSize size;
-		size.set_sample_count(total_samples);
+		size.set_total_samples(total_samples);
 		this->process_audiosize(size);
 	}
 

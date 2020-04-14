@@ -509,7 +509,7 @@ Checksums ARCSCalculator::Impl::calculate(
 			(single_file ? last_track_with_skip : false))
 	};
 
-	arcss[0] = arcs;
+	arcss.append(arcs);
 
 	// Avoid calculating a single track track twice
 
@@ -524,7 +524,7 @@ Checksums ARCSCalculator::Impl::calculate(
 	{
 		arcs = this->calculate_track(audiofilenames[i], false, false);
 
-		arcss[i] = arcs;
+		arcss.append(arcs);
 	}
 
 	// Calculate last track
@@ -532,7 +532,7 @@ Checksums ARCSCalculator::Impl::calculate(
 	arcs = this->calculate_track(audiofilenames.back(), false,
 			last_track_with_skip);
 
-	arcss[arcss.size() - 1] = arcs;
+	arcss.append(arcs);
 
 	return arcss;
 }

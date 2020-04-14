@@ -1427,10 +1427,10 @@ bool FFmpegAudioFile::decode_packet(::AVPacket packet, ::AVFrame *frame,
 						//total_samples_ -= total_diff;
 
 						AudioSize newsize;
-						newsize.set_sample_count(this->total_samples());
+						newsize.set_total_samples(this->total_samples());
 
 						ARCS_LOG_INFO << "Update total number of samples to: "
-								<< newsize.sample_count()
+								<< newsize.total_samples()
 								<< " (was "
 								<< old_total << " before)";
 
@@ -1690,7 +1690,7 @@ std::unique_ptr<AudioSize> FFmpegAudioReaderImpl::do_acquire_size(
 
 	FFmpegFileLoader loader;
 	auto audiofile = loader.load(filename);
-	audiosize->set_sample_count(audiofile->total_samples()); // estimated!
+	audiosize->set_total_samples(audiofile->total_samples()); // estimated!
 
 	return audiosize;
 }
@@ -1716,7 +1716,7 @@ void FFmpegAudioReaderImpl::do_process_file(const std::string &filename)
 	// Provide estimation
 
 	AudioSize size;
-	size.set_sample_count(audiofile->total_samples());
+	size.set_total_samples(audiofile->total_samples());
 	this->process_audiosize(size);
 
 	// Register this AudioReaderImpl instance as the target for samples and
@@ -1735,7 +1735,7 @@ void FFmpegAudioReaderImpl::do_process_file(const std::string &filename)
 
 	// Process file
 
-	auto sample_count_expect { size.sample_count() };
+	auto sample_count_expect { size.total_samples() };
 	auto sample_count_fact   { audiofile->traverse_samples() };
 
 
