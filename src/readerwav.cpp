@@ -731,7 +731,7 @@ void WavAudioHandler::do_fail()
 // PCMBlockReader
 
 
-PCMBlockReader::PCMBlockReader(const uint32_t &samples_per_block)
+PCMBlockReader::PCMBlockReader(const int32_t samples_per_block)
 	: BlockCreator(samples_per_block)
 	, consume_()
 {
@@ -753,7 +753,9 @@ void PCMBlockReader::register_block_consumer(const std::function<void(
 int64_t PCMBlockReader::read_blocks(std::ifstream &in,
 		const int64_t &total_pcm_bytes)
 {
-	std::vector<uint32_t> samples(this->samples_per_block());
+	std::vector<uint32_t> samples;
+	samples.resize(
+		static_cast<decltype(samples)::size_type>(this->samples_per_block()));
 
 	int64_t bytes_per_block =
 		static_cast<int64_t>(this->samples_per_block()) * CDDA.BYTES_PER_SAMPLE;
@@ -765,13 +767,14 @@ int64_t PCMBlockReader::read_blocks(std::ifstream &in,
 		<< " bytes in " << std::to_string(estimated_blocks) << " blocks with "
 		<< bytes_per_block << " bytes per block";
 
-	uint32_t samples_todo = total_pcm_bytes / CDDA.BYTES_PER_SAMPLE;
+	int32_t samples_todo = total_pcm_bytes / CDDA.BYTES_PER_SAMPLE;
 	int64_t total_bytes_read   = 0;
 	int64_t total_blocks_read  = 0;
 
-	int64_t read_bytes =
-		static_cast<int64_t>(this->samples_per_block() * sizeof(uint32_t));
-	// FIXME Use sample type!
+	const int64_t sample_type_size = static_cast<int>(sizeof(uint32_t));
+						// FIXME Use symbolized sample type  ^^^^^^^^!
+
+	int64_t read_bytes = this->samples_per_block() * sample_type_size;
 
 	while (total_bytes_read < total_pcm_bytes)
 	{
@@ -780,11 +783,10 @@ int64_t PCMBlockReader::read_blocks(std::ifstream &in,
 		if (samples_todo < this->samples_per_block())
 		{
 			// Avoid trailing zeros in buffer
-			samples.resize(samples_todo);
+			samples.resize(
+					static_cast<decltype(samples)::size_type>(samples_todo));
 
-			//read_bytes = samples_todo * sizeof(samples.front());
-			read_bytes = static_cast<int64_t>(samples_todo * sizeof(uint32_t));
-			// FIXME Use sample type!
+			read_bytes = samples_todo * sample_type_size;
 		}
 
 		// Actually read the bytes
@@ -797,12 +799,10 @@ int64_t PCMBlockReader::read_blocks(std::ifstream &in,
 		{
 			total_bytes_read += in.gcount();
 
-			//ARCS_LOG_ERROR << "Failed to read from file: " << f.what();
-
 			throw FileReadException(f.what(), total_bytes_read + 1);
 		}
 		total_bytes_read += read_bytes;
-		samples_todo     -= samples.size();
+		samples_todo     -= static_cast<int32_t>(samples.size());
 
 		// Logging + Statistics
 

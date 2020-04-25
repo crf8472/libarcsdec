@@ -44,7 +44,7 @@ void SampleProcessor::update_audiosize(const AudioSize &size)
 }
 
 
-void SampleProcessor::end_input(const uint32_t last_sample_index)
+void SampleProcessor::end_input(const int32_t last_sample_index)
 {
 	this->do_end_input(last_sample_index);
 }
@@ -88,7 +88,7 @@ void SampleProcessorAdapter::do_update_audiosize(const AudioSize &size)
 }
 
 
-void SampleProcessorAdapter::do_end_input(const uint32_t /* last_sample_index*/)
+void SampleProcessorAdapter::do_end_input(const int32_t /* last_sample_index*/)
 {
 	// empty
 }
@@ -132,7 +132,7 @@ void SampleProvider::register_updatesize(
 
 
 void SampleProvider::register_endinput(
-		std::function<void(const uint32_t last_sample_index)> func)
+		std::function<void(const int32_t last_sample_index)> func)
 {
 	this->end_input_ = func;
 }
@@ -151,7 +151,7 @@ void SampleProvider::process_audiosize(const AudioSize &size)
 }
 
 
-void SampleProvider::process_endinput(const uint32_t last_sample_index)
+void SampleProvider::process_endinput(const int32_t last_sample_index)
 {
 	this->end_input_(last_sample_index);
 }

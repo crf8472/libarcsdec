@@ -40,21 +40,21 @@ struct BLOCKSIZE_t
 	 *
 	 * Currently, this is 256 MiB.
 	 */
-	const uint32_t MAX     = 67108864; // == 256 * 1024^2 / 4
+	const int32_t MAX     = 67108864; // == 256 * 1024^2 / 4
 
 	/**
 	 * \brief Default buffer size in number of PCM 32 bit samples.
 	 *
 	 * Currently, this is 64 MiB.
 	 */
-	const uint32_t DEFAULT = 16777216; // == 64 * 1024^2 / 4
+	const int32_t DEFAULT = 16777216; // == 64 * 1024^2 / 4
 
 	/**
 	 * \brief Minimum buffer size in number of PCM 32 bit samples.
 	 *
 	 * Currently, this is 256 KiB.
 	 */
-	const uint32_t MIN     = 65536; // == 256 * 1024 / 4
+	const int32_t MIN     = 65536; // == 256 * 1024 / 4
 	// The size of a maximal fLaC block. This entails that at least one fLaC
 	// frame is guaranteed to fit in a block of minimal size.
 };
@@ -99,7 +99,7 @@ public:
 	 *
 	 * \param[in] last_sample_index 0-based index of the last sample.
 	 */
-	void end_input(const uint32_t last_sample_index);
+	void end_input(const int32_t last_sample_index);
 
 	/**
 	 * \brief Number of sample sequence that this instance has processed.
@@ -136,9 +136,9 @@ private:
 	= 0;
 
 	/**
-	 * \brief Implements SampleProcessor::end_input(const uint32_t last_sample_index)
+	 * \brief Implements SampleProcessor::end_input(const int32_t last_sample_index)
 	 */
-	virtual void do_end_input(const uint32_t last_sample_index)
+	virtual void do_end_input(const int32_t last_sample_index)
 	= 0;
 
 	/**
@@ -186,7 +186,7 @@ private:
 
 	void do_update_audiosize(const AudioSize &size) override;
 
-	void do_end_input(const uint32_t last_sample_index) override;
+	void do_end_input(const int32_t last_sample_index) override;
 
 	/**
 	 * \brief Internal pointer to the calculation to wrap.
@@ -230,7 +230,7 @@ public:
 	 *
 	 * \param[in] f The function to register
 	 */
-	virtual void register_endinput(std::function<void(const uint32_t)> f)
+	virtual void register_endinput(std::function<void(const int32_t)> f)
 	= 0;
 
 	/**
@@ -283,7 +283,7 @@ private:
 	 *
 	 * \param[in] last_sample_index The 0-based index of the last sample.
 	 */
-	virtual void process_endinput(const uint32_t last_sample_index)
+	virtual void process_endinput(const int32_t last_sample_index)
 	= 0;
 };
 
@@ -309,7 +309,7 @@ public:
 
 	void register_updatesize(std::function<void(const AudioSize &size)>) final;
 
-	void register_endinput(std::function<void(const uint32_t)> f) final;
+	void register_endinput(std::function<void(const int32_t)> f) final;
 
 	void register_processor(SampleProcessor &processor) final;
 
@@ -330,7 +330,7 @@ protected:
 
 	void process_audiosize(const AudioSize &size) override;
 
-	void process_endinput(const uint32_t last_sample_index) override;
+	void process_endinput(const int32_t last_sample_index) override;
 
 	SampleProcessor* use_processor();
 
@@ -356,7 +356,7 @@ private:
 	/**
 	 * \brief Callback pointer for indicating the end of the sample input.
 	 */
-	std::function<void(const uint32_t last_sample_index)> end_input_;
+	std::function<void(const int32_t last_sample_index)> end_input_;
 
 	/**
 	 * \brief Internal pointer to the SampleProcessor.

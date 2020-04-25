@@ -385,10 +385,9 @@ std::unique_ptr<AudioSize> FlacAudioReaderImpl::do_acquire_size(
 	}
 
 	auto total_samples = streaminfo.get_total_samples();
-	auto max_samples = static_cast<unsigned int>(CDDA.SAMPLES_PER_FRAME) *
-			CDDA.MAX_BLOCK_ADDRESS;
+	auto max_samples = CDDA.SAMPLES_PER_FRAME * CDDA.MAX_BLOCK_ADDRESS;
 
-	if (total_samples > max_samples)
+	if (max_samples < static_cast<decltype(max_samples)>(total_samples))
 	{
 		ARCS_LOG_WARNING << "Too many samples: "
 				<< "Counted " << total_samples

@@ -45,7 +45,7 @@ BlockCreator::BlockCreator()
 }
 
 
-BlockCreator::BlockCreator(const uint32_t &samples_per_block)
+BlockCreator::BlockCreator(const int32_t samples_per_block)
 	: samples_per_block_(samples_per_block)
 {
 	// empty
@@ -55,32 +55,32 @@ BlockCreator::BlockCreator(const uint32_t &samples_per_block)
 BlockCreator::~BlockCreator() noexcept = default;
 
 
-void BlockCreator::set_samples_per_block(const uint32_t &samples_per_block)
+void BlockCreator::set_samples_per_block(const int32_t samples_per_block)
 {
 	samples_per_block_ = samples_per_block;
 }
 
 
-uint32_t BlockCreator::samples_per_block() const
+int32_t BlockCreator::samples_per_block() const
 {
 	return samples_per_block_;
 }
 
 
-uint32_t BlockCreator::min_samples_per_block() const
+int32_t BlockCreator::min_samples_per_block() const
 {
 	return BLOCKSIZE.MIN;
 }
 
 
-uint32_t BlockCreator::max_samples_per_block() const
+int32_t BlockCreator::max_samples_per_block() const
 {
-	return 0xFFFFFFFF; // maximal value for uint32_t
+	return std::numeric_limits<decltype(samples_per_block_)>::max();
 }
 
 
-uint32_t BlockCreator::clip_samples_per_block(
-		const uint32_t &samples_per_block) const
+int32_t BlockCreator::clip_samples_per_block(
+		const int32_t samples_per_block) const
 {
 	return samples_per_block >= min_samples_per_block()
 		? (samples_per_block <= max_samples_per_block()
@@ -94,19 +94,19 @@ uint32_t BlockCreator::clip_samples_per_block(
 
 
 BlockAccumulator::BlockAccumulator()
-	: consume_()
-	, samples_(BLOCKSIZE.DEFAULT)
-	, samples_appended_(0)
+	: consume_ { }
+	, samples_(static_cast<decltype(samples_)::size_type>(BLOCKSIZE.DEFAULT))
+	, samples_appended_ { 0 }
 {
 	// empty
 }
 
 
-BlockAccumulator::BlockAccumulator(const uint32_t &samples_per_block)
+BlockAccumulator::BlockAccumulator(const int32_t samples_per_block)
 	: BlockCreator(samples_per_block)
-	, consume_()
-	, samples_(samples_per_block)
-	, samples_appended_(0)
+	, consume_ { }
+	, samples_(static_cast<decltype(samples_)::size_type>(samples_per_block))
+	, samples_appended_ { 0 }
 {
 	// empty
 }
@@ -135,7 +135,7 @@ void BlockAccumulator::register_block_consumer(const std::function<void(
 }
 
 
-uint64_t BlockAccumulator::samples_appended() const
+int32_t BlockAccumulator::samples_appended() const
 {
 	return samples_appended_;
 }
@@ -172,11 +172,11 @@ void BlockAccumulator::do_flush()
 void BlockAccumulator::append_to_block(SampleInputIterator begin,
 		SampleInputIterator end)
 {
-	uint32_t seq_size         = std::distance(begin, end);
+	int32_t seq_size         = std::distance(begin, end);
 	// TODO Verify size within legal bounds
-	uint32_t buffer_avail     = 0;
-	uint32_t samples_todo     = seq_size;
-	uint32_t samples_buffered = 0;
+	int32_t buffer_avail     = 0;
+	int32_t samples_todo     = seq_size;
+	int32_t samples_buffered = 0;
 
 	auto smpl { samples_.begin() };
 	auto last { samples_.end()   };
@@ -232,12 +232,12 @@ void BlockAccumulator::init_buffer()
 }
 
 
-void BlockAccumulator::init_buffer(const uint32_t &buffer_size)
+void BlockAccumulator::init_buffer(const int32_t buffer_size)
 {
 	ARCS_LOG(DEBUG1) << "Init buffer for " << buffer_size << " samples";
 
 	// Remove trailing zeros
-	samples_.resize(buffer_size);
+	samples_.resize(static_cast<decltype(samples_)::size_type>(buffer_size));
 }
 
 
@@ -251,7 +251,7 @@ SampleBuffer::SampleBuffer()
 }
 
 
-SampleBuffer::SampleBuffer(const uint32_t samples_per_block)
+SampleBuffer::SampleBuffer(const int32_t samples_per_block)
 	: BlockAccumulator(samples_per_block)
 {
 	this->init();
@@ -316,7 +316,7 @@ void SampleBuffer::do_update_audiosize(const AudioSize &size)
 }
 
 
-void SampleBuffer::do_end_input(const uint32_t last_sample_index)
+void SampleBuffer::do_end_input(const int32_t last_sample_index)
 {
 	this->flush();
 

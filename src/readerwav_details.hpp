@@ -864,7 +864,7 @@ public:
 	 *
 	 * \param[in] samples_per_block Number of 32 bit PCM samples in one block
 	 */
-	explicit PCMBlockReader(const uint32_t &samples_per_block);
+	explicit PCMBlockReader(const int32_t samples_per_block);
 
 	// make class non-copyable (1/2)
 	PCMBlockReader(const PCMBlockReader &) = delete;

@@ -103,7 +103,7 @@ public:
 	 *
 	 * \param[in] samples_per_block Number of 32 bit PCM samples in one block
 	 */
-	explicit BlockCreator(const uint32_t &samples_per_block);
+	explicit BlockCreator(const int32_t samples_per_block);
 
 	// make class non-copyable (1/2)
 	BlockCreator(const BlockCreator &) = delete;
@@ -121,14 +121,14 @@ public:
 	 * \param[in] samples_per_block
 	 *     The number of 32 bit PCM samples in one block
 	 */
-	void set_samples_per_block(const uint32_t &samples_per_block);
+	void set_samples_per_block(const int32_t samples_per_block);
 
 	/**
 	 * \brief Return the maximal number of samples a block can contain.
 	 *
 	 * \return The number of 32 bit PCM samples that the block can store
 	 */
-	uint32_t samples_per_block() const;
+	int32_t samples_per_block() const;
 
 	// make class non-copyable (2/2)
 	BlockCreator& operator = (const BlockCreator &) = delete;
@@ -143,14 +143,14 @@ protected:
 	 *
 	 * \return Minimum number of samples per block
 	 */
-	virtual uint32_t min_samples_per_block() const;
+	virtual int32_t min_samples_per_block() const;
 
 	/**
 	 * \brief Returns the maximum block size of this instance
 	 *
 	 * \return Maximum number of samples per block
 	 */
-	virtual uint32_t max_samples_per_block() const;
+	virtual int32_t max_samples_per_block() const;
 
 	/**
 	 * \brief Clip the parameter to be between the values of
@@ -160,7 +160,7 @@ protected:
 	 *
 	 * \return Valid number of samples per block
 	 */
-	uint32_t clip_samples_per_block(const uint32_t &samples_per_block) const;
+	int32_t clip_samples_per_block(const int32_t samples_per_block) const;
 
 
 private:
@@ -168,7 +168,7 @@ private:
 	/**
 	 * \brief Number of 32bit PCM samples per block
 	 */
-	uint32_t samples_per_block_;
+	int32_t samples_per_block_;
 };
 
 
@@ -205,7 +205,7 @@ public:
 	 *
 	 * \param[in] samples_per_block Number of 32 bit PCM samples in one block
 	 */
-	explicit BlockAccumulator(const uint32_t &samples_per_block);
+	explicit BlockAccumulator(const int32_t samples_per_block);
 
 	// make class non-copyable (1/2)
 	BlockAccumulator(const BlockAccumulator &) = delete;
@@ -253,7 +253,7 @@ public:
 	 *
 	 * \return Number of samples processed since init() was called
 	 */
-	uint64_t samples_appended() const;
+	int32_t samples_appended() const;
 
 	// make class non-copyable (2/2)
 	BlockAccumulator& operator = (const BlockAccumulator &) = delete;
@@ -269,7 +269,7 @@ protected:
 	 *
 	 * \param[in] total_samples Reinitialize buffer for new block
 	 */
-	void init_buffer(const uint32_t &total_samples);
+	void init_buffer(const int32_t total_samples);
 
 
 private:
@@ -305,7 +305,7 @@ private:
 	/**
 	 * \brief Number of samples processed
 	 */
-	uint64_t samples_appended_;
+	int32_t samples_appended_;
 };
 
 
@@ -334,7 +334,7 @@ public:
 	 *
 	 * \param[in] samples_per_block Number of 32 bit PCM samples in one block
 	 */
-	explicit SampleBuffer(const uint32_t samples_per_block);
+	explicit SampleBuffer(const int32_t samples_per_block);
 
 	/**
 	 * \brief Default destructor
@@ -362,7 +362,7 @@ private:
 
 	void do_update_audiosize(const AudioSize &size) override;
 
-	void do_end_input(const uint32_t last_sample_index) override;
+	void do_end_input(const int32_t last_sample_index) override;
 
 	void hook_post_register_processor() override;
 };

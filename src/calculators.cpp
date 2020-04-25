@@ -261,7 +261,7 @@ protected:
 	 * \param[in] use_cbuffer    Enforce a converting buffer
 	 */
 	void process_file(const std::string &audiofilename, Calculation& calc,
-		const uint32_t buffer_size, const bool use_cbuffer) const;
+		const int32_t buffer_size, const bool use_cbuffer) const;
 
 	/**
 	 * \brief Worker: check samples_todo() and warn if < 0 and error if > 0
@@ -548,7 +548,7 @@ ChecksumSet ARCSCalculator::Impl::calculate(
 
 
 void ARCSCalculator::Impl::process_file(const std::string &audiofilename,
-		Calculation& calc, const uint32_t buffer_size, const bool use_cbuffer)
+		Calculation& calc, const int32_t buffer_size, const bool use_cbuffer)
 		const
 {
 	std::unique_ptr<AudioReader> reader = selection().for_file(audiofilename);
