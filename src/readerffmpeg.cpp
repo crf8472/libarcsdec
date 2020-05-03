@@ -1470,7 +1470,7 @@ int FFmpegAudioFile::pass_samples(const uint8_t* ch0, const uint8_t* ch1,
 	if (SAMPLE_FORMAT::S16P == this->sample_format())
 	{
 		SampleSequence<int16_t, true> sequence;
-		sequence.wrap(ch0, ch1, static_cast<uint64_t>(bytes_per_plane));
+		sequence.wrap_bytes(ch0, ch1, static_cast<uint64_t>(bytes_per_plane));
 
 		append_samples_(sequence.begin(), sequence.end());
 
@@ -1480,7 +1480,7 @@ int FFmpegAudioFile::pass_samples(const uint8_t* ch0, const uint8_t* ch1,
 	if (SAMPLE_FORMAT::S16  == this->sample_format())
 	{
 		SampleSequence<int16_t, false> sequence;
-		sequence.wrap(ch0, static_cast<uint64_t>(bytes_per_plane));
+		sequence.wrap_bytes(ch0, static_cast<uint64_t>(bytes_per_plane));
 
 		append_samples_(sequence.begin(), sequence.end());
 
@@ -1490,7 +1490,7 @@ int FFmpegAudioFile::pass_samples(const uint8_t* ch0, const uint8_t* ch1,
 	if (SAMPLE_FORMAT::S32P == this->sample_format()) // e.g. flac reader
 	{
 		SampleSequence<int32_t, true> sequence;
-		sequence.wrap(ch0, ch1, static_cast<uint64_t>(bytes_per_plane));
+		sequence.wrap_bytes(ch0, ch1, static_cast<uint64_t>(bytes_per_plane));
 
 		append_samples_(sequence.begin(), sequence.end());
 
@@ -1500,7 +1500,7 @@ int FFmpegAudioFile::pass_samples(const uint8_t* ch0, const uint8_t* ch1,
 	if (SAMPLE_FORMAT::S32  == this->sample_format()) // e.g. wavpack reader
 	{
 		SampleSequence<int32_t, false> sequence;
-		sequence.wrap(ch0, static_cast<uint64_t>(bytes_per_plane));
+		sequence.wrap_bytes(ch0, static_cast<uint64_t>(bytes_per_plane));
 
 		append_samples_(sequence.begin(), sequence.end());
 

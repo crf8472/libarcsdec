@@ -810,7 +810,7 @@ void WavpackAudioReaderImpl::do_process_file(const std::string &filename)
 			ARCS_LOG_DEBUG << "    Size: " << samples.size()
 					<< " integers, add to current block";
 
-			sequence.reset(samples.data(), samples.size());
+			sequence.wrap(samples.data(), samples.size());
 			// NOTE That we use the number of 16 bit samples _per_channel_, not
 			// the total number of 16 bit samples in the chunk
 

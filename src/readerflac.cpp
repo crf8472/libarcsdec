@@ -293,7 +293,7 @@ FlacAudioReaderImpl::~FlacAudioReaderImpl() noexcept = default;
 		const ::FLAC__Frame	*frame,
 		const FLAC__int32   * const buffer[])
 {
-	smplseq_.reset(buffer[0], buffer[1], frame->header.blocksize);
+	smplseq_.wrap(buffer[0], buffer[1], frame->header.blocksize);
 	this->process_samples(smplseq_.begin(), smplseq_.end());
 
 	return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;

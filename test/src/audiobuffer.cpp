@@ -37,8 +37,8 @@ TEST_CASE ( "BlockAccumulator", "[audiobuffer] [blockaccumulator]" )
 
 		// Configure sequence "adapter" for actual samples
 		SampleSequence<int32_t, false> sequence; // left 0, right 1
-		sequence.reset(samples.data(),
-				samples.size() / static_cast<unsigned int>(CDDA.NUMBER_OF_CHANNELS));
+		sequence.wrap(samples.data(),
+			samples.size() / static_cast<unsigned int>(CDDA.NUMBER_OF_CHANNELS));
 
 		// We can append those sequences without registering a processor
 		// because the won't trigger a flush()
