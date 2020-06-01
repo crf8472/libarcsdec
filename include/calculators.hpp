@@ -51,6 +51,7 @@ inline namespace v_1_0_0
 
 using arcstk::TOC;
 using arcstk::ARId;
+using arcstk::checksum::type;
 using arcstk::Checksums;
 using arcstk::ChecksumSet;
 
@@ -174,8 +175,17 @@ public:
 
 	/**
 	 * \brief Constructor.
+	 *
+	 * Uses ARCS1 and ARCS2 as default checksum types.
 	 */
 	ARCSCalculator();
+
+	/**
+	 * \brief Constructor
+	 *
+	 * \param[in] type The Checksum type to calculate.
+	 */
+	ARCSCalculator(const arcstk::checksum::type type);
 
 	/**
 	 * \brief Virtual default destructor.
@@ -262,6 +272,20 @@ public:
 	 * \return The AudioReaderSelection used by this instance
 	 */
 	const AudioReaderSelection& selection() const;
+
+	/**
+	 * \brief Set checksum::type for the instance to calculate
+	 *
+	 * \param[in] type The checksum::type to calculate
+	 */
+	void set_type(const arcstk::checksum::type type);
+
+	/**
+	 * \brief Return checksum::type calculated by this instance
+	 *
+	 * \return The checksum::type to calculate
+	 */
+	arcstk::checksum::type type() const;
 
 
 private:

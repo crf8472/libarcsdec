@@ -169,9 +169,18 @@ class ARCSCalculator::Impl final
 public:
 
 	/**
-	 * \brief Empty constructor.
+	 * \brief Constructor
+	 *
+	 * \param[in] type The Checksum type to calculate
 	 */
-	Impl();
+	Impl(const arcstk::checksum::type type);
+
+	/**
+	 * \brief Default constructor.
+	 *
+	 * Uses ARCS1 and ARCS2 as default checksum::types.
+	 */
+	Impl() : Impl(arcstk::checksum::type::ARCS2) { /* empty */ };
 
 	/**
 	 * \brief Calculate ARCS values for the given audio file, using the metadata
@@ -238,6 +247,20 @@ public:
 	 */
 	const AudioReaderSelection& selection() const;
 
+	/**
+	 * \brief Set checksum::type for the instance to calculate
+	 *
+	 * \param[in] type The checksum::type to calculate
+	 */
+	void set_type(const arcstk::checksum::type type);
+
+	/**
+	 * \brief Return checksum::type calculated by this instance
+	 *
+	 * \return The checksum::type to calculate
+	 */
+	arcstk::checksum::type type() const;
+
 
 protected:
 
@@ -287,6 +310,11 @@ private:
 	 * \brief Internal AudioReaderSelection.
 	 */
 	std::unique_ptr<AudioReaderSelection> selection_;
+
+	/**
+	 * \brief Internal checksum type.
+	 */
+	arcstk::checksum::type type_;
 };
 
 
@@ -382,7 +410,7 @@ std::unique_ptr<ARId> ARIdCalculator::Impl::calculate(
 
 	// Use path from metafile (if any) as search path for the audio file
 
-	auto pos = metafilename.find_last_of("/\\");
+	auto pos = metafilename.find_last_of("/\\"); // XXX Is this really portable?
 
 	if (pos != std::string::npos)
 	{
@@ -458,8 +486,9 @@ std::unique_ptr<ARId> ARIdCalculator::Impl::calculate(const TOC &toc,
 // ARCSCalculator::Impl
 
 
-ARCSCalculator::Impl::Impl()
+ARCSCalculator::Impl::Impl(const arcstk::checksum::type type)
 	: selection_(std::make_unique<AudioReaderSelection>())
+	, type_ { type }
 {
 	// empty
 }
@@ -472,7 +501,8 @@ std::pair<Checksums, ARId> ARCSCalculator::Impl::calculate(
 	ARCS_LOG_DEBUG << "Calculate by TOC and single audiofilename: "
 		<< audiofilename;
 
-	auto calc = std::make_unique<Calculation>(make_context(toc, audiofilename));
+	auto calc = std::make_unique<Calculation>(type(),
+			make_context(toc, audiofilename));
 
 	this->process_file(audiofilename, *calc, BLOCKSIZE.DEFAULT, false);
 
@@ -617,7 +647,7 @@ ChecksumSet ARCSCalculator::Impl::calculate_track(
 
 	// Configure Calculation
 
-	auto calc = std::make_unique<Calculation>(
+	auto calc = std::make_unique<Calculation>(type(),
 		make_context(skip_front, skip_back, audiofilename));
 
 	this->process_file(audiofilename, *calc, BLOCKSIZE.DEFAULT, false);
@@ -650,6 +680,18 @@ void ARCSCalculator::Impl::set_selection(
 const AudioReaderSelection& ARCSCalculator::Impl::selection() const
 {
 	return *selection_;
+}
+
+
+void ARCSCalculator::Impl::set_type(const arcstk::checksum::type type)
+{
+	type_ = type;
+}
+
+
+arcstk::checksum::type ARCSCalculator::Impl::type() const
+{
+	return type_;
 }
 
 
@@ -742,6 +784,13 @@ ARCSCalculator::ARCSCalculator()
 }
 
 
+ARCSCalculator::ARCSCalculator(const arcstk::checksum::type type)
+	: impl_(std::make_unique<ARCSCalculator::Impl>(type))
+{
+	// empty
+}
+
+
 ARCSCalculator::~ARCSCalculator() noexcept = default;
 
 
@@ -781,6 +830,18 @@ void ARCSCalculator::set_selection(
 const AudioReaderSelection& ARCSCalculator::selection() const
 {
 	return impl_->selection();
+}
+
+
+void ARCSCalculator::set_type(const arcstk::checksum::type type)
+{
+	impl_->set_type(type);
+}
+
+
+arcstk::checksum::type ARCSCalculator::type() const
+{
+	return impl_->type();
 }
 
 /// \endcond
