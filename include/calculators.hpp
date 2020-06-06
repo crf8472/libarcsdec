@@ -225,10 +225,7 @@ public:
 	 * audiofilenames.
 	 *
 	 * Note that in this use case, it is not offered to compute the ARId of the
-	 * album since the exact offsets are missing. Calculating the offsets from
-	 * the actual tracks may be a feature but it is in no way guaranteed that
-	 * this would lead to a correct result (e.g. if the silence was not appended
-	 * to the end of the previous track).
+	 * album since the exact offsets are missing.
 	 *
 	 * \param[in] audiofilenames       Names of the audiofiles
 	 * \param[in] first_file_with_skip Process first file as first track
