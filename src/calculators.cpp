@@ -397,13 +397,17 @@ std::unique_ptr<ARId> ARIdCalculator::Impl::calculate(
 				"and TOC does not seem to reference any audio file.");
 	} else
 	{
-		std::unordered_set<std::string> name_set;
-		for (const auto& name : audiofilenames) { name_set.insert(name); }
+		std::unordered_set<std::string> name_set(
+				audiofilenames.begin(), audiofilenames.end());
+
 		if (name_set.size() != 1)
 		{
 			throw std::runtime_error("Incomplete TOC, no audio file provided "
 					"and TOC does not reference exactly one audio file.");
 		}
+
+		ARCS_LOG_INFO << "Found audiofile: " << *name_set.begin()
+			<< ", try loading";
 	}
 
 	auto audiofile { audiofilenames[0] };
