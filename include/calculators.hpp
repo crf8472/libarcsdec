@@ -61,7 +61,6 @@ using arcstk::ChecksumSet;
  */
 class TOCParser
 {
-
 public:
 
 	/**
@@ -97,7 +96,6 @@ public:
 	 */
 	const MetadataParserSelection& selection() const;
 
-
 private:
 
 	// Forward declaration for private implementation.
@@ -115,7 +113,6 @@ private:
  */
 class ARIdCalculator
 {
-
 public:
 
 	/**
@@ -149,7 +146,6 @@ public:
 	std::unique_ptr<ARId> calculate(const std::string &audiofilename,
 			const std::string &metafilename);
 
-
 private:
 
 	// Forward declaration for private implementation.
@@ -166,11 +162,10 @@ private:
  * \brief Calculate ARCSs for input audio files.
  *
  * Note that ARCSCalculator does not perform any lookups in the filesystem. This
- * part is completely delegated to the <tt>FileReader</tt>s.
+ * part is completely delegated to the \link FileReader FileReaders\endlink.
  */
-class ARCSCalculator
+class ARCSCalculator final
 {
-
 public:
 
 	/**
@@ -188,19 +183,17 @@ public:
 	ARCSCalculator(const arcstk::checksum::type type);
 
 	/**
-	 * \brief Virtual default destructor.
+	 * \brief Non-virtual default destructor.
 	 */
-	virtual ~ARCSCalculator() noexcept;
+	~ARCSCalculator() noexcept;
 
 	/**
-	 * \brief Calculate ARCS values for the given audio file, using the metadata
-	 * from the given TOC.
+	 * \brief Calculate ARCS values for an audio file, using the given TOC.
 	 *
 	 * The TOC is supposed to contain the offsets of all tracks represented
 	 * in the audio file. It is not required to be <tt>complete()</tt>.
 	 *
-	 * Any audio file name(s) in the TOC are ignored in favor of
-	 * \c audiofilename.
+	 * Any audio file names in the TOC are ignored in favor of \c audiofilename.
 	 *
 	 * The result will contain ARCS v1 and v2 for all tracks specified in the
 	 * TOC.
@@ -214,15 +207,15 @@ public:
 			const TOC &toc);
 
 	/**
-	 * \brief Calculate ARCSs for the given audio files.
+	 * \brief Calculate ARCSs for audio files.
 	 *
 	 * It can be specified that the sequence of audiofiles forms an album by
-	 * passing <tt>true</tt> for both boolean parameters.
+	 * passing <tt>TRUE</tt> for both boolean parameters.
 	 *
 	 * The ARCSs in the result will have the same order as the input files,
-	 * so for any index i: 0 <= i < audiofilenames.size(), result[i] will be the
-	 * result for audiofilenames[i]. The result will have the same size as
-	 * audiofilenames.
+	 * so for any index <tt>i: 0 <= i < audiofilenames.size()</tt>,
+	 * \c result[i] will be the result for <tt>audiofilenames[i]</tt>. The
+	 * result will have the same size as audiofilenames.
 	 *
 	 * Note that in this use case, it is not offered to compute the ARId of the
 	 * album since the exact offsets are missing.
@@ -238,14 +231,15 @@ public:
 			const bool &last_file_with_skip);
 
 	/**
-	 * \brief Calculate a single ARCS for the given audio file.
+	 * \brief Calculate a single ARCS for an audio file.
 	 *
-	 * The flags skip_front and skip_back control whether the track is processed
-	 * as first or last track of an album. If \c skip_front is set to TRUE, the
-	 * track is processed as first track of an album, meaning the first 2939
-	 * samples are skipped in the calculation. If \c skip_back
-	 * is set to TRUE, the track is processed as the last track of an album,
-	 * meaning that the last 5 frames of are skipped in the calculation.
+	 * The flags \c skip_front and \c skip_back control whether the track is
+	 * processed as first or last track of an album. If \c skip_front is set to
+	 * <tt>TRUE</tt>, the track is processed as first track of an album, meaning
+	 * the first 2939 samples are skipped in the calculation according to the
+	 * ARCS checksum definition. If \c skip_back is set to <tt>TRUE</tt>, the
+	 * track is processed as the last track of an album, meaning that the last
+	 * 5 frames of the input are skipped in the calculation.
 	 *
 	 * \param[in] audiofilename  Name  of the audiofile
 	 * \param[in] skip_front     Skip front samples of first track
@@ -271,19 +265,18 @@ public:
 	const AudioReaderSelection& selection() const;
 
 	/**
-	 * \brief Set checksum::type for the instance to calculate
+	 * \brief Set checksum::type for the instance to calculate.
 	 *
 	 * \param[in] type The checksum::type to calculate
 	 */
 	void set_type(const arcstk::checksum::type type);
 
 	/**
-	 * \brief Return checksum::type calculated by this instance
+	 * \brief Return checksum::type calculated by this instance.
 	 *
 	 * \return The checksum::type to calculate
 	 */
 	arcstk::checksum::type type() const;
-
 
 private:
 
