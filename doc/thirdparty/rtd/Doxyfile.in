@@ -1,0 +1,25 @@
+## Include the base Doxyfile of the libarcstk project
+
+@INCLUDE = @DOC_DOXYFILE_BASE@
+
+
+## Override the following values from included Doxyfile
+
+OUTPUT_DIRECTORY       = "@DOXYGEN_OUTPUT_DIRECTORY@"
+# Has to be repeated: Doxfile-base gets the value from root CMakeLists.txt,
+# Doxyfile has to get the value from rtd/CMakeListst.txt.
+
+STRIP_FROM_PATH        = ..
+# Must resolve identically to doxygenStripFromPath in conf.py, see here:
+# https://exhale.readthedocs.io/en/latest/reference/configs.html
+
+#STRIP_FROM_INC_PATH    = ..
+
+INPUT                  = @DOXYGEN_INPUT@
+
+GENERATE_HTML          = NO
+GENERATE_LATEX         = NO
+
+GENERATE_XML           = YES
+XML_PROGRAMLISTING     = NO
+

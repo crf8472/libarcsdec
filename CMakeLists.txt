@@ -558,3 +558,8 @@ if (IWYU )
 	endif (IWYU_PATH )
 endif (IWYU )
 
+
+## --- Create Log directory
+
+file (MAKE_DIRECTORY ${PROJECT_LOG_DIR} )
+
