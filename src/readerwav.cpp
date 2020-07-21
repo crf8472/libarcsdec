@@ -65,8 +65,6 @@ using arcstk::InvalidAudioException;
  * @{
  */
 
-/// \cond UNDOC_FUNCTION_BODIES
-
 
 // WAV_CDDA_t
 
@@ -1182,11 +1180,9 @@ void WavAudioReaderImpl::register_audio_handler(
 	audio_handler_ = std::move(hndlr);
 }
 
-/// \endcond
 
 /// @}
 
-/// \cond UNDOC_FUNCTION_BODIES
 
 // DescriptorWavPCM
 
@@ -1242,8 +1238,6 @@ std::unique_ptr<FileReaderDescriptor> DescriptorWavPCM::do_clone() const
 {
 	return std::make_unique<DescriptorWavPCM>();
 }
-
-/// \endcond
 
 } // namespace v_1_0_0
 

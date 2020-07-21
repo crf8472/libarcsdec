@@ -240,9 +240,6 @@ private:
 /// @}
 
 
-/// \cond UNDOC_FUNCTION_BODIES
-
-
 CueOpenFile::CueOpenFile(const std::string &filename)
 	: cd_info_(nullptr)
 {
@@ -470,7 +467,6 @@ void CueInfo::append_track(
 	++track_count_;
 }
 
-/// \endcond
 
 /// \internal \addtogroup parserCueImpl
 /// @{
@@ -526,9 +522,6 @@ private:
 
 
 /// @}
-
-
-/// \cond UNDOC_FUNCTION_BODIES
 
 
 // CueParserImpl
@@ -651,8 +644,7 @@ std::unique_ptr<FileReaderDescriptor> DescriptorCUE::do_clone() const
 	return std::make_unique<DescriptorCUE>();
 }
 
-/// \endcond
-
 } // namespace v_1_0_0
 
 } // namespace arcsdec
+

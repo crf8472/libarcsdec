@@ -27,9 +27,6 @@ inline namespace v_1_0_0
 {
 
 
-/// \cond UNDOC_FUNCTION_BODIES
-
-
 // MetadataParserImpl
 
 
@@ -174,8 +171,6 @@ std::unique_ptr<MetadataParser> MetadataParserSelection::safe_cast(
 
 	return metaparser_uptr;
 }
-
-/// \endcond
 
 } // namespace v_1_0_0
 

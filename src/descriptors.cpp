@@ -202,9 +202,6 @@ private:
 };
 
 
-/// \cond UNDOC_FUNCTION_BODIES
-
-
 std::string name(FileFormat format)
 {
 	return names.at(format);
@@ -801,8 +798,7 @@ bool FileReaderSelection::empty() const
 	return impl_->empty();
 }
 
-/// \endcond
-
 } // namespace v_1_0_0
 
 } // namespace arcsdec
+

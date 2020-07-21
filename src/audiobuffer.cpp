@@ -32,9 +32,6 @@ inline namespace v_1_0_0
 {
 
 
-/// \cond UNDOC_FUNCTION_BODIES
-
-
 // BlockCreator
 
 
@@ -332,8 +329,6 @@ void SampleBuffer::hook_post_register_processor()
 		std::bind(&SampleProcessor::append_samples, this->use_processor(),
 			std::placeholders::_1, std::placeholders::_2));
 }
-
-/// \endcond
 
 } // namespace v_1_0_0
 

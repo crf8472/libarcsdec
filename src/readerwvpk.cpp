@@ -192,9 +192,6 @@ private:
 };
 
 
-/// \cond UNDOC_FUNCTION_BODIES
-
-
 // WAVPACK_CDDA_t
 
 
@@ -842,14 +839,7 @@ bool WavpackAudioReaderImpl::perform_validations(const WavpackOpenFile &file)
 		and validate_handler_->validate_version(file);
 }
 
-/// \endcond
-
 /// @}
-
-//} // namespace
-
-
-/// \cond UNDOC_FUNCTION_BODIES
 
 
 // DescriptorWavpack
@@ -915,8 +905,6 @@ std::unique_ptr<FileReaderDescriptor> DescriptorWavpack::do_clone() const
 {
 	return std::make_unique<DescriptorWavpack>();
 }
-
-/// \endcond
 
 } // namespace v_1_0_0
 

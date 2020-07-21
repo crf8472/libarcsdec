@@ -524,8 +524,6 @@ private:
 
 /// @}
 
-/// \cond UNDOC_FUNCTION_BODIES
-
 
 // FFmpegSampleFormatList
 
@@ -1765,11 +1763,8 @@ std::unique_ptr<FileReaderDescriptor> FFmpegAudioReaderImpl::do_descriptor()
 	return std::make_unique<DescriptorFFmpeg>();
 }
 
-/// \endcond
 
 } // namespace
-
-/// \cond UNDOC_FUNCTION_BODIES
 
 
 // DescriptorFFmpeg
@@ -1822,8 +1817,6 @@ std::unique_ptr<FileReaderDescriptor> DescriptorFFmpeg::do_clone() const
 {
 	return std::make_unique<DescriptorFFmpeg>();
 }
-
-/// \endcond
 
 } // namespace v_1_0_0
 

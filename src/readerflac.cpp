@@ -202,9 +202,6 @@ private:
 };
 
 
-/// \cond UNDOC_FUNCTION_BODIES
-
-
 // FlacMetadataHandler
 
 
@@ -475,13 +472,10 @@ void FlacAudioReaderImpl::register_validate_handler(
 	metadata_handler_ = std::move(hndlr);
 }
 
-/// \endcond
-
 /// @}
 
 } // namespace
 
-/// \cond UNDOC_FUNCTION_BODIES
 
 // DescriptorFlac
 
@@ -541,8 +535,6 @@ std::unique_ptr<FileReaderDescriptor> DescriptorFlac::do_clone() const
 {
 	return std::make_unique<DescriptorFlac>();
 }
-
-/// \endcond
 
 } // namespace v_1_0_0
 

@@ -33,9 +33,6 @@ inline namespace v_1_0_0
 using arcstk::CDDA;
 
 
-/// \cond UNDOC_FUNCTION_BODIES
-
-
 // ByteConverter
 
 
@@ -447,8 +444,6 @@ int64_t BufferedAudioReaderImpl::do_samples_per_read() const
 	return samples_per_read_;
 }
 
-/// \endcond
-
 
 // Audioreader::Impl
 
@@ -550,9 +545,6 @@ private:
 	 */
 	std::unique_ptr<AudioReaderImpl> readerimpl_;
 };
-
-
-/// \cond UNDOC_FUNCTION_BODIES
 
 
 AudioReader::Impl::Impl(std::unique_ptr<AudioReaderImpl> readerimpl,
@@ -784,8 +776,6 @@ std::unique_ptr<AudioReader> AudioReaderSelection::safe_cast(
 
 	return audio_reader_uptr;
 }
-
-/// \endcond
 
 } // namespace v_1_0_0
 
