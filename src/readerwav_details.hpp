@@ -2,6 +2,12 @@
 #error "Do not include readerwav_details.hpp, include readerwav.hpp instead"
 #endif
 
+/**
+ * \file
+ *
+ * \brief Internal APIs for native RIFFWAV/PCM reader
+ */
+
 #ifndef __LIBARCSDEC_READERWAV_DETAILS_HPP__
 #define __LIBARCSDEC_READERWAV_DETAILS_HPP__
 
@@ -21,12 +27,10 @@
 #endif
 
 /**
- * \internal \defgroup readerwavInternal
+ * \internal
+ * \defgroup readerwavInternal Implementation of the WAV reader
+ *
  * \ingroup readerwav
- *
- * \file
- *
- * \brief Internal APIs for native RIFFWAV/PCM reader
  * @{
  */
 
@@ -924,10 +928,10 @@ private:
  * containing 44.100 Hz/16 bit Stereo PCM samples in its data chunk.
  *
  * This class provides the PCM sample data as a succession of blocks
- * of 32 bit PCM samples to its \ref Calculation. The first block starts with the very
- * first PCM sample in the data chunk, i.e. in a compliant CDDA WAV file the 4
- * bytes following byte 0x2C. The format subchunk is validated to conform to
- * CDDA.
+ * of 32 bit PCM samples to its Calculation. The first block starts with the
+ * very first PCM sample in the data chunk, i.e. in a compliant CDDA WAV file
+ * the 4 bytes following byte 0x2C. The format subchunk is validated to conform
+ * to CDDA.
  */
 class WavAudioReaderImpl : public BufferedAudioReaderImpl
 {
@@ -992,7 +996,7 @@ private:
 	 * \brief Read the WAV file and optionally validate it. This method provides
 	 * the implementation of WavAudioReader::process_file().
 	 *
-	 * \param[in]  in         The ifstream to read from
+	 * \param[in]  filename   The file to read from
 	 * \param[in]  validate   Flag to control if actual validation is performed
 	 * \param[in]  calculate  Flag to control if actual calculation is performed
 	 * \param[out] total_pcm_bytes Number of total bytes representing PCM

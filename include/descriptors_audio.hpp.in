@@ -5,7 +5,8 @@
  * \file
  *
  * \brief Provide compiled-in
- * @link AudioReaderDescriptor AudioReaderDescriptors @endlink.
+ * \link arcsdec::FileReaderDescriptor FileReaderDescriptors\endlink for audio
+ * FileReader instances.
  *
  * This information is controlled by cmake. It is made accessible at build time
  * for program scope.

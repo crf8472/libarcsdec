@@ -1,6 +1,7 @@
 /**
- * \file metaparser.hpp An interface for parsing TOC informations
+ * \file
  *
+ * \brief An interface for parsing TOC informations
  */
 
 
@@ -28,10 +29,11 @@ inline namespace v_1_0_0
 using arcstk::TOC;
 
 /**
- * \internal \defgroup metaparser API for parsing metadata/toc files
+ * \internal
+ * \defgroup metaparser API for parsing metadata/toc files
  *
  * \brief Interface for implementing and creating
- * @link MetadataParser MetadataParsers @endlink.
+ * \link MetadataParser MetadataParsers\endlink.
  *
  * The interface for reading audio files is provided by class MetadataParser
  * that internally holds a concrete instance of MetadataParserImpl.

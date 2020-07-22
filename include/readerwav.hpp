@@ -1,6 +1,7 @@
 /**
- * \file readerwav.hpp Audio reader for RIFF/WAV audio files with PCM
+ * \file
  *
+ * \brief Audio reader for RIFF/WAV audio files with PCM
  */
 
 
@@ -24,7 +25,8 @@ inline namespace v_1_0_0
 {
 
 /**
- * \internal \defgroup readerwav Audio: RIFF/WAV with PCM encoding
+ * \internal
+ * \defgroup readerwav Audio: RIFF/WAV with PCM encoding
  *
  * \brief AudioReader for RIFF/WAV files with CDDA-compliant PCM data.
  *

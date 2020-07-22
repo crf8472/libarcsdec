@@ -1,6 +1,7 @@
 /**
- * \file readerflac.hpp Audio reader for FLAC audio files
+ * \file
  *
+ * \brief Audio reader for FLAC audio files
  */
 
 
@@ -24,7 +25,8 @@ inline namespace v_1_0_0
 {
 
 /**
- * \internal \defgroup readerflac Audio: fLaC by libFLAC++
+ * \internal
+ * \defgroup readerflac Audio: fLaC by libFLAC++
  *
  * \brief An AudioReader for fLaC/fLaC files.
  *

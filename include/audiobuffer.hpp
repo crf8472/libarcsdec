@@ -29,7 +29,8 @@ inline namespace v_1_0_0
 {
 
 /**
- * \internal \defgroup audiobuffer Basic audio sample buffer
+ * \internal
+ * \defgroup audiobuffer Basic audio sample buffer
  *
  * \brief Tool classes for buffering audio samples.
  *

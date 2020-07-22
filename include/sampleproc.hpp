@@ -2,7 +2,9 @@
 #define __LIBARCSDEC_SAMPLEPROC_HPP__
 
 /**
- * \file sampleproc.hpp Interface for processing samples
+ * \file
+ *
+ * \brief Interface for processing samples
  */
 
 #include <functional>
@@ -19,7 +21,8 @@ inline namespace v_1_0_0
 {
 
 /**
- * \internal \defgroup sampleproc Interface for processing samples
+ * \internal
+ * \defgroup sampleproc Interface for processing samples
  *
  * \brief Interface for processing samples
  *

@@ -1,6 +1,7 @@
 /**
- * \file parsercue.hpp Parser for CUE sheets
+ * \file
  *
+ * \brief Parser for CUE sheets
  */
 
 

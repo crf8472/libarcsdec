@@ -4,7 +4,7 @@
 /**
  * \file
  *
- * API for reading and validating audio files
+ * \brief API for reading and validating audio files
  */
 
 #include <functional>
@@ -29,7 +29,8 @@ inline namespace v_1_0_0
 {
 
 /**
- * \internal \defgroup audioreader API for reading and validating audio files
+ * \internal
+ * \defgroup audioreader API for reading and validating audio files
  *
  * \brief Interface for implementing and creating AudioReaders
  *
@@ -39,7 +40,7 @@ inline namespace v_1_0_0
  * The AudioReader provides two actual operations on the input file: it can
  * either analyze the file to provide a CalcContext for it or actually process
  * the file, which yields the actual ARCSs. An AudioReader can be attached a
- * pre-configured \ref Calculation to perform the actual calculation.
+ * pre-configured Calculation to perform the actual calculation.
  *
  * The concrete reading of a given audio file is implemented by the subclasses
  * of AudioReaderImpl. An AudioReaderImpl can be set to a block size, that may
@@ -52,7 +53,7 @@ inline namespace v_1_0_0
  * transferring the audio samples to a SampleBuffer. SampleSequences hides the
  * concrete SAMPLE_FORMAT to the buffer (including whether the sample order is
  * planar or interleaved). Putting a SampleSequence to a SampleBuffer normalizes
- * the SAMPLE_FORMAT along to the requirements of \ref Calculation.
+ * the SAMPLE_FORMAT along to the requirements of Calculation.
  *
  * SampleBuffer buffers SampleSequences and flushes an entire block of samples
  * to a registered ARCScalc instance once the buffer is full.

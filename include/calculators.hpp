@@ -2,7 +2,9 @@
 #define __LIBARCSTK_CALCULATORS_HPP__
 
 /**
- * \file calculators.hpp A high-level API for calculating ARCSs and IDs.
+ * \file
+ *
+ * \brief A high-level API for calculating ARCSs and IDs.
  */
 
 #include "metaparser.hpp"
@@ -44,7 +46,8 @@ inline namespace v_1_0_0
  *
  * ARIdCalculator is a calculator for the AccurateRip id of a given medium
  * description. ARCSCalculator is a calculator for the ARCSs for each audio
- * track of a given file.
+ * track of a given file. TOCParser is a format independent parser for
+ * TOC files.
  *
  * @{
  */

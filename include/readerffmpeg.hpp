@@ -1,6 +1,7 @@
 /**
- * \file readerffmpeg.hpp FFmpeg-based generic audio reader
+ * \file
  *
+ * \brief FFmpeg-based generic audio reader
  */
 
 
@@ -24,7 +25,8 @@ inline namespace v_1_0_0
 {
 
 /**
- * \internal \defgroup readerffmpeg Audio: Generic by FFmpeg
+ * \internal
+ * \defgroup readerffmpeg Audio: Generic by FFmpeg
  *
  * \brief A generic AudioReader for losslessly encoded audio files.
  *

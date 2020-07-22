@@ -2,7 +2,9 @@
 #define __LIBARCSDEC_DESCRIPTORS_HPP__
 
 /**
- * \file descriptors.hpp Toolkit for selecting file readers
+ * \file
+ *
+ * \brief Toolkit for selecting file readers
  */
 
 #include <cstdint>
@@ -26,9 +28,10 @@ namespace arcsdec
 inline namespace v_1_0_0
 {
 
-/// \defgroup descriptors API for creating a FileReader for a specified file
 
 /**
+ * \defgroup descriptors API for creating a FileReader for a specified file
+ *
  * \brief Framework for creating specialized FileReaders for a specified file.
  *
  * Abstract class FileReaderSelection implements the generic mechanism to check
@@ -47,15 +50,18 @@ inline namespace v_1_0_0
  * A FileTest implements a single test. It may or may not open the file to test.
  *
  * The \ref AudioReader and \ref MetadataParser APIs are built on this API.
+ *
+ *  @{
  */
-
-/// @{
 
 
 // forward declaration for FileReader
 class FileReaderDescriptor;
 
 
+/**
+ * \brief A supported file format.
+ */
 enum class FileFormat : uint32_t
 {
 	UNKNOWN = 0,
@@ -277,9 +283,9 @@ public:
 	bool accepts(FileFormat format) const;
 
 	/**
-	 * \brief @link FileFormat FileFormats @endlink accepted by the FileReader.
+	 * \brief \link FileFormat FileFormats\endlink accepted by the FileReader.
 	 *
-	 * \return @link FileFormat FileFormats @endlink accepted by the FileReader
+	 * \return \link FileFormat FileFormats\endlink accepted by the FileReader
 	 */
 	std::set<FileFormat> formats() const;
 

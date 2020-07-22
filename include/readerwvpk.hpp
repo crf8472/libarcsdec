@@ -1,6 +1,7 @@
 /**
- * \file readerwvpk.hpp Audio reader for Wavpack audio files
+ * \file
  *
+ * \brief Audio reader for Wavpack audio files
  */
 
 
@@ -23,7 +24,8 @@ inline namespace v_1_0_0
 {
 
 /**
- * \internal \defgroup readerwvpk Audio: Lossless Wavpack by libwavpack
+ * \internal
+ * \defgroup readerwvpk Audio: Lossless Wavpack by libwavpack
  *
  * \brief An AudioReader for losslessly encoded Wavpack/Wv files.
  *
