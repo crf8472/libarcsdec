@@ -67,7 +67,9 @@ file (MAKE_DIRECTORY "${DOC_GEN_DIR}" )
 
 ## --- Build internal docs if requested
 
-if (WITH_INTERNAL_DOCS)
+option (WITH_INTERNAL_DOCS "Build documentation also for internal APIs" OFF )
+
+if (WITH_INTERNAL_DOCS )
 
 	message (STATUS "Will build documentation also for internal APIs" )
 
