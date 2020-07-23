@@ -87,8 +87,7 @@ MetadataParserSelection::MetadataParserSelection()
 {
 	// Provide tests
 
-	std::unique_ptr<FileTestSuffix> test =
-		std::make_unique<FileTestSuffix>();
+	auto test = std::make_unique<FileTestName>();
 
 	this->register_test(std::move(test));
 

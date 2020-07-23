@@ -74,7 +74,7 @@ public:
 	 * \return TRUE iff suffix is case-insensitively equal to suffix otherwise
 	 * FALSE
 	 */
-	bool do_accepts_suffix(const std::string &suffix) const override;
+	//bool do_accepts_suffix(const std::string &suffix) const override;
 
 	bool do_accepts(FileFormat format) const override;
 

@@ -59,14 +59,19 @@ inline namespace v_1_0_0
  */
 class DescriptorFFmpeg : public FileReaderDescriptor
 {
-
 public:
+
+	/**
+	 * \brief Constructor.
+	 */
+	DescriptorFFmpeg()
+		: FileReaderDescriptor { { "*" } }
+	{ /* empty */ }
 
 	/**
 	 * \brief Virtual default destructor.
 	 */
 	~DescriptorFFmpeg() noexcept override;
-
 
 private:
 
@@ -81,23 +86,18 @@ private:
 	 * \brief Returns TRUE for every input implying this format matches all
 	 * files.
 	 *
-	 * \param[in] bytes  The byte sequence to check (ignored)
-	 * \param[in] offset The offset to byte 0 in the file (ignored)
-	 *
 	 * \return TRUE
 	 */
-	bool do_accepts_bytes(const std::vector<char> &bytes,
-			const uint64_t &offset) const override;
+	bool do_accepts_bytes(const std::vector<char> &, const uint64_t &) const
+		override;
 
 	/**
 	 * \brief Returns TRUE for every input implying this format matches all
 	 * files.
 	 *
-	 * \param[in] suffix The file suffix to check (ignored)
-	 *
 	 * \return TRUE
 	 */
-	bool do_accepts_suffix(const std::string &suffix) const override;
+	bool do_accepts_name(const std::string &) const override;
 
 	bool do_accepts(FileFormat format) const override;
 

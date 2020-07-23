@@ -8,6 +8,7 @@
 #include "descriptors.hpp"
 #endif
 
+#include <algorithm>
 #include <cstdint>
 #include <fstream>
 #include <list>
@@ -171,7 +172,6 @@ public:
 	// class is non-copy-assignable
 	Impl& operator = (const Impl &) = delete;
 
-
 protected:
 
 	/**
@@ -181,7 +181,6 @@ protected:
 	 * \return The FileReaderSelector of this instance
 	 */
 	FileReaderSelector& use_selector();
-
 
 private:
 
@@ -267,6 +266,13 @@ std::string FileReaderDescriptor::name() const
 }
 
 
+void FileReaderDescriptor::accept_suffices(
+		const decltype( suffices_ ) &suffices)
+{
+	suffices_.insert(suffices_.end(), suffices.begin(), suffices.end());
+}
+
+
 bool FileReaderDescriptor::accepts_bytes(const std::vector<char> &bytes,
 			const uint64_t &offset) const
 {
@@ -274,15 +280,17 @@ bool FileReaderDescriptor::accepts_bytes(const std::vector<char> &bytes,
 }
 
 
-bool FileReaderDescriptor::accepts_suffix(const std::string &suffix) const
+bool FileReaderDescriptor::accepts_name(const std::string &filename) const
 {
-	return this->do_accepts_suffix(suffix);
+	return this->do_accepts_name(filename);
 }
+
 
 bool FileReaderDescriptor::accepts(FileFormat format) const
 {
 	return this->do_accepts(format);
 }
+
 
 std::set<FileFormat> FileReaderDescriptor::formats() const
 {
@@ -321,6 +329,45 @@ bool FileReaderDescriptor::do_operator_equals(const FileReaderDescriptor &rhs)
 	// same static type
 
 	return typeid(this) == typeid(rhs);
+}
+
+
+bool FileReaderDescriptor::do_accepts_name(const std::string &filename) const
+{
+	auto rc = std::find_if(suffices_.begin(), suffices_.end(),
+			[filename,this](const decltype( suffices_[0] ) &suffix)
+			{
+				return this->has_suffix(filename, suffix);
+			});
+
+	return rc != suffices_.end();
+}
+
+
+std::string FileReaderDescriptor::get_suffix(const std::string &filename,
+		const std::string &delimiter) const
+{
+	auto pos = filename.find_last_of(delimiter);
+
+	if (pos == std::string::npos) { return filename; }
+
+	return pos < filename.length()
+			? filename.substr(pos + 1, filename.length())
+			: std::to_string(filename.back());
+}
+
+
+bool FileReaderDescriptor::has_suffix(const std::string &name,
+		const details::ci_string &suffix) const
+{
+	auto name_suffix = get_suffix(name, ".");
+
+	if (name_suffix == name)
+	{
+		return false;
+	}
+
+	return suffix == details::ci_string { name_suffix.c_str() };
 }
 
 
@@ -424,25 +471,12 @@ std::vector<char> FileTestBytes::read_bytes(const std::string &filename,
 }
 
 
-// FileTestSuffix
+// FileTestName
 
 
-bool FileTestSuffix::do_matches(const FileReaderDescriptor &desc) const
+bool FileTestName::do_matches(const FileReaderDescriptor &desc) const
 {
-	auto suffix = this->get_suffix(this->filename());
-	return desc.accepts_suffix(suffix);
-}
-
-
-std::string FileTestSuffix::get_suffix(const std::string &filename) const
-{
-	auto pos = filename.find_last_of(".");
-
-	return pos == std::string::npos
-		? filename
-		: (pos < filename.length())
-			? filename.substr(pos + 1, filename.length())
-			: std::to_string(filename.back());
+	return desc.accepts_name(filename());
 }
 
 
@@ -510,13 +544,13 @@ bool FileReaderSelector::matches(
 
 
 /**
- * \internal \defgroup descriptorsImpl Implementation details for building and selecting file types
+ * \internal
+ *
+ * \defgroup descriptorsImpl Implementation details for building and selecting file types
  *
  * \ingroup descriptors
  * @{
  */
-
-
 
 
 // FileReaderSelection
@@ -797,6 +831,8 @@ bool FileReaderSelection::empty() const
 {
 	return impl_->empty();
 }
+
+/// @}
 
 } // namespace v_1_0_0
 

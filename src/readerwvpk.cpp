@@ -867,11 +867,11 @@ bool DescriptorWavpack::do_accepts_bytes(const std::vector<char> &bytes,
 }
 
 
-bool DescriptorWavpack::do_accepts_suffix(const std::string &suffix) const
-{
-	std::locale locale;
-	return std::tolower(suffix, locale) == "wv";
-}
+//bool DescriptorWavpack::do_accepts_suffix(const std::string &suffix) const
+//{
+//	std::locale locale;
+//	return std::tolower(suffix, locale) == "wv";
+//}
 
 
 bool DescriptorWavpack::do_accepts(FileFormat format) const

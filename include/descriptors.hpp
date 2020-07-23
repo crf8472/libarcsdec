@@ -7,6 +7,7 @@
  * \brief Toolkit for selecting file readers
  */
 
+#include <cctype>
 #include <cstdint>
 #include <functional>  // for std::function
 #include <limits>
@@ -27,6 +28,52 @@ namespace arcsdec
 
 inline namespace v_1_0_0
 {
+
+namespace details
+{
+
+/**
+ * \brief Traits for case insensitive string comparison.
+ *
+ * Thanks to Herb Sutter: http://www.gotw.ca/gotw/029.htm
+ */
+struct ci_char_traits : public std::char_traits<char>
+{
+	static bool eq(char c1, char c2) { return toupper(c1) == toupper(c2); }
+
+	static bool ne(char c1, char c2) { return toupper(c1) != toupper(c2); }
+
+	static bool lt(char c1, char c2) { return toupper(c1)  < toupper(c2); }
+
+	static int compare(const char* s1, const char* s2, size_t n)
+	{
+        while(n-- != 0)
+		{
+			if( toupper(*s1) < toupper(*s2) ) { return -1; }
+			if( toupper(*s1) > toupper(*s2) ) { return  1; }
+
+			++s1;
+			++s2;
+		}
+
+		return 0;
+	}
+
+	static const char* find(const char* s, int n, char a)
+	{
+		while(n-- > 0 && toupper(*s) != toupper(a)) { ++s; }
+
+		return s;
+	}
+};
+
+
+/**
+ * \brief Case insensitive comparable string.
+ */
+using ci_string = std::basic_string<char, ci_char_traits>;
+
+} // namespace details
 
 
 /**
@@ -139,9 +186,6 @@ bool is_audio_format(FileFormat format);
  */
 class FileReader
 {
-
-// TODO FileReader should inform about libs in its implementation
-
 public:
 
 	/**
@@ -159,12 +203,13 @@ public:
 	 */
 	std::unique_ptr<FileReaderDescriptor> descriptor() const;
 
-
 private:
 
 	virtual std::unique_ptr<FileReaderDescriptor> do_descriptor() const
 	= 0;
 };
+// TODO FileReader should inform about libs in its implementation
+
 
 
 /**
@@ -178,7 +223,6 @@ private:
  */
 class FileReadException final : public std::runtime_error
 {
-
 public:
 
 	/**
@@ -209,7 +253,6 @@ public:
 	 */
 	int64_t byte_pos() const;
 
-
 private:
 
 	/**
@@ -237,8 +280,20 @@ private:
  */
 class FileReaderDescriptor
 {
+private:
+
+	/**
+	 * \brief List of case-insensitive accepted suffices.
+	 */
+	std::vector<details::ci_string> suffices_;
 
 public:
+
+	/**
+	 * \brief Default Constructor.
+	 */
+	FileReaderDescriptor()
+		: suffices_ { } { /* empty */ }
 
 	/**
 	 * \brief Virtual default destructor.
@@ -264,14 +319,13 @@ public:
 			const uint64_t &offset) const;
 
 	/**
-	 * \brief Check whether this descriptor is known to have the specified
-	 * suffix.
+	 * \brief Check whether this descriptor accepts the specified filename.
 	 *
-	 * \param[in] suffix The suffix of the filename to test for
+	 * \param[in] filename The filename to test for
 	 *
-	 * \return TRUE iff the suffix matches the suffix of the descriptor
+	 * \return TRUE iff the descriptor accepts the filename
 	 */
-	bool accepts_suffix(const std::string &suffix) const;
+	bool accepts_name(const std::string &filename) const;
 
 	/**
 	 * \brief Check for acceptance of the specified format
@@ -326,6 +380,51 @@ public:
 	 */
 	bool operator != (const FileReaderDescriptor &rhs) const;
 
+protected:
+
+	/**
+	 * \brief Constructor for accepting suffices.
+	 */
+	FileReaderDescriptor(const decltype( suffices_ ) suffices)
+		: suffices_ { suffices } { /* empty */ }
+
+	/**
+	 * \brief Accept the specified suffices.
+	 *
+	 * Can be called multiple times.
+	 *
+	 * \param[in] Filename    List of suffices to accept
+	 * \param[in] ignore_case If TRUE, case is ignored for \c suffices
+	 */
+	void accept_suffices(const decltype( suffices_ ) &suffices);
+
+	/**
+	 * \brief Worker: Provides the suffix of a given filename.
+	 *
+	 * The suffix is the part of filename following the last occurrence of
+	 * \c delimiter. If filename does not contain the delimiter, the entire
+	 * filename is returned as suffix.
+	 *
+	 * \param[in] filename  The filename to check
+	 * \param[in] delimiter The delimiter to separate the suffix from the base
+	 *
+	 * \return The relevant suffix or the entire filename
+	 */
+	std::string get_suffix(const std::string &filename,
+			const std::string &delimiter) const;
+	// TODO Use std::filesystem of C++17
+
+	/**
+	 * \brief Worker: Returns TRUE if filename has specified suffix, otherwise
+	 * FALSE.
+	 *
+	 * \param[in] name   Filename to test
+	 * \param[in] suffix Suffix to test \c name for
+	 *
+	 * \return TRUE if file has specified suffix, otherwise FALSE
+	 */
+	bool has_suffix(const std::string &name,
+			const details::ci_string &suffix) const;
 
 private:
 
@@ -350,17 +449,19 @@ private:
 	= 0;
 
 	/**
-	 * \brief Implements FileReaderDescriptor::accepts_suffix().
+	 * \brief Implements FileReaderDescriptor::accepts_name().
 	 *
-	 * \param[in] suffix The suffix of the filename to test for
+	 * The default implementation tries to match the suffix of the filename
+	 * against the predefined suffices of this descriptor type.
 	 *
-	 * \return TRUE iff the suffix matches the suffix of the descriptor
+	 * \param[in] name The filename to test
+	 *
+	 * \return TRUE iff the filename is accepted by this descriptor
 	 */
-	virtual bool do_accepts_suffix(const std::string &suffix) const
-	= 0;
+	virtual bool do_accepts_name(const std::string &suffix) const;
 
 	/**
-	 * \brief Check for acceptance of the specified format
+	 * \brief Implements FileReaderDescriptor::accepts().
 	 *
 	 * \param[in] format The format to check for
 	 *
@@ -370,9 +471,9 @@ private:
 	= 0;
 
 	/**
-	 * \brief @link FileFormat FileFormats @endlink accepted by the FileReader.
+	 * \brief \link FileFormat FileFormats\endlink accepted by the FileReader.
 	 *
-	 * \return @link FileFormat FileFormats @endlink accepted by the FileReader
+	 * \return \link FileFormat FileFormats\endlink accepted by the FileReader
 	 */
 	virtual std::set<FileFormat> do_formats() const
 	= 0;
@@ -405,7 +506,6 @@ private:
  */
 class FileTest
 {
-
 public:
 
 	/**
@@ -449,7 +549,6 @@ public:
 	 */
 	bool matches(const FileReaderDescriptor &desc) const;
 
-
 private:
 
 	/**
@@ -477,7 +576,6 @@ private:
  */
 class FileTestBytes final : public FileTest
 {
-
 public:
 
 	/**
@@ -487,7 +585,6 @@ public:
 	 * \param[in] length Number of bytes in the sequence
 	 */
 	FileTestBytes(const uint64_t &offset, const uint32_t &length);
-
 
 private:
 
@@ -521,27 +618,13 @@ private:
 
 
 /**
- * \brief Test file for compliance with a certain filename suffix
+ * \brief Test an actual filename for compliance.
  */
-class FileTestSuffix final : public FileTest
+class FileTestName final : public FileTest
 {
-
 private:
 
 	bool do_matches(const FileReaderDescriptor &desc) const override;
-
-	/**
-	 * \brief Provides the suffix of a given filename.
-	 *
-	 * The suffix is the part of filename following the last occurrence of ".".
-	 * If filename does not contain the character ".", the entire filename is
-	 * returned.
-	 *
-	 * \param[in] filename The filename to check
-	 *
-	 * \return The relevant suffix or the entire filename
-	 */
-	std::string get_suffix(const std::string &filename) const;
 };
 
 
@@ -557,7 +640,6 @@ private:
  */
 class FileReaderSelector
 {
-
 public:
 
 	/**
@@ -578,7 +660,6 @@ public:
 			const std::set<std::unique_ptr<FileTest>> &tests,
 			const std::list<std::unique_ptr<FileReaderDescriptor>> &descs)
 		const;
-
 
 private:
 
@@ -614,7 +695,6 @@ private:
  */
 class FileReaderSelection
 {
-
 public:
 
 	/**
@@ -754,7 +834,6 @@ public:
 	FileReaderSelection& operator = (const FileReaderSelection &) = delete;
 
 	// TODO Move assignment
-
 
 private:
 

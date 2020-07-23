@@ -1203,13 +1203,6 @@ bool DescriptorWavPCM::do_accepts_bytes(const std::vector<char> &bytes,
 }
 
 
-bool DescriptorWavPCM::do_accepts_suffix(const std::string &suffix) const
-{
-	std::locale locale;
-	return std::tolower(suffix, locale) == "wav";
-}
-
-
 std::unique_ptr<FileReader> DescriptorWavPCM::do_create_reader() const
 {
 	auto impl = std::make_unique<WavAudioReaderImpl>();

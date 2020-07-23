@@ -7,9 +7,13 @@
 #include "readerwvpk_details.hpp"
 #endif
 
+
 /**
- * \file readerwvpk.cpp Tests for all API classes exported by readerwvpk.hpp
+ * \file
+ *
+ * Tests for all API classes exported by readerwvpk.hpp
  */
+
 
 TEST_CASE ( "WAVPACK_WAV_PCM_CDDA_t constants", "[readerwvpk]" )
 {
@@ -22,5 +26,28 @@ TEST_CASE ( "WAVPACK_WAV_PCM_CDDA_t constants", "[readerwvpk]" )
 	CHECK(  w.at_least_version() == 1 );
 	CHECK(  w.at_most_version()  == 5 );
 	CHECK(  w.bytes_per_sample() == 2 );
+}
+
+
+TEST_CASE ("DescriptorWavpack", "[readerwvpk]" )
+{
+	using arcsdec::DescriptorWavpack;
+
+	auto d = DescriptorWavpack {};
+
+	SECTION ("Matches names correctly")
+	{
+		CHECK ( d.accepts_name("foo.wv") );
+		CHECK ( d.accepts_name("bar.WV") );
+
+		CHECK ( !d.accepts_name("bar.WAV") );
+		CHECK ( !d.accepts_name("bar.wav") );
+
+		CHECK ( !d.accepts_name("bar.rwv") );
+		CHECK ( !d.accepts_name("bar.RWV") );
+
+		CHECK ( !d.accepts_name("bar.wvx") );
+		CHECK ( !d.accepts_name("bar.WVX") );
+	}
 }
 

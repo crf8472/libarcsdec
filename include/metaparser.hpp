@@ -112,7 +112,6 @@ private:
  */
 class MetadataParser : public FileReader
 {
-
 public:
 
 	/**
@@ -139,9 +138,6 @@ public:
 	 */
 	std::unique_ptr<TOC> parse(const std::string &filename);
 
-
-private:
-
 	/**
 	 * \brief Implementation of a MetadataParser.
 	 */
@@ -156,7 +152,6 @@ private:
  */
 class MetadataParseException final : public std::runtime_error
 {
-
 public:
 
 	/**
@@ -174,7 +169,6 @@ public:
  */
 class MetadataParserSelection : public FileReaderSelection
 {
-
 public:
 
 	/**
@@ -211,7 +205,6 @@ public:
 	 */
 	std::unique_ptr<MetadataParser> by_name(const std::string &name)
 		const;
-
 
 protected:
 

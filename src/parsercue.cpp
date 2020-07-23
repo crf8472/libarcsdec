@@ -591,7 +591,7 @@ bool DescriptorCUE::do_accepts_bytes(const std::vector<char> & /* bytes */,
 	return true;
 }
 
-
+/*
 bool DescriptorCUE::do_accepts_suffix(const std::string &suffix) const
 {
 	char letter = suffix.at(0);
@@ -617,7 +617,7 @@ bool DescriptorCUE::do_accepts_suffix(const std::string &suffix) const
 
 	return true;
 }
-
+*/
 
 std::unique_ptr<FileReader> DescriptorCUE::do_create_reader() const
 {

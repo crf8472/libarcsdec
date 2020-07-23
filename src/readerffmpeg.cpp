@@ -1786,7 +1786,7 @@ bool DescriptorFFmpeg::do_accepts_bytes(const std::vector<char> & /* bytes */,
 }
 
 
-bool DescriptorFFmpeg::do_accepts_suffix(const std::string & /* suffix */)
+bool DescriptorFFmpeg::do_accepts_name(const std::string &/* filename */)
 	const
 {
 	return true;

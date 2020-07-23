@@ -502,13 +502,6 @@ bool DescriptorFlac::do_accepts_bytes(const std::vector<char> &bytes,
 }
 
 
-bool DescriptorFlac::do_accepts_suffix(const std::string &suffix) const
-{
-	std::locale locale;
-	return std::tolower(suffix, locale) == "flac";
-}
-
-
 std::unique_ptr<FileReader> DescriptorFlac::do_create_reader() const
 {
 	auto impl = std::make_unique<FlacAudioReaderImpl>();

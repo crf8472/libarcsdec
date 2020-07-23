@@ -47,15 +47,19 @@ inline namespace v_1_0_0
  */
 class DescriptorWavpack : public FileReaderDescriptor
 {
-
 public:
 
+	/**
+	 * \brief Constructor.
+	 */
+	DescriptorWavpack()
+		: FileReaderDescriptor { { "wv" } }
+	{ /* empty */ }
 
 	/**
 	 * \brief Virtual default destructor.
 	 */
 	~DescriptorWavpack() noexcept override;
-
 
 private:
 
@@ -80,8 +84,6 @@ private:
 	 */
 	bool do_accepts_bytes(const std::vector<char> &bytes,
 			const uint64_t &offset) const override;
-
-	bool do_accepts_suffix(const std::string &suffix) const override;
 
 	bool do_accepts(FileFormat format) const override;
 

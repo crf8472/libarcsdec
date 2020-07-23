@@ -46,14 +46,19 @@ inline namespace v_1_0_0
  */
 class DescriptorFlac : public FileReaderDescriptor
 {
-
 public:
+
+	/**
+	 * \brief Constructor.
+	 */
+	DescriptorFlac()
+		: FileReaderDescriptor { { "flac" } }
+	{ /* empty */ }
 
 	/**
 	 * \brief Virtual default destructor.
 	 */
 	~DescriptorFlac() noexcept override;
-
 
 private:
 
@@ -78,16 +83,6 @@ private:
 	 */
 	bool do_accepts_bytes(const std::vector<char> &bytes,
 			const uint64_t &offset) const override;
-
-	/**
-	 * \brief Test whether suffix is case insensitively equal to "flac".
-	 *
-	 * \param[in] suffix The suffix to test
-	 *
-	 * \return TRUE iff suffix is case insensitively equal to "flac", otherwise
-	 * FALSE
-	 */
-	bool do_accepts_suffix(const std::string &suffix) const override;
 
 	bool do_accepts(FileFormat format) const override;
 
