@@ -12,17 +12,17 @@ set (MAIN_TEST_CPP   "${TEST_SOURCE_DIR}/main.test.cpp" )
 ## Define testsuites
 
 set (TEST_SETS )
-list (APPEND TEST_SETS audiobuffer )
-list (APPEND TEST_SETS audioreader )
-#list (APPEND TEST_SETS calculators )
-list (APPEND TEST_SETS descriptors )
-#list (APPEND TEST_SETS metaparser )
-#list (APPEND TEST_SETS parsercue)
+list (APPEND TEST_SETS audiobuffer  )
+list (APPEND TEST_SETS audioreader  )
+#list (APPEND TEST_SETS calculators  ) ## TODO requires Mock for Calculation
+list (APPEND TEST_SETS descriptors  )
+#list (APPEND TEST_SETS metaparser   )
+list (APPEND TEST_SETS parsercue    )
 list (APPEND TEST_SETS readerffmpeg )
 list (APPEND TEST_SETS readerflac   )
-list (APPEND TEST_SETS readerwav   )
+list (APPEND TEST_SETS readerwav    )
 list (APPEND TEST_SETS readerwvpk   )
-#list (APPEND TEST_SETS sampleproc )
+#list (APPEND TEST_SETS sampleproc   )
 
 
 ## Provide main object file
