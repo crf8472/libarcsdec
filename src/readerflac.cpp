@@ -13,7 +13,6 @@
 
 #include <cstdint>
 #include <limits>
-#include <locale>       // for locale
 #include <memory>
 #include <string>
 
@@ -486,6 +485,17 @@ DescriptorFlac::~DescriptorFlac() noexcept = default;
 std::string DescriptorFlac::do_name() const
 {
 	return "Flac";
+}
+
+
+LibInfo  DescriptorFlac::do_libraries() const
+{
+	using details::find_lib;
+	using details::libarcsdec_libs;
+
+	return { { "libFLAC++", find_lib(libarcsdec_libs(), "libFLAC++") },
+			 { "libFLAC" , find_lib(libarcsdec_libs(),  "libFLAC")   }
+	};
 }
 
 

@@ -35,6 +35,9 @@ extern "C" {
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__
 #include "audioreader.hpp"
 #endif
+#ifndef __LIBARCSDEC_VERSION_HPP__
+#include "version.hpp"
+#endif
 
 
 namespace arcsdec
@@ -1193,6 +1196,13 @@ DescriptorWavPCM::~DescriptorWavPCM() noexcept = default;
 std::string DescriptorWavPCM::do_name() const
 {
 	return "RIFF/WAV(PCM)";
+}
+
+
+LibInfo DescriptorWavPCM::do_libraries() const
+{
+	return { { "-genuine-",
+		details::find_lib(details::list_libs(""), LIBARCSDEC_NAME) } };
 }
 
 

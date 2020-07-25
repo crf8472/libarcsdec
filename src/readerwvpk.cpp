@@ -854,6 +854,15 @@ std::string DescriptorWavpack::do_name() const
 }
 
 
+LibInfo  DescriptorWavpack::do_libraries() const
+{
+	using details::find_lib;
+	using details::libarcsdec_libs;
+
+	return { { "libwavpack", find_lib(libarcsdec_libs(), "libwavpack") } };
+}
+
+
 bool DescriptorWavpack::do_accepts_bytes(const std::vector<char> &bytes,
 		const uint64_t &offset) const
 {
@@ -865,13 +874,6 @@ bool DescriptorWavpack::do_accepts_bytes(const std::vector<char> &bytes,
 		and bytes [3]    == 0x6B  // k
 		;
 }
-
-
-//bool DescriptorWavpack::do_accepts_suffix(const std::string &suffix) const
-//{
-//	std::locale locale;
-//	return std::tolower(suffix, locale) == "wv";
-//}
 
 
 bool DescriptorWavpack::do_accepts(FileFormat format) const

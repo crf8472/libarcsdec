@@ -56,6 +56,8 @@ public:
 	 */
 	std::string do_name() const override;
 
+	LibInfo do_libraries() const override;
+
 	/**
 	 * \brief Always returns TRUE since CUESheets cannot be recognized by a
 	 * certain byte sequence in a certain offset.

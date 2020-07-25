@@ -13,6 +13,7 @@
 #include <limits>
 #include <list>
 #include <memory>
+#include <regex>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -73,6 +74,48 @@ struct ci_char_traits : public std::char_traits<char>
  */
 using ci_string = std::basic_string<char, ci_char_traits>;
 
+
+/**
+ * \brief Load runtime dependencies of \c object_name.
+ *
+ * If \c object_name is empty, the runtime dependencies of the main executable
+ * are loaded.
+ *
+ * \param[in] object_name Name of the object to get dependencies for.
+ */
+std::vector<std::string> list_libs(const std::string &object_name);
+
+void escape(std::string &input, const char c, const std::string &seq);
+
+/**
+ * \brief Construct search pattern from library name.
+ */
+std::regex libname_pattern(const std::string &libname);
+
+
+/**
+ * \brief Find a lib in the list of libarcsdec runtime dependencies.
+ *
+ * \param[in] list List of library so filepaths
+ * \param[in] name Name of the lib (e.g. libFLAC++, libavformat etc.)
+ *
+ * \return Filepath for the lib or empty string.
+ */
+const std::string& find_lib(const std::vector<std::string> &list,
+		const std::string &name);
+
+
+/**
+ * \brief List runtime dependencies of libarcsdec.
+ */
+std::vector<std::string> acquire_libarcsdec_libs();
+
+
+/**
+ * \brief Global list of libarcsdec runtime dependency libraries.
+ */
+const std::vector<std::string>& libarcsdec_libs();
+
 } // namespace details
 
 
@@ -104,6 +147,60 @@ using ci_string = std::basic_string<char, ci_char_traits>;
 
 // forward declaration for FileReader
 class FileReaderDescriptor;
+
+
+/**
+ * \brief List of supported metadata format.
+ */
+enum class MetadataFormat : unsigned
+{
+	UNKNOWN, // 0
+	CUE,
+	CDRDAO
+};
+
+
+/**
+ * \brief List of supported container formats.
+ *
+ * These are only the tested containers, in fact other lossless codecs are
+ * supported if an appropriate FileReader exists.
+ */
+enum class ContainerFormat : unsigned
+{
+	UNKNOWN,  // 0
+	RIFFWAVE,
+	FLAC,
+	APE,
+	CAF,
+	M4A,
+	OGG,
+	WV,
+	AIFF,
+	WMA
+};
+
+
+/**
+ * \brief List of supported audio codecs.
+ *
+ * These are only the tested codecs, in fact other lossless codecs are supported
+ * if an appropriate FileReader exists.
+ */
+enum class Codec : unsigned
+{
+	UNKNOWN,  // 0
+	PCM_S16BE,
+	PCM_S16BE_PLANAR,
+	PCM_S16LE,
+	PCM_S16LE_PLANAR,
+	FLAC,
+	WAVEPACK,
+	MONKEY,
+	ALAC,
+	WMALOSSLESS,
+	RAW
+};
 
 
 /**
@@ -175,6 +272,12 @@ std::string name(FileFormat format);
  * \return TRUE iff \c format is an audio format, otherwise FALSE.
  */
 bool is_audio_format(FileFormat format);
+
+
+/**
+ * \brief Represents a list of pairs of a library name and a version string.
+ */
+using LibInfo = std::vector<std::pair<std::string, std::string>>;
 
 
 /**
@@ -344,6 +447,13 @@ public:
 	std::set<FileFormat> formats() const;
 
 	/**
+	 * \brief Name of the underlying library.
+	 *
+	 * \return Name of the underlying library
+	 */
+	LibInfo libraries() const;
+
+	/**
 	 * \brief Create an opaque reader for the specified file.
 	 *
 	 * \return A FileReader that can read this FileReaderDescriptor
@@ -434,6 +544,14 @@ private:
 	 * \return A human-readable name of this FileReaderDescriptor
 	 */
 	virtual std::string do_name() const
+	= 0;
+
+	/**
+	 * \brief Implements FileReaderDescriptor::libraries().
+	 *
+	 * \return Name of the underlying libraries along with their versions
+	 */
+	virtual LibInfo do_libraries() const
 	= 0;
 
 	/**

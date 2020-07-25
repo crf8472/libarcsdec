@@ -255,7 +255,7 @@ CueOpenFile::CueOpenFile(const std::string &filename)
 
 		if (!f)
 		{
-			std::stringstream message;
+			std::ostringstream message;
 			message << "Failed to open CUEsheet file: " << filename;
 
 			ARCS_LOG_ERROR << message.str();
@@ -273,7 +273,7 @@ CueOpenFile::CueOpenFile(const std::string &filename)
 			::cd_delete(cd_info_);
 			cd_info_ = nullptr;
 
-			std::stringstream message;
+			std::ostringstream message;
 			message << "Failed to close CUEsheet file after reading: "
 				<< filename;
 
@@ -284,7 +284,7 @@ CueOpenFile::CueOpenFile(const std::string &filename)
 
 	if (!cd_info_)
 	{
-		std::stringstream message;
+		std::ostringstream message;
 		message << "Failed to parse CUEsheet file: " << filename;
 
 		ARCS_LOG_ERROR << message.str();
@@ -310,7 +310,7 @@ CueInfo CueOpenFile::parse_info()
 
 	if (track_count < 0 or track_count > 99)
 	{
-		std::stringstream ss;
+		std::ostringstream ss;
 		ss << "Invalid number of tracks: " << track_count;
 
 		ARCS_LOG_ERROR << ss.str();
@@ -345,7 +345,7 @@ CueInfo CueOpenFile::parse_info()
 
 		if (trk_offset < 0)
 		{
-			std::stringstream msg;
+			std::ostringstream msg;
 			msg << "Offset for track " << i
 				<< " is not expected to be negative: " << trk_offset;
 			throw InvalidMetadataException(msg.str());
@@ -356,7 +356,7 @@ CueInfo CueOpenFile::parse_info()
 		// Length of last track is allowed to be -1.
 		if (i < track_count and trk_length < 0)
 		{
-			std::stringstream msg;
+			std::ostringstream msg;
 			msg << "Length for track " << i
 				<< " is not expected to be negative: " << trk_length;
 			throw InvalidMetadataException(msg.str());
@@ -401,11 +401,12 @@ CueInfo CueOpenFile::parse_info()
 }
 
 
-int32_t CueOpenFile::cast_or_throw(const long &value, const std::string &name) const
+int32_t CueOpenFile::cast_or_throw(const long &value, const std::string &name)
+	const
 {
 	if (value > std::numeric_limits<int32_t>::max())
 	{
-		std::stringstream msg;
+		std::ostringstream msg;
 		msg << "Value '" << name << "': " << value << " too big for int32_t";
 
 		throw InvalidMetadataException(msg.str());
@@ -585,39 +586,21 @@ std::string DescriptorCUE::do_name() const
 }
 
 
+LibInfo DescriptorCUE::do_libraries() const
+{
+	using details::find_lib;
+	using details::libarcsdec_libs;
+
+	return { { "libcue", find_lib(libarcsdec_libs(), "libcue") } };
+}
+
+
 bool DescriptorCUE::do_accepts_bytes(const std::vector<char> & /* bytes */,
 		const uint64_t & /* offset */) const
 {
 	return true;
 }
 
-/*
-bool DescriptorCUE::do_accepts_suffix(const std::string &suffix) const
-{
-	char letter = suffix.at(0);
-
-	if (not (letter == 'C' or letter == 'c'))
-	{
-		return false;
-	}
-
-	letter = suffix.at(1);
-
-	if (not (letter == 'U' or letter == 'u'))
-	{
-		return false;
-	}
-
-	letter = suffix.at(2);
-
-	if (not (letter == 'E' or letter == 'e'))
-	{
-		return false;
-	}
-
-	return true;
-}
-*/
 
 std::unique_ptr<FileReader> DescriptorCUE::do_create_reader() const
 {

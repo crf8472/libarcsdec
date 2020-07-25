@@ -69,6 +69,8 @@ private:
 	 */
 	std::string do_name() const override;
 
+	LibInfo do_libraries() const override;
+
 	/**
 	 * \brief Test if this format is recognized on the given input bytes.
 	 *

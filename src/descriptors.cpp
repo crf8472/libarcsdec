@@ -2,17 +2,22 @@
  * \file descriptors.cpp Implementation of a selection toolkit for FileReaders
  */
 
-
-#include <type_traits>
 #ifndef __LIBARCSDEC_DESCRIPTORS_HPP__
 #include "descriptors.hpp"
 #endif
+
+extern "C"
+{
+#include <dlfcn.h>     // [glibc, Linux] for dlopen,dlclose
+#include <link.h>      // [glibc, Linux] for link_map
+}
 
 #include <algorithm>
 #include <cstdint>
 #include <fstream>
 #include <list>
 #include <memory>
+#include <regex>
 #include <string>
 #include <vector>
 
@@ -23,12 +28,162 @@
 #include <arcstk/logging.hpp>
 #endif
 
+#ifndef __LIBARCSDEC_VERSION_HPP__
+#include "version.hpp"
+#endif
+
 
 namespace arcsdec
 {
 
 inline namespace v_1_0_0
 {
+
+namespace details
+{
+
+// TODO Linux/Unix only
+std::vector<std::string> list_libs(const std::string &object_name)
+{
+	// C-Style stuff: Messing with glibc to get shared object paths
+	// Use dlfcn.h and link.h. Do not know a better way yet.
+
+	const auto* object = object_name.empty() ? nullptr : object_name.c_str();
+
+	// TODO Hardcodes the SO we load on runtime and may completely fail
+	auto* handle = ::dlopen(object, RTLD_LAZY);
+	//auto* handle = ::dlopen(object, RTLD_LAZY);
+	// If calles with NULL for first parameter, dlopen returns the list for
+	// the main executable. Take this, then figure out libarcsdec.so, then load.
+
+	if (!handle)
+	{
+		throw std::runtime_error(::dlerror());
+	}
+
+	using OpaqueStruct =
+		struct opaque_struct
+		{
+			void*  pointers[3];
+			struct opaque_struct* ptr;
+		};
+
+	auto* pter = reinterpret_cast<OpaqueStruct*>(handle)->ptr;
+
+	if (!pter)
+	{
+		throw std::runtime_error("Got null instead of shared object handle");
+	}
+
+	using LinkMap = struct link_map;
+
+	auto* lmap  = reinterpret_cast<LinkMap*>(pter->ptr);
+
+	if (!lmap)
+	{
+		throw std::runtime_error("Shared object handle contained no link_map");
+	}
+
+	// Traverse link_map for names
+
+	auto so_list = std::vector<std::string>{};
+
+	while (lmap)
+	{
+		so_list.push_back(lmap->l_name); // FIXME Choose initial capacity
+
+		lmap = lmap->l_next;
+	}
+
+	::dlclose(handle);
+
+	return so_list;
+}
+
+
+void escape(std::string &input, const char c, const std::string &escape_seq)
+{
+	std::size_t lookHere = 0;
+	std::size_t foundHere;
+
+	auto replacement = escape_seq + c;
+	while((foundHere = input.find(c, lookHere)) != std::string::npos)
+	{
+		input.replace(foundHere, 1, replacement);
+		lookHere = foundHere + replacement.size();
+	}
+}
+
+
+std::regex libname_pattern(const std::string &libname)
+{
+	auto e_name = libname;
+
+	escape(e_name, '+', "\\");
+
+	return std::regex(".*\\b" + e_name + "\\.so(\\.[0-9]+)*$",
+			std::regex::icase);
+}
+
+
+const std::string& find_lib(const std::vector<std::string> &list,
+		const std::string &name)
+{
+	static const auto empty_string = std::string{};
+
+	const auto pattern = libname_pattern(name);
+
+	auto first_match = std::find_if(list.begin(), list.end(),
+			[pattern](const std::string &lname)
+			{
+				return std::regex_match(lname, pattern);
+			}
+	);
+
+	if (first_match == list.end())
+	{
+		return empty_string;
+	}
+
+	return *first_match;
+}
+
+
+std::vector<std::string> acquire_libarcsdec_libs()
+{
+	// Runtime deps from main executable
+
+	auto so_list = list_libs("");
+
+	// Runtime deps of libarcsdec
+
+	auto libarcsdec_so = find_lib(so_list, LIBARCSDEC_NAME);
+
+	if (libarcsdec_so.empty())
+	{
+		ARCS_LOG_WARNING << "Could not retrieve any runtime dependencies from"
+			" libarcsdec";
+
+		return {}; // libarcsdec was not found
+	}
+
+	ARCS_LOG_DEBUG << "Inspect " << libarcsdec_so
+		<< " for runtime dependencies";
+
+	return list_libs(libarcsdec_so);
+}
+
+
+const std::vector<std::string>& libarcsdec_libs()
+{
+	static const std::vector<std::string> libarcsdec_libs =
+		acquire_libarcsdec_libs();
+
+	return libarcsdec_libs;
+}
+
+
+} // namespace details
 
 
 /**
@@ -295,6 +450,12 @@ bool FileReaderDescriptor::accepts(FileFormat format) const
 std::set<FileFormat> FileReaderDescriptor::formats() const
 {
 	return this->do_formats();
+}
+
+
+LibInfo FileReaderDescriptor::libraries() const
+{
+	return this->do_libraries();
 }
 
 

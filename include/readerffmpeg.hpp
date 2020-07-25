@@ -76,11 +76,13 @@ public:
 private:
 
 	/**
-	 * \brief Returns "unknown (handled by ffmpeg)".
+	 * \brief Returns "FFmpeg".
 	 *
-	 * \return "unknown (handled by ffmpeg)"
+	 * \return "FFmpeg"
 	 */
 	std::string do_name() const override;
+
+	LibInfo do_libraries() const override;
 
 	/**
 	 * \brief Returns TRUE for every input implying this format matches all

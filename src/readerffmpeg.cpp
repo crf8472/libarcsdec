@@ -19,8 +19,11 @@
 extern "C"
 {
 #include <libavcodec/avcodec.h>
+#include <libavcodec/version.h>
 #include <libavformat/avformat.h>
+#include <libavformat/version.h>
 #include <libavutil/avutil.h>
+#include <libavutil/version.h>
 }
 
 #ifndef __LIBARCSTK_SAMPLES_HPP__
@@ -1775,7 +1778,19 @@ DescriptorFFmpeg::~DescriptorFFmpeg() noexcept = default;
 
 std::string DescriptorFFmpeg::do_name() const
 {
-	return "unknown (handled by ffmpeg)";
+	return "FFmpeg";
+}
+
+
+LibInfo  DescriptorFFmpeg::do_libraries() const
+{
+	using details::find_lib;
+	using details::libarcsdec_libs;
+
+	return { { "libavformat", find_lib(libarcsdec_libs(), "libavformat") },
+			 { "libavcodec" , find_lib(libarcsdec_libs(), "libavcodec")  },
+			 { "libavutil"  , find_lib(libarcsdec_libs(), "libavutil")   }
+	};
 }
 
 
