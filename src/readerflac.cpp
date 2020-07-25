@@ -522,15 +522,27 @@ std::unique_ptr<FileReader> DescriptorFlac::do_create_reader() const
 }
 
 
-bool DescriptorFlac::do_accepts(FileFormat format) const
+bool DescriptorFlac::do_accepts(Codec codec) const
 {
-	return format == FileFormat::FLAC;
+	return codec == Codec::FLAC;
 }
 
 
-std::set<FileFormat> DescriptorFlac::do_formats() const
+std::set<Codec> DescriptorFlac::do_codecs() const
 {
-	return { FileFormat::FLAC };
+	return { Codec::FLAC };
+}
+
+
+bool DescriptorFlac::do_accepts(Format format) const
+{
+	return format == Format::FLAC; // TODO OGG ?
+}
+
+
+std::set<Format> DescriptorFlac::do_formats() const
+{
+	return { Format::FLAC }; // TODO OGG ?
 }
 
 

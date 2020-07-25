@@ -1808,15 +1808,52 @@ bool DescriptorFFmpeg::do_accepts_name(const std::string &/* filename */)
 }
 
 
-bool DescriptorFFmpeg::do_accepts(FileFormat format) const
+bool DescriptorFFmpeg::do_accepts(Codec codec) const
 {
-	return is_audio_format(format);
+	return codecs().find(codec) != codecs().end();
 }
 
 
-std::set<FileFormat> DescriptorFFmpeg::do_formats() const
+std::set<Codec> DescriptorFFmpeg::do_codecs() const
 {
-	return { FileFormat::ANY_AUDIO };
+	return {
+		Codec::PCM_S16BE,
+		Codec::PCM_S16BE_PLANAR,
+		Codec::PCM_S16LE,
+		Codec::PCM_S16LE_PLANAR,
+		Codec::PCM_S32BE,
+		Codec::PCM_S32BE_PLANAR,
+		Codec::PCM_S32LE,
+		Codec::PCM_S32LE_PLANAR,
+		Codec::FLAC,
+		// not WAVEPACK
+		Codec::MONKEY,
+		Codec::ALAC,
+		Codec::WMALOSSLESS
+	};
+}
+
+
+bool DescriptorFFmpeg::do_accepts(Format format) const
+{
+	return is_audio_format(format) and format != Format::WV;
+}
+
+
+std::set<Format> DescriptorFFmpeg::do_formats() const
+{
+	return
+	{
+		Format::WAVE,
+		Format::FLAC,
+		Format::APE,
+		Format::CAF,
+		Format::M4A,
+		Format::OGG,
+		// not WV,
+		Format::AIFF,
+		Format::WMA
+	};
 }
 
 

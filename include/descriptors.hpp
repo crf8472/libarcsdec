@@ -85,10 +85,23 @@ using ci_string = std::basic_string<char, ci_char_traits>;
  */
 std::vector<std::string> list_libs(const std::string &object_name);
 
+
+/**
+ * \brief Escape a character in a string with another string.
+ *
+ * \param[in,out] input Input string to modify
+ * \param[in]     c     Character to escape
+ * \param[in]     seq   Escape string
+ */
 void escape(std::string &input, const char c, const std::string &seq);
+
 
 /**
  * \brief Construct search pattern from library name.
+ *
+ * \param[in] libname The library name to turn into a pattern
+ *
+ * \return A regex matching concrete sonames for this library
  */
 std::regex libname_pattern(const std::string &libname);
 
@@ -107,6 +120,8 @@ const std::string& find_lib(const std::vector<std::string> &list,
 
 /**
  * \brief List runtime dependencies of libarcsdec.
+ *
+ * \return List of runtime dependencies of libarcsdec
  */
 std::vector<std::string> acquire_libarcsdec_libs();
 
@@ -141,35 +156,23 @@ const std::vector<std::string>& libarcsdec_libs();
  *
  * The \ref AudioReader and \ref MetadataParser APIs are built on this API.
  *
- *  @{
+ * @{
  */
 
 
-// forward declaration for FileReader
-class FileReaderDescriptor;
-
-
 /**
- * \brief List of supported metadata format.
- */
-enum class MetadataFormat : unsigned
-{
-	UNKNOWN, // 0
-	CUE,
-	CDRDAO
-};
-
-
-/**
- * \brief List of supported container formats.
+ * \brief List of supported file formats.
  *
  * These are only the tested containers, in fact other lossless codecs are
  * supported if an appropriate FileReader exists.
  */
-enum class ContainerFormat : unsigned
+enum class Format : unsigned
 {
 	UNKNOWN,  // 0
-	RIFFWAVE,
+	CUE,
+	CDRDAO,
+	// ... add more metadata formats here
+	WAVE, // Audio formats from here on (is_audio_format relies on that)
 	FLAC,
 	APE,
 	CAF,
@@ -178,7 +181,29 @@ enum class ContainerFormat : unsigned
 	WV,
 	AIFF,
 	WMA
+	// ... add more audio formats here
 };
+// TODO Raw
+
+
+/**
+ * \brief Return the name of the format.
+ *
+ * \param[in] format The format to get the name for
+ *
+ * \return Name of the format.
+ */
+std::string name(Format format);
+
+
+/**
+ * \brief Returns TRUE if \c format is an audio format, otherwise FALSE.
+ *
+ * \param[in] format The format to test
+ *
+ * \return TRUE iff \c format is an audio format, otherwise FALSE.
+ */
+bool is_audio_format(Format format);
 
 
 /**
@@ -194,91 +219,31 @@ enum class Codec : unsigned
 	PCM_S16BE_PLANAR,
 	PCM_S16LE,
 	PCM_S16LE_PLANAR,
+	PCM_S32BE,
+	PCM_S32BE_PLANAR,
+	PCM_S32LE,
+	PCM_S32LE_PLANAR,
 	FLAC,
 	WAVEPACK,
 	MONKEY,
 	ALAC,
-	WMALOSSLESS,
-	RAW
+	WMALOSSLESS
 };
+// TODO Raw
 
 
 /**
- * \brief A supported file format.
- */
-enum class FileFormat : uint32_t
-{
-	UNKNOWN = 0,
-
-	// Audio Container
-	WAVPCM  = 1,
-	FLAC    = 2,
-	APE     = 3,
-	CAF     = 4,
-	WMA     = 5,
-	M4A     = 6,
-	OGG     = 7,
-	AIFF    = 8,
-	WV      = 9,
-	RAW     = 10,
-
-	ANY_AUDIO    = std::numeric_limits<uint32_t>::max() - 1001,
-	ANY_METADATA = std::numeric_limits<uint32_t>::max() - 1000,
-
-	// Metadata
-	CUE     = ANY_METADATA + 1,
-	TOC     = ANY_METADATA + 2
-};
-
-
-/**
- * \brief Iterable sequence of type names
- */
-static const std::map<FileFormat, std::string> names
-{
-	{ FileFormat::UNKNOWN, "UNKNOWN" },
-	{ FileFormat::WAVPCM,  "WAVPCM"  },
-	{ FileFormat::FLAC,    "FLAC"    },
-	{ FileFormat::APE,     "APE"     },
-	{ FileFormat::CAF,     "CAF"     },
-	{ FileFormat::WMA,     "WMA"     },
-	{ FileFormat::M4A,     "M4A"     },
-	{ FileFormat::OGG,     "OGG"     },
-	{ FileFormat::AIFF,    "AIFF"    },
-	{ FileFormat::WV,      "WV"      },
-	{ FileFormat::RAW,     "RAW"     },
-	{ FileFormat::ANY_AUDIO,    "ANY_AUDIO"    },
-	{ FileFormat::ANY_METADATA, "ANY_METADATA" },
-	{ FileFormat::CUE,     "CUE" },
-	{ FileFormat::TOC,     "TOC" }
-};
-
-
-/**
- * \brief Return the name of a FileFormat.
+ * \brief Return the name of the codec.
  *
- * \param[in] format Type to get name of
+ * \param[in] codec The codec to get the name for
  *
- * \return Name of type
+ * \return Name of the codec.
  */
-std::string name(FileFormat format);
+std::string name(Codec codec);
 
 
-/**
- * \brief Returns TRUE if \c format is an audio FileFormat, otherwise FALSE.
- *
- * \param[in] format The FileFormat to test
- *
- * \return TRUE iff \c format is an audio format, otherwise FALSE.
- */
-bool is_audio_format(FileFormat format);
-
-
-/**
- * \brief Represents a list of pairs of a library name and a version string.
- */
-using LibInfo = std::vector<std::pair<std::string, std::string>>;
-
+// forward declaration for FileReader
+class FileReaderDescriptor;
 
 /**
  * \brief Abstract base class for all FileReaders, acts as tag.
@@ -311,8 +276,6 @@ private:
 	virtual std::unique_ptr<FileReaderDescriptor> do_descriptor() const
 	= 0;
 };
-// TODO FileReader should inform about libs in its implementation
-
 
 
 /**
@@ -363,6 +326,12 @@ private:
 	 */
 	int64_t byte_pos_;
 };
+
+
+/**
+ * \brief Represents a list of pairs of a library name and an additional string.
+ */
+using LibInfo = std::vector<std::pair<std::string, std::string>>;
 
 
 /**
@@ -430,6 +399,10 @@ public:
 	 */
 	bool accepts_name(const std::string &filename) const;
 
+	bool accepts(Codec codec) const;
+
+	std::set<Codec> codecs() const;
+
 	/**
 	 * \brief Check for acceptance of the specified format
 	 *
@@ -437,14 +410,14 @@ public:
 	 *
 	 * \return TRUE if \c format is accepted, otherwise FALSE
 	 */
-	bool accepts(FileFormat format) const;
+	bool accepts(Format format) const;
 
 	/**
-	 * \brief \link FileFormat FileFormats\endlink accepted by the FileReader.
+	 * \brief \link Format Formats\endlink accepted by the FileReader.
 	 *
-	 * \return \link FileFormat FileFormats\endlink accepted by the FileReader
+	 * \return \link Format Formats\endlink accepted by the FileReader
 	 */
-	std::set<FileFormat> formats() const;
+	std::set<Format> formats() const;
 
 	/**
 	 * \brief Name of the underlying library.
@@ -497,16 +470,6 @@ protected:
 	 */
 	FileReaderDescriptor(const decltype( suffices_ ) suffices)
 		: suffices_ { suffices } { /* empty */ }
-
-	/**
-	 * \brief Accept the specified suffices.
-	 *
-	 * Can be called multiple times.
-	 *
-	 * \param[in] Filename    List of suffices to accept
-	 * \param[in] ignore_case If TRUE, case is ignored for \c suffices
-	 */
-	void accept_suffices(const decltype( suffices_ ) &suffices);
 
 	/**
 	 * \brief Worker: Provides the suffix of a given filename.
@@ -585,15 +548,33 @@ private:
 	 *
 	 * \return TRUE if \c format is accepted, otherwise FALSE
 	 */
-	virtual bool do_accepts(FileFormat format) const
+	virtual bool do_accepts(Codec codec) const
 	= 0;
 
 	/**
-	 * \brief \link FileFormat FileFormats\endlink accepted by the FileReader.
+	 * \brief \link Codec Codecs\endlink accepted by the FileReader.
 	 *
-	 * \return \link FileFormat FileFormats\endlink accepted by the FileReader
+	 * \return \link Codec Codecs\endlink accepted by the FileReader
 	 */
-	virtual std::set<FileFormat> do_formats() const
+	virtual std::set<Codec> do_codecs() const
+	= 0;
+
+	/**
+	 * \brief Implements FileReaderDescriptor::accepts().
+	 *
+	 * \param[in] format The format to check for
+	 *
+	 * \return TRUE if \c format is accepted, otherwise FALSE
+	 */
+	virtual bool do_accepts(Format format) const
+	= 0;
+
+	/**
+	 * \brief \link Format Formats\endlink accepted by the FileReader.
+	 *
+	 * \return \link Format Formats\endlink accepted by the FileReader
+	 */
+	virtual std::set<Format> do_formats() const
 	= 0;
 
 	/**

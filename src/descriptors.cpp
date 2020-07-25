@@ -129,7 +129,7 @@ std::regex libname_pattern(const std::string &libname)
 const std::string& find_lib(const std::vector<std::string> &list,
 		const std::string &name)
 {
-	static const auto empty_string = std::string{};
+	static const auto empty_entry = std::string{};
 
 	const auto pattern = libname_pattern(name);
 
@@ -142,7 +142,7 @@ const std::string& find_lib(const std::vector<std::string> &list,
 
 	if (first_match == list.end())
 	{
-		return empty_string;
+		return empty_entry;
 	}
 
 	return *first_match;
@@ -182,8 +182,53 @@ const std::vector<std::string>& libarcsdec_libs()
 	return libarcsdec_libs;
 }
 
-
 } // namespace details
+
+
+std::string name(Format format)
+{
+	static const std::array<std::string, 12> names = {
+		"Unknown",
+		"CUE",
+		"cdrdao",
+		// ... add more metadata formats here
+		"wave", // Audio formats from here on (is_audio_format relies on that)
+		"fLaC",
+		"APE",
+		"CAF",
+		"M4A",
+		"OGG",
+		"WV",
+		"AIFF",
+		"WMA"
+		// ... add more audio formats here
+	};
+
+	return names[std::underlying_type_t<Format>(format)];
+}
+
+
+std::string name(Codec codec)
+{
+	static const std::array<std::string, 14> names = {
+		"Unknown",
+		"PCM_S16BE",
+		"PCM_S16BE_PLANAR",
+		"PCM_S16LE",
+		"PCM_S16LE_PLANAR",
+		"PCM_S32BE",
+		"PCM_S32BE_PLANAR",
+		"PCM_S32LE",
+		"PCM_S32LE_PLANAR",
+		"FLAC",
+		"WAVEPACK",
+		"MONKEY",
+		"ALAC",
+		"WMALOSSLESS"
+	};
+
+	return names[std::underlying_type_t<Codec>(codec)];
+}
 
 
 /**
@@ -356,15 +401,9 @@ private:
 };
 
 
-std::string name(FileFormat format)
+bool is_audio_format(Format format)
 {
-	return names.at(format);
-}
-
-
-bool is_audio_format(FileFormat format)
-{
-	return format < FileFormat::ANY_AUDIO;
+	return format >= Format::WAVE;
 }
 
 
@@ -421,13 +460,6 @@ std::string FileReaderDescriptor::name() const
 }
 
 
-void FileReaderDescriptor::accept_suffices(
-		const decltype( suffices_ ) &suffices)
-{
-	suffices_.insert(suffices_.end(), suffices.begin(), suffices.end());
-}
-
-
 bool FileReaderDescriptor::accepts_bytes(const std::vector<char> &bytes,
 			const uint64_t &offset) const
 {
@@ -441,13 +473,25 @@ bool FileReaderDescriptor::accepts_name(const std::string &filename) const
 }
 
 
-bool FileReaderDescriptor::accepts(FileFormat format) const
+bool FileReaderDescriptor::accepts(Codec codec) const
+{
+	return this->do_accepts(codec);
+}
+
+
+std::set<Codec> FileReaderDescriptor::codecs() const
+{
+	return this->do_codecs();
+}
+
+
+bool FileReaderDescriptor::accepts(Format format) const
 {
 	return this->do_accepts(format);
 }
 
 
-std::set<FileFormat> FileReaderDescriptor::formats() const
+std::set<Format> FileReaderDescriptor::formats() const
 {
 	return this->do_formats();
 }
@@ -707,7 +751,7 @@ bool FileReaderSelector::matches(
 /**
  * \internal
  *
- * \defgroup descriptorsImpl Implementation details for building and selecting file types
+ * \defgroup descriptorsImpl Implementation details for module 'descriptors'
  *
  * \ingroup descriptors
  * @{
@@ -742,11 +786,11 @@ int FileReaderSelection::Impl::remove_descriptor(
 	int counter { 0 };
 
 	auto end { descriptors_.end() };
-	for (auto ptr = descriptors_.begin(); ptr != end; ++ptr) // TODO correct
+	for (auto ptr = descriptors_.begin(); ptr != end; ++ptr) // FIXME repair
 	{
 		if (ptr->get() == desc)
 		{
-			descriptors_.erase(ptr);
+			descriptors_.erase(ptr); // <= THIS invalidate ptr!
 			++counter;
 		}
 	}
@@ -766,11 +810,11 @@ int FileReaderSelection::Impl::unregister_test(const FileTest * test)
 {
 	int counter { 0 };
 
-	for (auto& t: tests_)
+	for (auto& t: tests_) // FIXME repair
 	{
 		if (t.get() == test)
 		{
-			tests_.erase(t);
+			tests_.erase(t); // <= THIS invalidate t
 			++counter;
 		}
 	}

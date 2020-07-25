@@ -610,15 +610,15 @@ std::unique_ptr<FileReader> DescriptorCUE::do_create_reader() const
 }
 
 
-bool DescriptorCUE::do_accepts(FileFormat format) const
+bool DescriptorCUE::do_accepts(Format format) const
 {
-	return format == FileFormat::CUE;
+	return format == Format::CUE;
 }
 
 
-std::set<FileFormat> DescriptorCUE::do_formats() const
+std::set<Format> DescriptorCUE::do_formats() const
 {
-	return { FileFormat::CUE };
+	return { Format::CUE };
 }
 
 

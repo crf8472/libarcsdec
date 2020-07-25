@@ -87,9 +87,13 @@ private:
 	bool do_accepts_bytes(const std::vector<char> &bytes,
 			const uint64_t &offset) const override;
 
-	bool do_accepts(FileFormat format) const override;
+	bool do_accepts(Codec codec) const override;
 
-	std::set<FileFormat> do_formats() const override;
+	std::set<Codec> do_codecs() const override;
+
+	bool do_accepts(Format format) const override;
+
+	std::set<Format> do_formats() const override;
 
 	std::unique_ptr<FileReader> do_create_reader() const override;
 

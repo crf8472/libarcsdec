@@ -876,15 +876,27 @@ bool DescriptorWavpack::do_accepts_bytes(const std::vector<char> &bytes,
 }
 
 
-bool DescriptorWavpack::do_accepts(FileFormat format) const
+bool DescriptorWavpack::do_accepts(Codec codec) const
 {
-	return format == FileFormat::WV;
+	return codec == Codec::WAVEPACK;
 }
 
 
-std::set<FileFormat> DescriptorWavpack::do_formats() const
+std::set<Codec> DescriptorWavpack::do_codecs() const
 {
-	return { FileFormat::WV };
+	return { Codec::WAVEPACK };
+}
+
+
+bool DescriptorWavpack::do_accepts(Format format) const
+{
+	return format == Format::WV;
+}
+
+
+std::set<Format> DescriptorWavpack::do_formats() const
+{
+	return { Format::WV };
 }
 
 

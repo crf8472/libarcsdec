@@ -1225,15 +1225,36 @@ std::unique_ptr<FileReader> DescriptorWavPCM::do_create_reader() const
 }
 
 
-bool DescriptorWavPCM::do_accepts(FileFormat format) const
+bool DescriptorWavPCM::do_accepts(Codec codec) const
 {
-	return format == FileFormat::WAVPCM;
+	return codecs().find(codec) != codecs().end();
 }
 
 
-std::set<FileFormat> DescriptorWavPCM::do_formats() const
+std::set<Codec> DescriptorWavPCM::do_codecs() const
 {
-	return { FileFormat::WAVPCM };
+	return {
+		Codec::PCM_S16BE,
+		Codec::PCM_S16BE_PLANAR,
+		Codec::PCM_S16LE,
+		Codec::PCM_S16LE_PLANAR,
+		Codec::PCM_S32BE,
+		Codec::PCM_S32BE_PLANAR,
+		Codec::PCM_S32LE,
+		Codec::PCM_S32LE_PLANAR
+	};
+}
+
+
+bool DescriptorWavPCM::do_accepts(Format format) const
+{
+	return format == Format::WAVE;
+}
+
+
+std::set<Format> DescriptorWavPCM::do_formats() const
+{
+	return { Format::WAVE };
 }
 
 
