@@ -120,6 +120,7 @@ std::regex libname_pattern(const std::string &libname)
 	auto e_name = libname;
 
 	escape(e_name, '+', "\\");
+	// TODO traverse string and escape every non-word (\W) character
 
 	return std::regex(".*\\b" + e_name + "\\.so(\\.[0-9]+)*$",
 			std::regex::icase);
@@ -231,176 +232,6 @@ std::string name(Codec codec)
 }
 
 
-/**
- * \brief Implementation of FileReaderSelection.
- */
-class FileReaderSelection::Impl
-{
-
-public:
-
-	/**
-	 * \brief Default constructor.
-	 */
-	Impl();
-
-	// class is non-copy-constructible
-	Impl(const Impl &) = delete;
-
-	/**
-	 * \brief Virtual default destructor.
-	 */
-	virtual ~Impl() noexcept;
-
-	/**
-	 * \brief Add a file descriptor for which a reader can be created.
-	 *
-	 * \param[in] desc A FileReaderDescriptor
-	 */
-	void add_descriptor(std::unique_ptr<FileReaderDescriptor> desc);
-
-	/**
-	 * \brief Remove all descriptors that qualify as equivalent to the given
-	 * descriptor by '==' from the list of descriptors.
-	 *
-	 * \param[in] desc The FileReaderDescriptor to be removed
-	 *
-	 * \return Number of descriptors instances removed.
-	 */
-	int remove_descriptor(const FileReaderDescriptor* desc);
-
-	/**
-	 * \brief Register a test for a FileReaderDescriptor for the specified
-	 * filename.
-	 *
-	 * \param[in] testobj The test to be registered
-	 */
-	void register_test(std::unique_ptr<FileTest> testobj);
-
-	/**
-	 * \brief Remove all tests that qualify as equivalent to the given test by
-	 * '==' from the list of test.
-	 *
-	 * \param[in] testobj The FileTest to be removed
-	 *
-	 * \return Number of test instances removed.
-	 */
-	int unregister_test(const FileTest * testobj);
-
-	/**
-	 * \brief Removes all tests registered to this instance.
-	 */
-	void remove_all_tests();
-
-	/**
-	 * \brief Sets the FileReaderSelector for this instance.
-	 *
-	 * \param[in] selector The FileReaderSelector for this instance
-	 */
-	void set_selector(std::unique_ptr<FileReaderSelector> selector);
-
-	/**
-	 * \brief Returns the internal FileReaderSelector of this instance.
-	 *
-	 * \return The FileReaderSelector of this instance
-	 */
-	const FileReaderSelector& selector() const;
-
-	/**
-	 * \brief Determine a matching FileReaderDescriptor for the specified file.
-	 *
-	 * \param[in] filename Name of the file to determine a descriptor for
-	 *
-	 * \return A FileReaderDescriptor for the specified file
-	 */
-	std::unique_ptr<FileReaderDescriptor> descriptor(
-			const std::string &filename) const;
-
-	/**
-	 * \brief Create an opaque FileReader for the given file.
-	 *
-	 * Will return nullptr if the file does not exist or cannot be read or the
-	 * filename is empty.
-	 *
-	 * \param[in] filename Name of the file to create the reader for
-	 *
-	 * \return A FileReader for the specified file
-	 */
-	std::unique_ptr<FileReader> for_file(const std::string &filename) const;
-
-	/**
-	 * \brief Return the FileReader specified by its name.
-	 *
-	 * If the selection does not contain a FileReader with the specified name,
-	 * \c nullptr will be returned.
-	 *
-	 * \param[in] name The name of the FileReader.
-	 *
-	 * \return A FileReader with the specified name
-	 */
-	std::unique_ptr<FileReader> by_name(const std::string &name) const;
-
-	/**
-	 * \brief Traverse all available descriptors and apply the specified
-	 * function \c func on each of them.
-	 *
-	 * \param[in] func Function to apply to each descriptor.
-	 */
-	void traverse_descriptors(
-			std::function<void(const FileReaderDescriptor &)> func) const;
-
-	/**
-	 * \brief Reset this instance to its initial state, removing all tests and
-	 * descriptors.
-	 */
-	void reset();
-
-	/**
-	 * \brief Number of descriptors.
-	 *
-	 * \return The number of descriptors in this selection.
-	 */
-	std::size_t size() const;
-
-	/**
-	 * \brief TRUE if this selection contains no descriptors.
-	 *
-	 * \return TRUE if this selection contains no descriptors.
-	 */
-	bool empty() const;
-
-	// class is non-copy-assignable
-	Impl& operator = (const Impl &) = delete;
-
-protected:
-
-	/**
-	 * \brief Return the FileReaderSelector of this instance for use in
-	 * subclasses.
-	 *
-	 * \return The FileReaderSelector of this instance
-	 */
-	FileReaderSelector& use_selector();
-
-private:
-
-	/**
-	 * \brief Internal FileReaderSelector
-	 */
-	std::unique_ptr<FileReaderSelector> selector_;
-
-	/**
-	 * \brief Internal set of FileTests to performed by the selector_
-	 */
-	std::set<std::unique_ptr<FileTest>> tests_;
-
-	/**
-	 * \brief Internal list of FileReaderDescriptors to match by the selector_
-	 */
-	std::list<std::unique_ptr<FileReaderDescriptor>> descriptors_;
-};
-
-
 bool is_audio_format(Format format)
 {
 	return format >= Format::WAVE;
@@ -473,27 +304,27 @@ bool FileReaderDescriptor::accepts_name(const std::string &filename) const
 }
 
 
-bool FileReaderDescriptor::accepts(Codec codec) const
-{
-	return this->do_accepts(codec);
-}
-
-
-std::set<Codec> FileReaderDescriptor::codecs() const
-{
-	return this->do_codecs();
-}
-
-
 bool FileReaderDescriptor::accepts(Format format) const
 {
 	return this->do_accepts(format);
 }
 
 
+bool FileReaderDescriptor::accepts(Codec codec) const
+{
+	return this->do_accepts(codec);
+}
+
+
 std::set<Format> FileReaderDescriptor::formats() const
 {
 	return this->do_formats();
+}
+
+
+std::set<Codec> FileReaderDescriptor::codecs() const
+{
+	return this->do_codecs();
 }
 
 
@@ -515,34 +346,20 @@ std::unique_ptr<FileReaderDescriptor> FileReaderDescriptor::clone() const
 }
 
 
-bool FileReaderDescriptor::operator == (const FileReaderDescriptor &rhs) const
-{
-	return this->do_operator_equals(rhs);
-}
-
-
-bool FileReaderDescriptor::operator != (const FileReaderDescriptor &rhs) const
-{
-	return not(this == &rhs);
-}
-
-
-bool FileReaderDescriptor::do_operator_equals(const FileReaderDescriptor &rhs)
-	const
-{
-	// FileReaderDescriptors are stateless and hence equal iff they are of the
-	// same static type
-
-	return typeid(this) == typeid(rhs);
-}
-
-
 bool FileReaderDescriptor::do_accepts_name(const std::string &filename) const
 {
+	auto fname_suffix = get_suffix(filename, ".");
+
+	if (fname_suffix.empty()) { return false; }
+
+	if (fname_suffix.length() == filename.length()) { return false; }
+	// Shouldn't this be TRUE?
+
 	auto rc = std::find_if(suffices_.begin(), suffices_.end(),
-			[filename,this](const decltype( suffices_[0] ) &suffix)
+			[fname_suffix,this](const decltype( *suffices_.begin() ) &suffix)
 			{
-				return this->has_suffix(filename, suffix);
+				// Perform case insensitive comparison
+				return suffix == details::ci_string { fname_suffix.c_str() };
 			});
 
 	return rc != suffices_.end();
@@ -552,6 +369,8 @@ bool FileReaderDescriptor::do_accepts_name(const std::string &filename) const
 std::string FileReaderDescriptor::get_suffix(const std::string &filename,
 		const std::string &delimiter) const
 {
+	if (filename.empty()) { return filename; }
+
 	auto pos = filename.find_last_of(delimiter);
 
 	if (pos == std::string::npos) { return filename; }
@@ -562,17 +381,13 @@ std::string FileReaderDescriptor::get_suffix(const std::string &filename,
 }
 
 
-bool FileReaderDescriptor::has_suffix(const std::string &name,
-		const details::ci_string &suffix) const
+bool operator == (const FileReaderDescriptor &lhs,
+			const FileReaderDescriptor &rhs)
 {
-	auto name_suffix = get_suffix(name, ".");
+	// FileReaderDescriptors are stateless and hence equal iff they are of the
+	// same static type
 
-	if (name_suffix == name)
-	{
-		return false;
-	}
-
-	return suffix == details::ci_string { name_suffix.c_str() };
+	return typeid(lhs) == typeid(rhs);
 }
 
 
@@ -700,17 +515,28 @@ std::unique_ptr<FileReaderDescriptor> FileReaderSelector::select(
 }
 
 
-std::unique_ptr<FileReaderDescriptor> FileReaderSelector::do_select(
+bool FileReaderSelector::matches(
+		const std::set<std::unique_ptr<FileTest>> &tests,
+		const std::unique_ptr<FileReaderDescriptor> &desc) const
+{
+	ARCS_LOG_DEBUG << "Try to match descriptor: " << desc->name();
+
+	return this->do_matches(tests, desc);
+}
+
+
+// DefaultSelector
+
+
+std::unique_ptr<FileReaderDescriptor> DefaultSelector::do_select(
 		const std::set<std::unique_ptr<FileTest>> &tests,
 		const std::list<std::unique_ptr<FileReaderDescriptor>> &descs) const
 {
 	for (auto& desc : descs)
 	{
-		ARCS_LOG_DEBUG << "Testing reader: " << desc->name();
-
 		if (this->matches(tests, desc))
 		{
-			ARCS_LOG_DEBUG << "Reader descriptor matched";
+			ARCS_LOG_DEBUG << "Select descriptor: '" << desc->name() << "'";
 
 			return desc->clone();
 		}
@@ -720,7 +546,7 @@ std::unique_ptr<FileReaderDescriptor> FileReaderSelector::do_select(
 }
 
 
-bool FileReaderSelector::matches(
+bool DefaultSelector::do_matches(
 		const std::set<std::unique_ptr<FileTest>> &tests,
 		const std::unique_ptr<FileReaderDescriptor> &desc) const
 {
@@ -730,7 +556,7 @@ bool FileReaderSelector::matches(
 
 	for (const auto& test : tests)
 	{
-		ARCS_LOG_DEBUG << "Perform test";
+		ARCS_LOG_DEBUG << "Perform test"; // TODO test name?
 
 		if (not test->matches(*desc))
 		{
@@ -743,9 +569,10 @@ bool FileReaderSelector::matches(
 	// This means that whatever is first in enumerating the descriptors will be
 	// matched and create the FileReader.
 
+	ARCS_LOG_DEBUG << "Descriptor '" << desc->name() << "' matched";
+
 	return true;
 }
-
 
 
 /**
@@ -757,20 +584,80 @@ bool FileReaderSelector::matches(
  * @{
  */
 
-
-// FileReaderSelection
-
-
-FileReaderSelection::Impl::Impl()
-	: selector_(std::make_unique<FileReaderSelector>())
-	, tests_()
-	, descriptors_()
+/**
+ * \brief Implementation of FileReaderSelection.
+ */
+class FileReaderSelection::Impl final
 {
-	// empty
-}
+public:
 
+	Impl()
+		: selector_(std::make_unique<DefaultSelector>())
+		, tests_()
+		, descriptors_()
+	{ /* empty */ }
 
-FileReaderSelection::Impl::~Impl() noexcept = default;
+	void add_descriptor(std::unique_ptr<FileReaderDescriptor> desc);
+
+	int remove_descriptor(const FileReaderDescriptor* desc);
+
+	void remove_all_descriptors();
+
+	void register_test(std::unique_ptr<FileTest> testobj);
+
+	int unregister_test(const FileTest * testobj);
+
+	void remove_all_tests();
+
+	void reset();
+
+	void set_selector(std::unique_ptr<FileReaderSelector> selector);
+
+	const FileReaderSelector& selector() const;
+
+	std::unique_ptr<FileReaderDescriptor> select_descriptor(
+			const std::string &filename) const;
+
+	std::unique_ptr<FileReader> for_file(const std::string &filename) const;
+
+	std::unique_ptr<FileReader> by_name(const std::string &name) const;
+
+	void traverse_descriptors(
+			std::function<void(const FileReaderDescriptor &)> func) const;
+
+	std::size_t size() const;
+
+	bool empty() const;
+
+	std::size_t total_tests() const;
+
+	bool no_tests() const;
+
+private:
+
+	/**
+	 * \brief Return the FileReaderSelector of this instance for use in
+	 * subclasses.
+	 *
+	 * \return The FileReaderSelector of this instance
+	 */
+	FileReaderSelector& use_selector();
+
+	/**
+	 * \brief Internal FileReaderSelector
+	 */
+	std::unique_ptr<FileReaderSelector> selector_;
+
+	/**
+	 * \brief Internal set of FileTests to performed by the selector_
+	 */
+	std::set<std::unique_ptr<FileTest>> tests_;
+
+	/**
+	 * \brief Internal list of FileReaderDescriptors to match by the selector_
+	 */
+	std::list<std::unique_ptr<FileReaderDescriptor>> descriptors_;
+};
 
 
 void FileReaderSelection::Impl::add_descriptor(
@@ -785,17 +672,23 @@ int FileReaderSelection::Impl::remove_descriptor(
 {
 	int counter { 0 };
 
-	auto end { descriptors_.end() };
-	for (auto ptr = descriptors_.begin(); ptr != end; ++ptr) // FIXME repair
+	auto pos = descriptors_.begin();
+	while ((pos = std::find_if(pos, descriptors_.end(),
+			[desc](const std::unique_ptr<FileReaderDescriptor> &d)
+				{ return d.get() == desc; }))
+			!= descriptors_.end())
 	{
-		if (ptr->get() == desc)
-		{
-			descriptors_.erase(ptr); // <= THIS invalidate ptr!
-			++counter;
-		}
+		descriptors_.erase(pos);
+		++counter;
 	}
 
 	return counter;
+}
+
+
+void FileReaderSelection::Impl::remove_all_descriptors()
+{
+	descriptors_.clear();
 }
 
 
@@ -810,13 +703,14 @@ int FileReaderSelection::Impl::unregister_test(const FileTest * test)
 {
 	int counter { 0 };
 
-	for (auto& t: tests_) // FIXME repair
+	auto pos = tests_.begin();
+	while ((pos = std::find_if(pos, tests_.end(),
+			[test](const std::unique_ptr<FileTest> &t)
+				{ return t.get() == test; }))
+			!= tests_.end())
 	{
-		if (t.get() == test)
-		{
-			tests_.erase(t); // <= THIS invalidate t
-			++counter;
-		}
+		tests_.erase(pos);
+		++counter;
 	}
 
 	return counter;
@@ -826,6 +720,13 @@ int FileReaderSelection::Impl::unregister_test(const FileTest * test)
 void FileReaderSelection::Impl::remove_all_tests()
 {
 	tests_.clear();
+}
+
+
+void FileReaderSelection::Impl::reset()
+{
+	tests_.clear();
+	descriptors_.clear();
 }
 
 
@@ -842,8 +743,8 @@ const FileReaderSelector& FileReaderSelection::Impl::selector() const
 }
 
 
-std::unique_ptr<FileReaderDescriptor> FileReaderSelection::Impl::descriptor(
-		const std::string &filename) const
+std::unique_ptr<FileReaderDescriptor>
+FileReaderSelection::Impl::select_descriptor(const std::string &filename) const
 {
 	if (filename.empty())
 	{
@@ -852,7 +753,7 @@ std::unique_ptr<FileReaderDescriptor> FileReaderSelection::Impl::descriptor(
 
 	for (auto& test : tests_)
 	{
-		test->set_filename(filename);
+		test->set_filename(filename); // FIXME Remove this!
 	}
 
 	std::unique_ptr<FileReaderDescriptor> desc =
@@ -874,14 +775,9 @@ std::unique_ptr<FileReaderDescriptor> FileReaderSelection::Impl::descriptor(
 std::unique_ptr<FileReader> FileReaderSelection::Impl::for_file(
 		const std::string &filename) const
 {
-	auto desc = this->descriptor(filename);
+	auto desc = this->select_descriptor(filename);
 
-	if (not desc)
-	{
-		return nullptr;
-	}
-
-	return desc->create_reader();
+	return desc ? desc->create_reader() : nullptr;
 }
 
 
@@ -910,13 +806,6 @@ void FileReaderSelection::Impl::traverse_descriptors(
 }
 
 
-void FileReaderSelection::Impl::reset()
-{
-	tests_.clear();
-	descriptors_.clear();
-}
-
-
 std::size_t FileReaderSelection::Impl::size() const
 {
 	return descriptors_.size();
@@ -929,10 +818,24 @@ bool FileReaderSelection::Impl::empty() const
 }
 
 
+std::size_t FileReaderSelection::Impl::total_tests() const
+{
+	return tests_.size();
+}
+
+
+bool FileReaderSelection::Impl::no_tests() const
+{
+	return tests_.empty();
+}
+
+
 FileReaderSelector& FileReaderSelection::Impl::use_selector()
 {
 	return *selector_;
 }
+
+/// @}
 
 
 // FileReaderSelection
@@ -992,10 +895,10 @@ const FileReaderSelector& FileReaderSelection::selector() const
 }
 
 
-std::unique_ptr<FileReaderDescriptor> FileReaderSelection::descriptor(
+std::unique_ptr<FileReaderDescriptor> FileReaderSelection::select_descriptor(
 		const std::string &filename) const
 {
-	return impl_->descriptor(filename);
+	return impl_->select_descriptor(filename);
 }
 
 
@@ -1032,12 +935,16 @@ std::size_t FileReaderSelection::size() const
 }
 
 
+std::size_t FileReaderSelection::total_tests() const
+{
+	return impl_->total_tests();
+}
+
+
 bool FileReaderSelection::empty() const
 {
 	return impl_->empty();
 }
-
-/// @}
 
 } // namespace v_1_0_0
 

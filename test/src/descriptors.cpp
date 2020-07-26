@@ -10,6 +10,9 @@
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__
 #include "audioreader.hpp"
 #endif
+#ifndef __LIBARCSDEC_METAPARSER_HPP__
+#include "metaparser.hpp"
+#endif
 #ifndef __LIBARCSDEC_VERSION_HPP__
 #include "version.hpp"
 #endif
@@ -119,8 +122,19 @@ TEST_CASE ( "Load runtime dependencies", "" )
 	}
 }
 
-TEST_CASE ( "List descriptors", "[audioreaderselection]" )
+
+TEST_CASE ( "List audio descriptors", "[audioreaderselection]" )
 {
 	arcsdec::AudioReaderSelection selection;
+
+	SECTION ( "" )
+	{
+	}
+}
+
+
+TEST_CASE ( "List metadata descriptors", "[metadataparserselection]" )
+{
+	arcsdec::MetadataParserSelection selection;
 }
 
