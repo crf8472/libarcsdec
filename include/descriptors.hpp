@@ -643,56 +643,42 @@ public:
 	FileTest();
 
 	/**
-	 * \brief Constructor.
-	 *
-	 * \param[in] filename The filename to test
-	 */
-	explicit FileTest(const std::string &filename);
-
-	/**
 	 * \brief Virtual default destructor.
 	 */
 	virtual ~FileTest() noexcept;
 
 	/**
-	 * \brief Set the filename to test.
+	 * \brief Short description of this test.
 	 *
+	 * \returns Description of this test
+	 */
+	std::string description() const;
+
+	/**
+	 * \brief Perform test for a given pair of descriptor instance and filename.
+	 *
+	 * \param[in] desc     The FileReaderDescriptor to match
 	 * \param[in] filename The filename to test
-	 */
-	void set_filename(const std::string &filename);
-
-	/**
-	 * \brief Returns the filename tested by this test.
-	 *
-	 * \return Filename to test
-	 */
-	const std::string& filename() const;
-
-	/**
-	 * \brief Perform test for a given descriptor instance.
-	 *
-	 * \param[in] desc The FileReaderDescriptor to test
 	 *
 	 * \return TRUE iff the descriptor matches the criterion of this test
 	 */
-	bool matches(const FileReaderDescriptor &desc) const;
+	bool passes(const FileReaderDescriptor &desc, const std::string &filename)
+		const;
 
 private:
 
 	/**
-	 * \brief Implements FileTest::matches().
-	 *
-	 * \param[in] desc The FileReaderDescriptor to test
-	 *
-	 * \return TRUE iff the descriptor matches the criteria of this selector
+	 * \brief Implements FileTest::description().
 	 */
-	virtual bool do_matches(const FileReaderDescriptor &desc) const
+	virtual std::string do_description() const
 	= 0;
 
 	/**
-	 * \brief Filename tested by this test.
+	 * \brief Implements FileTest::passes().
 	 */
-	std::string filename_;
+	virtual bool do_passes(const FileReaderDescriptor &desc,
+			const std::string &filename) const
+	= 0;
 };
 
 
@@ -713,7 +699,10 @@ public:
 
 private:
 
-	bool do_matches(const FileReaderDescriptor &desc) const override;
+	std::string do_description() const override;
+
+	bool do_passes(const FileReaderDescriptor &desc,
+			const std::string &filename) const override;
 
 	/**
 	 * \brief Worker: read length bytes from position offset in file filename.
@@ -738,7 +727,7 @@ private:
 	/**
 	 * \brief Number of bytes to read from the start position.
 	 */
-	uint16_t length_;
+	uint32_t length_;
 };
 
 
@@ -749,7 +738,10 @@ class FileTestName final : public FileTest
 {
 private:
 
-	bool do_matches(const FileReaderDescriptor &desc) const override;
+	std::string do_description() const override;
+
+	bool do_passes(const FileReaderDescriptor &desc,
+			const std::string &filename) const override;
 };
 
 
@@ -758,6 +750,10 @@ private:
  *
  * A FileReaderSelector applies FileTests to FileReaderDescriptors to select
  * a descriptor with a certain test result.
+ *
+ * It implements two different decisions. Implementing matches() defines which
+ * descriptors are candidates to be selected. Implementing select() defines
+ * which of the matching candidates is concretely selected.
  */
 class FileReaderSelector
 {
@@ -769,50 +765,60 @@ public:
 	virtual ~FileReaderSelector() noexcept;
 
 	/**
-	 * \brief Selects a descriptor using tests.
-	 *
-	 * The concrete implementation is supposed to use \c matches() to
-	 * decide whether a descriptor is matched.
-	 *
-	 * \param[in] tests Set of tests to perform
-	 * \param[in] descs Set of descriptors to select from
-	 *
-	 * \return A FileReaderDescriptor
-	 */
-	std::unique_ptr<FileReaderDescriptor> select(
-			const std::set<std::unique_ptr<FileTest>> &tests,
-			const std::list<std::unique_ptr<FileReaderDescriptor>> &descs)
-		const;
-
-	/**
 	 * \brief Decide whether a descriptor matches the given set of tests.
 	 *
-	 * \param[in] tests Set of tests to perform
-	 * \param[in] desc  The descriptor to check
+	 * This defines the set of selection candidates.
+	 *
+	 * \param[in] filename Name of the file to perform the tests on
+	 * \param[in] tests    Set of tests to perform
+	 * \param[in] desc     The descriptor to check
 	 *
 	 * \return TRUE iff the descriptor matches the given set of tests
 	 */
 	bool matches(
+		const std::string &filename,
 		const std::set<std::unique_ptr<FileTest>> &tests,
 		const std::unique_ptr<FileReaderDescriptor> &desc) const;
 
-private:
-
 	/**
-	 * \brief Implements FileReaderSelector::select().
+	 * \brief Selects a descriptor using tests.
+	 *
+	 * This defines the selection of a concrete selection candidate.
+	 *
+	 * The concrete implementation is supposed to use \c matches() to
+	 * decide whether a descriptor is matched.
+	 *
+	 * \param[in] filename Name of the file to select a descriptor for
+	 * \param[in] tests    Set of tests to perform
+	 * \param[in] descs    Set of descriptors to select from
+	 *
+	 * \return A FileReaderDescriptor
 	 */
-	virtual std::unique_ptr<FileReaderDescriptor> do_select(
+	std::unique_ptr<FileReaderDescriptor> select(
+			const std::string &filename,
 			const std::set<std::unique_ptr<FileTest>> &tests,
 			const std::list<std::unique_ptr<FileReaderDescriptor>> &descs)
-		const
-	= 0;
+		const;
+
+private:
 
 	/**
 	 * \brief Implements FileReaderSelector::matches().
 	 */
 	virtual bool do_matches(
+		const std::string &filename,
 		const std::set<std::unique_ptr<FileTest>> &tests,
 		const std::unique_ptr<FileReaderDescriptor> &desc) const
+	= 0;
+
+	/**
+	 * \brief Implements FileReaderSelector::select().
+	 */
+	virtual std::unique_ptr<FileReaderDescriptor> do_select(
+			const std::string &filename,
+			const std::set<std::unique_ptr<FileTest>> &tests,
+			const std::list<std::unique_ptr<FileReaderDescriptor>> &descs)
+		const
 	= 0;
 };
 
@@ -820,9 +826,7 @@ private:
 /**
  * \brief Default selector.
  *
- * The default FileReaderSelector selects just the first descriptor in the
- * descriptor list that passes all tests. Subclassing FileReaderSelector
- * can implement different selection policies.
+ * Selects the first descriptor from the descriptor list that passes all tests.
  *
  * Note that if no tests are passed, each FileReaderDescriptor matches!
  * This means that whatever is first descriptor in the sequence of descriptors
@@ -833,11 +837,13 @@ class DefaultSelector final : public FileReaderSelector
 private:
 
 	std::unique_ptr<FileReaderDescriptor> do_select(
+			const std::string &filename,
 			const std::set<std::unique_ptr<FileTest>> &tests,
 			const std::list<std::unique_ptr<FileReaderDescriptor>> &descs)
 		const override;
 
 	bool do_matches(
+		const std::string &filename,
 		const std::set<std::unique_ptr<FileTest>> &tests,
 		const std::unique_ptr<FileReaderDescriptor> &desc) const override;
 };
@@ -845,6 +851,8 @@ private:
 
 /**
  * \brief Traversable selection of available FileReader descriptors.
+ *
+ * Default constructor initializes the selection with a DefaultSelector.
  */
 class FileReaderSelection
 {
@@ -885,7 +893,10 @@ public:
 	 */
 	int remove_descriptor(const FileReaderDescriptor * desc);
 
-	// TODO remove_all_descriptors() ?
+	/**
+	 * \brief Removes all descriptors in this instance.
+	 */
+	void remove_all_descriptors();
 
 	/**
 	 * \brief Register a test.
@@ -948,18 +959,6 @@ public:
 	std::unique_ptr<FileReader> for_file(const std::string &filename) const;
 
 	/**
-	 * \brief Return the FileReader specified by its name.
-	 *
-	 * If the selection does not contain a FileReader with the specified name,
-	 * \c nullptr will be returned.
-	 *
-	 * \param[in] name The name of the FileReader.
-	 *
-	 * \return A FileReader with the specified name
-	 */
-	std::unique_ptr<FileReader> by_name(const std::string &name) const;
-
-	/**
 	 * \brief Traverse all available descriptors and apply the specified
 	 * function \c func on each of them.
 	 *
@@ -982,6 +981,13 @@ public:
 	std::size_t size() const;
 
 	/**
+	 * \brief TRUE if this selection contains no descriptors.
+	 *
+	 * \return TRUE if this selection contains no descriptors.
+	 */
+	bool empty() const;
+
+	/**
 	 * \brief Number of registered tests.
 	 *
 	 * \return The number of registered tests in this selection.
@@ -989,11 +995,11 @@ public:
 	std::size_t total_tests() const;
 
 	/**
-	 * \brief TRUE if this selection contains no descriptors.
+	 * \brief TRUE if this selection has no tests registered.
 	 *
-	 * \return TRUE if this selection contains no descriptors.
+	 * \return TRUE if this selection has no tests registered.
 	 */
-	bool empty() const;
+	bool no_tests() const;
 
 	// class is non-copy-assignable
 	FileReaderSelection& operator = (const FileReaderSelection &) = delete;

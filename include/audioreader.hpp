@@ -776,18 +776,6 @@ public:
 	 */
 	std::unique_ptr<AudioReader> for_file(const std::string &filename) const;
 
-	/**
-	 * \brief Return the AudioReader specified by its name.
-	 *
-	 * If the selection does not contain an AudioReader with the specified name,
-	 * \c nullptr will be returned.
-	 *
-	 * \param[in] name The name of the AudioReader.
-	 *
-	 * \return A AudioReader with the specified name
-	 */
-	std::unique_ptr<AudioReader> by_name(const std::string &name) const;
-
 
 protected:
 

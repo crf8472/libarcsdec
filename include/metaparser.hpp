@@ -193,19 +193,6 @@ public:
 	std::unique_ptr<MetadataParser> for_file(const std::string &metafilename)
 		const;
 
-	/**
-	 * \brief Return the MetadataParser specified by its name.
-	 *
-	 * If the selection does not contain a MetadataParser with the specified
-	 * name, \c nullptr will be returned.
-	 *
-	 * \param[in] name The name of the MetadataParser.
-	 *
-	 * \return A MetadataParser with the specified name
-	 */
-	std::unique_ptr<MetadataParser> by_name(const std::string &name)
-		const;
-
 protected:
 
 	/**

@@ -121,13 +121,6 @@ std::unique_ptr<MetadataParser> MetadataParserSelection::for_file(
 }
 
 
-std::unique_ptr<MetadataParser> MetadataParserSelection::by_name(
-	const std::string &name) const
-{
-	return this->safe_cast(FileReaderSelection::by_name(name));
-}
-
-
 std::unique_ptr<MetadataParser> MetadataParserSelection::safe_cast(
 		std::unique_ptr<FileReader> file_reader_uptr) const
 {

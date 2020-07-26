@@ -727,13 +727,6 @@ std::unique_ptr<AudioReader> AudioReaderSelection::for_file(
 }
 
 
-std::unique_ptr<AudioReader> AudioReaderSelection::by_name(
-	const std::string &name) const
-{
-	return this->safe_cast(FileReaderSelection::by_name(name));
-}
-
-
 std::unique_ptr<AudioReader> AudioReaderSelection::safe_cast(
 		std::unique_ptr<FileReader> file_reader_uptr) const
 {
