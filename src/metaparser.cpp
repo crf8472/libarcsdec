@@ -15,10 +15,6 @@
 #include <arcstk/logging.hpp>
 #endif
 
-#ifndef __LIBARCSDEC_DESCRIPTORS_METADATA_HPP__
-#include "descriptors_metadata.hpp"
-#endif
-
 
 namespace arcsdec
 {
@@ -60,6 +56,8 @@ MetadataParser::~MetadataParser() noexcept = default;
 
 std::unique_ptr<TOC> MetadataParser::parse(const std::string &filename)
 {
+	ARCS_LOG_DEBUG << "Parse metadata file '" << filename << "'";
+
 	return impl_->parse(filename);
 }
 
@@ -77,105 +75,6 @@ MetadataParseException::MetadataParseException(const std::string &what_arg)
 	: std::runtime_error(what_arg)
 {
 	// empty
-}
-
-
-// CreateMetadataParser
-
-
-std::unique_ptr<MetadataParser> CreateMetadataParser::operator()(
-		const FileReaderSelection &s, const std::string &filename) const
-{
-	auto pointers = details::cast_reader<MetadataParser>(s.for_file(filename));
-
-	return std::move(pointers.first);
-	// XXX Prohibits RVO
-	// XXX pointers.second is lost on failure
-}
-
-
-// MetadataParserSelection
-
-
-MetadataParserSelection::MetadataParserSelection()
-{
-	// Provide tests
-
-	auto test = std::make_unique<FileTestName>();
-
-	this->register_test(std::move(test));
-
-
-	// Provide FileReaderDescriptors
-
-	// The constructor of MetadataParserSelection automagically introduces the
-	// knowledge about what formats are available. This knowledge is
-	// provided by the instance FileReaderDescriptorsAudio that is populated at
-	// buildtime based on the configuration of the build system.
-
-	FileReaderDescriptorsMetadata compiled_supported_metadata_formats;
-
-	// We move all the actual formats to not access FileReaderDescriptorsMetadata
-	// beyond this particular block
-
-	for (auto& f : compiled_supported_metadata_formats)
-	{
-		this->add_descriptor(std::move(f));
-	}
-}
-
-
-MetadataParserSelection::~MetadataParserSelection() noexcept = default;
-
-
-std::unique_ptr<MetadataParser> MetadataParserSelection::for_file(
-	const std::string &filename) const
-{
-	return this->safe_cast(FileReaderSelection::for_file(filename));
-}
-
-
-std::unique_ptr<MetadataParser> MetadataParserSelection::safe_cast(
-		std::unique_ptr<FileReader> file_reader_uptr) const
-{
-	if (not file_reader_uptr)
-	{
-		return nullptr;
-	}
-
-	// Create MetadataParser manually by (safe) downcasting and reassignment
-
-	auto metaparser_uptr = std::make_unique<MetadataParser>(nullptr);
-
-	FileReader* file_reader_rptr = nullptr;
-	file_reader_rptr = file_reader_uptr.release();
-	// This is definitively NOT nice since file_reader_rptr is now an
-	// owning raw pointer. We will fix that with the following reset() to
-	// a unique_ptr. If thereby something goes wrong, we immediately destroy
-	// the raw pointer accurately.
-
-	try
-	{
-		metaparser_uptr.reset(dynamic_cast<MetadataParser*>(file_reader_rptr));
-
-		// Creation is correct iff the FileReader created is in fact a
-		// MetadataParser. If not, the file is not a supported audio file, so
-		// bail out.
-
-	} catch (...) // std::bad_cast is possible, but we play it safe
-	{
-		if (file_reader_rptr)
-		{
-			delete file_reader_rptr;
-		}
-
-		ARCS_LOG_ERROR <<
-				"FileReader created, but failed to turn it to a MetadataParser";
-
-		return nullptr;
-	}
-
-	return metaparser_uptr;
 }
 
 } // namespace v_1_0_0

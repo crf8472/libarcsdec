@@ -22,6 +22,9 @@
 #ifndef __LIBARCSTK_CALCULATE_HPP__
 #include <arcstk/calculate.hpp> // for SampleInputIterator
 #endif
+#ifndef __LIBARCSTK_LOGGING_HPP__
+#include <arcstk/logging.hpp>
+#endif
 
 
 namespace arcsdec
@@ -1247,7 +1250,6 @@ public:
 	 */
 	RegisterAudioDescriptor()
 	{
-		//auto func = &instantiate_ptr<D>;
 		audio_selection()->add_descriptor(call(&instantiate_ptr<D>));
 	}
 };
@@ -1271,6 +1273,43 @@ public:
 	RegisterMetadataDescriptor()
 	{
 		toc_selection()->add_descriptor(call(&instantiate_ptr<D>));
+	}
+};
+
+
+/**
+ * \brief Functor to safely create a unique_ptr to a downcasted FileReader.
+ *
+ * It will either provide a valid FileReader of the requested type or will
+ * throw. It will never silently fail nor provide a nullptr.
+ */
+template <class ReaderType>
+struct CreateReader
+{
+	virtual ~CreateReader() noexcept = default;
+
+	auto operator()(const FileReaderSelection &selection,
+			const std::string &filename) const -> std::unique_ptr<ReaderType>
+	{
+		ARCS_LOG_DEBUG << "Recognize format of input file '" << filename << "'";
+
+		auto file_reader = selection.for_file(filename);
+
+		if (!file_reader)
+		{
+			throw InputFormatException("Could not identify file format: '"
+					+ filename + "'");
+		}
+
+		auto readers = details::cast_reader<ReaderType>(std::move(file_reader));
+
+		if (!readers.first)
+		{
+			throw InputFormatException("Could not acquire reader for TOC file: "
+					+ filename);
+		}
+
+		return std::move(readers.first); // XXX Prevents RVO, but seems required
 	}
 };
 

@@ -749,53 +749,10 @@ private:
 };
 
 
-struct CreateAudioReader
-{
-	std::unique_ptr<AudioReader> operator()(const FileReaderSelection &s,
-			const std::string &filename) const;
-};
-
-
 /**
- * \brief Selects and builds AudioReader instances for given inputs.
+ * \brief Functor for safe creation of an AudioReader.
  */
-class AudioReaderSelection : public FileReaderSelection
-{
-
-public:
-
-	/**
-	 * \brief Constructor.
-	 */
-	AudioReaderSelection();
-
-	/**
-	 * \brief Virtual default destructor.
-	 */
-	~AudioReaderSelection() noexcept override;
-
-	/**
-	 * \brief Create an AudioReader for the specified file.
-	 *
-	 * \param[in] filename The filename to create an AudioReader for
-	 *
-	 * \return An AudioReader for the given file
-	 */
-	std::unique_ptr<AudioReader> for_file(const std::string &filename) const;
-
-
-protected:
-
-	/**
-	 * \brief Turns a FileReader to an AudioReader.
-	 *
-	 * \param[in] filereader The FileReader to cast
-	 *
-	 * \return AudioReader or nullptr
-	 */
-	std::unique_ptr<AudioReader> safe_cast(
-			std::unique_ptr<FileReader> filereader) const;
-};
+struct CreateAudioReader final : public CreateReader<AudioReader> { /*empty*/ };
 
 /// @}
 

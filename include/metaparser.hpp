@@ -163,55 +163,12 @@ public:
 };
 
 
-struct CreateMetadataParser
-{
-	std::unique_ptr<MetadataParser> operator()(const FileReaderSelection &s,
-			const std::string &filename) const;
-};
-
-
 /**
- * \brief Selects and builds
- * @link MetadataParser MetadataParsers @endlink for given inputs.
+ * \brief Functor for safe creation of a MetadataParser.
  */
-class MetadataParserSelection : public FileReaderSelection
-{
-public:
+struct CreateMetadataParser final : public CreateReader<MetadataParser>
+{ /*empty*/ };
 
-	/**
-	 * \brief Constructor.
-	 */
-	MetadataParserSelection();
-
-	/**
-	 * \brief Virtual default destructor.
-	 */
-	~MetadataParserSelection() noexcept override;
-
-	/**
-	 * \brief Create a MetadataParser for the specified file.
-	 *
-	 * \param[in] metafilename The filename to create MetadataParser for
-	 *
-	 * \return A MetadataParser for the specified file
-	 *
-	 * \throw FileReadException If the file could not be read
-	 */
-	std::unique_ptr<MetadataParser> for_file(const std::string &metafilename)
-		const;
-
-protected:
-
-	/**
-	 * \brief Turns a FileReader to a MetadataParser.
-	 *
-	 * \param[in] file_reader_uptr The FileReader to cast
-	 *
-	 * \return MetadataParser or nullptr
-	 */
-	std::unique_ptr<MetadataParser> safe_cast(
-		std::unique_ptr<FileReader> file_reader_uptr) const;
-};
 
 /// @}
 

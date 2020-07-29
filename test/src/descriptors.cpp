@@ -125,8 +125,6 @@ TEST_CASE ( "Load runtime dependencies", "" )
 
 TEST_CASE ( "List audio descriptors", "[audioreaderselection]" )
 {
-	arcsdec::AudioReaderSelection selection;
-
 	SECTION ( "" )
 	{
 	}
@@ -135,6 +133,8 @@ TEST_CASE ( "List audio descriptors", "[audioreaderselection]" )
 
 TEST_CASE ( "List metadata descriptors", "[metadataparserselection]" )
 {
-	arcsdec::MetadataParserSelection selection;
+	SECTION ( "" )
+	{
+	}
 }
 

@@ -19,10 +19,6 @@
 #include <arcstk/logging.hpp>
 #endif
 
-#ifndef __LIBARCSDEC_DESCRIPTORS_AUDIO_HPP__
-#include "descriptors_audio.hpp"
-#endif
-
 
 namespace arcsdec
 {
@@ -678,107 +674,6 @@ void AudioReader::set_processor(SampleProcessor &processor)
 std::unique_ptr<FileReaderDescriptor> AudioReader::do_descriptor() const
 {
 	return impl_->descriptor();
-}
-
-
-// CreateAudioReader
-
-
-std::unique_ptr<AudioReader> CreateAudioReader::operator()(
-		const FileReaderSelection &select, const std::string &filename) const
-{
-	// XXX pointers.second is lost on failure
-	return details::cast_reader<AudioReader>(select.for_file(filename)).first;
-}
-
-
-// AudioReaderSelection
-
-
-AudioReaderSelection::AudioReaderSelection()
-{
-	std::unique_ptr<FileTestBytes> test =
-		std::make_unique<FileTestBytes>(0, 44);
-	// Why 44? We want to recognize container format, codec and CDDA format.
-	// Consider RIFFWAVE/PCM: the first 12 bytes identify the container format,
-	// PCM format is encoded in bytes 20+21, but validating CDDA requires to
-	// read the entire format chunk (up to and including byte 36). Bytes 37-40
-	// are the data subchunk id and 41-44 the data subchunk size. This length
-	// is also sufficient to identify all other formats currently supported.
-
-	this->register_test(std::move(test));
-
-
-	// Provide FileReaderDescriptors
-
-	// The constructor of AudioReaderSelection automagically introduces the
-	// knowledge about what formats are available. This knowledge is
-	// provided by the instance FileReaderDescriptorsAudio that is populated at
-	// buildtime based on the configuration of the build system.
-
-	FileReaderDescriptorsAudio compiled_supported_audio_formats;
-
-	// We move all the actual formats to not access FileReaderDescriptorsAudio
-	// beyond this particular block
-
-	for (auto& f : compiled_supported_audio_formats)
-	{
-		this->add_descriptor(std::move(f));
-	}
-}
-
-
-AudioReaderSelection::~AudioReaderSelection() noexcept = default;
-
-
-std::unique_ptr<AudioReader> AudioReaderSelection::for_file(
-	const std::string &filename) const
-{
-	return this->safe_cast(FileReaderSelection::for_file(filename));
-}
-
-
-std::unique_ptr<AudioReader> AudioReaderSelection::safe_cast(
-		std::unique_ptr<FileReader> file_reader_uptr) const
-{
-	if (not file_reader_uptr)
-	{
-		return nullptr;
-	}
-
-	// Create AudioReader manually by (safe) downcasting and reassignment
-
-	auto audio_reader_uptr = std::make_unique<AudioReader>(nullptr);
-
-	FileReader* file_reader_rptr = nullptr;
-	file_reader_rptr = file_reader_uptr.release();
-	// This is definitively NOT nice since file_reader_rptr is now an
-	// owning raw pointer. We will fix that with the following reset() to
-	// a unique_ptr. If thereby something goes wrong, we immediately destroy
-	// the raw pointer accurately.
-
-	try
-	{
-		audio_reader_uptr.reset(dynamic_cast<AudioReader*>(file_reader_rptr));
-
-		// Creation is correct iff the FileReader created is in fact an
-		// AudioReader. If not, the file is not a supported audio file, so bail
-		// out.
-
-	} catch (...) // std::bad_cast is possible, but we play it safe
-	{
-		if (file_reader_rptr)
-		{
-			delete file_reader_rptr;
-		}
-
-		ARCS_LOG_ERROR <<
-				"FileReader created, but failed to turn it to an AudioReader";
-
-		return nullptr;
-	}
-
-	return audio_reader_uptr;
 }
 
 } // namespace v_1_0_0

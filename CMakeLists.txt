@@ -132,8 +132,6 @@ list (APPEND PROJECT_PUBLIC_HEADERS
 	${PROJECT_INCLUDE_DIR}/descriptors.hpp
 	${PROJECT_INCLUDE_DIR}/metaparser.hpp
 	${PROJECT_INCLUDE_DIR}/sampleproc.hpp
-	${PROJECT_BUILD_SOURCE_DIR}/descriptors_audio.hpp
-	${PROJECT_BUILD_SOURCE_DIR}/descriptors_metadata.hpp
 	${PROJECT_BUILD_SOURCE_DIR}/version.hpp )
 
 set_target_properties (${PROJECT_NAME} PROPERTIES
@@ -283,19 +281,11 @@ endif (WITH_FFMPEG)
 
 ## Configure all .in files producing C++ headers files
 
-set (CONFIGURED_HEADERS
-		descriptors_audio.hpp
-		descriptors_metadata.hpp
-		version.hpp )
-
-foreach (_header IN LISTS CONFIGURED_HEADERS )
-
-	configure_file (
-		"${PROJECT_INCLUDE_DIR}/${_header}.in"
-		"${PROJECT_BUILD_SOURCE_DIR}/${_header}"
-		@ONLY
-	)
-endforeach()
+configure_file (
+	"${PROJECT_INCLUDE_DIR}/version.hpp.in"
+	"${PROJECT_BUILD_SOURCE_DIR}/version.hpp"
+	@ONLY
+)
 
 
 ## --- Install binary and exported header files

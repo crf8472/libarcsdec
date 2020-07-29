@@ -238,27 +238,11 @@ std::unique_ptr<TOC> TOCParser::Impl::parse(const std::string &metafilename)
 				"Requested metadata file parser for empty filename.");
 	}
 
-	ARCS_LOG_DEBUG << "Try to read TOC file '" << metafilename << "'";
+	CreateMetadataParser get_parser;
 
-	auto file_reader = selection().for_file(metafilename);
+	ARCS_LOG_DEBUG << "Try to read metadata file '" << metafilename << "'";
 
-	if (!file_reader)
-	{
-		throw InputFormatException("Could not identify file format: '"
-				+ metafilename + "'");
-	}
-
-	auto readers = details::cast_reader<MetadataParser>(std::move(file_reader));
-
-	if (!readers.first)
-	{
-		throw InputFormatException("Could not acquire reader for TOC file: "
-				+ metafilename);
-	}
-
-	ARCS_LOG_DEBUG << "Start to parse metadata input";
-
-	return readers.first->parse(metafilename);
+	return get_parser(selection(), metafilename)->parse(metafilename);
 }
 
 
@@ -278,7 +262,7 @@ const FileReaderSelection& TOCParser::Impl::selection() const
 
 
 ARIdCalculator::Impl::Impl()
-	: toc_selection_ { nullptr }
+	: toc_selection_   { nullptr }
 	, audio_selection_ { nullptr }
 {
 	// empty
@@ -346,8 +330,12 @@ std::unique_ptr<ARId> ARIdCalculator::Impl::calculate(
 		return this->calculate(metafilename);
 	}
 
-	TOCParser parser;
-	const auto toc = parser.parse(metafilename); // FIXME set/get selection
+	CreateMetadataParser get_parser;
+
+	ARCS_LOG_DEBUG << "Try to read metadata file '" << metafilename << "'";
+
+	const auto toc = get_parser(toc_selection(), metafilename)->parse(
+			metafilename);
 
 	if (toc->complete())
 	{
@@ -391,23 +379,11 @@ std::unique_ptr<ARId> ARIdCalculator::Impl::calculate(const TOC &toc,
 	// The builder has to check its input values either way when it is
 	// requested to start processing.
 
-	auto file_reader = audio_selection().for_file(audiofilename);
+	CreateAudioReader get_audioreader;
 
-	if (!file_reader)
-	{
-		throw InputFormatException("Could not identify file format: '"
-				+ audiofilename + "'");
-	}
-
-	auto readers = details::cast_reader<AudioReader>(std::move(file_reader));
-
-	if (!readers.first)
-	{
-		throw InputFormatException("Could not acquire reader for audio file: "
-				+ audiofilename);
-	}
-
-	const auto audiosize = readers.first->acquire_size(audiofilename);
+	const auto audiosize =
+		get_audioreader(audio_selection(), audiofilename)->acquire_size(
+				audiofilename);
 
 	return make_arid(toc, audiosize->leadout_frame());
 }
@@ -541,26 +517,8 @@ void ARCSCalculator::Impl::process_file(const std::string &audiofilename,
 		Calculation& calc, const int32_t buffer_size, const bool use_cbuffer)
 		const
 {
-	ARCS_LOG_DEBUG << "Try to read audio file '" << audiofilename << "'";
-
-	auto file_reader = selection().for_file(audiofilename);
-
-	if (!file_reader)
-	{
-		throw InputFormatException("Could not identify file format: '"
-				+ audiofilename + "'");
-	}
-
-	auto readers = details::cast_reader<AudioReader>(std::move(file_reader));
-
-	if (!readers.first)
-	{
-		throw InputFormatException("Could not acquire reader for audio file: "
-				+ audiofilename);
-	}
-
-	ARCS_LOG_DEBUG << "Start to read audio input";
-
+	CreateAudioReader audioreader;
+	auto reader = audioreader(selection(), audiofilename);
 
 	// Configure AudioReader and process file
 
@@ -569,7 +527,7 @@ void ARCSCalculator::Impl::process_file(const std::string &audiofilename,
 
 	SampleProcessorAdapter proc { calc };
 
-	if (use_cbuffer and !readers.first->configurable_read_buffer()
+	if (use_cbuffer and !reader->configurable_read_buffer()
 			and buffer_size_is_legal)
 	{
 		ARCS_LOG_DEBUG << "Buffering for sample conversion requested";
@@ -582,12 +540,12 @@ void ARCSCalculator::Impl::process_file(const std::string &audiofilename,
 		ARCS_LOG(DEBUG1) << "Configure sample buffer of size: "
 			<< std::to_string(buffer_size) << " bytes";
 
-		readers.first->set_processor(buffer);
+		reader->set_processor(buffer);
 	} else
 	{
 		// Conversion/Buffering was not requested
 
-		if (readers.first->configurable_read_buffer())
+		if (reader->configurable_read_buffer())
 		{
 			ARCS_LOG_DEBUG << "AudioReader provides configurable read buffer";
 
@@ -596,7 +554,7 @@ void ARCSCalculator::Impl::process_file(const std::string &audiofilename,
 				ARCS_LOG(DEBUG1) << "Configure sample read chunk size: "
 					<< std::to_string(buffer_size) << " bytes";
 
-				readers.first->set_samples_per_read(buffer_size);
+				reader->set_samples_per_read(buffer_size);
 
 			} else
 			{
@@ -615,10 +573,12 @@ void ARCSCalculator::Impl::process_file(const std::string &audiofilename,
 				<< "was requested.";
 		}
 
-		readers.first->set_processor(proc);
+		reader->set_processor(proc);
 	}
 
-	readers.first->process_file(audiofilename);
+	ARCS_LOG_DEBUG << "Try to read audio file '" << audiofilename << "'";
+
+	reader->process_file(audiofilename);
 }
 
 
