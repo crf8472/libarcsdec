@@ -1870,6 +1870,15 @@ std::unique_ptr<FileReaderDescriptor> DescriptorFFmpeg::do_clone() const
 	return std::make_unique<DescriptorFFmpeg>();
 }
 
+
+// Add this descriptor to the audio descriptor registry
+
+namespace {
+
+const auto d = RegisterAudioDescriptor<DescriptorFFmpeg>();
+
+} // namespace
+
 } // namespace v_1_0_0
 
 } // namespace arcsdec

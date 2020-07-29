@@ -1,12 +1,12 @@
+#ifndef __LIBARCSDEC_METAPARSER_HPP__
+#define __LIBARCSDEC_METAPARSER_HPP__
+
 /**
  * \file
  *
  * \brief An interface for parsing TOC informations
  */
 
-
-#ifndef __LIBARCSDEC_METAPARSER_HPP__
-#define __LIBARCSDEC_METAPARSER_HPP__
 
 #include <memory>
 #include <string>
@@ -160,6 +160,13 @@ public:
 	 * \param[in] what_arg What argument
 	 */
 	explicit MetadataParseException(const std::string &what_arg);
+};
+
+
+struct CreateMetadataParser
+{
+	std::unique_ptr<MetadataParser> operator()(const FileReaderSelection &s,
+			const std::string &filename) const;
 };
 
 

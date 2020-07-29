@@ -80,6 +80,20 @@ MetadataParseException::MetadataParseException(const std::string &what_arg)
 }
 
 
+// CreateMetadataParser
+
+
+std::unique_ptr<MetadataParser> CreateMetadataParser::operator()(
+		const FileReaderSelection &s, const std::string &filename) const
+{
+	auto pointers = details::cast_reader<MetadataParser>(s.for_file(filename));
+
+	return std::move(pointers.first);
+	// XXX Prohibits RVO
+	// XXX pointers.second is lost on failure
+}
+
+
 // MetadataParserSelection
 
 

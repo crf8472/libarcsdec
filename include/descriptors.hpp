@@ -125,14 +125,6 @@ const std::string& find_lib(const std::vector<std::string> &list,
 
 
 /**
- * \brief List runtime dependencies of libarcsdec.
- *
- * \return List of runtime dependencies of libarcsdec
- */
-std::vector<std::string> acquire_libarcsdec_libs();
-
-
-/**
  * \brief Global list of libarcsdec runtime dependency libraries.
  */
 const std::vector<std::string>& libarcsdec_libs();
@@ -316,6 +308,102 @@ private:
 	 */
 	virtual std::unique_ptr<FileReaderDescriptor> do_descriptor() const
 	= 0;
+};
+
+
+namespace details
+{
+
+/**
+ * \brief Downcast a FileReader to a specialized ReaderType.
+ *
+ * The operation is safe: if the cast fails, the input pointer is returned
+ * unaltered as second element of the pair, together with a nullptr as casting
+ * result. If the cast succeeds, the casted pointer is returned together with
+ * a nullptr as second element.
+ */
+template<typename ReaderType>
+auto cast_reader(std::unique_ptr<FileReader> file_reader) noexcept
+	-> std::pair<std::unique_ptr<ReaderType>, std::unique_ptr<FileReader>>
+{
+	if (!file_reader)
+	{
+		return std::make_pair(nullptr, std::move(file_reader));
+	}
+
+	// Create ReaderType manually by downcasting and reassignment
+
+	FileReader *file_reader_rptr = file_reader.get();
+	ReaderType *reader_type_rptr = nullptr;
+
+	// Dry run:
+	// Casting succeeds iff the FileReader created is in fact a ReaderType.
+	// If not, the file is not supported by file_reader, so bail out.
+	try
+	{
+		reader_type_rptr = dynamic_cast<ReaderType*>(file_reader_rptr);
+
+	} catch (...) // std::bad_cast is possible
+	{
+		//ARCS_LOG_ERROR <<
+		//		"Failed to safely cast FileReader pointer to ReaderType";
+
+		return std::make_pair(nullptr, std::move(file_reader));
+	}
+
+	if (!reader_type_rptr)
+	{
+		//ARCS_LOG_ERROR <<
+		//		"Casting FileReader pointer to ReaderType resulted in nullptr";
+
+		return std::make_pair(nullptr, std::move(file_reader));
+	}
+
+	auto readertype_uptr = std::make_unique<ReaderType>(nullptr);
+
+	// file_reader was left unmodified until now
+
+	readertype_uptr.reset(dynamic_cast<ReaderType*>(file_reader.release()));
+	// release() + reset() are both 'noexcept'
+
+	return std::make_pair(std::move(readertype_uptr), nullptr);
+}
+
+
+/**
+ * \brief Read \c length bytes from file \c filename starting at position
+ * \c offset.
+ *
+ * \param[in] filename Name of the file to read from
+ * \param[in] offset   0-based byte offset to start
+ * \param[in] length   Number of bytes to read
+ *
+ * \return Byte sequence read from file
+ */
+std::vector<char> read_bytes(const std::string &filename,
+	const uint32_t &offset, const uint32_t &length);
+
+} // namespace details
+
+
+/**
+ * \brief Reports an error concerning the input file format.
+ *
+ * This exception can be thrown when the input format could not be determined
+ * or nor FileReader could be acquired.
+ */
+class InputFormatException final : public std::runtime_error
+{
+public:
+
+	/**
+	 * \brief Constructor.
+	 *
+	 * \param[in] what_arg What argument
+	 */
+	explicit InputFormatException(const std::string &what_arg)
+		: std::runtime_error(what_arg)
+	{ /* empty */ };
 };
 
 
@@ -850,6 +938,28 @@ private:
 
 
 /**
+ * \brief Function pointer to function returning std::unique_ptr<T>.
+ *
+ * \tparam T The type the function should return a unique_ptr to
+ */
+template <class T>
+using FunctionReturning = std::unique_ptr<T>(*)();
+
+
+/**
+ * \brief Instantiate FileReaderDescriptor.
+ *
+ * \tparam T    The type to instantiate
+ * \tparam Args The constructor arguments
+ */
+template <class T, typename... Args> // TODO SFINAE stuff
+std::unique_ptr<FileReaderDescriptor> instantiate_ptr(Args&&... args)
+{
+	return std::make_unique<T>(std::forward<Args>(args)...);
+}
+
+
+/**
  * \brief Traversable selection of available FileReader descriptors.
  *
  * Default constructor initializes the selection with a DefaultSelector.
@@ -1016,7 +1126,153 @@ private:
 	 */
 	std::unique_ptr<FileReaderSelection::Impl> impl_;
 };
-// TODO Should be pure virtual, subclasses exist
+
+
+/**
+ * \brief Description.
+ */
+class FileReaderRegistry
+{
+public:
+
+	/**
+	 * \brief Create a reader for the specified audio file.
+	 *
+	 * \param[in] filename Name of the input audio file
+	 *
+	 * \return Opaque FileReader for the input audio file
+	 */
+	static std::unique_ptr<FileReader> for_audio_file(
+			const std::string &filename)
+	{
+		return audio_selection()->for_file(filename);
+	}
+
+	/**
+	 * \brief Create a reader for the specified metadata file.
+	 *
+	 * \param[in] filename Name of the input metadata file
+	 *
+	 * \return Opaque FileReader for the input metadata file
+	 */
+	static std::unique_ptr<FileReader> for_toc_file(const std::string &filename)
+	{
+		return toc_selection()->for_file(filename);
+	}
+
+	/**
+	 * \brief Return the internal audio descriptor selection.
+	 *
+	 * \return the internal audio descriptor selection.
+	 */
+	static FileReaderSelection* audio_selection()
+	{
+		if (!audio_selection_)
+		{
+			audio_selection_ = std::make_unique<FileReaderSelection>();
+
+			audio_selection_->register_test(
+					std::make_unique<FileTestBytes>(0, 44));
+			// Why 44? => Enough for WAVE and every other metadata format.
+			// We want to recognize container format, codec and CDDA format.
+			// Consider RIFFWAVE/PCM: the first 12 bytes identify the container
+			// format ('RIFF' + size + 'WAVE'), PCM format is encoded in bytes
+			// 20+21, but validating CDDA requires to read the entire format
+			// chunk (up to and including byte 36). Bytes 37-40 are the data
+			// subchunk id and 41-44 the data subchunk size. This length is also
+			// sufficient to identify all other formats currently supported.
+		}
+
+		return audio_selection_.get();
+	}
+
+	/**
+	 * \brief Return the internal metadata descriptor selection.
+	 *
+	 * \return the internal metadata descriptor selection.
+	 */
+	static FileReaderSelection* toc_selection()
+	{
+		if (!toc_selection_)
+		{
+			toc_selection_ = std::make_unique<FileReaderSelection>();
+
+			toc_selection_->register_test(std::make_unique<FileTestName>());
+		}
+
+		return toc_selection_.get();
+	}
+
+protected:
+
+	~FileReaderRegistry() noexcept = default;
+
+	/**
+	 * \brief Instantiate the FileReader with the given name.
+	 *
+	 * The string parameter is ignored.
+	 *
+	 * \param[in] create Function pointer to create the instance
+	 *
+	 * \return Instance returned by \c create
+	 */
+	static std::unique_ptr<FileReaderDescriptor> call(
+			FunctionReturning<FileReaderDescriptor> create)
+	{
+		return create();
+	}
+
+private:
+
+	static std::unique_ptr<FileReaderSelection> audio_selection_;
+
+	static std::unique_ptr<FileReaderSelection> toc_selection_;
+};
+
+
+/**
+ * \brief Register a FileReaderDescriptor type for audio input
+ *
+ * \tparam D The descriptor type to register
+ */
+template <class D>
+class RegisterAudioDescriptor : public FileReaderRegistry //TODO SFINAE stuff
+{
+public:
+
+	/**
+	 * \brief Register a descriptor
+	 *
+	 * \param[in] name The name to register the application type
+	 */
+	RegisterAudioDescriptor()
+	{
+		//auto func = &instantiate_ptr<D>;
+		audio_selection()->add_descriptor(call(&instantiate_ptr<D>));
+	}
+};
+
+
+/**
+ * \brief Register a FileReaderDescriptor type for TOC/metadata input
+ *
+ * \tparam D The descriptor type to register
+ */
+template <class D>
+class RegisterMetadataDescriptor : public FileReaderRegistry //TODO SFINAE stuff
+{
+public:
+
+	/**
+	 * \brief Register a descriptor by a specific name
+	 *
+	 * \param[in] name The name to register the application type
+	 */
+	RegisterMetadataDescriptor()
+	{
+		toc_selection()->add_descriptor(call(&instantiate_ptr<D>));
+	}
+};
 
 /// @}
 

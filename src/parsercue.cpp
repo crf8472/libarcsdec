@@ -627,6 +627,15 @@ std::unique_ptr<FileReaderDescriptor> DescriptorCUE::do_clone() const
 	return std::make_unique<DescriptorCUE>();
 }
 
+
+// Add this descriptor to the metadata descriptor registry
+
+namespace {
+
+const auto d = RegisterMetadataDescriptor<DescriptorCUE>{};
+
+} // namespace
+
 } // namespace v_1_0_0
 
 } // namespace arcsdec

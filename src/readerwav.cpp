@@ -46,6 +46,11 @@ namespace arcsdec
 inline namespace v_1_0_0
 {
 
+//namespace registered
+//{
+//const auto WavPCM = RegisterFileReaderType<DescriptorWavPCM>("parse");
+//}
+
 using arcstk::SampleInputIterator;
 using arcstk::AudioSize;
 using arcstk::CDDA;
@@ -1262,6 +1267,15 @@ std::unique_ptr<FileReaderDescriptor> DescriptorWavPCM::do_clone() const
 {
 	return std::make_unique<DescriptorWavPCM>();
 }
+
+
+// Add this descriptor to the audio descriptor registry
+
+namespace {
+
+const auto d = std::make_unique<RegisterAudioDescriptor<DescriptorWavPCM>>();
+
+} // namespace
 
 } // namespace v_1_0_0
 

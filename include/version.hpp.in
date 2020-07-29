@@ -69,7 +69,7 @@ constexpr auto LIBARCSDEC_NAME = "@PROJECT_NAME@";
 /**
  * Library name as a std::string
  */
-constexpr std::string LIBARCSDEC_NAME_STRING ( LIBARCSDEC_NAME );
+const std::string LIBARCSDEC_NAME_STRING ( LIBARCSDEC_NAME );
 
 } // namespace v_1_0_0
 

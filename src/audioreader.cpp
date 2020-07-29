@@ -681,6 +681,17 @@ std::unique_ptr<FileReaderDescriptor> AudioReader::do_descriptor() const
 }
 
 
+// CreateAudioReader
+
+
+std::unique_ptr<AudioReader> CreateAudioReader::operator()(
+		const FileReaderSelection &select, const std::string &filename) const
+{
+	// XXX pointers.second is lost on failure
+	return details::cast_reader<AudioReader>(select.for_file(filename)).first;
+}
+
+
 // AudioReaderSelection
 
 

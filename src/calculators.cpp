@@ -75,40 +75,17 @@ class TOCParser::Impl final
 {
 public:
 
-	/**
-	 * \brief Constructor.
-	 */
 	Impl();
 
-	/**
-	 * \brief Parse the metadata file to a TOC object.
-	 *
-	 * \param[in] metafilename Name of the metadatafile
-	 *
-	 * \return The parsed TOC
-	 */
 	std::unique_ptr<TOC> parse(const std::string &metafilename) const;
 
-	/**
-	 * \brief Set the MetadataParserSelection for this instance.
-	 *
-	 * \param[in] selection The MetadataParserSelection to use
-	 */
-	void set_selection(std::unique_ptr<MetadataParserSelection> selection);
+	void set_selection(const FileReaderSelection *selection);
 
-	/**
-	 * \brief Get the MetadataParserSelection used by this instance.
-	 *
-	 * \return The MetadataParserSelection used by this instance
-	 */
-	const MetadataParserSelection& selection() const;
+	const FileReaderSelection& selection() const;
 
 private:
 
-	/**
-	 * \brief Internal MetadataParserSelection.
-	 */
-	std::unique_ptr<MetadataParserSelection> selection_;
+	const FileReaderSelection *selection_;
 };
 
 
@@ -119,26 +96,20 @@ class ARIdCalculator::Impl final
 {
 public:
 
-	/**
-	 * \brief Calculate ARId using the specified metadata file.
-	 *
-	 * \param[in] metafilename Name of the metadata file
-	 *
-	 * \return The AccurateRip id for this medium
-	 */
+	Impl();
+
 	std::unique_ptr<ARId> calculate(const std::string &metafilename) const;
 
-	/**
-	 * \brief Calculate ARId using the specified metadata file and the specified
-	 * audio file.
-	 *
-	 * \param[in] audiofilename Name of the audiofile
-	 * \param[in] metafilename  Name of the metadata file
-	 *
-	 * \return The AccurateRip id for this medium
-	 */
 	std::unique_ptr<ARId> calculate(const std::string &audiofilename,
 			const std::string &metafilename) const;
+
+	void set_toc_selection(const FileReaderSelection *selection);
+
+	const FileReaderSelection& toc_selection() const;
+
+	void set_audio_selection(const FileReaderSelection *selection);
+
+	const FileReaderSelection& audio_selection() const;
 
 private:
 
@@ -153,6 +124,10 @@ private:
 	 */
 	std::unique_ptr<ARId> calculate(const TOC &toc,
 			const std::string &audiofilename) const;
+
+	const FileReaderSelection* toc_selection_;
+
+	const FileReaderSelection* audio_selection_;
 };
 
 
@@ -163,100 +138,29 @@ class ARCSCalculator::Impl final
 {
 public:
 
-	/**
-	 * \brief Constructor
-	 *
-	 * \param[in] type The Checksum type to calculate
-	 */
 	Impl(const arcstk::checksum::type type);
 
-	/**
-	 * \brief Default constructor.
-	 *
-	 * Uses ARCS1 and ARCS2 as default checksum::types.
-	 */
 	Impl() : Impl(arcstk::checksum::type::ARCS2) { /* empty */ };
 
-	/**
-	 * \brief Calculate ARCS values for the given audio file, using the metadata
-	 * from the given TOC.
-	 *
-	 * The TOC is supposed to contain the offsets of all tracks represented
-	 * in the audio file. The result will contain ARCS v1 and v2 for all tracks
-	 * specified in the TOC.
-	 *
-	 * \param[in] audiofilename Name of the audiofile
-	 * \param[in] toc           Metadata for the audiofile
-	 *
-	 * \return AccurateRip checksums of all tracks specified in the TOC
-	 */
 	std::pair<Checksums, ARId> calculate(
 		const std::string &audiofilename, const TOC &toc);
 
-	/**
-	 * \brief Calculate <tt>ChecksumSet</tt>s for the given audio files.
-	 *
-	 * The ARCSs in the result will have the same order as the input files,
-	 * so for any index i: 0 <= i < audiofilenames.size(), result[i] will be the
-	 * result for audiofilenames[i]. The result will have the same size as
-	 * audiofilenames.
-	 *
-	 * \param[in] audiofilenames       Names of the audiofiles
-	 * \param[in] first_file_with_skip Process first file as first track
-	 * \param[in] last_file_with_skip  Process last file as last track
-	 *
-	 * \return AccurateRip checksums of the input files
-	 */
 	Checksums calculate(const std::vector<std::string> &audiofilenames,
 		const bool &first_track_with_skip,
 		const bool &last_track_with_skip);
 
-	/**
-	 * \brief Calculate checksums for the given audio file.
-	 *
-	 * The flags skip_front and skip_back control whether the track is processed
-	 * as first or last track of an album. If skip_front is set to TRUE, the
-	 * first 2939 samples are skipped in the calculation. If skip_back
-	 * is set to TRUE, the last 5 frames of are skipped in the calculation.
-	 *
-	 * \param[in] audiofilename  Name  of the audiofile
-	 * \param[in] skip_front     Skip front samples of first track
-	 * \param[in] skip_back      Skip back samples of last track
-	 *
-	 * \return The AccurateRip checksum of this track
-	 */
 	ChecksumSet calculate(const std::string &audiofilename,
 		const bool &skip_front, const bool &skip_back);
 
-	/**
-	 * \brief Set the AudioReaderSelection for this instance.
-	 *
-	 * \param[in] selection The AudioReaderSelection to use
-	 */
-	void set_selection(std::unique_ptr<AudioReaderSelection> selection);
+	void set_selection(const FileReaderSelection *selection);
 
-	/**
-	 * \brief Get the AudioReaderSelection used by this instance.
-	 *
-	 * \return The AudioReaderSelection used by this instance
-	 */
-	const AudioReaderSelection& selection() const;
+	const FileReaderSelection& selection() const;
 
-	/**
-	 * \brief Set checksum::type for the instance to calculate
-	 *
-	 * \param[in] type The checksum::type to calculate
-	 */
 	void set_type(const arcstk::checksum::type type);
 
-	/**
-	 * \brief Return checksum::type calculated by this instance
-	 *
-	 * \return The checksum::type to calculate
-	 */
 	arcstk::checksum::type type() const;
 
-protected:
+private:
 
 	/**
 	 * \brief Worker: process a file and calculate the results.
@@ -287,8 +191,6 @@ protected:
 	 */
 	void log_completeness_check(const Calculation &calc) const;
 
-private:
-
 	/**
 	 * \brief Worker method: calculating the ARCS of a single audiofile.
 	 *
@@ -302,7 +204,7 @@ private:
 	/**
 	 * \brief Internal AudioReaderSelection.
 	 */
-	std::unique_ptr<AudioReaderSelection> selection_;
+	const FileReaderSelection *selection_;
 
 	/**
 	 * \brief Internal checksum type.
@@ -318,7 +220,7 @@ private:
 
 
 TOCParser::Impl::Impl()
-	: selection_(std::make_unique<MetadataParserSelection>())
+	: selection_ { nullptr }
 {
 	// empty
 }
@@ -336,29 +238,51 @@ std::unique_ptr<TOC> TOCParser::Impl::parse(const std::string &metafilename)
 				"Requested metadata file parser for empty filename.");
 	}
 
-	MetadataParserSelection selection;
-	std::unique_ptr<MetadataParser> parser = selection.for_file(metafilename);
+	ARCS_LOG_DEBUG << "Try to read TOC file '" << metafilename << "'";
+
+	auto file_reader = selection().for_file(metafilename);
+
+	if (!file_reader)
+	{
+		throw InputFormatException("Could not identify file format: '"
+				+ metafilename + "'");
+	}
+
+	auto readers = details::cast_reader<MetadataParser>(std::move(file_reader));
+
+	if (!readers.first)
+	{
+		throw InputFormatException("Could not acquire reader for TOC file: "
+				+ metafilename);
+	}
 
 	ARCS_LOG_DEBUG << "Start to parse metadata input";
 
-	return parser->parse(metafilename);
+	return readers.first->parse(metafilename);
 }
 
 
-void TOCParser::Impl::set_selection(
-		std::unique_ptr<MetadataParserSelection> selection)
+void TOCParser::Impl::set_selection(const FileReaderSelection *selection)
 {
-	selection_ = std::move(selection);
+	selection_ = selection;
 }
 
 
-const MetadataParserSelection& TOCParser::Impl::selection() const
+const FileReaderSelection& TOCParser::Impl::selection() const
 {
 	return *selection_;
 }
 
 
 // ARIdCalculator::Impl
+
+
+ARIdCalculator::Impl::Impl()
+	: toc_selection_ { nullptr }
+	, audio_selection_ { nullptr }
+{
+	// empty
+}
 
 
 std::unique_ptr<ARId> ARIdCalculator::Impl::calculate(
@@ -423,7 +347,7 @@ std::unique_ptr<ARId> ARIdCalculator::Impl::calculate(
 	}
 
 	TOCParser parser;
-	const auto toc = parser.parse(metafilename);
+	const auto toc = parser.parse(metafilename); // FIXME set/get selection
 
 	if (toc->complete())
 	{
@@ -467,11 +391,51 @@ std::unique_ptr<ARId> ARIdCalculator::Impl::calculate(const TOC &toc,
 	// The builder has to check its input values either way when it is
 	// requested to start processing.
 
-	const AudioReaderSelection selection;
-	std::unique_ptr<AudioReader> reader = selection.for_file(audiofilename);
-	const auto audiosize = reader->acquire_size(audiofilename);
+	auto file_reader = audio_selection().for_file(audiofilename);
+
+	if (!file_reader)
+	{
+		throw InputFormatException("Could not identify file format: '"
+				+ audiofilename + "'");
+	}
+
+	auto readers = details::cast_reader<AudioReader>(std::move(file_reader));
+
+	if (!readers.first)
+	{
+		throw InputFormatException("Could not acquire reader for audio file: "
+				+ audiofilename);
+	}
+
+	const auto audiosize = readers.first->acquire_size(audiofilename);
 
 	return make_arid(toc, audiosize->leadout_frame());
+}
+
+
+void ARIdCalculator::Impl::set_toc_selection(
+		const FileReaderSelection *selection)
+{
+	toc_selection_ = selection;
+}
+
+
+const FileReaderSelection& ARIdCalculator::Impl::toc_selection() const
+{
+	return *toc_selection_;
+}
+
+
+void ARIdCalculator::Impl::set_audio_selection(
+		const FileReaderSelection *selection)
+{
+	audio_selection_ = selection;
+}
+
+
+const FileReaderSelection& ARIdCalculator::Impl::audio_selection() const
+{
+	return *audio_selection_;
 }
 
 
@@ -479,7 +443,7 @@ std::unique_ptr<ARId> ARIdCalculator::Impl::calculate(const TOC &toc,
 
 
 ARCSCalculator::Impl::Impl(const arcstk::checksum::type type)
-	: selection_(std::make_unique<AudioReaderSelection>())
+	: selection_ {}
 	, type_ { type }
 {
 	// empty
@@ -577,40 +541,62 @@ void ARCSCalculator::Impl::process_file(const std::string &audiofilename,
 		Calculation& calc, const int32_t buffer_size, const bool use_cbuffer)
 		const
 {
-	std::unique_ptr<AudioReader> reader = selection().for_file(audiofilename);
+	ARCS_LOG_DEBUG << "Try to read audio file '" << audiofilename << "'";
 
-	if (!reader)
+	auto file_reader = selection().for_file(audiofilename);
+
+	if (!file_reader)
 	{
-		ARCS_LOG_ERROR << "No AudioReader available. Bail out.";
-		throw std::logic_error("No AudioReader available. Bail out.");
+		throw InputFormatException("Could not identify file format: '"
+				+ audiofilename + "'");
 	}
 
-	const bool buffer_size_is_legal =
-			(BLOCKSIZE.MIN <= buffer_size and buffer_size <= BLOCKSIZE.MAX);
+	auto readers = details::cast_reader<AudioReader>(std::move(file_reader));
+
+	if (!readers.first)
+	{
+		throw InputFormatException("Could not acquire reader for audio file: "
+				+ audiofilename);
+	}
+
+	ARCS_LOG_DEBUG << "Start to read audio input";
 
 
 	// Configure AudioReader and process file
 
+	const bool buffer_size_is_legal =
+			(BLOCKSIZE.MIN <= buffer_size and buffer_size <= BLOCKSIZE.MAX);
+
 	SampleProcessorAdapter proc { calc };
 
-	if (use_cbuffer and !reader->configurable_read_buffer()
+	if (use_cbuffer and !readers.first->configurable_read_buffer()
 			and buffer_size_is_legal)
 	{
+		ARCS_LOG_DEBUG << "Buffering for sample conversion requested";
+
 		// Conversion/Buffering was explicitly requested
 
 		SampleBuffer buffer(buffer_size);
 		buffer.register_processor(proc);
 
-		reader->set_processor(buffer);
+		ARCS_LOG(DEBUG1) << "Configure sample buffer of size: "
+			<< std::to_string(buffer_size) << " bytes";
+
+		readers.first->set_processor(buffer);
 	} else
 	{
 		// Conversion/Buffering was not requested
 
-		if (reader->configurable_read_buffer())
+		if (readers.first->configurable_read_buffer())
 		{
+			ARCS_LOG_DEBUG << "AudioReader provides configurable read buffer";
+
 			if (buffer_size_is_legal)
 			{
-				reader->set_samples_per_read(buffer_size);
+				ARCS_LOG(DEBUG1) << "Configure sample read chunk size: "
+					<< std::to_string(buffer_size) << " bytes";
+
+				readers.first->set_samples_per_read(buffer_size);
 
 			} else
 			{
@@ -623,15 +609,16 @@ void ARCSCalculator::Impl::process_file(const std::string &audiofilename,
 			}
 		} else
 		{
-			ARCS_LOG_INFO << "AudioReader has no configuration option "
-				<< "for read buffer size. Use implementation's default since "
-				<< "no conversion buffer was requested.";
+			ARCS_LOG_INFO << "AudioReader has no configuration option for read "
+				<< "buffer size and no conversion buffer was requested."
+				<< " Use implementation's default since no conversion buffer "
+				<< "was requested.";
 		}
 
-		reader->set_processor(proc);
+		readers.first->set_processor(proc);
 	}
 
-	reader->process_file(audiofilename);
+	readers.first->process_file(audiofilename);
 }
 
 
@@ -670,14 +657,13 @@ ChecksumSet ARCSCalculator::Impl::calculate_track(
 }
 
 
-void ARCSCalculator::Impl::set_selection(
-		std::unique_ptr<AudioReaderSelection> selection)
+void ARCSCalculator::Impl::set_selection(const FileReaderSelection *selection)
 {
 	selection_ = std::move(selection);
 }
 
 
-const AudioReaderSelection& ARCSCalculator::Impl::selection() const
+const FileReaderSelection& ARCSCalculator::Impl::selection() const
 {
 	return *selection_;
 }
@@ -719,9 +705,9 @@ void ARCSCalculator::Impl::log_completeness_check(const Calculation &calc) const
 
 
 TOCParser::TOCParser()
-	: impl_(std::make_unique<TOCParser::Impl>())
+	: impl_ { std::make_unique<TOCParser::Impl>() }
 {
-	// empty
+	impl_->set_selection(FileReaderRegistry::toc_selection());
 }
 
 
@@ -734,14 +720,13 @@ std::unique_ptr<TOC> TOCParser::parse(const std::string &metafilename) const
 }
 
 
-void TOCParser::set_selection(
-		std::unique_ptr<MetadataParserSelection> selection)
+void TOCParser::set_selection(const FileReaderSelection *selection)
 {
-	this->impl_->set_selection(std::move(selection));
+	this->impl_->set_selection(selection);
 }
 
 
-const MetadataParserSelection& TOCParser::selection() const
+const FileReaderSelection& TOCParser::selection() const
 {
 	return impl_->selection();
 }
@@ -753,7 +738,8 @@ const MetadataParserSelection& TOCParser::selection() const
 ARIdCalculator::ARIdCalculator()
 	: impl_(std::make_unique<ARIdCalculator::Impl>())
 {
-	// empty
+	impl_->set_toc_selection(FileReaderRegistry::toc_selection());
+	impl_->set_audio_selection(FileReaderRegistry::audio_selection());
 }
 
 
@@ -774,20 +760,46 @@ std::unique_ptr<ARId> ARIdCalculator::calculate(
 }
 
 
+void ARIdCalculator::set_toc_selection(
+		const FileReaderSelection *selection)
+{
+	impl_->set_toc_selection(selection);
+}
+
+
+const FileReaderSelection& ARIdCalculator::toc_selection() const
+{
+	return impl_->toc_selection();
+}
+
+
+void ARIdCalculator::set_audio_selection(
+		const FileReaderSelection *selection)
+{
+	impl_->set_audio_selection(selection);
+}
+
+
+const FileReaderSelection& ARIdCalculator::audio_selection() const
+{
+	return impl_->audio_selection();
+}
+
+
 // ARCSCalculator
 
 
 ARCSCalculator::ARCSCalculator()
 	: impl_(std::make_unique<ARCSCalculator::Impl>())
 {
-	// empty
+	impl_->set_selection(FileReaderRegistry::audio_selection());
 }
 
 
 ARCSCalculator::ARCSCalculator(const arcstk::checksum::type type)
 	: impl_(std::make_unique<ARCSCalculator::Impl>(type))
 {
-	// empty
+	impl_->set_selection(FileReaderRegistry::audio_selection());
 }
 
 
@@ -820,14 +832,13 @@ Checksums ARCSCalculator::calculate(
 }
 
 
-void ARCSCalculator::set_selection(
-		std::unique_ptr<AudioReaderSelection> selection)
+void ARCSCalculator::set_selection(const FileReaderSelection *selection)
 {
 	this->impl_->set_selection(std::move(selection));
 }
 
 
-const AudioReaderSelection& ARCSCalculator::selection() const
+const FileReaderSelection& ARCSCalculator::selection() const
 {
 	return impl_->selection();
 }

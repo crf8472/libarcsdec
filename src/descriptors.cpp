@@ -134,7 +134,7 @@ const std::string& find_lib(const std::vector<std::string> &list,
 
 	const auto pattern = libname_pattern(name);
 
-	auto first_match = std::find_if(list.begin(), list.end(),
+	const auto first_match = std::find_if(list.begin(), list.end(),
 			[pattern](const std::string &lname)
 			{
 				return std::regex_match(lname, pattern);
@@ -150,8 +150,18 @@ const std::string& find_lib(const std::vector<std::string> &list,
 }
 
 
+/**
+ * \internal
+ * \brief Acquire list of runtime dependencies of libarcsdec.
+ *
+ * \return List of runtime dependencies of libarcsdec
+ */
+std::vector<std::string> acquire_libarcsdec_libs();
+
 std::vector<std::string> acquire_libarcsdec_libs()
 {
+	ARCS_LOG_DEBUG << "Acquire runtime dependencies for libarcsdec";
+
 	// Runtime deps from main executable
 
 	auto so_list = list_libs("");
@@ -183,6 +193,81 @@ const std::vector<std::string>& libarcsdec_libs()
 	return libarcsdec_libs;
 }
 
+
+std::vector<char> read_bytes(const std::string &filename,
+	const uint32_t &offset, const uint32_t &length)
+{
+	// Read a number of bytes from the start of the file
+
+	// Note: We close and reopen the file while analyzing its file type.
+	// We 1 open the file, 2 read from it, 3 close it,
+	// 4 open it again with the determined FileReader and 5 read the content.
+	// This is inuitively two unnecessary operations (one open and one close).
+	// On the other hand, it is clean, requires no tricks and the application
+	// is not considered performance-critical. So for the moment, this is the
+	// way to go.
+
+	std::vector<char> bytes(length);
+	//bytes.reserve(length); // TODO Fix vector usage
+
+	std::ifstream in;
+
+	std::ios_base::iostate exception_mask = in.exceptions()
+		| std::ios::failbit | std::ios::badbit;
+
+	in.exceptions(exception_mask);
+
+	try
+	{
+		ARCS_LOG(DEBUG1) << "Open file: " << filename;
+
+		in.open(filename, std::ifstream::in | std::ifstream::binary);
+	}
+	catch (const std::ios_base::failure& f)
+	{
+		auto msg = std::string { "Failed to open file: " };
+		msg += filename;
+
+		throw FileReadException(msg, 0);
+	}
+
+	try
+	{
+		in.ignore(offset);
+
+		in.read(&bytes[0], length * sizeof(bytes[0]));
+
+		in.close();
+	}
+	catch (const std::ios_base::failure& f)
+	{
+		int64_t total_bytes_read = in.gcount();
+
+		in.close();
+
+		bytes.resize(0);
+
+		if (in.bad())
+		{
+			auto msg = std::string { "Failed while reading file: " };
+			msg += filename;
+
+			throw FileReadException(msg, total_bytes_read + 1);
+		} else
+		{
+			ARCS_LOG_DEBUG << "Something went wrong";
+
+			throw InputFormatException(f.what());
+		}
+	}
+
+	if (in.bad())
+	{
+	}
+
+	return bytes;
+}
+
 } // namespace details
 
 
@@ -199,7 +284,7 @@ std::string name(Format format)
 		"CAF",
 		"M4A",
 		"OGG",
-		"WV",
+		"WV", // TODO WVC?
 		"AIFF",
 		"WMA"
 		// ... add more audio formats here
@@ -459,43 +544,7 @@ bool FileTestBytes::do_passes(const FileReaderDescriptor &desc,
 std::vector<char> FileTestBytes::read_bytes(const std::string &filename,
 	const uint32_t &offset, const uint32_t &length) const
 {
-	// Read a number of bytes from the start of the file
-
-	// Note: We close and reopen the file while analyzing its file type.
-	// We 1 open the file, 2 read from it, 3 close it,
-	// 4 open it again with the determined FileReader and 5 read the content.
-	// This is inuitively two unnecessary operations (one open and one close).
-	// On the other hand, it is clean, requires no tricks and the application
-	// is not considered performance-critical. So for the moment, this is the
-	// way to go.
-
-	std::vector<char> bytes(length);
-	//bytes.reserve(length); // TODO Fix vector usage
-
-	std::ifstream in;
-
-	in.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-
-	try
-	{
-		in.open(filename, std::ifstream::in | std::ifstream::binary);
-
-		in.ignore(offset);
-
-		in.read(&bytes[0], length * sizeof(bytes[0]));
-
-		in.close();
-	}
-	catch (const std::ifstream::failure& f)
-	{
-		int64_t total_bytes_read = in.gcount();
-
-		bytes.resize(0);
-
-		throw FileReadException(f.what(), total_bytes_read + 1);
-	}
-
-	return bytes;
+	return details::read_bytes(filename, offset, length);
 }
 
 
@@ -504,13 +553,16 @@ std::vector<char> FileTestBytes::read_bytes(const std::string &filename,
 
 std::string FileTestName::do_description() const
 {
-	return "Is filename accepted?";
+	return "Filename analysis";
 }
 
 
 bool FileTestName::do_passes(const FileReaderDescriptor &desc,
 		const std::string &filename) const
 {
+	ARCS_LOG(DEBUG1) << "Does descriptor " << desc.name()
+		<< " accept file with name '" << filename << "'?";
+
 	return desc.accepts_name(filename);
 }
 
@@ -547,6 +599,12 @@ std::unique_ptr<FileReaderDescriptor> FileReaderSelector::select(
 {
 	auto descriptor = do_select(filename, tests, descs);
 
+	if (!descriptor)
+	{
+		ARCS_LOG_WARNING << "Could not select a matching descriptor";
+		return nullptr;
+	}
+
 	ARCS_LOG_DEBUG << "Descriptor '" << descriptor->name() << "' selected";
 
 	return descriptor;
@@ -563,17 +621,19 @@ bool DefaultSelector::do_matches(
 {
 	// The default implementation of matches() returns TRUE iff each test
 	// passes (== AND). It could be overwritten by a version that returns TRUE
-	// iff at least one test passes (== OR)
+	// iff at least one test passes (== OR).
 
 	for (const auto& test : tests)
 	{
 		// Note that if no tests are registered, each descriptor matches!
-		// In this case, just the first descriptor will create the FileReader.
+		// In this case, just the first descriptor wins.
 
 		if (not test->passes(*desc, filename))
 		{
 			ARCS_LOG_DEBUG << "Descriptor '" << desc->name()
-				<< "' failed a test and is discarded";
+				<< "' failed test '"
+				<< test->description()
+				<< "' and is discarded";
 			return false;
 		}
 	}
@@ -592,8 +652,8 @@ std::unique_ptr<FileReaderDescriptor> DefaultSelector::do_select(
 	{
 		if (this->matches(filename, tests, desc))
 		{
-			ARCS_LOG_DEBUG << "Select descriptor: '" << desc->name() << "'"
-				" (first descriptor passing all tests)";
+			ARCS_LOG_DEBUG << "First matching descriptor: '" << desc->name()
+				<< "'";
 
 			return desc->clone();
 		}
@@ -772,14 +832,14 @@ FileReaderSelection::Impl::select_descriptor(const std::string &filename) const
 	std::unique_ptr<FileReaderDescriptor> desc =
 		selector_->select(filename, tests_, descriptors_);
 
-	if (not desc)
+	if (!desc)
 	{
-		ARCS_LOG_WARNING << "Container format or codec unknown.";
+		ARCS_LOG_WARNING << "File format is unknown.";
 
 		return nullptr;
 	}
 
-	ARCS_LOG_INFO << "Select reader '" << desc->name() << "'";
+	ARCS_LOG_DEBUG << "Select reader '" << desc->name() << "'";
 
 	return desc;
 }
@@ -937,6 +997,15 @@ bool FileReaderSelection::no_tests() const
 {
 	return impl_->no_tests();
 }
+
+
+// FileReaderRegistry
+
+
+std::unique_ptr<FileReaderSelection> FileReaderRegistry::audio_selection_;
+
+std::unique_ptr<FileReaderSelection> FileReaderRegistry::toc_selection_;
+
 
 } // namespace v_1_0_0
 

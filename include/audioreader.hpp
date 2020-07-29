@@ -749,6 +749,13 @@ private:
 };
 
 
+struct CreateAudioReader
+{
+	std::unique_ptr<AudioReader> operator()(const FileReaderSelection &s,
+			const std::string &filename) const;
+};
+
+
 /**
  * \brief Selects and builds AudioReader instances for given inputs.
  */

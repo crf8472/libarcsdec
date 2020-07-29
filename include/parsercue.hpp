@@ -45,6 +45,13 @@ class DescriptorCUE : public FileReaderDescriptor
 public:
 
 	/**
+	 * \brief Constructor.
+	 */
+	DescriptorCUE()
+		: FileReaderDescriptor { { "cue" } }
+	{ /* empty */ }
+
+	/**
 	 * \brief Virtual default destructor.
 	 */
 	virtual ~DescriptorCUE() noexcept override;

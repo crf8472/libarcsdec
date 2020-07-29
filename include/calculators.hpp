@@ -90,14 +90,14 @@ public:
 	 *
 	 * \param[in] selection The MetadataParserSelection to use
 	 */
-	void set_selection(std::unique_ptr<MetadataParserSelection> selection);
+	void set_selection(const FileReaderSelection *selection);
 
 	/**
 	 * \brief Get the MetadataParserSelection used by this instance.
 	 *
 	 * \return The MetadataParserSelection used by this instance
 	 */
-	const MetadataParserSelection& selection() const;
+	const FileReaderSelection& selection() const;
 
 private:
 
@@ -148,6 +148,34 @@ public:
 	 */
 	std::unique_ptr<ARId> calculate(const std::string &audiofilename,
 			const std::string &metafilename);
+
+	/**
+	 * \brief Set the MetadataParserSelection for this instance.
+	 *
+	 * \param[in] selection The MetadataParserSelection to use
+	 */
+	void set_toc_selection(const FileReaderSelection *selection);
+
+	/**
+	 * \brief Get the MetadataParserSelection used by this instance.
+	 *
+	 * \return The MetadataParserSelection used by this instance
+	 */
+	const FileReaderSelection& toc_selection() const;
+
+	/**
+	 * \brief Set the MetadataParserSelection for this instance.
+	 *
+	 * \param[in] selection The MetadataParserSelection to use
+	 */
+	void set_audio_selection(const FileReaderSelection *selection);
+
+	/**
+	 * \brief Get the MetadataParserSelection used by this instance.
+	 *
+	 * \return The MetadataParserSelection used by this instance
+	 */
+	const FileReaderSelection& audio_selection() const;
 
 private:
 
@@ -258,14 +286,14 @@ public:
 	 *
 	 * \param[in] selection The AudioReaderSelection to use
 	 */
-	void set_selection(std::unique_ptr<AudioReaderSelection> selection);
+	void set_selection(const FileReaderSelection *selection);
 
 	/**
 	 * \brief Get the AudioReaderSelection used by this instance.
 	 *
 	 * \return The AudioReaderSelection used by this instance
 	 */
-	const AudioReaderSelection& selection() const;
+	const FileReaderSelection& selection() const;
 
 	/**
 	 * \brief Set checksum::type for the instance to calculate.

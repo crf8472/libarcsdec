@@ -551,6 +551,15 @@ std::unique_ptr<FileReaderDescriptor> DescriptorFlac::do_clone() const
 	return std::make_unique<DescriptorFlac>();
 }
 
+
+// Add this descriptor to the audio descriptor registry
+
+namespace {
+
+const auto d = RegisterAudioDescriptor<DescriptorFlac>();
+
+} // namespace
+
 } // namespace v_1_0_0
 
 } // namespace arcsdec

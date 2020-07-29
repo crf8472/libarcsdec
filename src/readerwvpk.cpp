@@ -920,6 +920,15 @@ std::unique_ptr<FileReaderDescriptor> DescriptorWavpack::do_clone() const
 	return std::make_unique<DescriptorWavpack>();
 }
 
+
+// Add this descriptor to the audio descriptor registry
+
+namespace {
+
+const auto d = RegisterAudioDescriptor<DescriptorWavpack>();
+
+} // namespace
+
 } // namespace v_1_0_0
 
 } // namespace arcsdec
