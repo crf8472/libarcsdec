@@ -1,6 +1,7 @@
 /**
- * \file audioreader.cpp Implements interface and toolkit for reading and validating audio files
+ * \file
  *
+ * Implements interface and toolkit for reading and validating audio files
  */
 
 
@@ -579,13 +580,26 @@ int64_t AudioReader::Impl::samples_per_read() const
 std::unique_ptr<AudioSize> AudioReader::Impl::acquire_size(
 		const std::string &filename) const
 {
-	return readerimpl_->acquire_size(filename);
+	ARCS_LOG_DEBUG << "Try to acquire audio file size of '" << filename << "'";
+
+	auto audiosize = readerimpl_->acquire_size(filename);
+
+	ARCS_LOG_DEBUG << "Audio file size of '" << filename
+		<< "' successfully acquired (== "
+		<< std::to_string(audiosize->leadout_frame())
+		<< " LBA frames)";
+
+	return audiosize;
 }
 
 
 void AudioReader::Impl::process_file(const std::string &filename)
 {
+	ARCS_LOG_DEBUG << "Try to process audio file '" << filename << "'";
+
 	readerimpl_->process_file(filename);
+
+	ARCS_LOG_DEBUG << "Sucessfully processed audio file '" << filename << "'";
 }
 
 

@@ -240,8 +240,6 @@ std::unique_ptr<TOC> TOCParser::Impl::parse(const std::string &metafilename)
 
 	CreateMetadataParser get_parser;
 
-	ARCS_LOG_DEBUG << "Try to read metadata file '" << metafilename << "'";
-
 	return get_parser(selection(), metafilename)->parse(metafilename);
 }
 
@@ -331,8 +329,6 @@ std::unique_ptr<ARId> ARIdCalculator::Impl::calculate(
 	}
 
 	CreateMetadataParser get_parser;
-
-	ARCS_LOG_DEBUG << "Try to read metadata file '" << metafilename << "'";
 
 	const auto toc = get_parser(toc_selection(), metafilename)->parse(
 			metafilename);
@@ -575,8 +571,6 @@ void ARCSCalculator::Impl::process_file(const std::string &audiofilename,
 
 		reader->set_processor(proc);
 	}
-
-	ARCS_LOG_DEBUG << "Try to read audio file '" << audiofilename << "'";
 
 	reader->process_file(audiofilename);
 }

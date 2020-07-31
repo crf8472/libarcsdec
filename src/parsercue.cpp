@@ -262,7 +262,7 @@ CueOpenFile::CueOpenFile(const std::string &filename)
 			throw FileReadException(message.str());
 		}
 
-		ARCS_LOG_INFO << "Start reading CUE file";
+		ARCS_LOG(DEBUG1) << "Start reading CUEsheet file with libcue";
 
 		cd_info_ = ::cue_parse_file(f);
 
@@ -291,7 +291,7 @@ CueOpenFile::CueOpenFile(const std::string &filename)
 		throw MetadataParseException(message.str());
 	}
 
-	ARCS_LOG_INFO << "CUE file read";
+	ARCS_LOG(DEBUG1) << "CUEsheet file successfully read";
 }
 
 

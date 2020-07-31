@@ -11,7 +11,6 @@
 #include <cstdint>
 #include <functional>  // for std::function
 #include <limits>
-#include <list>
 #include <memory>
 #include <regex>
 #include <set>
@@ -318,6 +317,7 @@ namespace details
 {
 
 /**
+ * \internal
  * \brief Downcast a FileReader to a specialized ReaderType.
  *
  * The operation is safe: if the cast fails, the input pointer is returned
@@ -348,16 +348,16 @@ auto cast_reader(std::unique_ptr<FileReader> file_reader) noexcept
 
 	} catch (...) // std::bad_cast is possible
 	{
-		//ARCS_LOG_ERROR <<
-		//		"Failed to safely cast FileReader pointer to ReaderType";
+		ARCS_LOG_WARNING <<
+				"Failed to safely cast FileReader pointer to ReaderType";
 
 		return std::make_pair(nullptr, std::move(file_reader));
 	}
 
 	if (!reader_type_rptr)
 	{
-		//ARCS_LOG_ERROR <<
-		//		"Casting FileReader pointer to ReaderType resulted in nullptr";
+		ARCS_LOG_WARNING <<
+				"Casting FileReader pointer to ReaderType resulted in nullptr";
 
 		return std::make_pair(nullptr, std::move(file_reader));
 	}
@@ -374,6 +374,7 @@ auto cast_reader(std::unique_ptr<FileReader> file_reader) noexcept
 
 
 /**
+ * \internal
  * \brief Read \c length bytes from file \c filename starting at position
  * \c offset.
  *
@@ -721,12 +722,17 @@ private:
 };
 
 
+class FileTest;
+bool operator == (const FileTest &lhs, const FileTest &rhs);
+
 /**
  * \brief A test whether a given FileReaderDescriptor matches a criterion.
  */
 class FileTest
 {
 public:
+
+	friend bool operator == (const FileTest &lhs, const FileTest &rhs);
 
 	/**
 	 * \brief Constructor.
@@ -755,6 +761,10 @@ public:
 	 */
 	bool passes(const FileReaderDescriptor &desc, const std::string &filename)
 		const;
+
+protected:
+
+	virtual bool equals(const FileTest &) const;
 
 private:
 
@@ -787,6 +797,10 @@ public:
 	 * \param[in] length Number of bytes in the sequence
 	 */
 	FileTestBytes(const uint64_t &offset, const uint32_t &length);
+
+protected:
+
+	bool equals(const FileTest &) const override;
 
 private:
 
@@ -888,7 +902,7 @@ public:
 	std::unique_ptr<FileReaderDescriptor> select(
 			const std::string &filename,
 			const std::set<std::unique_ptr<FileTest>> &tests,
-			const std::list<std::unique_ptr<FileReaderDescriptor>> &descs)
+			const std::set<std::unique_ptr<FileReaderDescriptor>> &descs)
 		const;
 
 private:
@@ -908,7 +922,7 @@ private:
 	virtual std::unique_ptr<FileReaderDescriptor> do_select(
 			const std::string &filename,
 			const std::set<std::unique_ptr<FileTest>> &tests,
-			const std::list<std::unique_ptr<FileReaderDescriptor>> &descs)
+			const std::set<std::unique_ptr<FileReaderDescriptor>> &descs)
 		const
 	= 0;
 };
@@ -930,7 +944,7 @@ private:
 	std::unique_ptr<FileReaderDescriptor> do_select(
 			const std::string &filename,
 			const std::set<std::unique_ptr<FileTest>> &tests,
-			const std::list<std::unique_ptr<FileReaderDescriptor>> &descs)
+			const std::set<std::unique_ptr<FileReaderDescriptor>> &descs)
 		const override;
 
 	bool do_matches(
@@ -947,19 +961,6 @@ private:
  */
 template <class T>
 using FunctionReturning = std::unique_ptr<T>(*)();
-
-
-/**
- * \brief Instantiate FileReaderDescriptor.
- *
- * \tparam T    The type to instantiate
- * \tparam Args The constructor arguments
- */
-template <class T, typename... Args> // TODO SFINAE stuff
-std::unique_ptr<FileReaderDescriptor> instantiate_ptr(Args&&... args)
-{
-	return std::make_unique<T>(std::forward<Args>(args)...);
-}
 
 
 /**
@@ -1002,9 +1003,10 @@ public:
 	 *
 	 * \param[in] desc The FileReaderDescriptor to be removed
 	 *
-	 * \return Number of descriptor instances removed.
+	 * \return The FileReaderDescriptor removed or nullptr
 	 */
-	int remove_descriptor(const FileReaderDescriptor * desc);
+	std::unique_ptr<FileReaderDescriptor> remove_descriptor(
+			const std::unique_ptr<FileReaderDescriptor> &desc);
 
 	/**
 	 * \brief Removes all descriptors in this instance.
@@ -1028,7 +1030,8 @@ public:
 	 *
 	 * \return Number of test instances removed.
 	 */
-	int unregister_test(const FileTest * test);
+	std::unique_ptr<FileTest> unregister_test(
+			const std::unique_ptr<FileTest> &test);
 
 	/**
 	 * \brief Removes all tests registered to this instance.
@@ -1063,7 +1066,7 @@ public:
 	 * \brief Create an opaque FileReader for the given file.
 	 *
 	 * Will return \c nullptr if the file cannot be read or the filename is
-	 * empty.
+	 * empty. The FileReader returned is selected by \c select_descriptor().
 	 *
 	 * \param[in] filename Name of the file to create the reader for
 	 *
@@ -1074,6 +1077,8 @@ public:
 	/**
 	 * \brief Traverse all available descriptors and apply the specified
 	 * function \c func on each of them.
+	 *
+	 * This enables listing or querying the set of added descriptors.
 	 *
 	 * \param[in] func Function to apply to each descriptor.
 	 */
@@ -1234,50 +1239,6 @@ private:
 
 
 /**
- * \brief Register a FileReaderDescriptor type for audio input
- *
- * \tparam D The descriptor type to register
- */
-template <class D>
-class RegisterAudioDescriptor : public FileReaderRegistry //TODO SFINAE stuff
-{
-public:
-
-	/**
-	 * \brief Register a descriptor
-	 *
-	 * \param[in] name The name to register the application type
-	 */
-	RegisterAudioDescriptor()
-	{
-		audio_selection()->add_descriptor(call(&instantiate_ptr<D>));
-	}
-};
-
-
-/**
- * \brief Register a FileReaderDescriptor type for TOC/metadata input
- *
- * \tparam D The descriptor type to register
- */
-template <class D>
-class RegisterMetadataDescriptor : public FileReaderRegistry //TODO SFINAE stuff
-{
-public:
-
-	/**
-	 * \brief Register a descriptor by a specific name
-	 *
-	 * \param[in] name The name to register the application type
-	 */
-	RegisterMetadataDescriptor()
-	{
-		toc_selection()->add_descriptor(call(&instantiate_ptr<D>));
-	}
-};
-
-
-/**
  * \brief Functor to safely create a unique_ptr to a downcasted FileReader.
  *
  * It will either provide a valid FileReader of the requested type or will
@@ -1310,6 +1271,63 @@ struct CreateReader
 		}
 
 		return std::move(readers.first); // XXX Prevents RVO, but seems required
+	}
+};
+
+
+/**
+ * \brief Instantiate FileReaderDescriptor.
+ *
+ * \tparam T    The type to instantiate
+ * \tparam Args The constructor arguments
+ */
+template <class T, typename... Args> // TODO SFINAE stuff
+std::unique_ptr<FileReaderDescriptor> make_descriptor(Args&&... args)
+{
+	return std::make_unique<T>(std::forward<Args>(args)...);
+}
+
+
+/**
+ * \brief Register a FileReaderDescriptor type for audio input
+ *
+ * \tparam D The descriptor type to register
+ */
+template <class D>
+class RegisterAudioDescriptor : public FileReaderRegistry //TODO SFINAE stuff
+{
+public:
+
+	/**
+	 * \brief Register a descriptor
+	 *
+	 * \param[in] name The name to register the application type
+	 */
+	RegisterAudioDescriptor()
+	{
+		audio_selection()->add_descriptor(call(&make_descriptor<D>));
+	}
+};
+
+
+/**
+ * \brief Register a FileReaderDescriptor type for TOC/metadata input
+ *
+ * \tparam D The descriptor type to register
+ */
+template <class D>
+class RegisterMetadataDescriptor : public FileReaderRegistry //TODO SFINAE stuff
+{
+public:
+
+	/**
+	 * \brief Register a descriptor by a specific name
+	 *
+	 * \param[in] name The name to register the application type
+	 */
+	RegisterMetadataDescriptor()
+	{
+		toc_selection()->add_descriptor(call(&make_descriptor<D>));
 	}
 };
 

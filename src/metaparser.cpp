@@ -1,6 +1,7 @@
 /**
- * \file metaparser.cpp Implements interface for parsing TOC informations
+ * \file
  *
+ * Implements interface for parsing TOC informations
  */
 
 
@@ -56,9 +57,13 @@ MetadataParser::~MetadataParser() noexcept = default;
 
 std::unique_ptr<TOC> MetadataParser::parse(const std::string &filename)
 {
-	ARCS_LOG_DEBUG << "Parse metadata file '" << filename << "'";
+	ARCS_LOG_DEBUG << "Try to read metadata file '" << filename << "'";
 
-	return impl_->parse(filename);
+	auto toc = impl_->parse(filename);
+
+	ARCS_LOG_DEBUG << "Metadata file '" << filename << "' successfully read";
+
+	return toc;
 }
 
 

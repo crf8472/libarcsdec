@@ -13,6 +13,12 @@
 #ifndef __LIBARCSDEC_METAPARSER_HPP__
 #include "metaparser.hpp"
 #endif
+#ifndef __LIBARCSDEC_READERWAV_HPP__
+#include "readerwav.hpp"
+#endif
+#ifndef __LIBARCSDEC_READERFLAC_HPP__
+#include "readerflac.hpp"
+#endif
 #ifndef __LIBARCSDEC_VERSION_HPP__
 #include "version.hpp"
 #endif
@@ -60,7 +66,7 @@ TEST_CASE ( "Load runtime dependencies", "" )
 	}
 
 
-	SECTION ("Escaped libname is found in list")
+	SECTION ("Escaped libname is found in libarcsdec list")
 	{
 		const auto& list = arcsdec::details::libarcsdec_libs();
 
@@ -123,18 +129,44 @@ TEST_CASE ( "Load runtime dependencies", "" )
 }
 
 
-TEST_CASE ( "List audio descriptors", "[audioreaderselection]" )
+TEST_CASE ( "FileReaderSelection", "[filereaderselection]" )
 {
-	SECTION ( "" )
+	using arcsdec::FileReaderSelection;
+	using arcsdec::FileReaderDescriptor;
+
+	FileReaderSelection selection;
+
+	REQUIRE ( selection.size() == 0 );
+	REQUIRE ( selection.empty() );
+	REQUIRE ( selection.total_tests() == 0 );
+	REQUIRE ( selection.no_tests() );
+
+	SECTION ( "Adding descriptors works correctly" )
 	{
+		selection.add_descriptor(std::make_unique<arcsdec::DescriptorWavPCM>());
+
+		CHECK ( selection.size() == 1 );
+		CHECK ( not selection.empty() );
+		CHECK ( selection.total_tests() == 0 );
+		CHECK ( selection.no_tests() );
+
+		selection.add_descriptor(std::make_unique<arcsdec::DescriptorFlac>());
+
+		CHECK ( selection.size() == 2 );
 	}
-}
 
-
-TEST_CASE ( "List metadata descriptors", "[metadataparserselection]" )
-{
-	SECTION ( "" )
+	SECTION ( "Removing descriptors works correctly" )
 	{
+		selection.add_descriptor(std::make_unique<arcsdec::DescriptorWavPCM>());
+		selection.add_descriptor(std::make_unique<arcsdec::DescriptorFlac>());
+		REQUIRE ( selection.size() == 2 );
+
+		const std::unique_ptr<FileReaderDescriptor> & flac_desc =
+			std::make_unique<arcsdec::DescriptorFlac>();
+
+		auto d = selection.remove_descriptor(flac_desc);
+
+		CHECK ( selection.size() == 1 );
 	}
 }
 

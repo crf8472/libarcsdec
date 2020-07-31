@@ -513,6 +513,18 @@ bool FileTest::passes(const FileReaderDescriptor &desc,
 }
 
 
+bool FileTest::equals(const FileTest &/*rhs*/) const
+{
+	return true; // default implementation for subclasses without members
+}
+
+
+bool operator == (const FileTest &lhs, const FileTest &rhs)
+{
+	return typeid(lhs) == typeid(rhs) and lhs.equals(rhs);
+}
+
+
 // FileTestBytes
 
 
@@ -545,6 +557,16 @@ std::vector<char> FileTestBytes::read_bytes(const std::string &filename,
 	const uint32_t &offset, const uint32_t &length) const
 {
 	return details::read_bytes(filename, offset, length);
+}
+
+
+bool FileTestBytes::equals(const FileTest &rhs) const
+{
+	auto rhs_ftb = dynamic_cast<const FileTestBytes*>(&rhs);
+
+	return rhs_ftb != nullptr
+		and offset_ == rhs_ftb->offset_
+		and length_ == rhs_ftb->length_;
 }
 
 
@@ -595,7 +617,7 @@ bool FileReaderSelector::matches(
 std::unique_ptr<FileReaderDescriptor> FileReaderSelector::select(
 		const std::string &filename,
 		const std::set<std::unique_ptr<FileTest>> &tests,
-		const std::list<std::unique_ptr<FileReaderDescriptor>> &descs) const
+		const std::set<std::unique_ptr<FileReaderDescriptor>> &descs) const
 {
 	auto descriptor = do_select(filename, tests, descs);
 
@@ -630,7 +652,7 @@ bool DefaultSelector::do_matches(
 
 		if (not test->passes(*desc, filename))
 		{
-			ARCS_LOG_DEBUG << "Descriptor '" << desc->name()
+			ARCS_LOG(DEBUG1) << "Descriptor '" << desc->name()
 				<< "' failed test '"
 				<< test->description()
 				<< "' and is discarded";
@@ -638,7 +660,7 @@ bool DefaultSelector::do_matches(
 		}
 	}
 
-	ARCS_LOG_DEBUG << "Descriptor '" << desc->name() << "' passed all tests";
+	ARCS_LOG(DEBUG1) << "Descriptor '" << desc->name() << "' passed all tests";
 	return true;
 }
 
@@ -646,13 +668,13 @@ bool DefaultSelector::do_matches(
 std::unique_ptr<FileReaderDescriptor> DefaultSelector::do_select(
 		const std::string &filename,
 		const std::set<std::unique_ptr<FileTest>> &tests,
-		const std::list<std::unique_ptr<FileReaderDescriptor>> &descs) const
+		const std::set<std::unique_ptr<FileReaderDescriptor>> &descs) const
 {
 	for (auto& desc : descs)
 	{
 		if (this->matches(filename, tests, desc))
 		{
-			ARCS_LOG_DEBUG << "First matching descriptor: '" << desc->name()
+			ARCS_LOG(DEBUG1) << "First matching descriptor: '" << desc->name()
 				<< "'";
 
 			return desc->clone();
@@ -687,13 +709,15 @@ public:
 
 	void add_descriptor(std::unique_ptr<FileReaderDescriptor> desc);
 
-	int remove_descriptor(const FileReaderDescriptor* desc);
+	std::unique_ptr<FileReaderDescriptor> remove_descriptor(
+			const std::unique_ptr<FileReaderDescriptor> &desc);
 
 	void remove_all_descriptors();
 
 	void register_test(std::unique_ptr<FileTest> testobj);
 
-	int unregister_test(const FileTest * testobj);
+	std::unique_ptr<FileTest> unregister_test(
+			const std::unique_ptr<FileTest> &test);
 
 	void remove_all_tests();
 
@@ -734,33 +758,39 @@ private:
 	/**
 	 * \brief Internal list of FileReaderDescriptors to match by the selector_
 	 */
-	std::list<std::unique_ptr<FileReaderDescriptor>> descriptors_;
+	std::set<std::unique_ptr<FileReaderDescriptor>> descriptors_;
 };
 
 
 void FileReaderSelection::Impl::add_descriptor(
 		std::unique_ptr<FileReaderDescriptor> desc)
 {
-	descriptors_.push_back(std::move(desc));
+	descriptors_.insert(std::move(desc));
 }
 
 
-int FileReaderSelection::Impl::remove_descriptor(
-		const FileReaderDescriptor * desc)
+std::unique_ptr<FileReaderDescriptor>
+	FileReaderSelection::Impl::remove_descriptor(
+		const std::unique_ptr<FileReaderDescriptor> &desc)
 {
-	int counter { 0 };
+	auto desc_ptr = desc.get();
+	auto pos = std::find_if(descriptors_.begin(), descriptors_.end(),
+			[desc_ptr](const std::unique_ptr<FileReaderDescriptor> &d)
+			{
+				return desc_ptr && *d == *desc_ptr;
+			});
 
-	auto pos = descriptors_.begin();
-	while ((pos = std::find_if(pos, descriptors_.end(),
-			[desc](const std::unique_ptr<FileReaderDescriptor> &d)
-				{ return d.get() == desc; }))
-			!= descriptors_.end())
+	if (pos != descriptors_.end())
 	{
-		descriptors_.erase(pos);
-		++counter;
+		pos = descriptors_.erase(pos);
 	}
 
-	return counter;
+	if (pos == descriptors_.end())
+	{
+		return nullptr;
+	}
+
+	return std::move(const_cast<std::unique_ptr<FileReaderDescriptor>&>(*pos));
 }
 
 
@@ -777,21 +807,28 @@ void FileReaderSelection::Impl::register_test(
 }
 
 
-int FileReaderSelection::Impl::unregister_test(const FileTest * test)
+std::unique_ptr<FileTest>
+	FileReaderSelection::Impl::unregister_test(
+			const std::unique_ptr<FileTest> &test)
 {
-	int counter { 0 };
+	auto test_ptr = test.get();
+	auto pos = std::find_if(tests_.begin(), tests_.end(),
+			[test_ptr](const std::unique_ptr<FileTest> &t)
+			{
+				return test_ptr && *t == *test_ptr;
+			});
 
-	auto pos = tests_.begin();
-	while ((pos = std::find_if(pos, tests_.end(),
-			[test](const std::unique_ptr<FileTest> &t)
-				{ return t.get() == test; }))
-			!= tests_.end())
+	if (pos != tests_.end())
 	{
-		tests_.erase(pos);
-		++counter;
+		pos = tests_.erase(pos);
 	}
 
-	return counter;
+	if (pos == tests_.end())
+	{
+		return nullptr;
+	}
+
+	return std::move(const_cast<std::unique_ptr<FileTest>&>(*pos));
 }
 
 
@@ -834,12 +871,10 @@ FileReaderSelection::Impl::select_descriptor(const std::string &filename) const
 
 	if (!desc)
 	{
-		ARCS_LOG_WARNING << "File format is unknown.";
+		ARCS_LOG_WARNING << "File format is unknown, no reader available.";
 
 		return nullptr;
 	}
-
-	ARCS_LOG_DEBUG << "Select reader '" << desc->name() << "'";
 
 	return desc;
 }
@@ -911,7 +946,8 @@ void FileReaderSelection::add_descriptor(
 }
 
 
-int FileReaderSelection::remove_descriptor(const FileReaderDescriptor * desc)
+std::unique_ptr<FileReaderDescriptor> FileReaderSelection::remove_descriptor(
+		const std::unique_ptr<FileReaderDescriptor> &desc)
 {
 	return impl_->remove_descriptor(desc);
 }
@@ -923,7 +959,8 @@ void FileReaderSelection::register_test(std::unique_ptr<FileTest> testobj)
 }
 
 
-int FileReaderSelection::unregister_test(const FileTest * test)
+std::unique_ptr<FileTest>  FileReaderSelection::unregister_test(
+		const std::unique_ptr<FileTest> &test)
 {
 	return impl_->unregister_test(test);
 }
