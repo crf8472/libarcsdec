@@ -375,8 +375,8 @@ auto cast_reader(std::unique_ptr<FileReader> file_reader) noexcept
 
 /**
  * \internal
- * \brief Read \c length bytes from file \c filename starting at position
- * \c offset.
+ * \brief Worker: Read \c length bytes from file \c filename starting at
+ * position \c offset.
  *
  * \param[in] filename Name of the file to read from
  * \param[in] offset   0-based byte offset to start
@@ -386,6 +386,23 @@ auto cast_reader(std::unique_ptr<FileReader> file_reader) noexcept
  */
 std::vector<char> read_bytes(const std::string &filename,
 	const uint32_t &offset, const uint32_t &length);
+
+
+/**
+ * \internal
+ * \brief Worker: Provides the suffix of a given filename.
+ *
+ * The suffix is the part of filename following the last occurrence of
+ * \c delimiter. If filename does not contain the delimiter, the entire
+ * filename is returned as suffix.
+ *
+ * \param[in] filename  The filename to check
+ * \param[in] delimiter The delimiter to separate the suffix from the base
+ *
+ * \return The relevant suffix or the entire filename
+ */
+std::string get_suffix(const std::string &filename,
+		const std::string &delimiter);
 
 } // namespace details
 
@@ -492,6 +509,9 @@ private:
 
 public:
 
+	friend bool operator == (const FileReaderDescriptor &lhs,
+			const FileReaderDescriptor &rhs);
+
 	/**
 	 * \brief Empty constructor.
 	 */
@@ -588,17 +608,6 @@ public:
 	 */
 	std::unique_ptr<FileReaderDescriptor> clone() const;
 
-	/**
-	 * \brief Equality.
-	 *
-	 * \param[in] rhs The right hand side of the comparison
-	 *
-	 * \return TRUE iff the right hand side is equal to the left hand side,
-	 * otherwise false
-	 */
-	friend bool operator == (const FileReaderDescriptor &lhs,
-			const FileReaderDescriptor &rhs);
-
 protected:
 
 	/**
@@ -609,22 +618,6 @@ protected:
 	FileReaderDescriptor(const decltype( suffices_ ) suffices)
 		: suffices_ { suffices } { /* empty */ }
 	// TODO suffices_ should be static since it depends on type, not on instance
-
-	/**
-	 * \brief Worker: Provides the suffix of a given filename.
-	 *
-	 * The suffix is the part of filename following the last occurrence of
-	 * \c delimiter. If filename does not contain the delimiter, the entire
-	 * filename is returned as suffix.
-	 *
-	 * \param[in] filename  The filename to check
-	 * \param[in] delimiter The delimiter to separate the suffix from the base
-	 *
-	 * \return The relevant suffix or the entire filename
-	 */
-	std::string get_suffix(const std::string &filename,
-			const std::string &delimiter) const;
-	// TODO Use std::filesystem of C++17
 
 private:
 

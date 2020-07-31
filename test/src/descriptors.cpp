@@ -168,5 +168,38 @@ TEST_CASE ( "FileReaderSelection", "[filereaderselection]" )
 
 		CHECK ( selection.size() == 1 );
 	}
+
+	SECTION ( "Adding tests works correctly" )
+	{
+		selection.register_test(std::make_unique<arcsdec::FileTestBytes>(0, 7));
+
+		CHECK ( selection.size() == 0 );
+		CHECK ( selection.empty() );
+		CHECK ( selection.total_tests() == 1 );
+		CHECK ( not selection.no_tests() );
+
+		selection.register_test(std::make_unique<arcsdec::FileTestName>());
+
+		CHECK ( selection.total_tests() == 2 );
+		CHECK ( not selection.no_tests() );
+	}
+
+	SECTION ( "Removing tests works correctly" )
+	{
+		selection.register_test(std::make_unique<arcsdec::FileTestBytes>(0, 6));
+		selection.register_test(std::make_unique<arcsdec::FileTestName>());
+		REQUIRE ( selection.size() == 0 );
+
+		CHECK ( selection.total_tests() == 2 );
+		CHECK ( not selection.no_tests() );
+
+		const std::unique_ptr<arcsdec::FileTest> & name_test=
+			std::make_unique<arcsdec::FileTestName>();
+
+		auto d = selection.unregister_test(name_test);
+
+		CHECK ( selection.total_tests() == 1 );
+		CHECK ( not selection.no_tests() );
+	}
 }
 

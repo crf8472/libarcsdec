@@ -268,6 +268,22 @@ std::vector<char> read_bytes(const std::string &filename,
 	return bytes;
 }
 
+
+std::string get_suffix(const std::string &filename, const std::string &delim)
+{
+	// TODO Use std::filesystem of C++17
+
+	if (filename.empty()) { return filename; }
+
+	auto pos = filename.find_last_of(delim);
+
+	if (pos == std::string::npos) { return filename; }
+
+	return pos < filename.length()
+			? filename.substr(pos + 1, filename.length())
+			: std::to_string(filename.back());
+}
+
 } // namespace details
 
 
@@ -433,7 +449,7 @@ std::unique_ptr<FileReaderDescriptor> FileReaderDescriptor::clone() const
 
 bool FileReaderDescriptor::do_accepts_name(const std::string &filename) const
 {
-	auto fname_suffix = get_suffix(filename, ".");
+	auto fname_suffix = details::get_suffix(filename, ".");
 
 	if (fname_suffix.empty()) { return false; }
 
@@ -448,21 +464,6 @@ bool FileReaderDescriptor::do_accepts_name(const std::string &filename) const
 			});
 
 	return rc != suffices_.end();
-}
-
-
-std::string FileReaderDescriptor::get_suffix(const std::string &filename,
-		const std::string &delimiter) const
-{
-	if (filename.empty()) { return filename; }
-
-	auto pos = filename.find_last_of(delimiter);
-
-	if (pos == std::string::npos) { return filename; }
-
-	return pos < filename.length()
-			? filename.substr(pos + 1, filename.length())
-			: std::to_string(filename.back());
 }
 
 
