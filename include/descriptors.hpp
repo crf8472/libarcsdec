@@ -1130,7 +1130,7 @@ private:
 
 
 /**
- * \brief Description.
+ * \brief A global singleton registry holding all compiled-in FileDescriptors.
  */
 class FileReaderRegistry
 {
@@ -1263,7 +1263,8 @@ struct CreateReader
 					+ filename);
 		}
 
-		return std::move(readers.first); // XXX Prevents RVO, but seems required
+		return std::move(readers.first);
+		// XXX Prevents RVO, but omitting the move causes compile error.
 	}
 };
 
@@ -1282,7 +1283,7 @@ std::unique_ptr<FileReaderDescriptor> make_descriptor(Args&&... args)
 
 
 /**
- * \brief Register a FileReaderDescriptor type for audio input
+ * \brief Register a FileReaderDescriptor type for audio input.
  *
  * \tparam D The descriptor type to register
  */
@@ -1304,7 +1305,7 @@ public:
 
 
 /**
- * \brief Register a FileReaderDescriptor type for TOC/metadata input
+ * \brief Register a FileReaderDescriptor type for TOC/metadata input.
  *
  * \tparam D The descriptor type to register
  */
