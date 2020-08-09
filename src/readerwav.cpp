@@ -16,6 +16,7 @@ extern "C" {
 #include <sys/stat.h> // for stat
 }
 
+#include <algorithm>  // for min
 #include <cstdint>
 #include <fstream>
 #include <functional>
@@ -46,11 +47,6 @@ namespace arcsdec
 inline namespace v_1_0_0
 {
 
-//namespace registered
-//{
-//const auto WavPCM = RegisterFileReaderType<DescriptorWavPCM>("parse");
-//}
-
 using arcstk::SampleInputIterator;
 using arcstk::AudioSize;
 using arcstk::CDDA;
@@ -74,21 +70,30 @@ using arcstk::InvalidAudioException;
  */
 
 
-// WAV_CDDA_t
-
-
-WAV_CDDA_t::~WAV_CDDA_t() noexcept = default;
-
-
 // RIFFWAV_PCM_CDDA_t
 
-
-constexpr unsigned char RIFFWAV_PCM_CDDA_t::WAVPCM_HEADER_[44];
-constexpr unsigned int  RIFFWAV_PCM_CDDA_t::BYTES_[13][2];
 constexpr int           RIFFWAV_PCM_CDDA_t::HEADER_FIELD_COUNT_;
 
+constexpr unsigned int  RIFFWAV_PCM_CDDA_t::BYTES_[13][2];
 
-RIFFWAV_PCM_CDDA_t::~RIFFWAV_PCM_CDDA_t() noexcept = default;
+constexpr unsigned char RIFFWAV_PCM_CDDA_t::any_;
+
+const std::array<unsigned char, 44> RIFFWAV_PCM_CDDA_t::WAVPCM_HEADER_ =
+{
+	0x52, 0x49, 0x46, 0x46, // BE: 'R','I','F','F'
+	any_, any_, any_, any_, // LE: filesize in bytes - 8
+	0x57, 0x41, 0x56, 0x45, // BE: 'W','A','V','E'
+	0x66, 0x6D, 0x74, 0x20, // BE: Format Subchunk Header: 'f','m','t',' '
+	0x10, 0x00, 0x00, 0x00, // LE: Format Subchunk Size: '16'
+	0x01, 0x00,             // LE: wFormatTag: 1 (means: PCM),
+	0x02, 0x00,             // LE: wChannels: 2 (means: stereo)
+	0x44, 0xAC, 0x00, 0x00, // LE: dwSamplesPerSec:  44100
+	0x10, 0xB1, 0x02, 0x00, // LE: dwAvgBytesPerSec: 176400
+	0x04, 0x00,             // LE: wBlockAlign: 4
+	0x10, 0x00,             // LE: wBitsPerSample: 16
+	0x64, 0x61, 0x74, 0x61, // BE: Data Subchunk Header: 'd','a','t','a'
+	any_, any_, any_, any_  // LE: Data Subchunk Size
+};
 
 
 uint32_t RIFFWAV_PCM_CDDA_t::header(FIELD field) const
@@ -190,49 +195,15 @@ uint32_t RIFFWAV_PCM_CDDA_t::data_subchunk_id() const
 }
 
 
-bool RIFFWAV_PCM_CDDA_t::match(std::vector<char> bytes, uint64_t offset)
+const std::array<unsigned char, 44>& RIFFWAV_PCM_CDDA_t::header()
 {
-	if (bytes.empty())
-	{
-		ARCS_LOG(DEBUG1) << "Test bytes empty, no match";
-		return false; // TODO Exception?
-	}
+	return WAVPCM_HEADER_;
+}
 
-	if (offset > 44u) // Test Bytes Beyond Canonical Part?
-	{
-		ARCS_LOG(DEBUG1) << "Test bytes beyond WAV header, match";
-		return true;
-	}
 
-	static const unsigned char irrelevant = 0xFF;
-	unsigned char refbyte = 0;
-
-	const auto max_size = 44u - offset;
-	const unsigned int size = bytes.size() > max_size ? max_size : bytes.size();
-
-	ARCS_LOG(DEBUG1) << "Test bytes offset: " << offset;
-	ARCS_LOG(DEBUG1) << "Test bytes length: " << bytes.size();
-	ARCS_LOG(DEBUG1) << "Compared bytes: " << size;
-
-	for (unsigned int i = 0; i < size; ++i)
-	{
-		refbyte = WAVPCM_HEADER_[offset + i];
-
-		std::stringstream msg;
-		msg << "Position " << std::setw(2) << std::setfill(' ') << i
-			<< ": reference byte ";
-		msg << std::hex << std::showbase << static_cast<int>(refbyte);
-		msg << " input byte ";
-		msg << std::hex << std::showbase << static_cast<int>(bytes[i]);
-		ARCS_LOG(DEBUG1) << msg.str();
-
-		if (refbyte != static_cast<unsigned char>(bytes[i]))
-		{
-			if (refbyte != irrelevant) { return false; }
-		}
-	}
-
-	return true;
+const unsigned char& RIFFWAV_PCM_CDDA_t::any_byte()
+{
+	return any_;
 }
 
 
@@ -1211,10 +1182,76 @@ LibInfo DescriptorWavPCM::do_libraries() const
 }
 
 
-bool DescriptorWavPCM::do_accepts_bytes(const std::vector<char> &bytes,
+bool DescriptorWavPCM::do_accepts_bytes(const std::vector<unsigned char> &bytes,
 		const uint64_t &offset) const
 {
-	return RIFFWAV_PCM_CDDA_t::match(bytes, offset);
+	// No test bytes? => fail
+	if (bytes.empty())
+	{
+		ARCS_LOG(DEBUG1) << "Test bytes empty, no match";
+		return false;
+	}
+
+	// Test Bytes Beyond Canonical Part? => accept
+	if (offset >= RIFFWAV_PCM_CDDA_t::header().size())
+	{
+		ARCS_LOG(DEBUG1) <<
+			"Test bytes accepted since they are beyond WAV header";
+		return true;
+	}
+
+	// determine start pointers
+
+	auto in_current  = bytes.begin();
+	auto ref_current = RIFFWAV_PCM_CDDA_t::header().begin() + offset;
+
+	// determine end pointers
+
+	const auto ref_bytes    = RIFFWAV_PCM_CDDA_t::header().size() - offset;
+	const bool longer_input = bytes.size() > ref_bytes;
+
+	const auto in_stop  = longer_input
+		? bytes.begin() + static_cast<int>(ref_bytes) + 1 /* past-the-end */
+		: bytes.end();
+
+	const auto ref_stop = longer_input
+		? RIFFWAV_PCM_CDDA_t::header().end()
+		: ref_current + bytes.size() + 1 /* past-the-end */;
+
+	do
+	{
+		const auto m = std::mismatch(in_current, in_stop, ref_current);
+
+		// Reached the end? => Success
+		if (m.first == in_stop or m.second == ref_stop)
+		{
+			break;
+		}
+
+		// Is it an actual mismatch (i.e. on a non-wildcard byte)?
+		if (m.second != ref_stop
+				and *m.second != RIFFWAV_PCM_CDDA_t::any_byte())
+		{
+			return false;
+		}
+
+		// Mismatch was on a "wildcard byte", so skip all following bytes until
+		// the wildcard sequence ends.
+
+		in_current  = m.first;
+		ref_current = m.second;
+
+		// Skip all input bytes referring to 'any_byte' in the reference bytes
+		while (in_current != in_stop and ref_current != ref_stop
+				and *ref_current == RIFFWAV_PCM_CDDA_t::any_byte())
+		{
+			++in_current;
+			++ref_current;
+		}
+
+	} while (in_current != in_stop and ref_current != ref_stop);
+
+	return true;
 }
 
 

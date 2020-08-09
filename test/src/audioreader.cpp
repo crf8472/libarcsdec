@@ -7,7 +7,9 @@
 #endif
 
 /**
- * \file audioreader.cpp Tests for all API classes exported by audioreader.hpp
+ * \file
+ *
+ * Tests for all API classes exported by audioreader.hpp
  */
 
 

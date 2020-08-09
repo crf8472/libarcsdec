@@ -499,7 +499,7 @@ LibInfo  DescriptorFlac::do_libraries() const
 }
 
 
-bool DescriptorFlac::do_accepts_bytes(const std::vector<char> &bytes,
+bool DescriptorFlac::do_accepts_bytes(const std::vector<unsigned char> &bytes,
 		const uint64_t &offset) const
 {
 	return  bytes.size() >= 4

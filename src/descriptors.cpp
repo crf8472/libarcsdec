@@ -194,26 +194,21 @@ const std::vector<std::string>& libarcsdec_libs()
 }
 
 
-std::vector<char> read_bytes(const std::string &filename,
+std::vector<unsigned char> read_bytes(const std::string &filename,
 	const uint32_t &offset, const uint32_t &length)
 {
-	// Read a number of bytes from the start of the file
+	// Read a specified number of bytes from a file offset
 
-	// Note: We close and reopen the file while analyzing its file type.
-	// We 1 open the file, 2 read from it, 3 close it,
-	// 4 open it again with the determined FileReader and 5 read the content.
-	// This is inuitively two unnecessary operations (one open and one close).
-	// On the other hand, it is clean, requires no tricks and the application
-	// is not considered performance-critical. So for the moment, this is the
-	// way to go.
-
-	std::vector<char> bytes(length);
-	//bytes.reserve(length); // TODO Fix vector usage
+	std::vector<unsigned char> bytes(length);
+	const auto byte_size = sizeof(bytes[0]);
 
 	std::ifstream in;
 
+	// Do not consume new lines in binary mode
+	in.unsetf(std::ios::skipws);
+
 	std::ios_base::iostate exception_mask = in.exceptions()
-		| std::ios::failbit | std::ios::badbit;
+		| std::ios::failbit | std::ios::badbit | std::ios::eofbit;
 
 	in.exceptions(exception_mask);
 
@@ -235,34 +230,36 @@ std::vector<char> read_bytes(const std::string &filename,
 	{
 		in.ignore(offset);
 
-		in.read(&bytes[0], length * sizeof(bytes[0]));
-
-		in.close();
+		in.read(reinterpret_cast<char*>(&bytes[0]), length * byte_size);
 	}
 	catch (const std::ios_base::failure& f)
 	{
-		int64_t total_bytes_read = in.gcount();
+		int64_t total_bytes_read = 1 + in.gcount();
 
 		in.close();
-
-		bytes.resize(0);
 
 		if (in.bad())
 		{
 			auto msg = std::string { "Failed while reading file: " };
 			msg += filename;
-
-			throw FileReadException(msg, total_bytes_read + 1);
+			throw FileReadException(msg, total_bytes_read);
+		} else if (in.eof())
+		{
+			auto msg = std::string { "Unexpected end while reading file: " };
+			msg += filename;
+			throw FileReadException(msg, total_bytes_read);
 		} else
 		{
-			ARCS_LOG_DEBUG << "Something went wrong";
+			auto msg = std::string { "Content failure on file: " };
+			msg += filename;
+			msg += ", message: ";
+			msg += f.what();
+			msg += ", read ";
+			msg += total_bytes_read;
+			msg += " bytes";
 
-			throw InputFormatException(f.what());
+			throw InputFormatException(msg);
 		}
-	}
-
-	if (in.bad())
-	{
 	}
 
 	return bytes;
@@ -289,7 +286,8 @@ std::string get_suffix(const std::string &filename, const std::string &delim)
 
 std::string name(Format format)
 {
-	static const std::array<std::string, 12> names = {
+	static const std::array<std::string, 12> names =
+	{
 		"Unknown",
 		"CUE",
 		"cdrdao",
@@ -312,7 +310,8 @@ std::string name(Format format)
 
 std::string name(Codec codec)
 {
-	static const std::array<std::string, 14> names = {
+	static const std::array<std::string, 14> names =
+	{
 		"Unknown",
 		"PCM_S16BE",
 		"PCM_S16BE_PLANAR",
@@ -392,8 +391,8 @@ std::string FileReaderDescriptor::name() const
 }
 
 
-bool FileReaderDescriptor::accepts_bytes(const std::vector<char> &bytes,
-			const uint64_t &offset) const
+bool FileReaderDescriptor::accepts_bytes(
+		const std::vector<unsigned char> &bytes, const uint64_t &offset) const
 {
 	return this->do_accepts_bytes(bytes, offset);
 }
@@ -454,7 +453,7 @@ bool FileReaderDescriptor::do_accepts_name(const std::string &filename) const
 	if (fname_suffix.empty()) { return false; }
 
 	if (fname_suffix.length() == filename.length()) { return false; }
-	// Shouldn't this be TRUE?
+	// XXX Shouldn't this be TRUE?
 
 	auto rc = std::find_if(suffices_.begin(), suffices_.end(),
 			[fname_suffix,this](const decltype( *suffices_.begin() ) &suffix)
@@ -549,15 +548,8 @@ std::string FileTestBytes::do_description() const
 bool FileTestBytes::do_passes(const FileReaderDescriptor &desc,
 		const std::string &filename) const
 {
-	auto bytes = this->read_bytes(filename, offset_, length_);
+	auto bytes = details::read_bytes(filename, offset_, length_);
 	return desc.accepts_bytes(bytes, offset_);
-}
-
-
-std::vector<char> FileTestBytes::read_bytes(const std::string &filename,
-	const uint32_t &offset, const uint32_t &length) const
-{
-	return details::read_bytes(filename, offset, length);
 }
 
 
@@ -660,6 +652,14 @@ bool DefaultSelector::do_matches(
 			return false;
 		}
 	}
+
+	// Note: We close and reopen the file while analyzing its file type.
+	// We 1 open the file, 2 read from it, 3 close it,
+	// 4 open it again with the determined FileReader and 5 read the content.
+	// This is inuitively two unnecessary operations (one open and one close).
+	// On the other hand, it is clean, requires no tricks and the application
+	// is not considered performance-critical. So for the moment, this is the
+	// way to go.
 
 	ARCS_LOG(DEBUG1) << "Descriptor '" << desc->name() << "' passed all tests";
 	return true;

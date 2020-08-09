@@ -595,7 +595,8 @@ LibInfo DescriptorCUE::do_libraries() const
 }
 
 
-bool DescriptorCUE::do_accepts_bytes(const std::vector<char> & /* bytes */,
+bool DescriptorCUE::do_accepts_bytes(
+		const std::vector<unsigned char> & /* bytes */,
 		const uint64_t & /* offset */) const
 {
 	return true;

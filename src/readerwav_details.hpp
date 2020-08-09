@@ -54,7 +54,7 @@ public:
 	/**
 	 * \brief Virtual default destructor.
 	 */
-	virtual ~WAV_CDDA_t() noexcept;
+	virtual ~WAV_CDDA_t() noexcept = default;
 
 	/**
 	 * \brief Expected chunk descriptor id, e.g. 0x52494646 for "RIFF" or
@@ -150,11 +150,9 @@ public:
 /**
  * \brief Implements reference values for CDDA compliant RIFF/WAV PCM.
  */
-class RIFFWAV_PCM_CDDA_t : public WAV_CDDA_t
+class RIFFWAV_PCM_CDDA_t final : public WAV_CDDA_t
 {
-
 private:
-
 
 	/**
 	 * \brief Constants for accessing first dimension of WAV_CDDA_.
@@ -181,41 +179,19 @@ private:
 		DATA_SC_SIZE             = 12   // data subchunk size
 	};
 
-
 	/**
 	 * \brief Number of sections in header.
 	 *
 	 * This defines an array size and must be equal to the amount of defined
-	 * HEADER values.
+	 * FIELD values.
 	 */
 	static constexpr int HEADER_FIELD_COUNT_ = 13;
-
-
-	/**
-	 * \brief Canonical header of a CDDA compliant RIFF WAVE file in PCM format.
-	 */
-	static constexpr unsigned char WAVPCM_HEADER_[44] = {
-
-		0x52, 0x49, 0x46, 0x46, // BE: 'R','I','F','F'
-		0xFF, 0xFF, 0xFF, 0xFF, // LE: filesize in bytes - 8 (0xFF means: any)
-		0x57, 0x41, 0x56, 0x45, // BE: 'W','A','V','E'
-		0x66, 0x6D, 0x74, 0x20, // BE: Format Subchunk Header: 'f','m','t',' '
-		0x10, 0x00, 0x00, 0x00, // LE: Format Subchunk Size: '16'
-		0x01, 0x00,             // LE: wFormatTag: 1 (means: PCM),
-		0x02, 0x00,             // LE: wChannels: 2 (means: stereo)
-		0x44, 0xAC, 0x00, 0x00, // LE: dwSamplesPerSec:  44100
-		0x10, 0xB1, 0x02, 0x00, // LE: dwAvgBytesPerSec: 176400
-		0x04, 0x00,             // LE: wBlockAlign: 4
-		0x10, 0x00,             // LE: wBitsPerSample: 16
-		0x64, 0x61, 0x74, 0x61, // BE: Data Subchunk Header: 'd','a','t','a'
-		0xFF, 0xFF, 0xFF, 0xFF  // LE: Data Subchunk Size
-	};
-
 
 	/**
 	 * \brief Offsets and lengths for interpreting a RIFF WAVE header.
 	 */
-	static constexpr unsigned int BYTES_[HEADER_FIELD_COUNT_][2] = {
+	static constexpr unsigned int BYTES_[HEADER_FIELD_COUNT_][2] =
+	{
 		{  0, 4}, // Chunk descriptor id 'RIFF'
 		{  4, 4}, // Filesize - 8
 		{  8, 4}, // Chunk descriptor format 'WAVE'
@@ -231,7 +207,6 @@ private:
 		{ 40, 4}  // Data: Subchunk size
 	};
 
-
 	/**
 	 * \brief Encodes access to \c BYTES_[i]
 	 */
@@ -241,8 +216,15 @@ private:
 		LENGTH = 1
 	};
 
+	/**
+	 * \brief Mark a position as "any byte value accepted here".
+	 */
+	static constexpr unsigned char any_ = 0xFF;
 
-protected:
+	/**
+	 * \brief Canonical header of a CDDA compliant RIFF WAVE file in PCM format.
+	 */
+	static const std::array<unsigned char, 44> WAVPCM_HEADER_;
 
 	/**
 	 * \brief Returns canonical value of specified header field
@@ -253,13 +235,7 @@ protected:
 	 */
 	uint32_t header(FIELD field) const;
 
-
 public:
-
-	/**
-	 * \brief Virtual default destructor.
-	 */
-	~RIFFWAV_PCM_CDDA_t() noexcept override;
 
 	/**
 	 * \brief Expected chunk descriptor id is "RIFF".
@@ -344,14 +320,14 @@ public:
 	uint32_t data_subchunk_id() const override;
 
 	/**
-	 * \brief Tries to match \c bytes for the specified offset.
-	 *
-	 * \param[in] bytes
-	 * \param[in] offset
-	 *
-	 * \return TRUE if \c bytes match canonical WAVE header, otherwise FALSE.
+	 * \brief Canoncial RIFF/WAVE header for PCM encoding.
 	 */
-	static bool match(std::vector<char> bytes, uint64_t offset);
+	static const std::array<unsigned char, 44>& header();
+
+	/**
+	 * \brief Compare to bytes that are accepted to have arbitrary values.
+	 */
+	static const unsigned char& any_byte();
 };
 
 

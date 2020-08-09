@@ -383,8 +383,13 @@ auto cast_reader(std::unique_ptr<FileReader> file_reader) noexcept
  * \param[in] length   Number of bytes to read
  *
  * \return Byte sequence read from file
+ *
+ * \throw FileReadException If the specified number of bytes could not be
+ * read from the specified file and position
+ *
+ * \throw InputFormatException On unspecified error
  */
-std::vector<char> read_bytes(const std::string &filename,
+std::vector<unsigned char> read_bytes(const std::string &filename,
 	const uint32_t &offset, const uint32_t &length);
 
 
@@ -538,7 +543,7 @@ public:
 	 *
 	 * \return TRUE iff the descriptor accepts the sequence, otherwise FALSE
 	 */
-	bool accepts_bytes(const std::vector<char> &bytes,
+	bool accepts_bytes(const std::vector<unsigned char> &bytes,
 			const uint64_t &offset) const;
 
 	/**
@@ -637,7 +642,7 @@ private:
 	 *
 	 * \return TRUE iff the descriptor accepts the bytes, otherwise FALSE
 	 */
-	virtual bool do_accepts_bytes(const std::vector<char> &bytes,
+	virtual bool do_accepts_bytes(const std::vector<unsigned char> &bytes,
 			const uint64_t &offset) const
 	= 0;
 
@@ -801,21 +806,6 @@ private:
 
 	bool do_passes(const FileReaderDescriptor &desc,
 			const std::string &filename) const override;
-
-	/**
-	 * \brief Worker: read length bytes from position offset in file filename.
-	 *
-	 * \param[in] filename Filename to test
-	 * \param[in] offset   The offset in bytes where this sequence starts
-	 * \param[in] length   Number of bytes in the sequence
-	 *
-	 * \return The actual byte sequence
-	 *
-	 * \throw FileReadException If the specified number of bytes could not be
-	 * read from the specified file and position
-	 */
-	std::vector<char> read_bytes(const std::string &filename,
-		const uint32_t &offset, const uint32_t &length) const;
 
 	/**
 	 * \brief Byte offset of the byte sequence in the file.

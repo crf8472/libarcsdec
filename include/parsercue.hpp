@@ -74,7 +74,7 @@ public:
 	 *
 	 * \return TRUE
 	 */
-	bool do_accepts_bytes(const std::vector<char> &bytes,
+	bool do_accepts_bytes(const std::vector<unsigned char> &bytes,
 			const uint64_t &offset) const override;
 
 	bool do_accepts(Codec /* codec */) const override { return false; };

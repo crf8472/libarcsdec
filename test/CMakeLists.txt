@@ -68,7 +68,7 @@ foreach (_testcase ${TEST_SETS} )
 		COMMAND ${_testcase}_test
 			-o "${PROJECT_BINARY_DIR}/report.${_testcase}.xml"
 			-r junit
-		##	WORKING_DIRECTORY "${PROJECT_TEST_DIR}/data"
+			WORKING_DIRECTORY "${PROJECT_TEST_DIR}/data"
 	)
 
 endforeach()

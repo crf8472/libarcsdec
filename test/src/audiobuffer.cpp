@@ -16,7 +16,9 @@
 #endif
 
 /**
- * \file audiobuffer.cpp Tests for all API classes exported by audiobuffer.hpp
+ * \file
+ *
+ * Tests for all API classes exported by audiobuffer.hpp
  */
 
 TEST_CASE ( "BlockAccumulator", "[audiobuffer] [blockaccumulator]" )

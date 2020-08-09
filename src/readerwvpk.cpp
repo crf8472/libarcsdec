@@ -863,8 +863,8 @@ LibInfo  DescriptorWavpack::do_libraries() const
 }
 
 
-bool DescriptorWavpack::do_accepts_bytes(const std::vector<char> &bytes,
-		const uint64_t &offset) const
+bool DescriptorWavpack::do_accepts_bytes(
+		const std::vector<unsigned char> &bytes, const uint64_t &offset) const
 {
 	return  bytes.size() >= 4
 		and offset       == 0

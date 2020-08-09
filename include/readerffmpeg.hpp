@@ -90,8 +90,8 @@ private:
 	 *
 	 * \return TRUE
 	 */
-	bool do_accepts_bytes(const std::vector<char> &, const uint64_t &) const
-		override;
+	bool do_accepts_bytes(const std::vector<unsigned char> &,
+			const uint64_t &) const override;
 
 	/**
 	 * \brief Returns TRUE for every input implying this format matches all
