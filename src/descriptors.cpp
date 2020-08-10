@@ -292,7 +292,7 @@ std::string name(Format format)
 		"CUE",
 		"cdrdao",
 		// ... add more metadata formats here
-		"wave", // Audio formats from here on (is_audio_format relies on that)
+		"wav", // Audio formats from here on (is_audio_format relies on that)
 		"fLaC",
 		"APE",
 		"CAF",
@@ -334,7 +334,7 @@ std::string name(Codec codec)
 
 bool is_audio_format(Format format)
 {
-	return format >= Format::WAVE;
+	return format >= Format::WAV;
 }
 
 

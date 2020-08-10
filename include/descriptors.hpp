@@ -175,7 +175,7 @@ enum class Format : unsigned
 	CUE,
 	CDRDAO,
 	// ... add more metadata formats here
-	WAVE, // Audio formats from here on (is_audio_format relies on that)
+	WAV, // Audio formats from here on (is_audio_format relies on that)
 	FLAC,
 	APE,
 	CAF,

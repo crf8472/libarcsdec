@@ -1845,7 +1845,7 @@ std::set<Format> DescriptorFFmpeg::do_formats() const
 {
 	return
 	{
-		Format::WAVE,
+		Format::WAV,
 		Format::FLAC,
 		Format::APE,
 		Format::CAF,

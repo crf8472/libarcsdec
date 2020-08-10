@@ -327,7 +327,7 @@ WavChunkDescriptor WavPartParser::chunk_descriptor(
 		// parse file size declaration
 		convert_.le_bytes_to_uint32(bytes[4], bytes[5], bytes[ 6], bytes[ 7]),
 
-		// parse file format declaration ("WAVE")
+		// parse file format declaration ("WAV")
 		convert_.be_bytes_to_uint32(bytes[8], bytes[9], bytes[10], bytes[11])
 	);
 }
@@ -1290,13 +1290,13 @@ std::set<Codec> DescriptorWavPCM::do_codecs() const
 
 bool DescriptorWavPCM::do_accepts(Format format) const
 {
-	return format == Format::WAVE;
+	return format == Format::WAV;
 }
 
 
 std::set<Format> DescriptorWavPCM::do_formats() const
 {
-	return { Format::WAVE };
+	return { Format::WAV };
 }
 
 
