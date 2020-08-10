@@ -126,7 +126,8 @@ target_include_directories (${PROJECT_NAME}
 
 target_compile_options (${PROJECT_NAME} PRIVATE ${PROJECT_CXX_FLAGS} )
 
-list (APPEND PROJECT_PUBLIC_HEADERS
+## XXX audiobuffer? readerwav?
+list (APPEND INTERFACE_HEADERS
 	${PROJECT_INCLUDE_DIR}/audioreader.hpp
 	${PROJECT_INCLUDE_DIR}/calculators.hpp
 	${PROJECT_INCLUDE_DIR}/descriptors.hpp
@@ -136,7 +137,7 @@ list (APPEND PROJECT_PUBLIC_HEADERS
 
 set_target_properties (${PROJECT_NAME} PROPERTIES
 	## CXX_STANDARD  14 ## Commented out: already set globally
-	PUBLIC_HEADER "${PROJECT_PUBLIC_HEADERS}"
+	PUBLIC_HEADER "${INTERFACE_HEADERS}"
 	PREFIX        "" ## No 'lib' prefix in soname, PROJECT_NAME is prefixed
 	VERSION       "${PROJECT_VERSION_STRING_WITHOUT_SUFFIX}"
 	SOVERSION     "${PROJECT_VERSION_STRING_WITHOUT_SUFFIX}" )
