@@ -567,9 +567,9 @@ public:
 	/**
 	 * \brief Check for acceptance of the specified format.
 	 *
-	 * \param[in] format The format to check for
+	 * \param[in] codec The Codec to check for
 	 *
-	 * \return TRUE if \c format is accepted, otherwise FALSE
+	 * \return TRUE if \c codec is accepted, otherwise FALSE
 	 */
 	bool accepts(Codec codec) const;
 
@@ -656,7 +656,7 @@ private:
 	 *
 	 * \return TRUE iff the filename is accepted by this descriptor
 	 */
-	virtual bool do_accepts_name(const std::string &suffix) const;
+	virtual bool do_accepts_name(const std::string &name) const;
 
 	/**
 	 * \brief Implements FileReaderDescriptor::accepts().
@@ -671,9 +671,9 @@ private:
 	/**
 	 * \brief Implements FileReaderDescriptor::accepts().
 	 *
-	 * \param[in] format The format to check for
+	 * \param[in] codec The codec to check for
 	 *
-	 * \return TRUE if \c format is accepted, otherwise FALSE
+	 * \return TRUE if \c codec is accepted, otherwise FALSE
 	 */
 	virtual bool do_accepts(Codec codec) const
 	= 0;
