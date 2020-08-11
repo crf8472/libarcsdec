@@ -9,21 +9,18 @@
 #endif
 
 #include <algorithm>  // for remove
-//#include <chrono>     // for debugging
 #include <climits>    // for CHAR_BIT
 #include <cstdlib>    // for abs
-//#include <ctime>      // for debugging
 #include <functional> // for function
-#include <stdexcept>
+#include <exception>  // for exception
+#include <string>
 
 extern "C"
 {
 #include <libavcodec/avcodec.h>
-#include <libavcodec/version.h>
 #include <libavformat/avformat.h>
 #include <libavformat/version.h>
 #include <libavutil/avutil.h>
-#include <libavutil/version.h>
 }
 
 #ifndef __LIBARCSTK_SAMPLES_HPP__
@@ -154,7 +151,7 @@ public:
  * APE as well as the PCM formats PCM_S16BE, PCM_S16LE and PCM_S16LE_PLANAR.
  *
  * \todo The list does not contain WavPack, since the FFmpeg-API seems not to
- * provide a way to not check whether the actual wavpack file is marked as
+ * provide a way to check whether the actual wavpack file is marked as
  * losslessly compressed. Also a file marked as losslessly compressed may
  * actually be created from lossy input, but a file marked as lossy compressed
  * must actually be refused since the ARCSs are guaranteed to be irrelevant and
@@ -626,10 +623,6 @@ std::unique_ptr<FFmpegAudioFile> FFmpegFileLoader::load(
 			::avformat_close_input(&format_ctx);
 			::av_free(format_ctx);
 		}
-
-		//ARCS_LOG_ERROR << "Failed to acquire format context for file "
-		//	<< filename.c_str();
-
 		throw;
 	}
 
@@ -652,16 +645,11 @@ std::unique_ptr<FFmpegAudioFile> FFmpegFileLoader::load(
 			::avcodec_close(codec_ctx);
 			::avcodec_free_context(&codec_ctx);
 		}
-
 		if (format_ctx)
 		{
 			::avformat_close_input(&format_ctx);
 			::av_free(format_ctx);
 		}
-
-		//ARCS_LOG_ERROR << "Failed to acquire codec and stream information "
-		//	<< "for file " << filename;
-
 		throw;
 	}
 
@@ -896,51 +884,51 @@ AVCodecContext* FFmpegFileLoader::alloc_and_init_codec_context(::AVCodec* codec,
 
 bool FFmpegFileLoader::validate_cdda(::AVCodecContext *ctx) const
 {
-	// Validate for CDDA
-
-	CDDAValidator validator;
+	bool is_validated = true;
 
 	if (::av_get_bytes_per_sample(ctx->sample_fmt) < 0)
 	{
 		ARCS_LOG_ERROR << "Could not validate CDDA: negative bits per sample";
-		return false;
+		is_validated = false;
 	}
-
-	if (not validator.bits_per_sample(
-				::av_get_bytes_per_sample(ctx->sample_fmt) * CHAR_BIT))
-	{
-		ARCS_LOG_ERROR << "Not CDDA: not 16 bits per sample";
-		return false;
-	}
-
 
 	if (ctx->channels < 0)
 	{
 		ARCS_LOG_ERROR
 			<< "Could not validate CDDA: negative number of channels";
-		return false;
+		is_validated = false;
+	}
+
+	if (ctx->sample_rate < 0)
+	{
+		ARCS_LOG_ERROR << "Could not validate CDDA: negative sample rate";
+		is_validated = false;
+	}
+
+	// Validate for CDDA
+
+	CDDAValidator validator;
+
+	if (not validator.bits_per_sample(
+				::av_get_bytes_per_sample(ctx->sample_fmt) * CHAR_BIT))
+	{
+		ARCS_LOG_ERROR << "Not CDDA: not 16 bits per sample";
+		is_validated = false;
 	}
 
 	if (not validator.num_channels(ctx->channels))
 	{
 		ARCS_LOG_ERROR << "Not CDDA: not stereo";
-		return false;
-	}
-
-
-	if (ctx->sample_rate < 0)
-	{
-		ARCS_LOG_ERROR << "Could not validate CDDA: negative sample rate";
-		return false;
+		is_validated = false;
 	}
 
 	if (not validator.samples_per_second(ctx->sample_rate))
 	{
 		ARCS_LOG_ERROR << "Not CDDA: sample rate is not 44100 Hz";
-		return false;
+		is_validated = false;
 	}
 
-	return true;
+	return is_validated;
 }
 
 
@@ -1346,10 +1334,8 @@ bool FFmpegAudioFile::decode_packet(::AVPacket packet, ::AVFrame *frame,
 				break;
 			}
 
-			if (AVERROR_EOF == result)
+			if (AVERROR_EOF == result) // Unexpected end of file
 			{
-				// Unexpected end of file
-
 				::av_log(nullptr, AV_LOG_ERROR, "Unexpected end of file\n");
 				break;
 			}
@@ -1381,11 +1367,11 @@ bool FFmpegAudioFile::decode_packet(::AVPacket packet, ::AVFrame *frame,
 
 			if (frame_sz_changed) // frame size changed: check for last frame
 			{
-				ARCS_LOG_DEBUG << "Frame length changed from "
+				ARCS_LOG_DEBUG << "Frame size changed from "
 						<< frame_size
 						<< " to "
 						<< frame->nb_samples
-						<< ". Guess whether this is the last frame.";
+						<< " (samples).";
 
 				// This is the real total samples respected so far
 
@@ -1393,6 +1379,13 @@ bool FFmpegAudioFile::decode_packet(::AVPacket packet, ::AVFrame *frame,
 
 				// diff estimated total samples32 vs. counted samples32
 				int64_t total_diff = total_samples_ - samples32_counted;
+
+				ARCS_LOG_DEBUG << "Counted "
+						<< samples32_counted
+						<< " after estimating "
+						<< total_samples_
+						<< " (error of " << std::abs(total_diff) << ")"
+						<< ".";
 
 				// diff size of current frame against previous frame sizes
 				int32_t frame_diff = frame_size - frame->nb_samples;
@@ -1403,19 +1396,19 @@ bool FFmpegAudioFile::decode_packet(::AVPacket packet, ::AVFrame *frame,
 				// one frame, check if we are "near" to the end of the stream
 				if (std::abs(total_diff) <= frame_size)
 				{
-					ARCS_LOG(DEBUG1) << "READ LAST FRAME";
+					ARCS_LOG(DEBUG1) << "LAST FRAME FOLLOWS";
 					ARCS_LOG(DEBUG1) << "  index: "
 						<< (*frames + frame_count);
 					ARCS_LOG(DEBUG1) << "  size:  "
 						<< frame->nb_samples << " samples of 16 bit";
 					ARCS_LOG(DEBUG1) << "  previous frame size: "
 						<< frame_size;
+					ARCS_LOG(DEBUG1) << "  diff to previous frame (16): "
+						<< frame_diff;
 
 					ARCS_LOG(DEBUG1)
 						<< "  total diff counted samples (32):   "
 						<< total_diff;
-					ARCS_LOG(DEBUG1) << "  frame diff to previous frame (16): "
-						<< frame_diff;
 
 					// Correct total samples and update outside world
 
@@ -1464,7 +1457,7 @@ int FFmpegAudioFile::pass_samples(const uint8_t* ch0, const uint8_t* ch1,
 		const int64_t bytes_per_plane)
 {
 	// Note:: ffmpeg "normalizes" the channel ordering away, so we will ignore
-	// it and process anything als lef0/right1
+	// it and process anything als left0/right1
 
 	// TODO Find less ugly implementation
 
