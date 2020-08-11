@@ -1318,6 +1318,7 @@ bool FFmpegAudioFile::decode_packet(::AVPacket packet, ::AVFrame *frame,
 	// Decode all frames in packet
 
 	int result = 1;
+	int samples_in_frame = 0;
 
 	while (result >= 0)
 	{
@@ -1348,7 +1349,8 @@ bool FFmpegAudioFile::decode_packet(::AVPacket packet, ::AVFrame *frame,
 
 		++frame_count;
 
-		sample16_count += frame->nb_samples * CDDA.NUMBER_OF_CHANNELS;
+		samples_in_frame = frame->nb_samples * CDDA.NUMBER_OF_CHANNELS;
+		sample16_count += samples_in_frame;
 
 		// For audio in general only linesize[0] will be defined since the
 		// planes have to be of identical size.
@@ -1443,7 +1445,12 @@ bool FFmpegAudioFile::decode_packet(::AVPacket packet, ::AVFrame *frame,
 		}
 
 		// Push sample sequence to processing/buffering
-		this->pass_samples(frame->data[0], frame->data[1], frame->linesize[0]);
+		this->pass_samples(frame->data[0], frame->data[1],
+				(num_planes_ == 2 ? 1 : 2) * samples_in_frame);
+		// We compute the expected bytes from the encoded samples.
+		// Instead, we could also just use frame->linesize[0] but it seems,
+		// linesize[0] does not always match nb_samples. We got always 24 bytes
+		// MORE than expected when using linesize[0].
 	}
 
 	*frames    += frame_count;
