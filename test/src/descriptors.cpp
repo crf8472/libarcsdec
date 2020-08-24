@@ -138,6 +138,7 @@ TEST_CASE ( "read_bytes", "[read_bytes]" )
 	SECTION ( "Reading existing bytes from valid file works" )
 	{
 		auto bytes = arcsdec::details::read_bytes("test01.wav", 0, 44);
+		// ARCS1: E35EF68A, ARCS2: E3631C44
 
 		CHECK ( bytes.size() == 44 );
 
@@ -178,11 +179,11 @@ TEST_CASE ( "read_bytes", "[read_bytes]" )
 	{
 		try
 		{
-			arcsdec::details::read_bytes("test01.wav", 0, 54);
+			arcsdec::details::read_bytes("test01.wav", 0, 4146);
 			FAIL ( "Expected FileReadException was not thrown" );
 		} catch (const FileReadException &e)
 		{
-			CHECK ( e.byte_pos() == 49 );
+			CHECK ( e.byte_pos() == 4145 );
 		}
 	}
 }

@@ -489,7 +489,7 @@ void WavAudioHandler::do_chunk_descriptor(
 
 	if (not this->assert_equals_u("Test: RIFF Header present?",
 		descriptor.id, valid_->chunk_id(),
-		"Unexpected header start."))
+		"Unexpected header start"))
 	{
 		ARCS_LOG_ERROR << this->last_error();
 		return;
@@ -503,7 +503,7 @@ void WavAudioHandler::do_chunk_descriptor(
 		"Test: Declared file size conforms to physical file size?",
 		descriptor.file_size + 2 * sizeof(uint32_t),
 		this->physical_file_size(),
-		"Unexpected header start."))
+		"Unexpected header start"))
 	{
 		ARCS_LOG_ERROR << this->last_error();
 		return;
@@ -511,7 +511,7 @@ void WavAudioHandler::do_chunk_descriptor(
 
 	if (not this->assert_equals_u("Test: Header declares WAVE format?",
 		descriptor.format, valid_->format(),
-		"Header does not declare WAVE format."))
+		"Header does not declare WAVE format"))
 	{
 		ARCS_LOG_ERROR << this->last_error();
 		return;
@@ -540,7 +540,7 @@ void WavAudioHandler::do_subchunk_format(
 	if (not this->assert_equals_u("Test: format subchunk size",
 		format_subchunk.size,
 		valid_->fmt_subchunk_size(),
-		"Unexpected format subchunk size."))
+		"Unexpected format subchunk size"))
 	{
 		ARCS_LOG_ERROR << this->last_error();
 		return;
@@ -578,7 +578,7 @@ void WavAudioHandler::do_subchunk_format(
 
 	if (not this->assert_equals("Test: wFormatTag is PCM",
 		format_subchunk.wFormatTag, valid_->wFormatTag(),
-		"wFormatTag is not PCM."))
+		"wFormatTag is not PCM"))
 	{
 		ARCS_LOG_ERROR << this->last_error();
 		return;
@@ -587,7 +587,7 @@ void WavAudioHandler::do_subchunk_format(
 	if (not this->assert_equals_u("Test: dwAvgBytesPerSec is CDDA",
 		format_subchunk.dwAvgBytesPerSec,
 		valid_->dwAvgBytesPerSec(),
-		"dwAvgBytesPerSec is not CDDA."))
+		"dwAvgBytesPerSec is not CDDA"))
 	{
 		ARCS_LOG_ERROR << this->last_error();
 		return;
@@ -596,7 +596,7 @@ void WavAudioHandler::do_subchunk_format(
 	if (not this->assert_equals("Test: wBlockAlign is CDDA",
 		format_subchunk.wBlockAlign,
 		valid_->wBlockAlign(),
-		"wBlockAlign is not CDDA."))
+		"wBlockAlign is not CDDA"))
 	{
 		ARCS_LOG_ERROR << this->last_error();
 		return;

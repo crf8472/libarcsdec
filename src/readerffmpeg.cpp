@@ -7,13 +7,22 @@
 #ifndef __LIBARCSDEC_READERFFMPEG_HPP__
 #include "readerffmpeg.hpp"
 #endif
+#ifndef __LIBARCSDEC_READERFFMPEG_DETAILS_HPP__
+#include "readerffmpeg_details.hpp"
+#endif
 
 #include <algorithm>  // for remove
 #include <climits>    // for CHAR_BIT
 #include <cstdlib>    // for abs
-#include <functional> // for function
 #include <exception>  // for exception
+#include <functional> // for function
+#include <new>        // for bad_alloc
+#include <numeric>    // for accumulate
+#include <queue>      // for queue
+#include <stdexcept>  // for invalid_argument
 #include <string>
+
+#include <iostream>
 
 extern "C"
 {
@@ -38,6 +47,7 @@ extern "C"
 namespace arcsdec
 {
 
+
 inline namespace v_1_0_0
 {
 
@@ -49,6 +59,538 @@ using arcstk::CDDA;
 using arcstk::SampleSequence;
 
 using arcstk::LOGLEVEL;
+
+
+// FFmpegException
+
+
+FFmpegException::FFmpegException(const int error, const std::string &name)
+	: error_ { error }
+	, msg_   {}
+{
+	std::ostringstream msg;
+	msg << "Function " << name  << " returned error "  << error_
+		<< ": '" << av_err2str(error_) << "'";
+	msg_ = msg.str();
+}
+
+
+int FFmpegException::error() const
+{
+	return error_;
+}
+
+
+char const * FFmpegException::what() const noexcept
+{
+	return msg_.c_str();
+}
+
+
+// Free_AVFormatContext
+
+
+void Free_AVFormatContext::operator()(::AVFormatContext* fctx) const
+{
+	if (fctx)
+	{
+		::avformat_close_input(&fctx);
+		// Does call ::avformat_free_context internally
+	}
+}
+
+
+// Free_AVCodecContext
+
+
+void Free_AVCodecContext::operator()(::AVCodecContext* cctx) const
+{
+	if (cctx)
+	{
+		::avcodec_free_context(&cctx);
+		// Does call ::avcodec_close internally
+	}
+}
+
+
+// Free_AVPacket
+
+
+void Free_AVPacket::operator()(::AVPacket* packet) const
+{
+	::av_packet_free(&packet);
+}
+
+
+// Make_AVPacketPtr
+
+
+AVPacketPtr Make_AVPacketPtr::operator()() const
+{
+	auto packet = ::av_packet_alloc();
+
+	if (!packet)
+	{
+		throw std::bad_alloc();
+	}
+
+	::av_init_packet(packet);
+	packet->data = nullptr;
+	packet->size = 0;
+
+	return AVPacketPtr(packet);
+}
+
+
+// Free_AVFrame
+
+
+void Free_AVFrame::operator()(::AVFrame* frame) const
+{
+	::av_free(frame);
+}
+
+
+// Make_AVFramePtr
+
+
+AVFramePtr  Make_AVFramePtr::operator()() const
+{
+	::AVFrame* f = ::av_frame_alloc();
+
+	if (!f)
+	{
+		throw std::bad_alloc();
+	}
+
+	return AVFramePtr(f);
+}
+
+
+// PacketQueue
+
+
+PacketQueue::PacketQueue()
+	: packets_        {}
+	, current_packet_ {}
+	, stream_index_   { 0 }
+	, cctx_   { nullptr }
+	, fctx_   { nullptr }
+{
+	// empty
+}
+
+
+void PacketQueue::set_source(::AVFormatContext* fctx, const int stream_index)
+{
+	fctx_         = fctx;
+	stream_index_ = stream_index;
+}
+
+
+std::pair<const ::AVFormatContext*, const int> PacketQueue::source() const
+{
+	return std::make_pair(fctx_, stream_index_);
+}
+
+
+void PacketQueue::set_decoder(::AVCodecContext* cctx)
+{
+	cctx_ = cctx;
+}
+
+
+const ::AVCodecContext* PacketQueue::decoder() const
+{
+	return cctx_;
+}
+
+
+bool PacketQueue::enqueue_frame()
+{
+	auto error  = int { -1 };
+	auto packet = make_packet();
+
+	while (error < 0)
+	{
+		error = ::av_read_frame(format_context(), packet.get());
+
+		// For audio, the packet contains:
+		// - an integer number of frames if each frame has a known fixed size
+		//   (e.g. PCM or ADPCM data).
+		// - If the audio frames have a variable size (e.g. MPEG audio), then
+		//   the packet contains one frame.
+
+		// On error, packet is blank, like if it came from av_packet_alloc()
+
+		if (AVERROR_EOF == error)
+		{
+			std::cout << "No more frames" << std::endl;
+			return false;
+		}
+
+		if (error < 0)
+		{
+			throw FFmpegException(error, "av_read_frame");
+		}
+
+		// Respect only packets from the specified stream
+
+		if (packet->stream_index != stream_index())
+		{
+			std::cout << "Discard packet from other stream" << std::endl;
+			::av_packet_unref(packet.get());
+
+			error = -1; // Restart loop
+			continue;
+		}
+	}
+
+	packets_.push(std::move(packet));
+	std::cout << "Pushed frame, size: " << packets_.size() << std::endl;
+
+	return true;
+}
+
+
+AVFramePtr PacketQueue::dequeue_frame()
+{
+	auto error          = int  { 0 };
+	auto frame          = make_frame();
+	auto decode_success = bool { false };
+
+	while (error >= 0)
+	{
+		std::cout << "Try to receive frame" << std::endl;
+		error = ::avcodec_receive_frame(decoder(), frame.get());
+
+		if (AVERROR(EAGAIN) == error)
+		{
+			// Decoder requires more input packets before it can provide
+			// any frames, so just finish the processing of this packet
+			// and provide next packet to decoder.
+
+			std::cout << "Decoder needs more input" << std::endl;
+			if (packets_.empty())
+			{
+				std::cout << "Queue is empty" << std::endl;
+				return nullptr; // enqueue_frame() needs to be called
+			}
+
+			current_packet_ = std::move(packets_.front());
+			packets_.pop();
+
+			std::cout << "Popped frame, size: " << packets_.size() << std::endl;
+
+			try
+			{
+				decode_success = decode_packet();
+
+			} catch (const FFmpegException &e)
+			{
+				if (AVERROR(EAGAIN) == e.error())
+				{
+					std::cout << "More input required" << std::endl;
+					return nullptr; // enqueue_frame() needs to be called
+				}
+
+				throw;
+			}
+
+			if (decode_success)
+			{
+				std::cout << "Decode success" << std::endl;
+				error = 0;
+				continue;
+			} else
+			{
+				std::cout << "Decoding failed" << std::endl;
+				return nullptr; // enqueue_frame() needs to be called
+			}
+		}
+
+		if (error < 0) // some error occurred
+		{
+			throw FFmpegException(error, "avcodec_receive_frame");
+
+			// Possible errors (other then EAGAIN) are:
+			// AVERROR(EINVAL) : Codec not opened.
+			// AVERROR_EOF     : The decoder has been flushed.
+		}
+
+		std::cout << "Frame received" << std::endl;
+		break;
+	}
+
+	return frame;
+}
+
+
+bool PacketQueue::decode_packet()
+{
+	std::cout << "Decode frame" << std::endl;
+	const auto error = ::avcodec_send_packet(decoder(), current_packet_.get());
+
+	if (error < 0)
+	{
+		throw FFmpegException(error, "avcodec_send_packet");
+
+		// Possible errors are:
+		// AVERROR(EAGAIN) : Input is not accepted in the current state
+		//                   user must read output with avcodec_receive_frame().
+		//                   Once all output is read, the packet should be
+		//                   resent.
+		// AVERROR(EINVAL) : Codec requires flush.
+		// AVERROR(ENOMEM) : Failed to add packet to internal queue
+		// AVERROR_EOF     : The decoder has been flushed, and no new packets
+		//                   can be sent to it (also returned if more than 1
+		//                   flush packet is sent).
+	}
+
+	return true;
+}
+
+
+std::size_t PacketQueue::size() const
+{
+	return packets_.size();
+}
+
+
+::AVCodecContext* PacketQueue::decoder()
+{
+	return cctx_;
+}
+
+
+::AVFormatContext* PacketQueue::format_context()
+{
+	return fctx_;
+}
+
+
+int PacketQueue::stream_index() const
+{
+	return stream_index_;
+}
+
+
+AVPacketPtr PacketQueue::make_packet()
+{
+	static const Make_AVPacketPtr new_packet;
+
+	return new_packet();
+}
+
+
+AVFramePtr PacketQueue::make_frame()
+{
+	static const Make_AVFramePtr new_frame;
+
+	return new_frame();
+}
+
+
+// open_file()
+
+
+AVFormatContextPtr open_file(const std::string &filename)
+{
+	// Open input stream of the file and read the header
+
+	::AVFormatContext* fctx = nullptr;
+	::AVInputFormat* detect = nullptr; // TODO Currently unused
+	::AVDictionary* options = nullptr; // TODO Currently unused
+
+	const auto error_open = ::avformat_open_input(&fctx , filename.c_str(),
+			detect, &options);
+
+	if (error_open != 0)
+	{
+		throw FFmpegException(error_open, "avformat_open_input");
+	}
+
+	// Read some packets to acquire information about the streams
+	// (This is useful for formats without a header)
+
+	const auto error_find = ::avformat_find_stream_info(fctx, nullptr);
+
+	if (error_find < 0)
+	{
+		::avformat_close_input(&fctx);
+
+		throw FFmpegException(error_find, "avformat_find_stream_info");
+	}
+
+	return AVFormatContextPtr(fctx);
+}
+
+
+// identify_stream()
+
+
+std::pair<int, AVCodec*> identify_stream(::AVFormatContext* fctx,
+		const ::AVMediaType media_type)
+{
+	::AVCodec* codec = nullptr;
+
+	const int stream_index = ::av_find_best_stream(fctx, media_type,
+			-1/*no wanted stream*/, -1/*no related stream*/,
+			&codec/*request codec*/, 0/*no flags*/);
+
+	if (stream_index < 0)
+	{
+		throw FFmpegException(stream_index, "av_find_best_stream");
+
+		// Possible Errors:
+		// AVERROR_STREAM_NOT_FOUND if no stream with the requested type could
+		//			be found
+		// AVERROR_DECODER_NOT_FOUND if streams were found but no decoder
+	}
+
+	if (!codec)
+	{
+		std::ostringstream message;
+		message << "No codec found for audio stream " << stream_index;
+
+		ARCS_LOG_ERROR << message.str();
+
+		// This is not a problem since we will try to identify the codec
+		// with create_audio_decoder() and throw a proper exception there.
+		// Caller must check codec.
+	}
+
+	return std::make_pair(stream_index, codec);
+}
+
+
+// create_audio_decoder()
+
+
+AVCodecContextPtr create_audio_decoder(::AVFormatContext *fctx,
+		const int stream_idx)
+{
+	if (!fctx)
+	{
+		throw std::invalid_argument("AVFormatContext is NULL");
+	}
+
+	if (stream_idx < 0)
+	{
+		throw std::invalid_argument("Stream index is negative");
+	}
+
+	::AVStream* stream = fctx->streams[stream_idx];
+
+	if (!stream)
+	{
+		std::ostringstream msg;
+		msg << "Could not find stream for requested index ";
+		msg << stream_idx;
+
+		throw std::invalid_argument(msg.str());
+	}
+
+	auto stream_params = stream->codecpar;
+
+	if (!stream_params)
+	{
+		throw std::runtime_error("No stream parameters found");
+	}
+
+	if (stream_params->codec_type != AVMEDIA_TYPE_AUDIO)
+	{
+		std::ostringstream msg;
+		msg << "Stream with requested index ";
+		msg << stream_idx;
+		msg << " is not an audio stream";
+
+		throw std::invalid_argument(msg.str());
+	}
+
+	::AVCodec *codec = nullptr;
+
+	if (fctx->audio_codec)
+	{
+		codec = fctx->audio_codec;
+	} else
+	{
+		codec = ::avcodec_find_decoder(stream_params->codec_id);
+	}
+
+	if (!codec)
+	{
+		throw std::runtime_error(
+				"avcodec_find_decoder could not determine codec");
+	}
+
+	::AVCodecContext* cctx = ::avcodec_alloc_context3(codec);
+
+	if (!cctx)
+	{
+		ARCS_LOG_ERROR << "Could not allocate AVCodecContext for decoding";
+		throw std::bad_alloc();
+	}
+
+	auto context = AVCodecContextPtr(cctx);
+
+	const auto error_pars =
+		::avcodec_parameters_to_context(cctx, stream_params);
+
+	if (error_pars < 0) // success: >= 0
+	{
+		throw FFmpegException(error_pars, "avcodec_parameters_to_context");
+	}
+
+	const auto error_open = ::avcodec_open2(cctx, codec, nullptr);
+
+	if (error_open < 0) // success: == 0
+	{
+		throw FFmpegException(error_open, "avcodec_open2");
+	}
+
+	return context;
+}
+
+
+// IsSupported
+
+
+bool IsSupported::format(const ::AVSampleFormat id)
+{
+	static std::set<::AVSampleFormat> formats =
+	{
+		::AV_SAMPLE_FMT_S16P,
+		::AV_SAMPLE_FMT_S16,
+		::AV_SAMPLE_FMT_S32P,
+		::AV_SAMPLE_FMT_S32
+	};
+
+	return formats.find(id) != formats.end();
+}
+
+
+bool IsSupported::codec(const ::AVCodecID id)
+{
+	static std::set<::AVCodecID> codecs =
+	{
+		::AV_CODEC_ID_ALAC,
+		::AV_CODEC_ID_APE,
+		::AV_CODEC_ID_FLAC,
+		::AV_CODEC_ID_PCM_S16BE,
+		::AV_CODEC_ID_PCM_S16LE,
+		::AV_CODEC_ID_PCM_S16BE_PLANAR, /* TODO untested */
+		::AV_CODEC_ID_PCM_S16LE_PLANAR  /* TODO untested */
+	};
+		// TODO WMALOSSLESS
+		// ::AV_CODEC_ID_WAVPACK: // Removed: could not check for lossy
+
+	return codecs.find(id) != codecs.end();
+}
+
+
+// ******* OLD ************
+
 
 namespace
 {
@@ -75,8 +617,8 @@ extern "C"
  * has to be a static or global function with C linkage to provide a portable
  * way of setting a C++ function as a callback for a C function.
  *
- * \relatesalso FFmpegAudioFile
- * \relatesalso FFmpegFileLoader
+ * \relatesalso FFmpegAudioStream
+ * \relatesalso FFmpegAudioStreamLoader
  *
  * \param[in] lvl The loglevel as defined by the ffmpeg API (e.g. AV_LOG_INFO)
  * \param[in] msg The message to log
@@ -125,112 +667,25 @@ void arcs_av_log(void* /*v*/, int lvl, const char* msg, va_list /*l*/)
 } // extern C
 
 
-/**
- * \brief List of supported sample formats.
- */
-class FFmpegSampleFormatList final
-{
-
-public:
-
-	/**
-	 * \brief Informs about whether a sample format is supported.
-	 *
-	 * \param[in] id Id of the sample format
-	 *
-	 * \return The SAMPLE_FORMAT to be used, or 0 if unsupported
-	 */
-	SAMPLE_FORMAT support(const ::AVSampleFormat &id);
-};
-
-
-/**
- * \brief List of supported codecs.
- *
- * The list of supported codecs and sample formats contains FLAC, ALAC,
- * APE as well as the PCM formats PCM_S16BE, PCM_S16LE and PCM_S16LE_PLANAR.
- *
- * \todo The list does not contain WavPack, since the FFmpeg-API seems not to
- * provide a way to check whether the actual wavpack file is marked as
- * losslessly compressed. Also a file marked as losslessly compressed may
- * actually be created from lossy input, but a file marked as lossy compressed
- * must actually be refused since the ARCSs are guaranteed to be irrelevant and
- * misleading.
- *
- * \todo Add support for more PCM formats, for example there could be
- * AV_CODEC_ID_PCM_U16LE, AV_CODEC_ID_PCM_U16BE, AV_CODEC_ID_PCM_S32LE,
- * AV_CODEC_ID_PCM_S32BE, AV_CODEC_ID_PCM_U32LE, AV_CODEC_ID_PCM_U32BE
- * and maybe more if reasonable.
- */
-class FFmpegCodecList final
-{
-
-public:
-
-	/**
-	 * \brief Informs about whether a codec is supported
-	 *
-	 * \param[in] id Id of the codec
-	 *
-	 * \return TRUE if the codec with the given id is supported, otherwise FALSE
-	 */
-	bool support(const ::AVCodecID &id);
-};
-
-
 // forward declaration
-class FFmpegAudioFile;
+class FFmpegAudioStream;
 
 
 /**
- * \brief Loads an audio file and returns a representation as FFmpegAudioFile.
+ * \brief Loads an audio file and returns a representation as FFmpegAudioStream.
  */
-class FFmpegFileLoader final
+class FFmpegAudioStreamLoader final
 {
-
 public:
 
 	/**
-	 * \brief Load a file with ffmpeg.
+	 * \brief Load a stream from a file with ffmpeg.
 	 *
-	 * \param[in] filename The file to load
+	 * \param[in] filename Filename
 	 */
-	std::unique_ptr<FFmpegAudioFile> load(const std::string &filename) const;
-
+	std::unique_ptr<FFmpegAudioStream> load(const std::string &filename) const;
 
 private:
-
-	/**
-	 * \brief Acquire an AVFormatContext for the specified file.
-	 *
-	 * \param[in] filename Name of the file to load
-	 * \return The AVFormatContext for this file
-	 * \throw FileReadException If no AVFormatContext could be acquired
-	 */
-	::AVFormatContext* acquire_format_context(const std::string &filename)
-		const;
-
-	/**
-	 * \brief Identify the AVCodec and the relevant AudioStream
-	 *
-	 * \param[out] stream_idx Index of the audio stream of interest
-	 * \param[in]  fctx The AVFormatContext to work with
-	 * \return The codec for this stream
-	 * \throw FileReadException If no AVCodec could be acquired
-	 */
-	::AVCodec* identify_stream_and_codec(int* stream_idx,
-			::AVFormatContext* fctx) const;
-
-	/**
-	 * \brief Allocate and initialize the AVCodecContext
-	 *
-	 * \param[in] codec AVCodec to create context for
-	 * \param[in] stream The stream to derive the AVCodecContext from
-	 * \return The codec context
-	 * \throw FileReadException If no AVCodecContext could be acquired
-	 */
-	::AVCodecContext* alloc_and_init_codec_context(
-			::AVCodec* codec, ::AVStream* stream) const;
 
 	/**
 	 * \brief Validates stream for CDDA compliance.
@@ -299,22 +754,24 @@ private:
  * \todo If ffmpeg API would allow to check for lossless encoding on Wavpack
  * files, Wavpack should be added to the list
  */
-class FFmpegAudioFile final
+class FFmpegAudioStream final
 {
-	friend std::unique_ptr<FFmpegAudioFile> FFmpegFileLoader::load(
+	friend std::unique_ptr<FFmpegAudioStream> FFmpegAudioStreamLoader::load(
 			const std::string &filename) const;
 
 public:
 
 	// make class non-copyable
-	FFmpegAudioFile (const FFmpegAudioFile &file) = delete;
+	FFmpegAudioStream (const FFmpegAudioStream &file) = delete;
 
-	// TODO Move constructor
+	FFmpegAudioStream (FFmpegAudioStream &&file) = default;
 
 	/**
-	 * \brief Default destructor.
+	 * \brief Return the sample format of this file.
+	 *
+	 * \return The sample format of this file
 	 */
-	virtual ~FFmpegAudioFile() noexcept;
+	AVSampleFormat sample_format() const;
 
 	/**
 	 * \brief Number of planes.
@@ -324,6 +781,13 @@ public:
 	 * \return Number of planes, either 1 for interleaved or 2 for planar.
 	 */
 	int num_planes() const;
+
+	/**
+	 * \brief Return the channel layout of this file.
+	 *
+	 * \return TRUE for left0/right1, FALSE otherwise
+	 */
+	bool channels_swapped() const;
 
 	/**
 	 * \brief Total number of 32 bit PCM samples as declared by the stream.
@@ -340,7 +804,7 @@ public:
 	 * As a consequence, total_samples_declared() will yield only an estimation
 	 * of samples, i.e. the total number of samples as declared in the stream.
 	 *
-	 * The factual number of samples contributing to the ARCSs is returned by
+	 * The actual number of samples contributing to the ARCSs is returned by
 	 * traverse_samples().
 	 *
 	 * \return Total number of 32 bit PCM samples in file (including priming and
@@ -349,18 +813,16 @@ public:
 	int64_t total_samples_declared() const;
 
 	/**
-	 * \brief Return the sample format of this file.
+	 * \brief Traverse all 16 bit samples in the file, thereby accumulating 32
+	 * bit samples in a buffer and automatically flushing it once it is full.
 	 *
-	 * \return The sample format of this file
-	 */
-	SAMPLE_FORMAT sample_format() const;
-
-	/**
-	 * \brief Return the channel layout of this file.
+	 * Returns the number of 32 bit samples processed. Note that this number may
+	 * differ from the number returned by total_samples_declared().
 	 *
-	 * \return TRUE for left0/right1, FALSE otherwise
+	 * \return Number of 32 bit PCM samples enumerated.
+	 * \throw FileReadException If an error occurrs while reading the file
 	 */
-	bool channels_swapped() const;
+	int64_t traverse_samples();
 
 	/**
 	 * \brief Traverse all 16 bit samples in the file, thereby accumulating 32
@@ -369,12 +831,10 @@ public:
 	 * Returns the number of samples processed. Note that this number may differ
 	 * from the number returned by total_samples_declared().
 	 *
-	 * \param[in] expected_size Expected size to traverse
-	 *
 	 * \return Number of 32 bit PCM samples enumerated.
 	 * \throw FileReadException If an error occurrs while reading the file
 	 */
-	int64_t traverse_samples();
+	int64_t traverse_samples_old();
 
 	/**
 	 * \brief Register the append_samples() method.
@@ -394,9 +854,9 @@ public:
 			std::function<void(const AudioSize &size)> func);
 
 	// make class non-copyable
-	FFmpegAudioFile& operator = (const FFmpegAudioFile &file) = delete;
+	FFmpegAudioStream& operator = (const FFmpegAudioStream &file) = delete;
 
-	// TODO Move assignment
+	FFmpegAudioStream& operator = (FFmpegAudioStream &&file) = default;
 
 private:
 
@@ -411,8 +871,15 @@ private:
 	 *
 	 * \return TRUE iff samples were decoded from the packet, otherwise FALSE
 	 */
-	bool decode_packet(::AVPacket packet, ::AVFrame* frame,
+	bool decode_packet_old(::AVPacket packet, ::AVFrame* frame,
 			int64_t* samples16, int64_t* frames, int64_t* bytes);
+
+	/**
+	 * \brief Get the index of the decoded audio stream.
+	 *
+	 * \return Index of the decoded audio stream.
+	 */
+	int stream_index() const;
 
 	/**
 	 * \brief Pass a sequence of samples to consumer.
@@ -424,48 +891,38 @@ private:
 	 * \return 0 on success, otherwise non-zero error code
 	 */
 	int pass_samples(const uint8_t* ch0, const uint8_t* ch1,
-		const int64_t bytes_per_plane);
+		const int64_t bytes_per_plane) const;
 
 	/**
 	 * \brief Internal format context pointer.
 	 */
-	::AVFormatContext* formatContext_;
+	AVFormatContextPtr formatContext_;
 
 	/**
 	 * \brief Internal codec context pointer.
 	 */
-	::AVCodecContext* codecContext_;
+	AVCodecContextPtr codecContext_;
 
 	/**
-	 * \brief Internal pointer to the audio stream.
+	 * \brief Index of the AVStream to be decoded.
 	 */
-	::AVStream* audioStream_;
+	int stream_index_;
 
 	/**
-	 * \brief Total number of 32 bit PCM samples in the file.
-	 *
-	 * The actual value may
-	 * be an estimation and may deviate from the factual total number of
-	 * samples. This will occurr for files for which padding frames contribute
-	 * to the duration or in cases where the duration or time base is broken.
-	 */
-	int64_t total_samples_declared_;
-
-	/**
-	 * \brief Number of planes
-	 * (1 for interleaved data, CDDA.NUMBER_OF_CHANNELS for planar data)
+	 * \brief Number of planes (1 for interleaved data, 2 for planar data).
 	 */
 	int num_planes_;
 
 	/**
-	 * \brief Sample format of this file.
-	 */
-	SAMPLE_FORMAT format_;
-
-	/**
-	 * \brief True indicates left0/right1, false otherwise.
+	 * \brief TRUE indicates left0/right1, FALSE otherwise.
 	 */
 	bool channels_swapped_;
+
+	/**
+	 * \brief Total number of 32 bit PCM samples in the file estimated by
+	 * duration.
+	 */
+	int64_t total_samples_declared_;
 
 	/**
 	 * \brief Callback for notifying outside world about the correct AudioSize.
@@ -482,7 +939,7 @@ private:
 	/**
 	 * \brief Constructor.
 	 */
-	FFmpegAudioFile();
+	FFmpegAudioStream();
 };
 
 
@@ -500,7 +957,6 @@ private:
  */
 class FFmpegAudioReaderImpl : public AudioReaderImpl
 {
-
 public:
 
 	/**
@@ -512,7 +968,6 @@ public:
 	 * \brief Virtual default destructor.
 	 */
 	~FFmpegAudioReaderImpl() noexcept override;
-
 
 private:
 
@@ -528,73 +983,10 @@ private:
 /// @}
 
 
-// FFmpegSampleFormatList
+// FFmpegAudioStreamLoader
 
 
-SAMPLE_FORMAT FFmpegSampleFormatList::support(const ::AVSampleFormat &fmt)
-{
-	// TODO Ugly if-else's, replace with something less ugly
-
-	if (::AV_SAMPLE_FMT_S16P == fmt)
-	{
-		return SAMPLE_FORMAT::S16P;
-	} else
-	if (::AV_SAMPLE_FMT_S16 == fmt)
-	{
-		return SAMPLE_FORMAT::S16;
-	} else
-	if (::AV_SAMPLE_FMT_S32P == fmt)
-	{
-		return SAMPLE_FORMAT::S32P;
-	} else
-	if (::AV_SAMPLE_FMT_S32  == fmt)
-	{
-		return SAMPLE_FORMAT::S32;
-	}
-
-	return SAMPLE_FORMAT::UNKNOWN;
-}
-
-
-// FFmpegCodecList
-
-
-bool FFmpegCodecList::support(const ::AVCodecID &id)
-{
-	switch (id)
-	{
-		case ::AV_CODEC_ID_ALAC:
-
-		case ::AV_CODEC_ID_APE:
-
-		case ::AV_CODEC_ID_FLAC:
-
-		case ::AV_CODEC_ID_PCM_S16BE: // AIFF
-
-		case ::AV_CODEC_ID_PCM_S16LE: // RIFF/WAV
-
-		/* TODO untested */ case ::AV_CODEC_ID_PCM_S16BE_PLANAR:
-
-		/* TODO untested */ case ::AV_CODEC_ID_PCM_S16LE_PLANAR:
-
-		//case ::AV_CODEC_ID_WAVPACK: // Removed: could not check for lossy
-
-		// TODO WMALOSSLESS should be respected
-
-			return true;
-
-		default:
-			break;
-	}
-
-	return false;
-}
-
-
-// FFmpegFileLoader
-
-
-std::unique_ptr<FFmpegAudioFile> FFmpegFileLoader::load(
+std::unique_ptr<FFmpegAudioStream> FFmpegAudioStreamLoader::load(
 		const std::string &filename) const
 {
 	ARCS_LOG_DEBUG << "Start to analyze audio file with ffmpeg";
@@ -607,101 +999,36 @@ std::unique_ptr<FFmpegAudioFile> FFmpegFileLoader::load(
 	::av_register_all();
 #endif
 
-	// This is what we need for the FFmpegAudioFile
+	auto fctx = open_file(filename);
 
-	::AVFormatContext* format_ctx   = nullptr;
-	::AVStream*        audio_stream = nullptr;
-	::AVCodecContext*  codec_ctx    = nullptr;
+	auto stream_and_codec = identify_stream(fctx.get(),
+			::AVMEDIA_TYPE_AUDIO);
 
-	// Acquire AVFormatContext
+	const auto stream_idx = int { stream_and_codec.first };
 
-	try
+	auto cctx = create_audio_decoder(fctx.get(), stream_idx);
+
+
+	if (not IsSupported::format(cctx->sample_fmt))
 	{
-		format_ctx = this->acquire_format_context(filename);
+		std::ostringstream message;
+		message << "Sample format not supported: "
+			<< ::av_get_sample_fmt_name(cctx->sample_fmt);
 
-	} catch (const std::exception& e)
-	{
-		if (format_ctx)
-		{
-			::avformat_close_input(&format_ctx);
-			::av_free(format_ctx);
-		}
-		throw;
+		throw InvalidAudioException(message.str());
 	}
 
-	// Acquire AVCodec and AVStream
-	// Allocate and initialize AVCodecContext
 
-	try
+	if (not IsSupported::codec(cctx->codec->id))
 	{
-		int stream_idx;
-		::AVCodec* codec = nullptr;
+		std::ostringstream message;
+		message << "Codec not supported: " << cctx->codec->long_name;
 
-		codec        = this->identify_stream_and_codec(&stream_idx, format_ctx);
-		audio_stream = format_ctx->streams[stream_idx];
-		codec_ctx    = this->alloc_and_init_codec_context(codec, audio_stream);
-
-	} catch (const std::exception& e)
-	{
-		if (codec_ctx)
-		{
-			::avcodec_close(codec_ctx);
-			::avcodec_free_context(&codec_ctx);
-		}
-		if (format_ctx)
-		{
-			::avformat_close_input(&format_ctx);
-			::av_free(format_ctx);
-		}
-		throw;
+		throw InvalidAudioException(message.str());
 	}
 
-	// Is the identified sample format supported?
 
-	SAMPLE_FORMAT format;
-	{
-		FFmpegSampleFormatList formats;
-
-		format = formats.support(codec_ctx->sample_fmt);
-
-		if (SAMPLE_FORMAT::UNKNOWN == format)
-		{
-			std::stringstream message;
-			message << "Sample format not supported: "
-				<< ::av_get_sample_fmt_name(codec_ctx->sample_fmt);
-
-			ARCS_LOG_ERROR << message.str();
-			throw FileReadException(message.str());
-		}
-	}
-
-	// Is the identified codec supported?
-
-	{
-		FFmpegCodecList allow;
-
-		if (not allow.support(codec_ctx->codec->id))
-		{
-			std::stringstream message;
-			message << "Codec not supported: " << codec_ctx->codec->long_name;
-
-			ARCS_LOG_ERROR << message.str();
-			throw FileReadException(message.str());
-		}
-
-		// Instead of using a whitelist we could allow each codec with
-		// PROP_LOSSLESS that does not have PROP_LOSSY.
-
-		// To further allow codecs with PROP_LOSSLESS that also have PROP_LOSSY
-		// would require us to safely recognize whether the particular file to
-		// analyze was losslessly compressed. At least for wavpack, this does
-		// not seem to be currently possible by ffmpeg only. (libwavpack can
-		// of course do this easily.)
-	}
-
-	// CDDA ?
-
-	if (not this->validate_cdda(codec_ctx))
+	if (not this->validate_cdda(cctx.get()))
 	{
 		std::stringstream message;
 		message << "Audio is not CDDA compliant";
@@ -710,43 +1037,46 @@ std::unique_ptr<FFmpegAudioFile> FFmpegFileLoader::load(
 		throw InvalidAudioException(message.str());
 	}
 
+
 	// Configure file object with ffmpeg properties
 
-	std::unique_ptr<FFmpegAudioFile> file = nullptr;
+	std::unique_ptr<FFmpegAudioStream> stream = nullptr;
 	{
 		// Cannot use std::make_unique due to private constructor
 
-		FFmpegAudioFile* f = new FFmpegAudioFile();
-		file.reset(f);
+		FFmpegAudioStream* f = new FFmpegAudioStream();
+		stream.reset(f);
 	}
 
-	file->formatContext_ = format_ctx;
-	file->audioStream_   = audio_stream;
-	file->codecContext_  = codec_ctx;
-	file->num_planes_    = ::av_sample_fmt_is_planar(codec_ctx->sample_fmt)
-		? CDDA.NUMBER_OF_CHANNELS
-		: 1 ;
-	file->format_  = format;
+	const auto estimated_samples = this->get_total_samples_declared(
+			cctx.get(), fctx->streams[stream_idx]);
+	ARCS_LOG_DEBUG << "Stream duration suggests a total amount of "
+		<< estimated_samples << " samples";
+	// We have to update the expected AudioSize before the last block of samples
+	// is passed.
+	//
+	// We estimate the number of samples by the duration of the stream. We use
+	// this estimation to decide at which point we start to buffer frames till
+	// EOF is seen. We assume that the declaration does not yield an estimation
+	// smaller than 6 frames less of the physical total samples. So, if the the
+	// declared total sample amount is 6 frames away, we just start to read
+	// until EOF.
+	//
+	// In most cases, the estimation is correct if the file is intact and the
+	// codec does not use padding (priming or remainder frames). The guess is
+	// reliable for PCM*, FLAC, WAVPACK, APE. It fails for ALAC. However, we
+	// count the samples and correct the estimation before flushing the last
+	// relevant block.
 
-	file->channels_swapped_ = (codec_ctx->channel_layout != 3);
+	stream->num_planes_ = ::av_sample_fmt_is_planar(cctx->sample_fmt) ? 2 : 1;
+
+	stream->channels_swapped_ = (cctx->channel_layout != 3);
 	// '3' == stereo left/right (== FL+FR).
 	// Since we already have tested for having 2 channels, anything except
 	// the standard layout must mean channels are swapped.
 
-	file->total_samples_declared_ = this->get_total_samples_declared(
-		codec_ctx, audio_stream);
-	ARCS_LOG_DEBUG << "Stream declares " << file->total_samples_declared()
-		<< " total samples";
-	// This is probably not sensible. In most cases, the estimation is correct
-	// if the file is intact and the codec does not use padding (priming or
-	// remainder frames). The guess is reliable for PCM*, FLAC, WAVPACK, APE.
-	// It fails for ALAC. However, we count the samples and correct the
-	// estimation before flushing the last relevant block.
-	// NOTE This requires:
-	// - no block is smaller than the smallest frame (say: 8 MB)
-	// - frame length is constant (we check that)
-	// But these are considerable costs. The requirement is _only_ to notify
-	// the BlockCreator immediately _before_ the last block is passed.
+	stream->total_samples_declared_ = estimated_samples;
+	stream->stream_index_ = stream_idx;
 
 
 	// Log some information about the file
@@ -757,177 +1087,43 @@ std::unique_ptr<FFmpegAudioFile> FFmpegFileLoader::load(
 
 	if (Logging::instance().has_level(LOGLEVEL::DEBUG))
 	{
-		this->log_codec_info(codec_ctx);
+		this->log_codec_info(cctx.get());
 	}
 	if (Logging::instance().has_level(LOGLEVEL::DEBUG1))
 	{
-		this->log_format_info(format_ctx);
-		this->log_stream_info(audio_stream);
+		this->log_format_info(fctx.get());
+		//this->log_stream_info(fctx->streams[stream_idx]);
 	}
 
-	return file;
+	stream->codecContext_  = std::move(cctx);
+	stream->formatContext_ = std::move(fctx);
+
+	ARCS_LOG_DEBUG << "Input stream ready";
+
+	return stream;
 }
 
 
-AVFormatContext* FFmpegFileLoader::acquire_format_context(
-		const std::string &filename) const
-{
-	// Open input stream of the file and read the header
-
-	::AVFormatContext* ctx  = nullptr;
-	::AVInputFormat* detect = nullptr; // TODO Just a stub
-	::AVDictionary* options = nullptr; // TODO Just a stub
-
-	if (::avformat_open_input(&ctx , filename.c_str(), detect, &options) != 0)
-	{
-		std::stringstream message;
-		message << "Error opening audio file: " << filename;
-
-		ARCS_LOG_ERROR << message.str();
-		throw FileReadException(message.str());
-	}
-
-	// Read some packets to acquire information about the streams
-	// (This is useful for formats without a header)
-
-	if (::avformat_find_stream_info(ctx, nullptr) < 0)
-	{
-		::avformat_close_input(&ctx);
-
-		std::stringstream message;
-		message << "Could not acquire stream info in file: " << filename;
-
-		ARCS_LOG_ERROR << message.str();
-		throw FileReadException(message.str());
-	}
-
-	return ctx;
-}
-
-
-AVCodec* FFmpegFileLoader::identify_stream_and_codec(int* stream_index,
-		::AVFormatContext* fctx) const
-{
-	// Determine the audio stream and prepare the matching codec
-
-	::AVCodec* codec = nullptr;
-
-	*stream_index = ::av_find_best_stream(
-		fctx, ::AVMEDIA_TYPE_AUDIO, -1, -1, &codec, 0);
-
-	if (*stream_index < 0)
-	{
-		std::string message("No audio stream found in file");
-
-		ARCS_LOG_ERROR << message;
-		throw FileReadException(message);
-	}
-
-	if (!codec)
-	{
-		std::stringstream message;
-		message << "No codec found for audio stream " << *stream_index;
-
-		ARCS_LOG_ERROR << message.str();
-		throw FileReadException(message.str());
-	}
-
-	// Commented out:
-	// Alternate method to create the codec when already having the AVStream
-	// AVCodec* codec = ::avcodec_find_decoder(audio_stream->codecpar->codec_id);
-	// but it seems ok to just use av_find_best_stream:
-	// https://stackoverflow.com/a/39917045
-
-	return codec;
-}
-
-
-AVCodecContext* FFmpegFileLoader::alloc_and_init_codec_context(::AVCodec* codec,
-		::AVStream* stream) const
-{
-	// Allocate CodecContext
-
-	::AVCodecContext* cctx = ::avcodec_alloc_context3(nullptr);
-
-	if (!cctx)
-	{
-		std::string message("Failed to allocate codec context");
-
-		ARCS_LOG_ERROR << message;
-		throw FileReadException(message);
-	}
-
-	// Initialize CodecContext: copy codec parameters from stream to context
-
-	if (::avcodec_parameters_to_context(cctx, stream->codecpar) < 0)
-	{
-		::avcodec_free_context(&cctx);
-
-		std::string message(
-			"Failed to copy stream parameters to codec context");
-
-		ARCS_LOG_ERROR << message;
-		throw FileReadException(message);
-	}
-
-	// Open CodecContext
-
-	if (::avcodec_open2(cctx, codec, nullptr) != 0)
-	{
-		::avcodec_close(cctx);
-		::avcodec_free_context(&cctx);
-
-		std::string message("Failed to open codec context");
-
-		ARCS_LOG_ERROR << message;
-		throw FileReadException(message);
-	}
-
-	return cctx;
-}
-
-
-bool FFmpegFileLoader::validate_cdda(::AVCodecContext *ctx) const
+bool FFmpegAudioStreamLoader::validate_cdda(::AVCodecContext *cctx) const
 {
 	bool is_validated = true;
-
-	if (::av_get_bytes_per_sample(ctx->sample_fmt) < 0)
-	{
-		ARCS_LOG_ERROR << "Could not validate CDDA: negative bits per sample";
-		is_validated = false;
-	}
-
-	if (ctx->channels < 0)
-	{
-		ARCS_LOG_ERROR
-			<< "Could not validate CDDA: negative number of channels";
-		is_validated = false;
-	}
-
-	if (ctx->sample_rate < 0)
-	{
-		ARCS_LOG_ERROR << "Could not validate CDDA: negative sample rate";
-		is_validated = false;
-	}
-
-	// Validate for CDDA
 
 	CDDAValidator validator;
 
 	if (not validator.bits_per_sample(
-				::av_get_bytes_per_sample(ctx->sample_fmt) * CHAR_BIT))
+				::av_get_bytes_per_sample(cctx->sample_fmt) * CHAR_BIT))
 	{
 		ARCS_LOG_ERROR << "Not CDDA: not 16 bits per sample";
 		is_validated = false;
 	}
 
-	if (not validator.num_channels(ctx->channels))
+	if (not validator.num_channels(cctx->channels))
 	{
 		ARCS_LOG_ERROR << "Not CDDA: not stereo";
 		is_validated = false;
 	}
 
-	if (not validator.samples_per_second(ctx->sample_rate))
+	if (not validator.samples_per_second(cctx->sample_rate))
 	{
 		ARCS_LOG_ERROR << "Not CDDA: sample rate is not 44100 Hz";
 		is_validated = false;
@@ -937,8 +1133,8 @@ bool FFmpegFileLoader::validate_cdda(::AVCodecContext *ctx) const
 }
 
 
-int64_t FFmpegFileLoader::get_total_samples_declared(::AVCodecContext* cctx,
-		::AVStream* stream) const
+int64_t FFmpegAudioStreamLoader::get_total_samples_declared(
+		::AVCodecContext* cctx, ::AVStream* stream) const
 {
 	// Deduce number of samples from duration, which should be accurate
 	// if stream metadata is intact
@@ -950,14 +1146,13 @@ int64_t FFmpegFileLoader::get_total_samples_declared(::AVCodecContext* cctx,
 	const double duration_secs =
 		static_cast<double>(stream->duration) * time_base;
 
-	ARCS_LOG_DEBUG << "Estimate duration:       " << duration_secs
-		<< " secs";
+	ARCS_LOG_DEBUG << "Estimate duration:       " << duration_secs << " secs";
 
 	return duration_secs * cctx->sample_rate;
 }
 
 
-void FFmpegFileLoader::log_format_info(::AVFormatContext *ctx) const
+void FFmpegAudioStreamLoader::log_format_info(::AVFormatContext *fctx) const
 {
 	// Print Format Context metadata
 
@@ -965,38 +1160,39 @@ void FFmpegFileLoader::log_format_info(::AVFormatContext *ctx) const
 
 	::AVDictionaryEntry *tag = nullptr;
 
-	while ((tag = ::av_dict_get(ctx->metadata, "", tag, AV_DICT_IGNORE_SUFFIX)))
+	while ((tag =
+				::av_dict_get(fctx->metadata, "", tag, AV_DICT_IGNORE_SUFFIX)))
 	{
 		ARCS_LOG(DEBUG1) << "  metadata Name: " << tag->key
 				<< "  Value: "    << tag->value;
 	}
 
 	ARCS_LOG(DEBUG1) << "  packet_size:  "
-		<< std::to_string(ctx->packet_size);
+		<< std::to_string(fctx->packet_size);
 }
 
 
-void FFmpegFileLoader::log_codec_info(::AVCodecContext *ctx) const
+void FFmpegAudioStreamLoader::log_codec_info(::AVCodecContext *cctx) const
 {
 	// Print file audio information
 
 	ARCS_LOG_INFO << "CODEC INFORMATION:";
 
-	ARCS_LOG_INFO << "  Codec name:     " << ctx->codec->long_name;
+	ARCS_LOG_INFO << "  Codec name:     " << cctx->codec->long_name;
 
-	ARCS_LOG_INFO << "  Short name:     " << ctx->codec->name;
+	ARCS_LOG_INFO << "  Short name:     " << cctx->codec->name;
 
 	ARCS_LOG_INFO << "  Sample format:  "
-			<< ::av_get_sample_fmt_name(ctx->sample_fmt);
+			<< ::av_get_sample_fmt_name(cctx->sample_fmt);
 
 	// Analyze planarity / interleavedness
 
 	{
-		bool is_planar = ::av_sample_fmt_is_planar(ctx->sample_fmt);
+		const bool is_planar = ::av_sample_fmt_is_planar(cctx->sample_fmt);
 
 		ARCS_LOG_INFO << "  Is planar:      " << (is_planar ? "yes" : "no");
 
-		if (is_planar and ctx->channels > AV_NUM_DATA_POINTERS)
+		if (is_planar and cctx->channels > AV_NUM_DATA_POINTERS)
 		{
 			// We have already ensured 2 channels by validating against CDDA.
 			// Can 2 channels ever be too much??
@@ -1007,16 +1203,16 @@ void FFmpegFileLoader::log_codec_info(::AVCodecContext *ctx) const
 	}
 
 	ARCS_LOG_INFO << "  Bytes/Sample:   "
-			<< ::av_get_bytes_per_sample(ctx->sample_fmt)
+			<< ::av_get_bytes_per_sample(cctx->sample_fmt)
 			<< " (= "
-			<< (::av_get_bytes_per_sample(ctx->sample_fmt) * CHAR_BIT)
+			<< (::av_get_bytes_per_sample(cctx->sample_fmt) * CHAR_BIT)
 			<< " bit)";
 
-	ARCS_LOG_INFO << "  Channels:       " << ctx->channels;
+	ARCS_LOG_INFO << "  Channels:       " << cctx->channels;
 
-	ARCS_LOG_INFO << "  Channel layout: " << ctx->channel_layout;
+	ARCS_LOG_INFO << "  Channel layout: " << cctx->channel_layout;
 
-	ARCS_LOG_INFO << "  Samplerate:     " << ctx->sample_rate
+	ARCS_LOG_INFO << "  Samplerate:     " << cctx->sample_rate
 			<< " Hz (samples/sec)";
 
 	// ----
@@ -1026,11 +1222,11 @@ void FFmpegFileLoader::log_codec_info(::AVCodecContext *ctx) const
 	{
 		// Losslessness ?
 
-		bool codec_prop_lossless =
-			ctx->codec_descriptor->props & AV_CODEC_PROP_LOSSLESS;
+		const bool codec_prop_lossless =
+			cctx->codec_descriptor->props & AV_CODEC_PROP_LOSSLESS;
 
-		bool codec_prop_lossy =
-			ctx->codec_descriptor->props & AV_CODEC_PROP_LOSSY;
+		const bool codec_prop_lossy =
+			cctx->codec_descriptor->props & AV_CODEC_PROP_LOSSY;
 
 		ARCS_LOG_DEBUG << "  PROP_LOSSLESS:  "
 			<< (codec_prop_lossless ? "yes" : "no");
@@ -1064,15 +1260,15 @@ void FFmpegFileLoader::log_codec_info(::AVCodecContext *ctx) const
 	{
 
 		ARCS_LOG_DEBUG << "  Capabilities:            " <<
-					ctx->codec->capabilities;
+					cctx->codec->capabilities;
 
 		ARCS_LOG_DEBUG << "  Capability bits:         " <<
-					(sizeof(ctx->codec->capabilities) * 8);
+					(sizeof(cctx->codec->capabilities) * 8);
 
 		// Constant frame length ?
 
-		bool codec_cap_variable_frame_size =
-			ctx->codec->capabilities & AV_CODEC_CAP_VARIABLE_FRAME_SIZE;
+		const bool codec_cap_variable_frame_size =
+			cctx->codec->capabilities & AV_CODEC_CAP_VARIABLE_FRAME_SIZE;
 
 		ARCS_LOG_DEBUG << "  CAP_VARIABLE_FRAME_SIZE: "
 			<< (codec_cap_variable_frame_size ? "yes" : "no");
@@ -1088,8 +1284,8 @@ void FFmpegFileLoader::log_codec_info(::AVCodecContext *ctx) const
 
 		// Last frame smaller ?
 
-		bool codec_cap_small_last_frame =
-			ctx->codec->capabilities & AV_CODEC_CAP_SMALL_LAST_FRAME;
+		const bool codec_cap_small_last_frame =
+			cctx->codec->capabilities & AV_CODEC_CAP_SMALL_LAST_FRAME;
 
 		ARCS_LOG_DEBUG << "  CAP_SMALL_LAST_FRAME:    "
 			<< (codec_cap_variable_frame_size ? "yes" : "no");
@@ -1107,8 +1303,8 @@ void FFmpegFileLoader::log_codec_info(::AVCodecContext *ctx) const
 		// so it is probably useless to test for. Seems to be expressed by
 		// properties instead, see above.
 
-		bool codec_cap_lossless = static_cast<unsigned long>
-			(ctx->codec->capabilities) & AV_CODEC_CAP_LOSSLESS;
+		const bool codec_cap_lossless = static_cast<unsigned long>
+			(cctx->codec->capabilities) & AV_CODEC_CAP_LOSSLESS;
 
 		ARCS_LOG_DEBUG << "  CAP_LOSSLESS:            "
 			<< (codec_cap_lossless ? "yes" : "no");
@@ -1123,8 +1319,8 @@ void FFmpegFileLoader::log_codec_info(::AVCodecContext *ctx) const
 		// Analyze delay capability
 
 		{
-			bool codec_cap_delay =
-				ctx->codec->capabilities & AV_CODEC_CAP_DELAY;
+			const bool codec_cap_delay =
+				cctx->codec->capabilities & AV_CODEC_CAP_DELAY;
 
 			ARCS_LOG_INFO << "   CAP_DELAY:               "
 				<< (codec_cap_delay ? "yes" : "no");
@@ -1141,16 +1337,16 @@ void FFmpegFileLoader::log_codec_info(::AVCodecContext *ctx) const
 	{
 		ARCS_LOG(DEBUG1) << "Codec Context information:";
 
-		ARCS_LOG(DEBUG1) << "  skip_bottom:      " << ctx->skip_bottom;
-		ARCS_LOG(DEBUG1) << "  frame_number:     " << ctx->frame_number;
-		ARCS_LOG(DEBUG1) << "  frame_size:       " << ctx->frame_size;
-		ARCS_LOG(DEBUG1) << "  initial_padding:  " << ctx->initial_padding;
-		ARCS_LOG(DEBUG1) << "  trailing_padding: " << ctx->trailing_padding;
+		ARCS_LOG(DEBUG1) << "  skip_bottom:      " << cctx->skip_bottom;
+		ARCS_LOG(DEBUG1) << "  frame_number:     " << cctx->frame_number;
+		ARCS_LOG(DEBUG1) << "  frame_size:       " << cctx->frame_size;
+		ARCS_LOG(DEBUG1) << "  initial_padding:  " << cctx->initial_padding;
+		ARCS_LOG(DEBUG1) << "  trailing_padding: " << cctx->trailing_padding;
 
 		// Commented out these logs because they are mostly unnecessary
 		// for practical means, but I wanted to keep them at hand if needed.
 
-		//ARCS_LOG(DEBUG1) << "  skip_frame:       " << ctx->skip_frame;
+		//ARCS_LOG(DEBUG1) << "  skip_frame:       " << cctx->skip_frame;
 
 		//// applies for flac, alac, ape
 		//ARCS_LOG(DEBUG1) << "  CAP_DR1:            "
@@ -1183,7 +1379,7 @@ void FFmpegFileLoader::log_codec_info(::AVCodecContext *ctx) const
 }
 
 
-void FFmpegFileLoader::log_stream_info(::AVStream *stream) const
+void FFmpegAudioStreamLoader::log_stream_info(::AVStream *stream) const
 {
 	// Print stream metadata
 
@@ -1201,6 +1397,7 @@ void FFmpegFileLoader::log_stream_info(::AVStream *stream) const
 		stream->codecpar->initial_padding;
 	ARCS_LOG(DEBUG1) << "  trailing_padding: " <<
 		stream->codecpar->trailing_padding;
+	ARCS_LOG(DEBUG1) << "  frame_size:       " << stream->codecpar->frame_size;
 	ARCS_LOG(DEBUG1) << "  nb_side_data:     " << stream->nb_side_data;
 	ARCS_LOG(DEBUG1) << "  nb_frames:        " << stream->nb_frames;
 
@@ -1216,59 +1413,48 @@ void FFmpegFileLoader::log_stream_info(::AVStream *stream) const
 }
 
 
-// FFmpegAudioFile
+// FFmpegAudioStream
 
 
-FFmpegAudioFile::FFmpegAudioFile()
-	: formatContext_(nullptr)
-	, codecContext_(nullptr)
-	, audioStream_(nullptr)
-	, total_samples_declared_(0)
-	, num_planes_(0)
-	, format_(SAMPLE_FORMAT::UNKNOWN)
-	, channels_swapped_(false)
-	, update_audiosize_()
-	, append_samples_()
+FFmpegAudioStream::FFmpegAudioStream()
+	: formatContext_ { nullptr }
+	, codecContext_  { nullptr }
+	, stream_index_     { 0 }
+	, num_planes_       { 0 }
+	, channels_swapped_ { false }
+	, total_samples_declared_ { 0 }
+	, update_audiosize_ { }
+	, append_samples_   { }
 {
 	// empty
 }
 
 
-FFmpegAudioFile::~FFmpegAudioFile() noexcept
-{
-	if (codecContext_)
-	{
-		::avcodec_close(codecContext_);
-		::avcodec_free_context(&codecContext_);
-	}
-
-	if (formatContext_)
-	{
-		::avformat_close_input(&formatContext_);
-		::av_free(formatContext_);
-	}
-}
-
-
-int64_t FFmpegAudioFile::total_samples_declared() const
+int64_t FFmpegAudioStream::total_samples_declared() const
 {
 	return total_samples_declared_;
 }
 
 
-SAMPLE_FORMAT FFmpegAudioFile::sample_format() const
+AVSampleFormat FFmpegAudioStream::sample_format() const
 {
-	return format_;
+	return codecContext_->sample_fmt;
 }
 
 
-bool FFmpegAudioFile::channels_swapped() const
+int FFmpegAudioStream::stream_index() const
+{
+	return stream_index_;
+}
+
+
+bool FFmpegAudioStream::channels_swapped() const
 {
 	return channels_swapped_;
 }
 
 
-void FFmpegAudioFile::register_append_samples(
+void FFmpegAudioStream::register_append_samples(
 		std::function<void(SampleInputIterator begin,
 			SampleInputIterator end)> func)
 {
@@ -1276,20 +1462,165 @@ void FFmpegAudioFile::register_append_samples(
 }
 
 
-void FFmpegAudioFile::register_update_audiosize(
+void FFmpegAudioStream::register_update_audiosize(
 		std::function<void(const AudioSize &size)> func)
 {
 	update_audiosize_ = func;
 }
 
 
-int FFmpegAudioFile::num_planes() const
+int FFmpegAudioStream::num_planes() const
 {
 	return num_planes_;
 }
 
 
-bool FFmpegAudioFile::decode_packet(::AVPacket packet, ::AVFrame *frame,
+int64_t FFmpegAudioStream::traverse_samples_old()
+{
+	// This is incompatible to the old API from ffmpeg 0.9
+	// introduced by libavcodec version 53.25.0 in 2011-12-11.
+
+	// Counters
+
+	int64_t sample16_count   = 0;
+	int64_t frame_count      = 0;
+	int64_t byte_count       = 0;
+	int64_t packet_count     = 0;
+
+	// Pointer to current frame
+
+	::AVFrame* frame = ::av_frame_alloc();
+
+	if (!frame)
+	{
+		throw FileReadException("Error allocating frame pointer");
+	}
+
+	// Read packets
+
+	::AVPacket packet;
+	::av_init_packet(&packet);
+	bool got_samples = true;
+
+	ARCS_LOG_DEBUG << "START READING SAMPLES";
+
+	while (::av_read_frame(formatContext_.get(), &packet) == 0)
+	{
+		// Respect only packets from the specified stream
+
+		if (packet.stream_index != this->stream_index())
+		{
+			::av_packet_unref(&packet);
+
+			continue;
+		}
+
+		++packet_count;
+
+		// Note: ffmpeg-API requires packet to be copied, we ensure that doing
+		// a pass-by-value
+		got_samples = this->decode_packet_old(packet, frame,
+				&sample16_count, &frame_count, &byte_count);
+
+		if (not got_samples)
+		{
+			::av_packet_unref(&packet);
+			::av_free(frame);
+
+			ARCS_LOG_DEBUG << "Expected samples but did not get any";
+
+			return sample16_count / 2;
+		}
+
+		::av_packet_unref(&packet);
+	} // while ::av_read_frame
+
+	::av_free(frame);
+	const auto total_samples = sample16_count / 2;
+
+	// Some codecs (Monkey's Audio for example) will cause frames to be buffered
+	// up in the decoding process. If there are buffered up frames that have
+	// not yet been processed, the buffer needs to be flushed. Otherwise, those
+	// samples will not contribute to the checksum.
+
+	if (AV_CODEC_CAP_DELAY & codecContext_->codec->capabilities)
+	{
+		ARCS_LOG_DEBUG << "Codec is declared to have delay capability, so "
+			"check for delayed frames";
+
+		// https://ffmpeg.org/doxygen/4.1/group__lavc__encdec.html
+
+		// Enter "draining mode"
+		if (::avcodec_send_packet(codecContext_.get(), nullptr) < 0)
+		{
+			ARCS_LOG_DEBUG << "Codec does not seem to have any delayed frames";
+
+			return total_samples;
+		}
+
+		::AVFrame* f = ::av_frame_alloc();
+
+		if (!f)
+		{
+			throw std::runtime_error("Error allocating frame pointer");
+		}
+
+		int64_t total_frames_delayed = 0;
+		int samples_in_frame = 0;
+
+		int result = 1;
+		do
+		{
+			result = ::avcodec_receive_frame(codecContext_.get(), f);
+
+			if (result == AVERROR_EOF)
+			{
+				ARCS_LOG_DEBUG << "EOF reached while draining delayed frames";
+				break;
+			}
+
+			// Pass frame to calculation
+
+			samples_in_frame = f->nb_samples * CDDA.NUMBER_OF_CHANNELS;
+
+			// FIXME This is buggy, the AudioSize MUST have been updated BEFORE
+			// sending these samples. Otherwise, libarcstk will get "last part"
+			// twice and recognize that it cannot save the last track because
+			// it already was saved (prematurely).
+
+			this->pass_samples(f->data[0], f->data[1],
+				(num_planes() == 2 ? 1 : 2) * samples_in_frame);
+
+			++total_frames_delayed;
+
+		} while (result >= 0);
+
+		::av_free(f);
+
+		if (total_frames_delayed)
+		{
+			ARCS_LOG_DEBUG << "Passed "
+				<< total_frames_delayed << " more (delayed) frames";
+		} else
+		{
+			ARCS_LOG_DEBUG << "No delayed frames recognized";
+		}
+	}
+
+	// Log some information
+
+	ARCS_LOG_DEBUG << "Reading finished";
+	ARCS_LOG_DEBUG << "  Samples(32): " << total_samples;
+	ARCS_LOG_DEBUG << "  Samples(16): " << sample16_count;
+	ARCS_LOG_DEBUG << "  Bytes:       " << byte_count;
+	ARCS_LOG_DEBUG << "  Frames:      " << frame_count;
+	ARCS_LOG_DEBUG << "  Packets:     " << packet_count;
+
+	return total_samples;
+}
+
+
+bool FFmpegAudioStream::decode_packet_old(::AVPacket packet, ::AVFrame *frame,
 		int64_t *samples16, int64_t *frames, int64_t *bytes)
 {
 	// This is incompatible to the old API from ffmpeg 0.9
@@ -1297,14 +1628,14 @@ bool FFmpegAudioFile::decode_packet(::AVPacket packet, ::AVFrame *frame,
 
 	// Decode current packet
 
-	if (::avcodec_send_packet(codecContext_, &packet) < 0)
+	if (::avcodec_send_packet(codecContext_.get(), &packet) < 0)
 	{
 		::av_log(nullptr, AV_LOG_WARNING, "Error sending packet to decoder\n");
 		return false;
 	}
 
-	int64_t sample16_count = 0;
-	int64_t frame_count    = 0;
+	int64_t samples16_in_packet = 0;
+	int64_t frames_in_packet    = 0;
 
 	// Track the frame size to recognize last frame
 	// (assumes fixed frame length)
@@ -1319,7 +1650,13 @@ bool FFmpegAudioFile::decode_packet(::AVPacket packet, ::AVFrame *frame,
 
 	while (result >= 0)
 	{
-		result = ::avcodec_receive_frame(codecContext_, frame);
+		// PROBLEM HERE is that if file declares less samples than are actually
+		// present, the size cannot be updated before the the presumably last
+		// block is passed since we see the frames one by one without a
+		// lookahead. We just won't know whether there are frames to follow and
+		// libarcstk will finish the calculation too early!
+
+		result = ::avcodec_receive_frame(codecContext_.get(), frame);
 
 		if (result < 0) // some error occurred
 		{
@@ -1342,19 +1679,22 @@ bool FFmpegAudioFile::decode_packet(::AVPacket packet, ::AVFrame *frame,
 			break;
 		}
 
-		// From here on, frame is a handle for a completely decoded frame
-
-		++frame_count;
+		++frames_in_packet;
 
 		samples_in_frame = frame->nb_samples * CDDA.NUMBER_OF_CHANNELS;
-		sample16_count += samples_in_frame;
+		// Not num_planes() since nb_samples is the number of samples
+		// per channel and we always have 2 channels (stereo),
+		// regardless whether each channel has a separate plane.
 
-		// For audio in general only linesize[0] will be defined since the
-		// planes have to be of identical size.
+		// For audio in general, linesize will only be defined for the first
+		// plane (linesize[0]) since the planes have to be of identical size.
 
 		// For planar audio, the planes are just channels.
 
-		*bytes += frame->linesize[0] * num_planes();
+		samples16_in_packet += samples_in_frame;
+		*bytes              += samples_in_frame * 2/*bytes per 16-bit-sample*/;
+		// Note: linesize[0] counts bytes but may be misleading since it counts
+		// also the padding bytes!
 
 		// Track frame size to recognize last frame.
 		// Correct estimated number of total samples with counted samples.
@@ -1374,7 +1714,8 @@ bool FFmpegAudioFile::decode_packet(::AVPacket packet, ::AVFrame *frame,
 
 				// This is the real total samples respected so far
 
-				int64_t samples32_counted = (*samples16 + sample16_count) / 2;
+				int64_t samples32_counted =
+					(*samples16 + samples16_in_packet) / 2;
 
 				// diff estimated total samples32 vs. counted samples32
 				int64_t total_diff =
@@ -1397,7 +1738,7 @@ bool FFmpegAudioFile::decode_packet(::AVPacket packet, ::AVFrame *frame,
 
 					ARCS_LOG(DEBUG1) << "EXPECT LAST FRAME";
 					ARCS_LOG(DEBUG1) << "  index: "
-						<< (*frames + frame_count);
+						<< (*frames + frames_in_packet);
 					ARCS_LOG(DEBUG1) << "  size:  "
 						<< frame->nb_samples << " samples of 16 bit";
 					ARCS_LOG(DEBUG1) << "  previous frame size: "
@@ -1439,28 +1780,111 @@ bool FFmpegAudioFile::decode_packet(::AVPacket packet, ::AVFrame *frame,
 		// Push sample sequence to processing/buffering
 		this->pass_samples(frame->data[0], frame->data[1],
 				(num_planes() == 2 ? 1 : 2) * samples_in_frame);
-		// We compute the expected bytes from the encoded samples.
-		// Instead, we could also just use frame->linesize[0] but it seems,
-		// linesize[0] does not always match nb_samples. We got always 24 bytes
-		// MORE than expected when using linesize[0].
+		// Bytes per plane, not bytes per channel! If we have a single
+		// plane, this plane contains twice as much bytes as each of
+		// the two planes in a planar codec.
 	}
 
-	*frames    += frame_count;
-	*samples16 += sample16_count;
+	*frames    += frames_in_packet;
+	*samples16 += samples16_in_packet;
 
-	return sample16_count > 0;
+	return samples16_in_packet > 0;
 }
 
 
-int FFmpegAudioFile::pass_samples(const uint8_t* ch0, const uint8_t* ch1,
-		const int64_t bytes_per_plane)
+int64_t FFmpegAudioStream::traverse_samples()
+{
+	PacketQueue queue;
+	const auto avg_queue_size = decltype( queue )::size_type { 12 };
+
+	auto samples_in_frame = int32_t { 0 };
+	auto total_samples    = int32_t { 0 };
+
+	// Fill queue to its average size
+
+	queue.set_source(formatContext_.get(), stream_index());
+	queue.set_decoder(codecContext_.get());
+
+	while (queue.size() < avg_queue_size)
+	{
+		ARCS_LOG_DEBUG << "Enqueue frame";
+
+		if (not queue.enqueue_frame())
+		{
+			// TODO EOF reached
+			break;
+		}
+	}
+
+	ARCS_LOG_DEBUG << "Loaded " << queue.size() << "packets to queue";
+
+	// Manage queue while new frames are available
+
+	auto frame = AVFramePtr { nullptr };
+
+	while ((frame = queue.dequeue_frame()))
+	{
+		samples_in_frame = frame->nb_samples * CDDA.NUMBER_OF_CHANNELS;
+
+		this->pass_samples(frame->data[0], frame->data[1],
+				(num_planes() == 2 ? 1 : 2) * samples_in_frame);
+
+		total_samples += samples_in_frame;
+
+		if (not queue.enqueue_frame())
+		{
+			// TODO EOF reached
+			break;
+		}
+	}
+
+	// Decode last frames to get size for update
+
+	std::vector<AVFramePtr> frames;
+	frames.reserve(queue.size());
+
+	while ((frame = queue.dequeue_frame()))
+	{
+		samples_in_frame = frame->nb_samples * CDDA.NUMBER_OF_CHANNELS;
+		total_samples += samples_in_frame;
+
+		frames.push_back(std::move(frame));
+	}
+	total_samples /= 2;
+
+	// Update audiosize
+
+	AudioSize newsize;
+	newsize.set_total_samples(total_samples);
+
+	ARCS_LOG_INFO << "Update total number of samples to: "
+		<< newsize.total_samples();
+
+	update_audiosize_(newsize);
+
+	// Pass last samples
+
+	for (auto& f : frames)
+	{
+		samples_in_frame = f->nb_samples * CDDA.NUMBER_OF_CHANNELS;
+
+		this->pass_samples(f->data[0], f->data[1],
+				(num_planes() == 2 ? 1 : 2) * samples_in_frame);
+	}
+
+	return total_samples;
+}
+
+
+int FFmpegAudioStream::pass_samples(const uint8_t* ch0, const uint8_t* ch1,
+		const int64_t bytes_per_plane) const
 {
 	// Note:: ffmpeg "normalizes" the channel ordering away, so we will ignore
 	// it and process anything als left0/right1
 
 	// TODO Find less ugly implementation
 
-	if (SAMPLE_FORMAT::S16P == this->sample_format())
+	if (::AV_SAMPLE_FMT_S16P == this->sample_format())
 	{
 		SampleSequence<int16_t, true> sequence;
 		sequence.wrap_bytes(ch0, ch1, static_cast<uint64_t>(bytes_per_plane));
@@ -1470,7 +1894,7 @@ int FFmpegAudioFile::pass_samples(const uint8_t* ch0, const uint8_t* ch1,
 		return 0;
 	}
 
-	if (SAMPLE_FORMAT::S16  == this->sample_format())
+	if (::AV_SAMPLE_FMT_S16  == this->sample_format())
 	{
 		SampleSequence<int16_t, false> sequence;
 		sequence.wrap_bytes(ch0, static_cast<uint64_t>(bytes_per_plane));
@@ -1480,7 +1904,7 @@ int FFmpegAudioFile::pass_samples(const uint8_t* ch0, const uint8_t* ch1,
 		return 0;
 	}
 
-	if (SAMPLE_FORMAT::S32P == this->sample_format()) // e.g. flac reader
+	if (::AV_SAMPLE_FMT_S32P == this->sample_format()) // e.g. flac reader
 	{
 		SampleSequence<int32_t, true> sequence;
 		sequence.wrap_bytes(ch0, ch1, static_cast<uint64_t>(bytes_per_plane));
@@ -1490,7 +1914,7 @@ int FFmpegAudioFile::pass_samples(const uint8_t* ch0, const uint8_t* ch1,
 		return 0;
 	}
 
-	if (SAMPLE_FORMAT::S32  == this->sample_format()) // e.g. wavpack reader
+	if (::AV_SAMPLE_FMT_S32  == this->sample_format()) // e.g. wavpack reader
 	{
 		SampleSequence<int32_t, false> sequence;
 		sequence.wrap_bytes(ch0, static_cast<uint64_t>(bytes_per_plane));
@@ -1501,146 +1925,6 @@ int FFmpegAudioFile::pass_samples(const uint8_t* ch0, const uint8_t* ch1,
 	}
 
 	return 1;
-}
-
-
-int64_t FFmpegAudioFile::traverse_samples()
-{
-	// This is incompatible to the old API from ffmpeg 0.9
-	// introduced by libavcodec version 53.25.0 in 2011-12-11.
-
-	// Counters
-
-	int64_t sample16_count   = 0;
-	int64_t frame_count      = 0;
-	int64_t byte_count       = 0;
-	int64_t packet_count     = 0;
-
-	// Pointer to current frame
-
-	::AVFrame* frame = ::av_frame_alloc();
-
-	if (!frame)
-	{
-		throw FileReadException("Error allocating frame pointer");
-	}
-
-	// Read packets
-
-	::AVPacket packet;
-	::av_init_packet(&packet);
-	bool got_samples = true;
-
-	ARCS_LOG_DEBUG << "START READING SAMPLES";
-
-	while (::av_read_frame(formatContext_, &packet) == 0)
-	{
-		// Respect only packets from the specified stream
-
-		if (packet.stream_index != audioStream_->index)
-		{
-			::av_packet_unref(&packet);
-
-			continue;
-		}
-
-		++packet_count;
-
-		// Note: ffmpeg-API requires packet to be copied, we ensure that doing
-		// a pass-by-value
-		got_samples = this->decode_packet(packet, frame,
-				&sample16_count, &frame_count, &byte_count);
-
-		if (not got_samples)
-		{
-			::av_packet_unref(&packet);
-			::av_free(frame);
-
-			ARCS_LOG_DEBUG << "Expected samples but did not get any";
-
-			return sample16_count / 2;
-		}
-
-		::av_packet_unref(&packet);
-	} // while ::av_read_frame
-
-	::av_free(frame);
-	const auto total_samples = sample16_count / 2;
-
-	// Some codecs (Monkey's Audio for example) will cause frames to be buffered
-	// up in the decoding process. If there are buffered up frames that have
-	// not yet been processed, the buffer needs to be flushed. Otherwise, those
-	// samples will not contribute to the checksum.
-
-	if (AV_CODEC_CAP_DELAY & codecContext_->codec->capabilities)
-	{
-		ARCS_LOG_DEBUG << "Codec is declared to have delay capability, so "
-			"check for delayed frames";
-
-		// https://ffmpeg.org/doxygen/4.1/group__lavc__encdec.html
-
-		// Enter "draining mode"
-		if (::avcodec_send_packet(codecContext_, nullptr) < 0)
-		{
-			ARCS_LOG_DEBUG << "Codec does not seem to have any delayed frames";
-
-			return total_samples;
-		}
-
-		::AVFrame* f = ::av_frame_alloc();
-
-		if (!f)
-		{
-			throw std::runtime_error("Error allocating frame pointer");
-		}
-
-		int64_t total_frames_delayed = 0;
-		int samples_in_frame = 0;
-
-		int result = 1;
-		do
-		{
-			result = ::avcodec_receive_frame(codecContext_, f);
-
-			if (result == AVERROR_EOF)
-			{
-				ARCS_LOG_DEBUG << "EOF reached while draining delayed frames";
-				break;
-			}
-
-			// Pass frame to calculation
-
-			samples_in_frame = f->nb_samples * CDDA.NUMBER_OF_CHANNELS;
-
-			this->pass_samples(f->data[0], f->data[1],
-				(num_planes() == 2 ? 1 : 2) * samples_in_frame);
-
-			++total_frames_delayed;
-
-		} while (result >= 0);
-
-		::av_free(f);
-
-		if (total_frames_delayed)
-		{
-			ARCS_LOG_DEBUG << "Passed "
-				<< total_frames_delayed << " more (delayed) frames";
-		} else
-		{
-			ARCS_LOG_DEBUG << "No delayed frames recognized";
-		}
-	}
-
-	// Log some information
-
-	ARCS_LOG_DEBUG << "Reading finished";
-	ARCS_LOG_DEBUG << "  Samples(32): " << total_samples;
-	ARCS_LOG_DEBUG << "  Samples(16): " << sample16_count;
-	ARCS_LOG_DEBUG << "  Bytes:       " << byte_count;
-	ARCS_LOG_DEBUG << "  Frames:      " << frame_count;
-	ARCS_LOG_DEBUG << "  Packets:     " << packet_count;
-
-	return total_samples;
 }
 
 
@@ -1663,7 +1947,7 @@ std::unique_ptr<AudioSize> FFmpegAudioReaderImpl::do_acquire_size(
 	std::unique_ptr<AudioSize> audiosize =
 		std::make_unique<AudioSize>();
 
-	FFmpegFileLoader loader;
+	FFmpegAudioStreamLoader loader;
 	auto audiofile = loader.load(filename);
 	audiosize->set_total_samples(audiofile->total_samples_declared());
 
@@ -1680,7 +1964,7 @@ void FFmpegAudioReaderImpl::do_process_file(const std::string &filename)
 
 	// Plug file, buffer and processor together
 
-	FFmpegFileLoader loader;
+	FFmpegAudioStreamLoader loader;
 	auto audiofile = loader.load(filename);
 
 	if (audiofile->channels_swapped())
@@ -1713,6 +1997,7 @@ void FFmpegAudioReaderImpl::do_process_file(const std::string &filename)
 	// Process file
 
 	auto total_samples_expected { size.total_samples() };
+	ARCS_LOG_DEBUG << "Start traversing samples";
 	auto total_samples          { audiofile->traverse_samples() };
 
 
