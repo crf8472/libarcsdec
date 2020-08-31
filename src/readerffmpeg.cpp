@@ -69,8 +69,8 @@ FFmpegException::FFmpegException(const int error, const std::string &name)
 	, msg_   {}
 {
 	std::ostringstream msg;
-	msg << "Function " << name  << " returned error "  << error_
-		<< ": '" << av_err2str(error_) << "'";
+	msg << "Function " << name  << " returned error '"
+		<< av_err2str(error_) << "' ("  << error_ << ")";
 	msg_ = msg.str();
 }
 
@@ -309,13 +309,17 @@ AVFramePtr PacketQueue::dequeue_frame()
 			}
 		}
 
-		if (error < 0) // some error occurred
+		if (AVERROR_EOF == error)
+		{
+			return nullptr; // Do not throw, just signal '... and nothing more'
+		}
+
+		if (error < 0) // some error occurred, catchall
 		{
 			throw FFmpegException(error, "avcodec_receive_frame");
 
-			// Possible errors (other then EAGAIN) are:
+			// Possible errors (other then EAGAIN and EOF) are:
 			// AVERROR(EINVAL) : Codec not opened.
-			// AVERROR_EOF     : The decoder has been flushed.
 		}
 
 		std::cout << "Frame received" << std::endl;
@@ -550,6 +554,30 @@ AVCodecContextPtr create_audio_decoder(::AVFormatContext *fctx,
 	}
 
 	return context;
+}
+
+
+// bytes
+
+
+int32_t to_bytes(const int total_samples, const ::AVSampleFormat f)
+{
+	//const ::AVSampleFormat f = static_cast<::AVSampleFormat>(sformat);
+
+	if (f == ::AV_SAMPLE_FMT_S16 or f == ::AV_SAMPLE_FMT_S16P)
+	{
+		return total_samples * 2;
+	}
+
+	if (f == ::AV_SAMPLE_FMT_S32 or f == ::AV_SAMPLE_FMT_S32P)
+	{
+		return total_samples * 4;
+	}
+
+	std::ostringstream msg;
+	msg << "Unknown sample format: " << ::av_get_sample_fmt_name(f);
+
+	throw std::invalid_argument(msg.str());
 }
 
 
@@ -834,7 +862,7 @@ public:
 	 * \return Number of 32 bit PCM samples enumerated.
 	 * \throw FileReadException If an error occurrs while reading the file
 	 */
-	int64_t traverse_samples_old();
+	//int64_t traverse_samples_old();
 
 	/**
 	 * \brief Register the append_samples() method.
@@ -871,8 +899,8 @@ private:
 	 *
 	 * \return TRUE iff samples were decoded from the packet, otherwise FALSE
 	 */
-	bool decode_packet_old(::AVPacket packet, ::AVFrame* frame,
-			int64_t* samples16, int64_t* frames, int64_t* bytes);
+	//bool decode_packet_old(::AVPacket packet, ::AVFrame* frame,
+	//		int64_t* samples16, int64_t* frames, int64_t* bytes);
 
 	/**
 	 * \brief Get the index of the decoded audio stream.
@@ -882,16 +910,28 @@ private:
 	int stream_index() const;
 
 	/**
+	 * \brief Passes a frame.
+	 *
+	 * Wrapper for pass_samples().
+	 *
+	 * \param[in] frame The frame to pass
+	 */
+	void pass_frame(const ::AVFrame* frame) const;
+
+	/**
 	 * \brief Pass a sequence of samples to consumer.
 	 *
 	 * \param[in] ch0 Samples for channel 0 (all samples in non-planar layout)
 	 * \param[in] ch1 Samples for channel 1 (nullptr in non-planar layout)
 	 * \param[in] bytes_per_plane Number of bytes per plane
+	 * \param[in] f   Sample format
 	 *
 	 * \return 0 on success, otherwise non-zero error code
+	 *
+	 * \throws invalid_argument If the sample format is unknown
 	 */
-	int pass_samples(const uint8_t* ch0, const uint8_t* ch1,
-		const int64_t bytes_per_plane) const;
+	void pass_samples(const uint8_t* ch0, const uint8_t* ch1,
+		const int32_t bytes_per_plane, const ::AVSampleFormat f) const;
 
 	/**
 	 * \brief Internal format context pointer.
@@ -1475,321 +1515,321 @@ int FFmpegAudioStream::num_planes() const
 }
 
 
-int64_t FFmpegAudioStream::traverse_samples_old()
-{
-	// This is incompatible to the old API from ffmpeg 0.9
-	// introduced by libavcodec version 53.25.0 in 2011-12-11.
-
-	// Counters
-
-	int64_t sample16_count   = 0;
-	int64_t frame_count      = 0;
-	int64_t byte_count       = 0;
-	int64_t packet_count     = 0;
-
-	// Pointer to current frame
-
-	::AVFrame* frame = ::av_frame_alloc();
-
-	if (!frame)
-	{
-		throw FileReadException("Error allocating frame pointer");
-	}
-
-	// Read packets
-
-	::AVPacket packet;
-	::av_init_packet(&packet);
-	bool got_samples = true;
-
-	ARCS_LOG_DEBUG << "START READING SAMPLES";
-
-	while (::av_read_frame(formatContext_.get(), &packet) == 0)
-	{
-		// Respect only packets from the specified stream
-
-		if (packet.stream_index != this->stream_index())
-		{
-			::av_packet_unref(&packet);
-
-			continue;
-		}
-
-		++packet_count;
-
-		// Note: ffmpeg-API requires packet to be copied, we ensure that doing
-		// a pass-by-value
-		got_samples = this->decode_packet_old(packet, frame,
-				&sample16_count, &frame_count, &byte_count);
-
-		if (not got_samples)
-		{
-			::av_packet_unref(&packet);
-			::av_free(frame);
-
-			ARCS_LOG_DEBUG << "Expected samples but did not get any";
-
-			return sample16_count / 2;
-		}
-
-		::av_packet_unref(&packet);
-	} // while ::av_read_frame
-
-	::av_free(frame);
-	const auto total_samples = sample16_count / 2;
-
-	// Some codecs (Monkey's Audio for example) will cause frames to be buffered
-	// up in the decoding process. If there are buffered up frames that have
-	// not yet been processed, the buffer needs to be flushed. Otherwise, those
-	// samples will not contribute to the checksum.
-
-	if (AV_CODEC_CAP_DELAY & codecContext_->codec->capabilities)
-	{
-		ARCS_LOG_DEBUG << "Codec is declared to have delay capability, so "
-			"check for delayed frames";
-
-		// https://ffmpeg.org/doxygen/4.1/group__lavc__encdec.html
-
-		// Enter "draining mode"
-		if (::avcodec_send_packet(codecContext_.get(), nullptr) < 0)
-		{
-			ARCS_LOG_DEBUG << "Codec does not seem to have any delayed frames";
-
-			return total_samples;
-		}
-
-		::AVFrame* f = ::av_frame_alloc();
-
-		if (!f)
-		{
-			throw std::runtime_error("Error allocating frame pointer");
-		}
-
-		int64_t total_frames_delayed = 0;
-		int samples_in_frame = 0;
-
-		int result = 1;
-		do
-		{
-			result = ::avcodec_receive_frame(codecContext_.get(), f);
-
-			if (result == AVERROR_EOF)
-			{
-				ARCS_LOG_DEBUG << "EOF reached while draining delayed frames";
-				break;
-			}
-
-			// Pass frame to calculation
-
-			samples_in_frame = f->nb_samples * CDDA.NUMBER_OF_CHANNELS;
-
-			// FIXME This is buggy, the AudioSize MUST have been updated BEFORE
-			// sending these samples. Otherwise, libarcstk will get "last part"
-			// twice and recognize that it cannot save the last track because
-			// it already was saved (prematurely).
-
-			this->pass_samples(f->data[0], f->data[1],
-				(num_planes() == 2 ? 1 : 2) * samples_in_frame);
-
-			++total_frames_delayed;
-
-		} while (result >= 0);
-
-		::av_free(f);
-
-		if (total_frames_delayed)
-		{
-			ARCS_LOG_DEBUG << "Passed "
-				<< total_frames_delayed << " more (delayed) frames";
-		} else
-		{
-			ARCS_LOG_DEBUG << "No delayed frames recognized";
-		}
-	}
-
-	// Log some information
-
-	ARCS_LOG_DEBUG << "Reading finished";
-	ARCS_LOG_DEBUG << "  Samples(32): " << total_samples;
-	ARCS_LOG_DEBUG << "  Samples(16): " << sample16_count;
-	ARCS_LOG_DEBUG << "  Bytes:       " << byte_count;
-	ARCS_LOG_DEBUG << "  Frames:      " << frame_count;
-	ARCS_LOG_DEBUG << "  Packets:     " << packet_count;
-
-	return total_samples;
-}
-
-
-bool FFmpegAudioStream::decode_packet_old(::AVPacket packet, ::AVFrame *frame,
-		int64_t *samples16, int64_t *frames, int64_t *bytes)
-{
-	// This is incompatible to the old API from ffmpeg 0.9
-	// introduced by libavcodec version 53.25.0 in 2011-12-11.
-
-	// Decode current packet
-
-	if (::avcodec_send_packet(codecContext_.get(), &packet) < 0)
-	{
-		::av_log(nullptr, AV_LOG_WARNING, "Error sending packet to decoder\n");
-		return false;
-	}
-
-	int64_t samples16_in_packet = 0;
-	int64_t frames_in_packet    = 0;
-
-	// Track the frame size to recognize last frame
-	// (assumes fixed frame length)
-
-	static int      frame_size       = 0;
-	static uint32_t frame_sz_changed = 0xFFFFFFFF; // 1st frame wraps this to 0
-
-	// Decode all frames in packet
-
-	int result = 1;
-	int samples_in_frame = 0;
-
-	while (result >= 0)
-	{
-		// PROBLEM HERE is that if file declares less samples than are actually
-		// present, the size cannot be updated before the the presumably last
-		// block is passed since we see the frames one by one without a
-		// lookahead. We just won't know whether there are frames to follow and
-		// libarcstk will finish the calculation too early!
-
-		result = ::avcodec_receive_frame(codecContext_.get(), frame);
-
-		if (result < 0) // some error occurred
-		{
-			if (AVERROR(EAGAIN) == result)
-			{
-				// Decoder requires more input packets before it can provide
-				// any frames, so just finish the processing of this packet
-				// and provide next packet to decoder.
-
-				break;
-			}
-
-			if (AVERROR_EOF == result) // Unexpected end of file
-			{
-				::av_log(nullptr, AV_LOG_ERROR, "Unexpected end of file\n");
-				break;
-			}
-
-			::av_log(nullptr, AV_LOG_ERROR, "Error receiving frame\n");
-			break;
-		}
-
-		++frames_in_packet;
-
-		samples_in_frame = frame->nb_samples * CDDA.NUMBER_OF_CHANNELS;
-		// Not num_planes() since nb_samples is the number of samples
-		// per channel and we always have 2 channels (stereo),
-		// regardless whether each channel has a separate plane.
-
-		// For audio in general, linesize will only be defined for the first
-		// plane (linesize[0]) since the planes have to be of identical size.
-
-		// For planar audio, the planes are just channels.
-
-		samples16_in_packet += samples_in_frame;
-		*bytes              += samples_in_frame * 2/*bytes per 16-bit-sample*/;
-		// Note: linesize[0] counts bytes but may be misleading since it counts
-		// also the padding bytes!
-
-		// Track frame size to recognize last frame.
-		// Correct estimated number of total samples with counted samples.
-		// If TOC was complete, this should not be necessary, though.
-
-		if (frame_size != frame->nb_samples)
-		{
-			++frame_sz_changed;
-
-			if (frame_sz_changed) // frame size changed: check for last frame
-			{
-				ARCS_LOG_DEBUG << "Frame size changed from "
-						<< frame_size
-						<< " to "
-						<< frame->nb_samples
-						<< " (samples).";
-
-				// This is the real total samples respected so far
-
-				int64_t samples32_counted =
-					(*samples16 + samples16_in_packet) / 2;
-
-				// diff estimated total samples32 vs. counted samples32
-				int64_t total_diff =
-					total_samples_declared() - samples32_counted;
-
-				ARCS_LOG_DEBUG << "Counted "
-						<< samples32_counted << " after expecting "
-						<< total_samples_declared() << " (error of "
-						<< total_diff << ").";
-
-				// Assuming that the estimation will not deviate by more than
-				// one frame, check if we are "near" to the end of the stream
-				if (std::abs(total_diff) <= frame_size)
-				{
-					// diff size of current frame against previous frame sizes
-					int32_t frame_diff = frame_size - frame->nb_samples;
-					// Variable frame_diff counts samples16. Therefore,
-					// total_diff and frame_diff are not comparable for equality
-					// in case of non-planar data.
-
-					ARCS_LOG(DEBUG1) << "EXPECT LAST FRAME";
-					ARCS_LOG(DEBUG1) << "  index: "
-						<< (*frames + frames_in_packet);
-					ARCS_LOG(DEBUG1) << "  size:  "
-						<< frame->nb_samples << " samples of 16 bit";
-					ARCS_LOG(DEBUG1) << "  previous frame size: "
-						<< frame_size;
-					ARCS_LOG(DEBUG1) << "  diff to previous frame (16): "
-						<< frame_diff;
-
-					ARCS_LOG(DEBUG1)
-						<< "  total diff counted samples (32):   "
-						<< total_diff;
-
-					// Update outside world with corrected total samples
-
-					if (samples32_counted != this->total_samples_declared())
-					{
-						AudioSize newsize;
-						newsize.set_total_samples(samples32_counted);
-
-						// Note: Equivalent with
-						// this->total_samples_declared() - total_diff;
-
-						ARCS_LOG_INFO << "Update total number of samples to: "
-								<< newsize.total_samples();
-
-						update_audiosize_(newsize);
-					}
-				}
-			}
-
-			// Note: if the last frame is of the same size as all frames before,
-			// this heuristic will fail, resulting in not correcting the
-			// estimated total samples. If the last frame is completely filled
-			// with valid frames, the estimation should be correct, though.
-			// Nonetheless, the duration info may be broken.
-
-			frame_size = frame->nb_samples;
-		}
-
-		// Push sample sequence to processing/buffering
-		this->pass_samples(frame->data[0], frame->data[1],
-				(num_planes() == 2 ? 1 : 2) * samples_in_frame);
-		// Bytes per plane, not bytes per channel! If we have a single
-		// plane, this plane contains twice as much bytes as each of
-		// the two planes in a planar codec.
-	}
-
-	*frames    += frames_in_packet;
-	*samples16 += samples16_in_packet;
-
-	return samples16_in_packet > 0;
-}
+//int64_t FFmpegAudioStream::traverse_samples_old()
+//{
+//	// This is incompatible to the old API from ffmpeg 0.9
+//	// introduced by libavcodec version 53.25.0 in 2011-12-11.
+//
+//	// Counters
+//
+//	int64_t sample16_count   = 0;
+//	int64_t frame_count      = 0;
+//	int64_t byte_count       = 0;
+//	int64_t packet_count     = 0;
+//
+//	// Pointer to current frame
+//
+//	::AVFrame* frame = ::av_frame_alloc();
+//
+//	if (!frame)
+//	{
+//		throw FileReadException("Error allocating frame pointer");
+//	}
+//
+//	// Read packets
+//
+//	::AVPacket packet;
+//	::av_init_packet(&packet);
+//	bool got_samples = true;
+//
+//	ARCS_LOG_DEBUG << "START READING SAMPLES";
+//
+//	while (::av_read_frame(formatContext_.get(), &packet) == 0)
+//	{
+//		// Respect only packets from the specified stream
+//
+//		if (packet.stream_index != this->stream_index())
+//		{
+//			::av_packet_unref(&packet);
+//
+//			continue;
+//		}
+//
+//		++packet_count;
+//
+//		// Note: ffmpeg-API requires packet to be copied, we ensure that doing
+//		// a pass-by-value
+//		got_samples = this->decode_packet_old(packet, frame,
+//				&sample16_count, &frame_count, &byte_count);
+//
+//		if (not got_samples)
+//		{
+//			::av_packet_unref(&packet);
+//			::av_free(frame);
+//
+//			ARCS_LOG_DEBUG << "Expected samples but did not get any";
+//
+//			return sample16_count / 2;
+//		}
+//
+//		::av_packet_unref(&packet);
+//	} // while ::av_read_frame
+//
+//	::av_free(frame);
+//	const auto total_samples = sample16_count / 2;
+//
+//	// Some codecs (Monkey's Audio for example) will cause frames to be buffered
+//	// up in the decoding process. If there are buffered up frames that have
+//	// not yet been processed, the buffer needs to be flushed. Otherwise, those
+//	// samples will not contribute to the checksum.
+//
+//	if (AV_CODEC_CAP_DELAY & codecContext_->codec->capabilities)
+//	{
+//		ARCS_LOG_DEBUG << "Codec is declared to have delay capability, so "
+//			"check for delayed frames";
+//
+//		// https://ffmpeg.org/doxygen/4.1/group__lavc__encdec.html
+//
+//		// Enter "draining mode"
+//		if (::avcodec_send_packet(codecContext_.get(), nullptr) < 0)
+//		{
+//			ARCS_LOG_DEBUG << "Codec does not seem to have any delayed frames";
+//
+//			return total_samples;
+//		}
+//
+//		::AVFrame* f = ::av_frame_alloc();
+//
+//		if (!f)
+//		{
+//			throw std::runtime_error("Error allocating frame pointer");
+//		}
+//
+//		int64_t total_frames_delayed = 0;
+//		int samples_in_frame = 0;
+//
+//		int result = 1;
+//		do
+//		{
+//			result = ::avcodec_receive_frame(codecContext_.get(), f);
+//
+//			if (result == AVERROR_EOF)
+//			{
+//				ARCS_LOG_DEBUG << "EOF reached while draining delayed frames";
+//				break;
+//			}
+//
+//			// Pass frame to calculation
+//
+//			samples_in_frame = f->nb_samples * CDDA.NUMBER_OF_CHANNELS;
+//
+//			// FIXME This is buggy, the AudioSize MUST have been updated BEFORE
+//			// sending these samples. Otherwise, libarcstk will get "last part"
+//			// twice and recognize that it cannot save the last track because
+//			// it already was saved (prematurely).
+//
+//			this->pass_samples(f->data[0], f->data[1],
+//				(num_planes() == 2 ? 1 : 2) * samples_in_frame);
+//
+//			++total_frames_delayed;
+//
+//		} while (result >= 0);
+//
+//		::av_free(f);
+//
+//		if (total_frames_delayed)
+//		{
+//			ARCS_LOG_DEBUG << "Passed "
+//				<< total_frames_delayed << " more (delayed) frames";
+//		} else
+//		{
+//			ARCS_LOG_DEBUG << "No delayed frames recognized";
+//		}
+//	}
+//
+//	// Log some information
+//
+//	ARCS_LOG_DEBUG << "Reading finished";
+//	ARCS_LOG_DEBUG << "  Samples(32): " << total_samples;
+//	ARCS_LOG_DEBUG << "  Samples(16): " << sample16_count;
+//	ARCS_LOG_DEBUG << "  Bytes:       " << byte_count;
+//	ARCS_LOG_DEBUG << "  Frames:      " << frame_count;
+//	ARCS_LOG_DEBUG << "  Packets:     " << packet_count;
+//
+//	return total_samples;
+//}
+//
+//
+//bool FFmpegAudioStream::decode_packet_old(::AVPacket packet, ::AVFrame *frame,
+//		int64_t *samples16, int64_t *frames, int64_t *bytes)
+//{
+//	// This is incompatible to the old API from ffmpeg 0.9
+//	// introduced by libavcodec version 53.25.0 in 2011-12-11.
+//
+//	// Decode current packet
+//
+//	if (::avcodec_send_packet(codecContext_.get(), &packet) < 0)
+//	{
+//		::av_log(nullptr, AV_LOG_WARNING, "Error sending packet to decoder\n");
+//		return false;
+//	}
+//
+//	int64_t samples16_in_packet = 0;
+//	int64_t frames_in_packet    = 0;
+//
+//	// Track the frame size to recognize last frame
+//	// (assumes fixed frame length)
+//
+//	static int      frame_size       = 0;
+//	static uint32_t frame_sz_changed = 0xFFFFFFFF; // 1st frame wraps this to 0
+//
+//	// Decode all frames in packet
+//
+//	int result = 1;
+//	int samples_in_frame = 0;
+//
+//	while (result >= 0)
+//	{
+//		// PROBLEM HERE is that if file declares less samples than are actually
+//		// present, the size cannot be updated before the the presumably last
+//		// block is passed since we see the frames one by one without a
+//		// lookahead. We just won't know whether there are frames to follow and
+//		// libarcstk will finish the calculation too early!
+//
+//		result = ::avcodec_receive_frame(codecContext_.get(), frame);
+//
+//		if (result < 0) // some error occurred
+//		{
+//			if (AVERROR(EAGAIN) == result)
+//			{
+//				// Decoder requires more input packets before it can provide
+//				// any frames, so just finish the processing of this packet
+//				// and provide next packet to decoder.
+//
+//				break;
+//			}
+//
+//			if (AVERROR_EOF == result) // Unexpected end of file
+//			{
+//				::av_log(nullptr, AV_LOG_ERROR, "Unexpected end of file\n");
+//				break;
+//			}
+//
+//			::av_log(nullptr, AV_LOG_ERROR, "Error receiving frame\n");
+//			break;
+//		}
+//
+//		++frames_in_packet;
+//
+//		samples_in_frame = frame->nb_samples * CDDA.NUMBER_OF_CHANNELS;
+//		// Not num_planes() since nb_samples is the number of samples
+//		// per channel and we always have 2 channels (stereo),
+//		// regardless whether each channel has a separate plane.
+//
+//		// For audio in general, linesize will only be defined for the first
+//		// plane (linesize[0]) since the planes have to be of identical size.
+//
+//		// For planar audio, the planes are just channels.
+//
+//		samples16_in_packet += samples_in_frame;
+//		*bytes              += samples_in_frame * 2/*bytes per 16-bit-sample*/;
+//		// Note: linesize[0] counts bytes but may be misleading since it counts
+//		// also the padding bytes!
+//
+//		// Track frame size to recognize last frame.
+//		// Correct estimated number of total samples with counted samples.
+//		// If TOC was complete, this should not be necessary, though.
+//
+//		if (frame_size != frame->nb_samples)
+//		{
+//			++frame_sz_changed;
+//
+//			if (frame_sz_changed) // frame size changed: check for last frame
+//			{
+//				ARCS_LOG_DEBUG << "Frame size changed from "
+//						<< frame_size
+//						<< " to "
+//						<< frame->nb_samples
+//						<< " (samples).";
+//
+//				// This is the real total samples respected so far
+//
+//				int64_t samples32_counted =
+//					(*samples16 + samples16_in_packet) / 2;
+//
+//				// diff estimated total samples32 vs. counted samples32
+//				int64_t total_diff =
+//					total_samples_declared() - samples32_counted;
+//
+//				ARCS_LOG_DEBUG << "Counted "
+//						<< samples32_counted << " after expecting "
+//						<< total_samples_declared() << " (error of "
+//						<< total_diff << ").";
+//
+//				// Assuming that the estimation will not deviate by more than
+//				// one frame, check if we are "near" to the end of the stream
+//				if (std::abs(total_diff) <= frame_size)
+//				{
+//					// diff size of current frame against previous frame sizes
+//					int32_t frame_diff = frame_size - frame->nb_samples;
+//					// Variable frame_diff counts samples16. Therefore,
+//					// total_diff and frame_diff are not comparable for equality
+//					// in case of non-planar data.
+//
+//					ARCS_LOG(DEBUG1) << "EXPECT LAST FRAME";
+//					ARCS_LOG(DEBUG1) << "  index: "
+//						<< (*frames + frames_in_packet);
+//					ARCS_LOG(DEBUG1) << "  size:  "
+//						<< frame->nb_samples << " samples of 16 bit";
+//					ARCS_LOG(DEBUG1) << "  previous frame size: "
+//						<< frame_size;
+//					ARCS_LOG(DEBUG1) << "  diff to previous frame (16): "
+//						<< frame_diff;
+//
+//					ARCS_LOG(DEBUG1)
+//						<< "  total diff counted samples (32):   "
+//						<< total_diff;
+//
+//					// Update outside world with corrected total samples
+//
+//					if (samples32_counted != this->total_samples_declared())
+//					{
+//						AudioSize newsize;
+//						newsize.set_total_samples(samples32_counted);
+//
+//						// Note: Equivalent with
+//						// this->total_samples_declared() - total_diff;
+//
+//						ARCS_LOG_INFO << "Update total number of samples to: "
+//								<< newsize.total_samples();
+//
+//						update_audiosize_(newsize);
+//					}
+//				}
+//			}
+//
+//			// Note: if the last frame is of the same size as all frames before,
+//			// this heuristic will fail, resulting in not correcting the
+//			// estimated total samples. If the last frame is completely filled
+//			// with valid frames, the estimation should be correct, though.
+//			// Nonetheless, the duration info may be broken.
+//
+//			frame_size = frame->nb_samples;
+//		}
+//
+//		// Push sample sequence to processing/buffering
+//		this->pass_samples(frame->data[0], frame->data[1],
+//				(num_planes() == 2 ? 1 : 2) * samples_in_frame);
+//		// Bytes per plane, not bytes per channel! If we have a single
+//		// plane, this plane contains twice as much bytes as each of
+//		// the two planes in a planar codec.
+//	}
+//
+//	*frames    += frames_in_packet;
+//	*samples16 += samples16_in_packet;
+//
+//	return samples16_in_packet > 0;
+//}
 
 
 int64_t FFmpegAudioStream::traverse_samples()
@@ -1797,8 +1837,7 @@ int64_t FFmpegAudioStream::traverse_samples()
 	PacketQueue queue;
 	const auto avg_queue_size = decltype( queue )::size_type { 12 };
 
-	auto samples_in_frame = int32_t { 0 };
-	auto total_samples    = int32_t { 0 };
+	auto total_samples = int32_t { 0 };
 
 	// Fill queue to its average size
 
@@ -1807,8 +1846,6 @@ int64_t FFmpegAudioStream::traverse_samples()
 
 	while (queue.size() < avg_queue_size)
 	{
-		ARCS_LOG_DEBUG << "Enqueue frame";
-
 		if (not queue.enqueue_frame())
 		{
 			// TODO EOF reached
@@ -1816,7 +1853,8 @@ int64_t FFmpegAudioStream::traverse_samples()
 		}
 	}
 
-	ARCS_LOG_DEBUG << "Loaded " << queue.size() << "packets to queue";
+	ARCS_LOG_DEBUG << "Loaded " << queue.size() << " encoded packets to queue";
+	ARCS_LOG_DEBUG << "Start to manage decoding queue";
 
 	// Manage queue while new frames are available
 
@@ -1824,12 +1862,9 @@ int64_t FFmpegAudioStream::traverse_samples()
 
 	while ((frame = queue.dequeue_frame()))
 	{
-		samples_in_frame = frame->nb_samples * CDDA.NUMBER_OF_CHANNELS;
+		total_samples += frame->nb_samples;
 
-		this->pass_samples(frame->data[0], frame->data[1],
-				(num_planes() == 2 ? 1 : 2) * samples_in_frame);
-
-		total_samples += samples_in_frame;
+		this->pass_frame(frame.get());
 
 		if (not queue.enqueue_frame())
 		{
@@ -1838,93 +1873,121 @@ int64_t FFmpegAudioStream::traverse_samples()
 		}
 	}
 
-	// Decode last frames to get size for update
+	ARCS_LOG_DEBUG << "Last frame was read, flush queue after "
+		<< total_samples << " samples";
+
+	// Flush queue
 
 	std::vector<AVFramePtr> frames;
 	frames.reserve(queue.size());
+	auto drained = bool { false };
+
+	flush: // Flush all frames from decoder
 
 	while ((frame = queue.dequeue_frame()))
 	{
-		samples_in_frame = frame->nb_samples * CDDA.NUMBER_OF_CHANNELS;
-		total_samples += samples_in_frame;
+		total_samples += frame->nb_samples;
 
 		frames.push_back(std::move(frame));
 	}
-	total_samples /= 2;
+
+	// Respect delayed frames (if any)
+
+	if (not drained)
+	{
+		if (AV_CODEC_CAP_DELAY & codecContext_->codec->capabilities)
+		{
+			ARCS_LOG_INFO  << "Codec declares to have delay capability";
+			ARCS_LOG_DEBUG << "Check for delayed frames";
+
+			// https://ffmpeg.org/doxygen/4.1/group__lavc__encdec.html
+
+			// Enter "draining mode" by sending nullptr as packet
+			if (::avcodec_send_packet(codecContext_.get(), nullptr) < 0)
+			{
+				ARCS_LOG_DEBUG << "Could not get any delayed frames";
+			} else
+			{
+				ARCS_LOG_DEBUG << "Seems there are delayed frames, flush";
+				drained = true;
+				goto flush; // Flush again in "draining" mode
+			}
+		}
+	}
 
 	// Update audiosize
 
-	AudioSize newsize;
-	newsize.set_total_samples(total_samples);
+	AudioSize updated_size;
+	updated_size.set_total_samples(total_samples);
 
 	ARCS_LOG_INFO << "Update total number of samples to: "
-		<< newsize.total_samples();
+		<< updated_size.total_samples();
 
-	update_audiosize_(newsize);
+	update_audiosize_(updated_size);
 
 	// Pass last samples
 
 	for (auto& f : frames)
 	{
-		samples_in_frame = f->nb_samples * CDDA.NUMBER_OF_CHANNELS;
-
-		this->pass_samples(f->data[0], f->data[1],
-				(num_planes() == 2 ? 1 : 2) * samples_in_frame);
+		this->pass_frame(f.get());
 	}
 
 	return total_samples;
 }
 
 
-int FFmpegAudioStream::pass_samples(const uint8_t* ch0, const uint8_t* ch1,
-		const int64_t bytes_per_plane) const
+void FFmpegAudioStream::pass_frame(const ::AVFrame* frame) const
 {
+	const auto format = static_cast<::AVSampleFormat>(frame->format);
+
+	// The single plane will contain the samples for both stereo channels,
+	// therefore the amount of bytes has to be multiplied with the number
+	// of channels for interleaved data.
+	const uint64_t bytes_per_plane = static_cast<uint64_t>(
+		to_bytes(frame->nb_samples, format) * (num_planes() == 2 ? 1 : 2));
+	// We do not use frame->linesize[0] because it seems to add
+	// optional bytes sometimes (padding?)
+
 	// Note:: ffmpeg "normalizes" the channel ordering away, so we will ignore
 	// it and process anything als left0/right1
 
 	// TODO Find less ugly implementation
 
-	if (::AV_SAMPLE_FMT_S16P == this->sample_format())
+	if (::AV_SAMPLE_FMT_S16P == format)
 	{
 		SampleSequence<int16_t, true> sequence;
-		sequence.wrap_bytes(ch0, ch1, static_cast<uint64_t>(bytes_per_plane));
+		sequence.wrap_bytes(frame->data[0], frame->data[1], bytes_per_plane);
 
 		append_samples_(sequence.begin(), sequence.end());
-
-		return 0;
-	}
-
-	if (::AV_SAMPLE_FMT_S16  == this->sample_format())
+	} else
+	if (::AV_SAMPLE_FMT_S16  == format)
 	{
 		SampleSequence<int16_t, false> sequence;
-		sequence.wrap_bytes(ch0, static_cast<uint64_t>(bytes_per_plane));
+		sequence.wrap_bytes(frame->data[0], bytes_per_plane);
 
 		append_samples_(sequence.begin(), sequence.end());
-
-		return 0;
-	}
-
-	if (::AV_SAMPLE_FMT_S32P == this->sample_format()) // e.g. flac reader
+	} else
+	if (::AV_SAMPLE_FMT_S32P == format) // e.g. flac reader
 	{
 		SampleSequence<int32_t, true> sequence;
-		sequence.wrap_bytes(ch0, ch1, static_cast<uint64_t>(bytes_per_plane));
+		sequence.wrap_bytes(frame->data[0], frame->data[1], bytes_per_plane);
 
 		append_samples_(sequence.begin(), sequence.end());
-
-		return 0;
-	}
-
-	if (::AV_SAMPLE_FMT_S32  == this->sample_format()) // e.g. wavpack reader
+	} else
+	if (::AV_SAMPLE_FMT_S32  == format) // e.g. wavpack reader
 	{
 		SampleSequence<int32_t, false> sequence;
-		sequence.wrap_bytes(ch0, static_cast<uint64_t>(bytes_per_plane));
+		sequence.wrap_bytes(frame->data[0], bytes_per_plane);
 
 		append_samples_(sequence.begin(), sequence.end());
+	} else
+	{
+		std::ostringstream msg;
+		msg << "Cannot pass sequence with unknown sample format: "
+			<< ::av_get_sample_fmt_name(format);
 
-		return 0;
+		throw std::invalid_argument(msg.str());
 	}
-
-	return 1;
 }
 
 

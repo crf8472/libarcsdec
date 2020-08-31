@@ -365,6 +365,14 @@ AVCodecContextPtr create_audio_decoder(::AVFormatContext *fctx,
 
 
 /**
+ * \brief Turn an amount of samples into the equivalent number of bytes.
+ *
+ * \return Number of bytes an amount of samples represents.
+ */
+int32_t to_bytes(const int total_samples, const ::AVSampleFormat f);
+
+
+/**
  * \brief Informs about the support for a specified sample format or codec.
  */
 struct IsSupported final
@@ -408,4 +416,3 @@ struct IsSupported final
 /** @} */
 
 #endif
-
