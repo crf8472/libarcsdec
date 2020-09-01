@@ -37,14 +37,37 @@ extern "C"
 #include <libavutil/avutil.h>
 }
 
+#ifndef __LIBARCSTK_SAMPLES_HPP__
+#include <arcstk/samples.hpp>   // for SampleInputIterator
+#endif
+#ifndef __LIBARCSTK_CALCULATE_HPP__
+#include <arcstk/calculate.hpp> // for AudioSize
+#endif
+
 
 namespace arcsdec
 {
 inline namespace v_1_0_0
 {
+namespace details
+{
+namespace ffmpeg
+{
 
+using arcstk::SampleInputIterator;
+using arcstk::AudioSize;
+
+/**
+ * \internal \defgroup readerffmpegImpl Implementation
+ *
+ * \ingroup readerffmpeg
+ *
+ * @{
+ */
+
+// Replace macro av_err2str.
 // This fixes the "using temporary adress" error with av_err2str in some
-// versions of g++
+// versions of g++.
 #ifdef av_err2str
 #undef av_err2str
 av_always_inline char* av_err2str(int errnum)
@@ -89,7 +112,9 @@ private:
 
 
 /**
- * \brief Functor for freeing AVFormatContext* instances.
+ * \brief Free AVFormatContext* instances.
+ *
+ * Uses avformat_close_input to close and free the instance.
  */
 struct Free_AVFormatContext final
 {
@@ -102,7 +127,9 @@ using AVFormatContextPtr =
 
 
 /**
- * \brief Functor for freeing AVCodecContext* instances.
+ * \brief Free AVCodecContext* instances.
+ *
+ * Uses avcodec_free_context to close and free the instance.
  */
 struct Free_AVCodecContext final
 {
@@ -115,7 +142,9 @@ using AVCodecContextPtr =
 
 
 /**
- * \brief Functor for freeing AVPacket* instances.
+ * \brief Free AVPacket* instances.
+ *
+ * Uses av_packet_free to free the instance.
  */
 struct Free_AVPacket final
 {
@@ -124,7 +153,7 @@ struct Free_AVPacket final
 
 
 /**
- * \brief A unique_ptr for AVPackets with a specialized deleter
+ * \brief A unique_ptr for AVPackets using Free_AVPacket as a custom deleter.
  */
 using AVPacketPtr = std::unique_ptr<::AVPacket, Free_AVPacket>;
 
@@ -146,6 +175,8 @@ struct Make_AVPacketPtr final
 
 /**
  * \brief Functor for freeing AVFrame* instances.
+ *
+ * Uses av_free to free the instance.
  */
 struct Free_AVFrame final
 {
@@ -154,7 +185,7 @@ struct Free_AVFrame final
 
 
 /**
- * \brief A unique_ptr for AVFrame instances with a specialized deleter
+ * \brief A unique_ptr for AVFrame using Free_AVFrame as a custom deleter.
  */
 using AVFramePtr = std::unique_ptr<::AVFrame, Free_AVFrame>;
 
@@ -162,7 +193,7 @@ using AVFramePtr = std::unique_ptr<::AVFrame, Free_AVFrame>;
 /**
  * \brief Construction functor for AVFrame instances.
  *
- * Frame is allocated with \c av_frame_alloc.
+ * The frame is allocated with \c av_frame_alloc.
  *
  * If allocation fails, \c bad_alloc is thrown.
  */
@@ -173,7 +204,7 @@ struct Make_AVFramePtr final
 
 
 /**
- * \brief Represents a short sequence of frames.
+ * \brief A FIFO sequence of AVPacket instances.
  */
 class PacketQueue final
 {
@@ -233,7 +264,7 @@ public:
 	 *
 	 * EOF is signalled by returning FALSE, any error is indicated by throwing.
 	 *
-	 * \return True if a frame was enqueue, False on EOF.
+	 * \return TRUE if a frame was enqueued, FALSE on EOF.
 	 *
 	 * \throws FFmpegException With error code from \c av_read_frame
 	 */
@@ -242,12 +273,19 @@ public:
 	/**
 	 * \brief Provides next frame from queue.
 	 *
-	 * Expects a pointer to an allocated frame. The target object is filled with
-	 * the data of the provided frame.
+	 * If the decoder has enough input to provide the next frame, it just
+	 * provides it. Otherwise a packet is popped from the queue, decoded and the
+	 * first frame is provided. Hence, size() may or may not have changed after
+	 * a call of dequeue_frame (since audio packets may contain multiple
+	 * frames).
+	 *
+	 * When the decoder has no more input to provide a frame, a nullptr is
+	 * returned. All other reasons to not provide a frame are indicated by
+	 * throwing.
 	 *
 	 * \param[in,out] frame The frame to provide
 	 *
-	 * \return Total number of 16-bit samples in the provided frame.
+	 * \return Next frame from queue.
 	 *
 	 * \throws FFmpegException With error code from \c avcodec_receive_frame
 	 */
@@ -335,10 +373,11 @@ AVFormatContextPtr open_file(const std::string &filename);
 /**
  * \brief Identify the best stream of the specified media type.
  *
+ * AVCodec has to be tested for NULL by the caller. Any error in respect to
+ * the stream index will indiciated by throwing.
+ *
  * \param[in] fctx       The format context of the streams to inspect
  * \param[in] media_type The stream type to identify
- *
- * AVCodec has to be tested for NULL by the caller.
  *
  * \return Stream index and codec
  *
@@ -365,11 +404,22 @@ AVCodecContextPtr create_audio_decoder(::AVFormatContext *fctx,
 
 
 /**
+ * \brief Validates stream for CDDA compliance.
+ *
+ * \param[in] cctx The AVCodecContext to analyze
+ */
+bool validate_cdda(::AVCodecContext* cctx);
+
+
+/**
  * \brief Turn an amount of samples into the equivalent number of bytes.
+ *
+ * \param[in] total_samples The amount of 16-bit samples
+ * \param[in] f             The sample format
  *
  * \return Number of bytes an amount of samples represents.
  */
-int32_t to_bytes(const int total_samples, const ::AVSampleFormat f);
+int32_t in_bytes(const int total_samples, const ::AVSampleFormat f);
 
 
 /**
@@ -379,6 +429,8 @@ struct IsSupported final
 {
 	/**
 	 * \brief Returns TRUE iff the format is supported, otherwise FALSE.
+	 *
+	 * \param[in] id The sample format to test
 	 *
 	 * \return TRUE iff the format is supported, otherwise FALSE.
 	 */
@@ -403,11 +455,277 @@ struct IsSupported final
 	 * AV_CODEC_ID_PCM_S32BE, AV_CODEC_ID_PCM_U32LE, AV_CODEC_ID_PCM_U32BE,
 	 * WMALOSSLESS and maybe more if reasonable.
 	 *
+	 * \param[in] id The codec to test
+	 *
 	 * \return TRUE iff the codec is supported, otherwise FALSE.
 	 */
 	static bool codec(const ::AVCodecID id);
 };
 
+
+// forward declaration
+class FFmpegAudioStream;
+
+
+/**
+ * \brief Loads an audio file and returns a representation as FFmpegAudioStream.
+ */
+class FFmpegAudioStreamLoader final
+{
+public:
+
+	/**
+	 * \brief Load a stream from a file with ffmpeg.
+	 *
+	 * \param[in] filename Filename
+	 */
+	std::unique_ptr<FFmpegAudioStream> load(const std::string &filename) const;
+
+private:
+
+	/**
+	 * \brief Estimate the total number of samples from the the information
+	 * provided by stream and codec context.
+	 *
+	 * Given a constant frame size, the estimation helps to recognize the last
+	 * frame. Without the estimation we could only check for a frame with a
+	 * different size and consider it to be the last. With an estimation, we can
+	 * check whether the sample count differs from the estimation by less than
+	 * the size of one frame. This seems to ensure a "better" decision than
+	 * just the comparison to the previous frame.
+	 *
+	 * \todo Is an estimation really required? To work correctly,
+	 * Calculation has to know about the last relevant block when it encounters
+	 * it. It is completely sufficient to know the correct total number of
+	 * samples BEFORE flushing the last block. For this, no estimation is
+	 * necessary.
+	 *
+	 * \param[in] cctx   The AVCodecContext to analyze
+	 * \param[in] stream The AVStream to analyze
+	 * \return Estimated total number of 32 bit PCM samples
+	 */
+	int64_t get_total_samples_declared(::AVCodecContext* cctx,
+			::AVStream* stream) const;
+};
+
+
+/**
+ * \brief Represents an audio stream.
+ *
+ * Any container format is supported while it is only sensible to allow lossless
+ * codecs. Therefore, the support is limited to the following codes:
+ * - PCM S16LE,S16BE (WAV, AIFF)
+ * - fLaC
+ * - ALAC
+ * - Monkey's Audio
+ *
+ * \todo If ffmpeg API would allow to check for lossless encoding on Wavpack
+ * files, Wavpack should be added to the list
+ */
+class FFmpegAudioStream final
+{
+	friend std::unique_ptr<FFmpegAudioStream> FFmpegAudioStreamLoader::load(
+			const std::string &filename) const;
+
+public:
+
+	// make class non-copyable
+	FFmpegAudioStream (const FFmpegAudioStream &file) = delete;
+
+	FFmpegAudioStream (FFmpegAudioStream &&file) = default;
+
+	/**
+	 * \brief Return the sample format of this file.
+	 *
+	 * \return The sample format of this file
+	 */
+	AVSampleFormat sample_format() const;
+
+	/**
+	 * \brief Number of planes.
+	 *
+	 * 1 for interleaved, 2 (== \c CDDA.NUMBER_OF_CHANNELS= for planar data.
+	 *
+	 * \return Number of planes, either 1 for interleaved or 2 for planar.
+	 */
+	int num_planes() const;
+
+	/**
+	 * \brief Return the channel layout of this file.
+	 *
+	 * \return TRUE for left0/right1, FALSE otherwise
+	 */
+	bool channels_swapped() const;
+
+	/**
+	 * \brief Total number of 32 bit PCM samples as declared by the stream.
+	 *
+	 * Note that this number may differ from the total number of samples
+	 * processed. Some codecs like ALAC insert "priming frames" or
+	 * "remainder frames" as a padding to fill the last frame to conform a
+	 * standard frame size. At least for ALAC/CAF files FFmpeg let those
+	 * padding frames contribute to the number of total samples (cf.
+	 * \c cafdec.c) but does not enumerate them when decoding packets. (I never
+	 * figured out how ffmpeg keeps this information after having read the CAF
+	 * file.)
+	 *
+	 * As a consequence, total_samples_declared() will yield only an estimation
+	 * of samples, i.e. the total number of samples as declared in the stream.
+	 *
+	 * The actual number of samples contributing to the ARCSs is returned by
+	 * traverse_samples().
+	 *
+	 * \return Total number of 32 bit PCM samples in file (including priming and
+	 * remainder frames)
+	 */
+	int64_t total_samples_declared() const;
+
+	/**
+	 * \brief Traverse all 16 bit samples in the file, thereby accumulating 32
+	 * bit samples in a buffer and automatically flushing it once it is full.
+	 *
+	 * Returns the number of 32 bit samples processed. Note that this number may
+	 * differ from the number returned by total_samples_declared().
+	 *
+	 * \return Number of 32 bit PCM samples enumerated.
+	 * \throw FileReadException If an error occurrs while reading the file
+	 */
+	int64_t traverse_samples();
+
+	/**
+	 * \brief Traverse all 16 bit samples in the file, thereby accumulating 32
+	 * bit samples in a buffer and automatically flushing it once it is full.
+	 *
+	 * Returns the number of samples processed. Note that this number may differ
+	 * from the number returned by total_samples_declared().
+	 *
+	 * \return Number of 32 bit PCM samples enumerated.
+	 * \throw FileReadException If an error occurrs while reading the file
+	 */
+	//int64_t traverse_samples_old();
+
+	/**
+	 * \brief Register the append_samples() method.
+	 *
+	 * \param[in] func The append_samples() method to use while reading
+	 */
+	void register_append_samples(
+		std::function<void(SampleInputIterator begin, SampleInputIterator end)>
+			func);
+
+	/**
+	 * \brief Register the update_audiosize() method.
+	 *
+	 * \param[in] func The update_audiosize() method to use while reading
+	 */
+	void register_update_audiosize(
+			std::function<void(const AudioSize &size)> func);
+
+	// make class non-copyable
+	FFmpegAudioStream& operator = (const FFmpegAudioStream &file) = delete;
+
+	FFmpegAudioStream& operator = (FFmpegAudioStream &&file) = default;
+
+private:
+
+	/**
+	 * \brief Decode a single packet completely.
+	 *
+	 * \param[in]  packet    The packet to decode (call-by-value ensures copy)
+	 * \param[in]  frame     The frame pointer to use for decoding
+	 * \param[out] samples16 Accumulative counter for 16 bit samples
+	 * \param[out] frames    Accumulative counter of frames read
+	 * \param[out] bytes     Accumulative counter of bytes read
+	 *
+	 * \return TRUE iff samples were decoded from the packet, otherwise FALSE
+	 */
+	//bool decode_packet_old(::AVPacket packet, ::AVFrame* frame,
+	//		int64_t* samples16, int64_t* frames, int64_t* bytes);
+
+	/**
+	 * \brief Get the index of the decoded audio stream.
+	 *
+	 * \return Index of the decoded audio stream.
+	 */
+	int stream_index() const;
+
+	/**
+	 * \brief Passes a frame.
+	 *
+	 * Wrapper for pass_samples().
+	 *
+	 * \param[in] frame The frame to pass
+	 */
+	void pass_frame(const ::AVFrame* frame) const;
+
+	/**
+	 * \brief Pass a sequence of samples to consumer.
+	 *
+	 * \param[in] ch0 Samples for channel 0 (all samples in non-planar layout)
+	 * \param[in] ch1 Samples for channel 1 (nullptr in non-planar layout)
+	 * \param[in] bytes_per_plane Number of bytes per plane
+	 * \param[in] f   Sample format
+	 *
+	 * \return 0 on success, otherwise non-zero error code
+	 *
+	 * \throws invalid_argument If the sample format is unknown
+	 */
+	void pass_samples(const uint8_t* ch0, const uint8_t* ch1,
+		const int32_t bytes_per_plane, const ::AVSampleFormat f) const;
+
+	/**
+	 * \brief Internal format context pointer.
+	 */
+	AVFormatContextPtr formatContext_;
+
+	/**
+	 * \brief Internal codec context pointer.
+	 */
+	AVCodecContextPtr codecContext_;
+
+	/**
+	 * \brief Index of the AVStream to be decoded.
+	 */
+	int stream_index_;
+
+	/**
+	 * \brief Number of planes (1 for interleaved data, 2 for planar data).
+	 */
+	int num_planes_;
+
+	/**
+	 * \brief TRUE indicates left0/right1, FALSE otherwise.
+	 */
+	bool channels_swapped_;
+
+	/**
+	 * \brief Total number of 32 bit PCM samples in the file estimated by
+	 * duration.
+	 */
+	int64_t total_samples_declared_;
+
+	/**
+	 * \brief Callback for notifying outside world about the correct AudioSize.
+	 */
+	std::function<void(const AudioSize &size)> update_audiosize_;
+
+	/**
+	 * \brief Callback for notifying outside world about a new sequence of
+	 * samples.
+	 */
+	std::function<void(SampleInputIterator begin, SampleInputIterator end)>
+		append_samples_;
+
+	/**
+	 * \brief Constructor.
+	 */
+	FFmpegAudioStream();
+};
+
+} // namespace ffmpeg
+} // namespace details
+
+/// @}
 
 } // namespace v_1_0_0
 

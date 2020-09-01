@@ -7,21 +7,11 @@
 #include "readerffmpeg_details.hpp"
 #endif
 
-#include <iostream>
-
-extern "C"
-{
-#include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
-#include <libavformat/version.h>
-#include <libavutil/avutil.h>
-}
-
 
 /**
  * \file
  *
- * Tests for all API classes exported by readerfffmpeg.hpp
+ * Tests for classes in readerffmpeg.cpp
  */
 
 
@@ -48,6 +38,10 @@ TEST_CASE ( "DescriptorFFmpeg", "[readerffmpeg]" )
 
 TEST_CASE ( "PacketQueue", "[packetqueue]" )
 {
+	using arcsdec::details::ffmpeg::AVFormatContextPtr;
+	using arcsdec::details::ffmpeg::AVCodecContextPtr;
+	using arcsdec::details::ffmpeg::PacketQueue;
+
 	::AVFormatContext* ff_fctx = nullptr;
 
 	auto error_fopen =
@@ -55,7 +49,7 @@ TEST_CASE ( "PacketQueue", "[packetqueue]" )
 
 	REQUIRE ( error_fopen == 0 );
 
-	arcsdec::AVFormatContextPtr fctx(ff_fctx);
+	AVFormatContextPtr fctx(ff_fctx);
 
 	::AVCodec* codec = nullptr;
 	int stream_idx = ::av_find_best_stream(fctx.get(), ::AVMEDIA_TYPE_AUDIO,
@@ -72,7 +66,7 @@ TEST_CASE ( "PacketQueue", "[packetqueue]" )
 
 	REQUIRE ( ff_cctx );
 
-	arcsdec::AVCodecContextPtr cctx(ff_cctx);
+	AVCodecContextPtr cctx(ff_cctx);
 
 	auto error_pars = ::avcodec_parameters_to_context(cctx.get(),
 			stream->codecpar);
@@ -82,9 +76,6 @@ TEST_CASE ( "PacketQueue", "[packetqueue]" )
 	auto error_copen = ::avcodec_open2(cctx.get(), codec, nullptr);
 
 	REQUIRE ( error_copen == 0 );
-
-
-	using arcsdec::PacketQueue;
 
 	PacketQueue queue;
 	queue.set_source(fctx.get(), stream->index);
@@ -112,7 +103,7 @@ TEST_CASE ( "PacketQueue", "[packetqueue]" )
 
 	SECTION ( "loop traverses all frames" )
 	{
-		using arcsdec::AVFramePtr;
+		using arcsdec::details::ffmpeg::AVFramePtr;
 
 		auto total_frames  = int32_t { 0 };
 		auto total_samples = int32_t { 0 };
@@ -122,17 +113,10 @@ TEST_CASE ( "PacketQueue", "[packetqueue]" )
 		{
 			while((frame = queue.dequeue_frame()))
 			{
-				total_samples += frame->nb_samples * 2;
-
-				std::cout << "+++ Frame counted, size: " << frame->nb_samples
-					<< std::endl;
-
+				total_samples += frame->nb_samples;
 				++total_frames;
 			}
-
-			std::cout << "Frame is null" << std::endl;
 		}
-		total_samples /= 2;
 
 		CHECK ( total_frames  == 2 );
 		CHECK ( queue.size()  == 0 );
