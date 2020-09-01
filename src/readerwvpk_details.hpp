@@ -34,6 +34,10 @@ namespace arcsdec
 
 inline namespace v_1_0_0
 {
+namespace details
+{
+namespace wavpack
+{
 
 /**
  * \internal \defgroup readerwvpkImpl Implementation
@@ -425,6 +429,9 @@ private:
 
 
 /** @} */
+
+} // namespace wavpack
+} // namespace details
 
 } // namespace v_1_0_0
 

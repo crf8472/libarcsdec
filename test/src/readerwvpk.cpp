@@ -17,7 +17,7 @@
 
 TEST_CASE ( "WAVPACK_WAV_PCM_CDDA_t constants", "[readerwvpk]" )
 {
-	arcsdec::WAVPACK_WAV_PCM_CDDA_t w;
+	arcsdec::details::wavpack::WAVPACK_WAV_PCM_CDDA_t w;
 
 	CHECK(  w.wav_format_only() );
 	CHECK(  w.lossless()        );

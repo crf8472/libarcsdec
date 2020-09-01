@@ -42,7 +42,10 @@ namespace arcsdec
 
 inline namespace v_1_0_0
 {
-
+namespace details
+{
+namespace wavpack
+{
 
 using arcstk::SampleInputIterator;
 using arcstk::AudioSize;
@@ -839,6 +842,9 @@ bool WavpackAudioReaderImpl::perform_validations(const WavpackOpenFile &file)
 		and validate_handler_->validate_version(file);
 }
 
+} // namespace wavpack
+} // namespace details
+
 /// @}
 
 
@@ -902,12 +908,14 @@ std::set<Format> DescriptorWavpack::do_formats() const
 
 std::unique_ptr<FileReader> DescriptorWavpack::do_create_reader() const
 {
-	auto impl = std::make_unique<WavpackAudioReaderImpl>();
+	auto impl = std::make_unique<details::wavpack::WavpackAudioReaderImpl>();
 
-	std::unique_ptr<WAVPACK_CDDA_t> valid =
-		std::make_unique<WAVPACK_WAV_PCM_CDDA_t>();
+	std::unique_ptr<details::wavpack::WAVPACK_CDDA_t> valid =
+		std::make_unique<details::wavpack::WAVPACK_WAV_PCM_CDDA_t>();
+
 	auto validator =
-		std::make_unique<WavpackValidatingHandler>(std::move(valid));
+		std::make_unique<details::wavpack::WavpackValidatingHandler>(
+				std::move(valid));
 
 	impl->register_validate_handler(std::move(validator));
 
