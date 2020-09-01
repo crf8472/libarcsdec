@@ -22,8 +22,6 @@
 #include <stdexcept>  // for invalid_argument
 #include <string>
 
-#include <iostream>
-
 extern "C"
 {
 #include <libavcodec/avcodec.h>
@@ -292,7 +290,6 @@ bool PacketQueue::enqueue_frame()
 
 		if (AVERROR_EOF == error)
 		{
-			std::cout << "No more frames" << std::endl;
 			return false;
 		}
 
@@ -305,7 +302,6 @@ bool PacketQueue::enqueue_frame()
 
 		if (packet->stream_index != stream_index())
 		{
-			std::cout << "Discard packet from other stream" << std::endl;
 			::av_packet_unref(packet.get());
 
 			error = -1; // Restart loop
@@ -314,7 +310,6 @@ bool PacketQueue::enqueue_frame()
 	}
 
 	packets_.push(std::move(packet));
-	std::cout << "Pushed frame, size: " << packets_.size() << std::endl;
 
 	return true;
 }
@@ -328,7 +323,6 @@ AVFramePtr PacketQueue::dequeue_frame()
 
 	while (error >= 0)
 	{
-		std::cout << "Try to receive frame" << std::endl;
 		error = ::avcodec_receive_frame(decoder(), frame.get());
 
 		if (AVERROR(EAGAIN) == error)
@@ -337,17 +331,13 @@ AVFramePtr PacketQueue::dequeue_frame()
 			// any frames, so just finish the processing of this packet
 			// and provide next packet to decoder.
 
-			std::cout << "Decoder needs more input" << std::endl;
 			if (packets_.empty())
 			{
-				std::cout << "Queue is empty" << std::endl;
 				return nullptr; // enqueue_frame() needs to be called
 			}
 
 			current_packet_ = std::move(packets_.front());
 			packets_.pop();
-
-			std::cout << "Popped frame, size: " << packets_.size() << std::endl;
 
 			try
 			{
@@ -357,7 +347,6 @@ AVFramePtr PacketQueue::dequeue_frame()
 			{
 				if (AVERROR(EAGAIN) == e.error())
 				{
-					std::cout << "More input required" << std::endl;
 					return nullptr; // enqueue_frame() needs to be called
 				}
 
@@ -366,12 +355,10 @@ AVFramePtr PacketQueue::dequeue_frame()
 
 			if (decode_success)
 			{
-				std::cout << "Decode success" << std::endl;
 				error = 0;
 				continue;
 			} else
 			{
-				std::cout << "Decoding failed" << std::endl;
 				return nullptr; // enqueue_frame() needs to be called
 			}
 		}
@@ -389,7 +376,6 @@ AVFramePtr PacketQueue::dequeue_frame()
 			// AVERROR(EINVAL) : Codec not opened.
 		}
 
-		std::cout << "Frame received" << std::endl;
 		break;
 	}
 
@@ -399,7 +385,6 @@ AVFramePtr PacketQueue::dequeue_frame()
 
 bool PacketQueue::decode_packet()
 {
-	std::cout << "Decode frame" << std::endl;
 	const auto error = ::avcodec_send_packet(decoder(), current_packet_.get());
 
 	if (error < 0)
@@ -1595,6 +1580,5 @@ const auto d = RegisterAudioDescriptor<DescriptorFFmpeg>();
 } // namespace
 
 } // namespace v_1_0_0
-
 } // namespace arcsdec
 
