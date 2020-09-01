@@ -39,10 +39,6 @@ extern "C"
 #include <arcstk/logging.hpp>
 #endif
 
-#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
-#include "audioreader.hpp"
-#endif
-
 
 namespace arcsdec
 {
@@ -1094,43 +1090,6 @@ void FFmpegAudioStream::pass_frame(const ::AVFrame* frame) const
 		throw std::invalid_argument(msg.str());
 	}
 }
-
-
-/**
- * \brief Audio file reader implemented by FFmpeg API.
- *
- * This is a AudioReader implementation by libavformat and libavcodec. It can
- * open files in virtually every combination of container and audio format that
- * ffmpeg supports.
- *
- * It is internally limited to a set of lossless codecs.
- *
- * For CDDA compliant formats, it provides 16 bit samples as int16_t and
- * therefore requires a buffer interface for this sample format.
- */
-class FFmpegAudioReaderImpl : public AudioReaderImpl
-{
-public:
-
-	/**
-	 * \brief Default constructor.
-	 */
-	FFmpegAudioReaderImpl();
-
-	/**
-	 * \brief Virtual default destructor.
-	 */
-	~FFmpegAudioReaderImpl() noexcept override;
-
-private:
-
-	std::unique_ptr<AudioSize> do_acquire_size(const std::string &filename)
-		override;
-
-	void do_process_file(const std::string &filename) override;
-
-	std::unique_ptr<FileReaderDescriptor> do_descriptor() const override;
-};
 
 
 // FFmpegAudioReaderImpl

@@ -11,13 +11,6 @@
 #ifndef __LIBARCSDEC_READERFFMPEG_DETAILS_HPP__
 #define __LIBARCSDEC_READERFFMPEG_DETAILS_HPP__
 
-/**
- * \internal
- * \defgroup readerffmpegInternal Implementation of the FFmpeg-based reader
- *
- * \ingroup readerffmpeg
- * @{
- */
 
 #include <exception> // for exception
 #include <limits>    // for numeric_limits
@@ -36,6 +29,12 @@ extern "C"
 #include <libavformat/version.h>
 #include <libavutil/avutil.h>
 }
+
+
+#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
+#include "audioreader.hpp"      // for AudioReaderImpl
+#endif
+
 
 #ifndef __LIBARCSTK_SAMPLES_HPP__
 #include <arcstk/samples.hpp>   // for SampleInputIterator
@@ -722,15 +721,49 @@ private:
 	FFmpegAudioStream();
 };
 
-} // namespace ffmpeg
-} // namespace details
+
+/**
+ * \brief Audio file reader implemented by FFmpeg API.
+ *
+ * This is a AudioReader implementation by libavformat and libavcodec. It can
+ * open files in virtually every combination of container and audio format that
+ * ffmpeg supports.
+ *
+ * It is internally limited to a set of lossless codecs.
+ *
+ * For CDDA compliant formats, it provides 16 bit samples as int16_t and
+ * therefore requires a buffer interface for this sample format.
+ */
+class FFmpegAudioReaderImpl : public AudioReaderImpl
+{
+public:
+
+	/**
+	 * \brief Default constructor.
+	 */
+	FFmpegAudioReaderImpl();
+
+	/**
+	 * \brief Virtual default destructor.
+	 */
+	~FFmpegAudioReaderImpl() noexcept override;
+
+private:
+
+	std::unique_ptr<AudioSize> do_acquire_size(const std::string &filename)
+		override;
+
+	void do_process_file(const std::string &filename) override;
+
+	std::unique_ptr<FileReaderDescriptor> do_descriptor() const override;
+};
 
 /// @}
 
+} // namespace ffmpeg
+} // namespace details
 } // namespace v_1_0_0
-
 } // namespace arcsdec
 
-/** @} */
-
 #endif
+
