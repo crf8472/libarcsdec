@@ -4,7 +4,6 @@
  * \brief Audio reader for FLAC audio files
  */
 
-
 #ifndef __LIBARCSDEC_READERFLAC_HPP__
 #define __LIBARCSDEC_READERFLAC_HPP__
 
@@ -17,10 +16,8 @@
 #include "descriptors.hpp"
 #endif
 
-
 namespace arcsdec
 {
-
 inline namespace v_1_0_0
 {
 
@@ -36,7 +33,6 @@ inline namespace v_1_0_0
  *
  * @{
  */
-
 
 /**
  * \brief Libflac-based reader for fLaC containers holding fLaC data.
