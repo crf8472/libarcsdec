@@ -42,7 +42,6 @@ extern "C" {
 
 namespace arcsdec
 {
-
 inline namespace v_1_0_0
 {
 namespace details
@@ -233,6 +232,24 @@ bool WAVPACK_CDDA_t::lossless() const
 }
 
 
+int WAVPACK_CDDA_t::bytes_per_sample() const
+{
+	return 2; // Always require 16bit per sample and channel
+}
+
+
+bool WAVPACK_CDDA_t::wav_format_only() const
+{
+	return true;
+}
+
+
+bool WAVPACK_CDDA_t::floats_ok() const
+{
+	return false;
+}
+
+
 int WAVPACK_CDDA_t::at_least_version() const
 {
 	return 1;
@@ -242,30 +259,6 @@ int WAVPACK_CDDA_t::at_least_version() const
 int WAVPACK_CDDA_t::at_most_version() const
 {
 	return 5;
-}
-
-
-int WAVPACK_CDDA_t::bytes_per_sample() const
-{
-	return 2; // Always require 16bit per sample and channel
-}
-
-
-// WAVPACK_WAV_PCM_CDDA_t
-
-
-WAVPACK_WAV_PCM_CDDA_t::~WAVPACK_WAV_PCM_CDDA_t() noexcept = default;
-
-
-bool WAVPACK_WAV_PCM_CDDA_t::wav_format_only() const
-{
-	return true;
-}
-
-
-bool WAVPACK_WAV_PCM_CDDA_t::floats_ok() const
-{
-	return false;
 }
 
 
@@ -931,16 +924,15 @@ std::set<Format> DescriptorWavpack::do_formats() const
 
 std::unique_ptr<FileReader> DescriptorWavpack::do_create_reader() const
 {
-	auto impl = std::make_unique<details::wavpack::WavpackAudioReaderImpl>();
+	using details::wavpack::WAVPACK_CDDA_t;
+	using details::wavpack::WavpackAudioReaderImpl;
+	using details::wavpack::WavpackValidatingHandler;
 
-	std::unique_ptr<details::wavpack::WAVPACK_CDDA_t> valid =
-		std::make_unique<details::wavpack::WAVPACK_WAV_PCM_CDDA_t>();
+	auto valid = std::make_unique<WAVPACK_CDDA_t>();
+	auto handler = std::make_unique<WavpackValidatingHandler>(std::move(valid));
 
-	auto validator =
-		std::make_unique<details::wavpack::WavpackValidatingHandler>(
-				std::move(valid));
-
-	impl->register_validate_handler(std::move(validator));
+	auto impl = std::make_unique<WavpackAudioReaderImpl>();
+	impl->register_validate_handler(std::move(handler));
 
 	return std::make_unique<AudioReader>(std::move(impl));
 }

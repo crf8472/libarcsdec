@@ -75,17 +75,14 @@ private:
 
 
 /**
- * \brief Represents an interface for different reference CDDA representations
- * for the WAV format.
+ * \brief Interface for Wavpack validation values.
  *
- * For a concrete format like RIFFWAV/PCM, this interface can just
- * be implemented.
+ * Can be subclassed to be more permissive. Default implementation allows
+ * only WAV format and no floats.
  */
 class WAVPACK_CDDA_t
 {
-
 public:
-
 
 	/**
 	 * \brief Default destructor.
@@ -93,31 +90,40 @@ public:
 	virtual ~WAVPACK_CDDA_t() noexcept;
 
 	/**
-	 * \brief Declare whether WAV format is required.
-	 *
-	 * \return TRUE iff only WAV format is exclusively required, otherwise FALSE
-	 */
-	virtual bool wav_format_only() const = 0;
-
-	/**
 	 * \brief Expect lossless compression.
-	 *
-	 * This method is non-virtual because it
-	 * makes no sense to ever change this requirement.
 	 *
 	 * \return TRUE, since ARCS cannot be computed on lossly compressed files
 	 */
 	bool lossless() const;
 
 	/**
+	 * \brief Declare the required number of bytes per sample and channel.
+	 *
+	 * (For CDDA, this is 2 for 16 bit.)
+	 *
+	 * \return Require 2 bytes (for 16 bit).
+	 */
+	virtual int bytes_per_sample() const;
+
+	/**
+	 * \brief Declare whether WAV format is required.
+	 *
+	 * Default implementation returns TRUE.
+	 *
+	 * \return TRUE iff only WAV format is exclusively required, otherwise FALSE
+	 */
+	virtual bool wav_format_only() const;
+
+	/**
 	 * \brief Declare whether it is required to have samples represented as
 	 * integers.
 	 *
+	 * Default implementation returns FALSE.
 	 * In future versions, it may be supported to process float samples.
 	 *
 	 * \return TRUE iff float samples can be processed, otherwise FALSE
 	 */
-	virtual bool floats_ok() const = 0;
+	virtual bool floats_ok() const;
 
 	/**
 	 * \brief Declare the least version of wavpack that is supported.
@@ -136,46 +142,6 @@ public:
 	 * \return The highest version of wavpack supported
 	 */
 	virtual int at_most_version() const;
-
-	/**
-	 * \brief Declare the required number of bytes per sample and channel.
-	 *
-	 * (For CDDA, this is 2 for 16 bit.)
-	 *
-	 * \return Require 2 bytes (for 16 bit).
-	 */
-	virtual int bytes_per_sample() const;
-};
-
-
-/**
- * \brief Reference values for CDDA conforming Wavepack with integer PCM.
- */
-class WAVPACK_WAV_PCM_CDDA_t : public WAVPACK_CDDA_t
-{
-
-public:
-
-	/**
-	 * \brief Default destructor.
-	 */
-	virtual ~WAVPACK_WAV_PCM_CDDA_t() noexcept override;
-
-	/**
-	 * \brief Specifies WAV format as exclusively required.
-	 *
-	 * \return TRUE
-	 */
-	bool wav_format_only() const override;
-
-	/**
-	 * \brief Specifies float samples as not supported.
-	 *
-	 * (This in fact, restricts the support to integer samples.)
-	 *
-	 * \return FALSE
-	 */
-	virtual bool floats_ok() const override;
 };
 
 
@@ -184,7 +150,6 @@ public:
  */
 class WavpackOpenFile
 {
-
 public:
 
 	/**
@@ -320,7 +285,6 @@ public:
 	int64_t read_pcm_samples(const int64_t pcm_samples_to_read,
 		std::vector<int32_t> &buffer) const;
 
-
 private:
 
 	// forward declaration for private implementation
@@ -353,7 +317,6 @@ private:
  */
 class WavpackValidatingHandler : public ReaderValidatingHandler
 {
-
 public:
 
 	/**
@@ -403,7 +366,6 @@ public:
 	 */
 	bool validate_version(const WavpackOpenFile &file);
 
-
 private:
 
 	/**
@@ -418,7 +380,6 @@ private:
  */
 class WavpackAudioReaderImpl : public BufferedAudioReaderImpl
 {
-
 public:
 
 	/**
@@ -437,7 +398,6 @@ public:
 	 * \param[in] v The validating handler to register
 	 */
 	void register_validate_handler(std::unique_ptr<WavpackValidatingHandler> v);
-
 
 private:
 
