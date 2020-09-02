@@ -91,7 +91,7 @@ public:
 	 * \param[in] error Error code
 	 * \param[in] name  Name of function that returned the error code
 	 */
-	explicit FFmpegException(const int error, const std::string &name);
+	FFmpegException(const int error, const std::string &name);
 
 	/**
 	 * \brief The original error code.

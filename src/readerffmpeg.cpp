@@ -125,7 +125,7 @@ FFmpegException::FFmpegException(const int error, const std::string &name)
 	, msg_   {}
 {
 	std::ostringstream msg;
-	msg << "Function " << name  << " returned error '"
+	msg << "FFmpeg: Function " << name  << " returned error '"
 		<< av_err2str(error_) << "' ("  << error_ << ")";
 	msg_ = msg.str();
 }
