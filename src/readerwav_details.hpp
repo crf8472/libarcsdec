@@ -26,18 +26,33 @@
 #include "audiobuffer.hpp" // PCMBlockReader inherits from BlockCreator
 #endif
 
+namespace arcsdec
+{
+inline namespace v_1_0_0
+{
+namespace details
+{
+namespace wave
+{
+
+
 /**
  * \internal
  * \defgroup readerwavInternal Implementation of the WAV reader
  *
  * \ingroup readerwav
+ *
+ * AudioReader to read RIFF/WAV files containing integer PCM samples.
+ *
+ * Validation requires CDDA conform samples in PCM format. Additional fields in
+ * the format subchunk will cause the validation to fail. Non-standard
+ * subchunks are ignored. RIFX containers are currently not supported.
+ *
+ * \todo This implementation silently relies on a little endian plattform.
+ *
  * @{
  */
 
-namespace arcsdec
-{
-inline namespace v_1_0_0
-{
 
 /**
  * \brief Represents an interface for different reference CDDA representations
@@ -994,11 +1009,12 @@ private:
 	std::unique_ptr<WavAudioHandler> audio_handler_;
 };
 
+/// @}
+
+} // namespace wave
+} // namespace details
 } // namespace v_1_0_0
-
 } // namespace arcsdec
-
-/** @} */
 
 #endif
 

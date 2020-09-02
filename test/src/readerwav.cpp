@@ -10,13 +10,15 @@
 /**
  * \file
  *
- * Tests for all API classes exported by readerwav.hpp
+ * Tests for classes in readerwav.cpp
  */
 
 
 TEST_CASE ( "RIFFWAV_PCM_CDDA_t constants", "[readerwav]" )
 {
-	arcsdec::RIFFWAV_PCM_CDDA_t w;
+	using arcsdec::details::wave::RIFFWAV_PCM_CDDA_t;
+
+	RIFFWAV_PCM_CDDA_t w;
 
 	// RIFF Chunk
 	CHECK( w.chunk_id()          ==  0x52494646 );
@@ -38,6 +40,7 @@ TEST_CASE ( "RIFFWAV_PCM_CDDA_t constants", "[readerwav]" )
 TEST_CASE ("DescriptorWavPCM", "[readerwav]" )
 {
 	using arcsdec::DescriptorWavPCM;
+	using arcsdec::details::wave::RIFFWAV_PCM_CDDA_t;
 
 	auto d = DescriptorWavPCM {};
 
@@ -64,7 +67,7 @@ TEST_CASE ("DescriptorWavPCM", "[readerwav]" )
 
 	SECTION ( "accept_bytes()" )
 	{
-		arcsdec::RIFFWAV_PCM_CDDA_t w;
+		RIFFWAV_PCM_CDDA_t w;
 
 		CHECK ( not d.accepts_bytes( {}, 0 ));
 		CHECK ( not d.accepts_bytes( {}, 12 ));

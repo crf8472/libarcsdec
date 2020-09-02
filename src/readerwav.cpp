@@ -43,31 +43,17 @@ extern "C" {
 
 namespace arcsdec
 {
-
 inline namespace v_1_0_0
+{
+namespace details
+{
+namespace wave
 {
 
 using arcstk::SampleInputIterator;
 using arcstk::AudioSize;
 using arcstk::CDDA;
 using arcstk::InvalidAudioException;
-
-
-/**
- * \internal \defgroup readerwavImpl Implementation
- *
- * \ingroup readerwav
- *
- * AudioReader to read RIFF/WAV files containing integer PCM samples.
- *
- * Validation requires CDDA conform samples in PCM format. Additional fields in
- * the format subchunk will cause the validation to fail. Non-standard
- * subchunks are ignored. RIFX containers are currently not supported.
- *
- * \todo This implementation silently relies on a little endian plattform.
- *
- * @{
- */
 
 
 // RIFFWAV_PCM_CDDA_t
@@ -1159,8 +1145,8 @@ void WavAudioReaderImpl::register_audio_handler(
 	audio_handler_ = std::move(hndlr);
 }
 
-
-/// @}
+} // namespace wave
+} // namespace details
 
 
 // DescriptorWavPCM
@@ -1185,6 +1171,8 @@ LibInfo DescriptorWavPCM::do_libraries() const
 bool DescriptorWavPCM::do_accepts_bytes(const std::vector<unsigned char> &bytes,
 		const uint64_t &offset) const
 {
+	using details::wave::RIFFWAV_PCM_CDDA_t;
+
 	// No test bytes? => fail
 	if (bytes.empty())
 	{
@@ -1257,10 +1245,15 @@ bool DescriptorWavPCM::do_accepts_bytes(const std::vector<unsigned char> &bytes,
 
 std::unique_ptr<FileReader> DescriptorWavPCM::do_create_reader() const
 {
-	auto impl = std::make_unique<WavAudioReaderImpl>();
+	using details::wave::WAV_CDDA_t;
+	using details::wave::RIFFWAV_PCM_CDDA_t;
+	using details::wave::WavAudioReaderImpl;
+	using details::wave::WavAudioHandler;
 
 	std::unique_ptr<WAV_CDDA_t> valid = std::make_unique<RIFFWAV_PCM_CDDA_t>();
 	auto handler = std::make_unique<WavAudioHandler>(std::move(valid));
+
+	auto impl = std::make_unique<WavAudioReaderImpl>();
 	impl->register_audio_handler(std::move(handler));
 
 	return std::make_unique<AudioReader>(std::move(impl));
