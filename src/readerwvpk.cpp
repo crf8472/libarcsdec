@@ -15,12 +15,11 @@ extern "C" {
 #include <wavpack/wavpack.h>
 }
 
-#include <cstdlib>
 #include <cstdint>
-#include <locale> // for locale
 #include <memory>
-#include <stdexcept>
+#include <sstream>   // for ostringstream
 #include <string>
+#include <vector>
 
 #ifndef __LIBARCSTK_CALCULATE_HPP__
 #include <arcstk/calculate.hpp>
@@ -179,7 +178,7 @@ public:
 	 *
 	 * \return Number of 32 bit PCM samples actually read
 	 */
-	int64_t read_pcm_samples(const int64_t &pcm_samples_to_read,
+	int64_t read_pcm_samples(const int64_t pcm_samples_to_read,
 		std::vector<int32_t> *buffer) const;
 
 	// Delete copy assignment operator
@@ -370,7 +369,7 @@ bool WavpackOpenFile::Impl::channel_order() const
 
 	if (num_channels != 2)
 	{
-		std::stringstream msg;
+		std::ostringstream msg;
 		msg << "Expected 2 channels but got " << num_channels
 			<< ", input does not seem to be CDDA compliant (stereo)";
 
@@ -384,7 +383,7 @@ bool WavpackOpenFile::Impl::channel_order() const
 
 	if (identities.empty() or identities.size() < 2)
 	{
-		std::stringstream msg;
+		std::ostringstream msg;
 		msg << "Expected 2 channels but got not enough identities ("
 			<< identities.size()
 			<< "), input does not seem to be CDDA compliant (stereo)";
@@ -443,7 +442,7 @@ bool WavpackOpenFile::Impl::needs_channel_reorder() const
 
 
 int64_t WavpackOpenFile::Impl::read_pcm_samples(
-		const int64_t &pcm_samples_to_read,
+		const int64_t pcm_samples_to_read,
 		std::vector<int32_t> *buffer) const
 {
 	auto total_samples =
@@ -555,7 +554,7 @@ bool WavpackOpenFile::needs_channel_reorder() const
 }
 
 
-int64_t WavpackOpenFile::read_pcm_samples(const int64_t &pcm_samples_to_read,
+int64_t WavpackOpenFile::read_pcm_samples(const int64_t pcm_samples_to_read,
 		std::vector<int32_t> *buffer) const
 {
 	return impl_->read_pcm_samples(pcm_samples_to_read, buffer);
@@ -759,60 +758,55 @@ void WavpackAudioReaderImpl::do_process_file(const std::string &filename)
 
 
 	// Samples reading loop
+
 	{
 		SampleSequence<int32_t, false> sequence(file.channel_order());
 
 		std::vector<int32_t> samples;
-		auto num_samples = static_cast<decltype(samples)::size_type>(
-				this->samples_per_read());
+		using buffersize_t = typename decltype(samples)::size_type;
+		auto buffersize = static_cast<buffersize_t>(this->samples_per_read());
+		samples.resize(buffersize);
 
-		samples.resize(num_samples);
+		// Request Half the Number of Samples in a Block in one Read.
+		// Thus a Sequence will Have Exactly the Size of a Block.
+		const int64_t wv_sample_read = this->samples_per_read() / 2;
 
-		// Request half the number of samples in a block, thus a sequence will
-		// have exactly the size of a block.
-		int64_t wv_sample_count =
-			this->samples_per_read() / CDDA.NUMBER_OF_CHANNELS;
-		int64_t samples_read    = 0;
-
-		for (int64_t i = total_samples; i > 0; i -= wv_sample_count)
+		int64_t samples_read = 0;
+		for (int64_t i = total_samples; i > 0; i -= wv_sample_read)
 		{
 			ARCS_LOG_DEBUG << "READ SEQUENCE, remaining samples " << i;
 
-			samples_read = file.read_pcm_samples(wv_sample_count, &samples);
+			samples_read = file.read_pcm_samples(wv_sample_read, &samples);
 
-			if (samples_read != wv_sample_count)
+			if (samples_read != wv_sample_read)
 			{
-				// Chunk is smaller than declared. This is only allowed for the
-				// last chunk.
-				// The last chunk must have size total_samples % wv_sample_count
-				// and this is the value for i after the last loop run.
+				// Chunk is Smaller than Declared.
+				// This is only Allowed for the Last Chunk.
+				// The Last Chunk must have size total_samples % wv_sample_count
+				// what is Precisely the Value i has After the Last Loop Run.
 
-				if (samples_read != static_cast<uint32_t>(i))
+				if (samples_read != i)
 				{
-					std::stringstream ss;
-					ss << "    Read unexpected number of samples: "
+					std::ostringstream msg;
+					msg << "    Read unexpected number of samples: "
 						<< samples_read
 						<< ", but expected "
-						<< wv_sample_count
-						<< ". Resize the sequence accordingly.";
+						<< wv_sample_read;
 
-					ARCS_LOG_ERROR << ss.str();
-
-					throw FileReadException(ss.str());
+					throw FileReadException(msg.str());
 				}
 
-				num_samples = static_cast<decltype(samples)::size_type>(
+				buffersize = static_cast<buffersize_t>(
 						samples_read * CDDA.NUMBER_OF_CHANNELS);
-
-				samples.resize(num_samples);
+				samples.resize(buffersize);
 			}
 
 			ARCS_LOG_DEBUG << "    Size: " << samples.size()
 					<< " integers, add to current block";
 
 			sequence.wrap(samples.data(), samples.size());
-			// NOTE That we use the number of 16 bit samples _per_channel_, not
-			// the total number of 16 bit samples in the chunk
+			// Note: we use the Number of 16-bit-samples _per_channel_, not
+			// the total number of 16 bit samples in the chunk.
 
 			this->process_samples(sequence.begin(), sequence.end());
 		}

@@ -281,7 +281,7 @@ public:
 	 *
 	 * \return Number of 32 bit PCM samples actually read
 	 */
-	int64_t read_pcm_samples(const int64_t &pcm_samples_to_read,
+	int64_t read_pcm_samples(const int64_t pcm_samples_to_read,
 		std::vector<int32_t> *buffer) const;
 
 
