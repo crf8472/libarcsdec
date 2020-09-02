@@ -3,12 +3,15 @@
 #ifndef __LIBARCSDEC_READERFLAC_HPP__
 #include "readerflac.hpp"
 #endif
+#ifndef __LIBARCSDEC_READERFLAC_DETAILS_HPP__
+#include "readerflac_details.hpp"
+#endif
 
 
 /**
  * \file
  *
- * Tests for all API classes exported by readerflac.hpp
+ * Tests for classes in readerflac.cpp
  */
 
 
