@@ -76,6 +76,13 @@ inline namespace v_1_0_0
 
 using arcstk::AudioSize;
 
+
+/**
+ * \brief Maximum number of PCM 32 bit samples to read from a file.
+ */
+extern const int32_t MAX_SAMPLES_TO_READ;
+
+
 /**
  * \brief Service class providing methods to convert short byte sequences to
  * integers.
@@ -293,7 +300,6 @@ public:
  */
 class ReaderValidatingHandler
 {
-
 public:
 
 	/**
@@ -301,10 +307,13 @@ public:
 	 */
 	ReaderValidatingHandler();
 
-	// make class non-copyable (1/2)
+	// class is non-copyable
 	ReaderValidatingHandler(const ReaderValidatingHandler &) = delete;
+	ReaderValidatingHandler& operator = (const ReaderValidatingHandler &)
+		= delete;
 
 	// TODO move constructor
+	// TODO move assignment
 
 	/**
 	 * \brief Virtual default destructor.
@@ -338,13 +347,6 @@ public:
 	 * \return The last error that occurred
 	 */
 	std::string last_error();
-
-	// make class non-copyable (2/2)
-	ReaderValidatingHandler& operator = (const ReaderValidatingHandler &)
-		= delete;
-
-	// TODO move assignment
-
 
 protected:
 
@@ -445,7 +447,6 @@ protected:
 		bool value,
 		const std::string error_msg);
 
-
 private:
 
 	/**
@@ -463,7 +464,6 @@ private:
  */
 class AudioReaderImpl : public virtual SampleProvider
 {
-
 public:
 
 	/**
@@ -476,10 +476,12 @@ public:
 	 */
 	virtual ~AudioReaderImpl() noexcept;
 
-	// make class non-copyable (1/2)
+	// class is non-copyable
 	AudioReaderImpl(const AudioReaderImpl &) = delete;
+	AudioReaderImpl& operator = (const AudioReaderImpl &) = delete;
 
-	// TODO Move constructor
+	// TODO move constructor
+	// TODO move assignment
 
 	/**
 	 * \brief Provides implementation for acquire_size() of a AudioReader.
@@ -516,7 +518,7 @@ public:
 	 *
 	 * The default is BLOCKSIZE::DEFAULT.
 	 */
-	void set_samples_per_read(const int64_t &samples_per_read);
+	void set_samples_per_read(const int64_t samples_per_read);
 
 	/**
 	 * \brief Return the number of samples to read in one read operation.
@@ -531,12 +533,6 @@ public:
 	 * \return Descriptor for this implementation.
 	 */
 	std::unique_ptr<FileReaderDescriptor> descriptor() const;
-
-	// make class non-copyable (2/2)
-	AudioReaderImpl& operator = (const AudioReaderImpl &) = delete;
-
-	// TODO move assignment
-
 
 private:
 
@@ -553,7 +549,7 @@ private:
 	 *
 	 * The default is BLOCKSIZE::DEFAULT.
 	 */
-	virtual void do_set_samples_per_read(const int64_t &samples_per_read);
+	virtual void do_set_samples_per_read(const int64_t samples_per_read);
 
 	/**
 	 * \brief Return the number of samples to read in one read operation.
@@ -597,7 +593,6 @@ private:
  */
 class BufferedAudioReaderImpl : public AudioReaderImpl
 {
-
 public:
 
 	/**
@@ -615,16 +610,11 @@ public:
 	 */
 	~BufferedAudioReaderImpl() noexcept override;
 
-	// TODO Copy + move constructors
-
-	// TODO Copy + move assignment
-
-
 private:
 
 	bool do_configurable_read_buffer() const final;
 
-	void do_set_samples_per_read(const int64_t &samples_per_read) final;
+	void do_set_samples_per_read(const int64_t samples_per_read) final;
 
 	int64_t do_samples_per_read() const final;
 
@@ -643,7 +633,6 @@ private:
  */
 class AudioReader : public FileReader
 {
-
 public:
 
 	/**
@@ -661,10 +650,12 @@ public:
 	 */
 	explicit AudioReader(std::unique_ptr<AudioReaderImpl> impl);
 
-	// make class non-copyable (1/2)
+	// class is non-copyable
 	AudioReader(const AudioReader &) = delete;
+	AudioReader& operator = (const AudioReader &) = delete;
 
 	// TODO move constructor
+	// TODO move assignment
 
 	/**
 	 * \brief Default destructor.
@@ -688,7 +679,7 @@ public:
 	 *
 	 * \param[in] samples_per_read The number of 32 bit PCM samples per read
 	 */
-	void set_samples_per_read(const int64_t &samples_per_read);
+	void set_samples_per_read(const int64_t samples_per_read);
 
 	/**
 	 * \brief Return the number of samples to read in one read operation.
@@ -729,12 +720,6 @@ public:
 	 * \todo This should be part of a SampleProvider interface
 	 */
 	void set_processor(SampleProcessor &processor);
-
-	// make class non-copyable (2/2)
-	AudioReader& operator = (const AudioReader &) = delete;
-
-	// TODO move assignment
-
 
 private:
 

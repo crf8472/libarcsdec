@@ -10,11 +10,10 @@
 #endif
 
 #include <cstdint>
-#include <functional>
 #include <memory>
+#include <sstream>       // for ostringstream
+#include <stdexcept>     // for logic_error
 #include <string>
-#include <stdexcept> // for logic_error
-#include <sstream>
 
 #ifndef __LIBARCSTK_LOGGING_HPP__
 #include <arcstk/logging.hpp>
@@ -28,6 +27,13 @@ inline namespace v_1_0_0
 {
 
 using arcstk::CDDA;
+
+
+// MAX_SAMPLES_TO_READ
+
+
+const int32_t MAX_SAMPLES_TO_READ =
+	CDDA.MAX_BLOCK_ADDRESS * CDDA.SAMPLES_PER_FRAME;
 
 
 // ByteConverter
@@ -215,13 +221,13 @@ bool ReaderValidatingHandler::assert_equals(
 
 	if (value != proper_value)
 	{
-		std::stringstream ss;
+		std::ostringstream msg;
 
-		ss << error_msg;
-		ss << ". Expected " << std::to_string(proper_value)
+		msg << error_msg;
+		msg << ". Expected " << std::to_string(proper_value)
 			<< " but is " << std::to_string(value);
 
-		errors_.push_back(ss.str());
+		errors_.push_back(msg.str());
 		return false;
 	}
 
@@ -242,13 +248,13 @@ bool ReaderValidatingHandler::assert_equals_u(
 
 	if (value != proper_value)
 	{
-		std::stringstream ss;
+		std::ostringstream msg;
 
-		ss << error_msg;
-		ss << ". Expected " << std::to_string(proper_value)
+		msg << error_msg;
+		msg << ". Expected " << std::to_string(proper_value)
 			<< " but is " << std::to_string(value);
 
-		errors_.push_back(ss.str());
+		errors_.push_back(msg.str());
 		return false;
 	}
 
@@ -269,13 +275,13 @@ bool ReaderValidatingHandler::assert_at_least(
 
 	if (value < proper_value)
 	{
-		std::stringstream ss;
+		std::ostringstream msg;
 
-		ss << error_msg;
-		ss << ". Expected at least " << std::to_string(proper_value)
+		msg << error_msg;
+		msg << ". Expected at least " << std::to_string(proper_value)
 			<< " but is only " << std::to_string(value);
 
-		errors_.push_back(ss.str());
+		errors_.push_back(msg.str());
 		return false;
 	}
 
@@ -296,13 +302,13 @@ bool ReaderValidatingHandler::assert_at_most(
 
 	if (value > proper_value)
 	{
-		std::stringstream ss;
+		std::ostringstream msg;
 
-		ss << error_msg;
-		ss << ". Expected at most " << std::to_string(proper_value)
+		msg << error_msg;
+		msg << ". Expected at most " << std::to_string(proper_value)
 			<< " but is in fact " << std::to_string(value);
 
-		errors_.push_back(ss.str());
+		errors_.push_back(msg.str());
 		return false;
 	}
 
@@ -319,12 +325,12 @@ bool ReaderValidatingHandler::assert_true(
 
 	if (not value)
 	{
-		std::stringstream ss;
+		std::ostringstream msg;
 
-		ss << error_msg;
-		ss << ". Expected true but is false";
+		msg << error_msg;
+		msg << ". Expected true but is false";
 
-		errors_.push_back(ss.str());
+		errors_.push_back(msg.str());
 		return false;
 	}
 
@@ -347,7 +353,7 @@ bool AudioReaderImpl::configurable_read_buffer() const
 }
 
 
-void AudioReaderImpl::set_samples_per_read(const int64_t &samples_per_read)
+void AudioReaderImpl::set_samples_per_read(const int64_t samples_per_read)
 {
 	this->do_set_samples_per_read(samples_per_read);
 }
@@ -379,7 +385,7 @@ bool AudioReaderImpl::do_configurable_read_buffer() const
 
 
 void AudioReaderImpl::do_set_samples_per_read(
-		const int64_t &/* samples_per_read */)
+		const int64_t /* samples_per_read */)
 {
 	throw std::logic_error(
 		"Try to set read buffer size on an AudioReader that has "
@@ -427,7 +433,7 @@ bool BufferedAudioReaderImpl::do_configurable_read_buffer() const
 
 
 void BufferedAudioReaderImpl::do_set_samples_per_read(
-		const int64_t &samples_per_read)
+		const int64_t samples_per_read)
 {
 	samples_per_read_ = samples_per_read;
 
@@ -450,7 +456,6 @@ int64_t BufferedAudioReaderImpl::do_samples_per_read() const
  */
 class AudioReader::Impl final
 {
-
 public:
 
 	/**
@@ -470,8 +475,10 @@ public:
 	explicit Impl(std::unique_ptr<AudioReaderImpl> readerimpl);
 
 	Impl(const Impl &rhs) = delete;
+	Impl& operator = (const Impl &rhs) = delete;
 
 	// TODO Move constructor
+	// TODO Move assignment
 
 	/**
 	 *
@@ -484,7 +491,7 @@ public:
 	 *
 	 * The default is BLOCKSIZE.DEFAULT.
 	 */
-	void set_samples_per_read(const int64_t &samples_per_read);
+	void set_samples_per_read(const int64_t samples_per_read);
 
 	/**
 	 * Return the number of samples to read in one read operation.
@@ -530,11 +537,6 @@ public:
 	 */
 	const SampleProcessor* sampleprocessor();
 
-	Impl& operator = (const Impl &rhs) = delete;
-
-	// TODO Move assignment
-
-
 private:
 
 	/**
@@ -565,7 +567,7 @@ bool AudioReader::Impl::configurable_read_buffer() const
 }
 
 
-void AudioReader::Impl::set_samples_per_read(const int64_t &samples_per_read)
+void AudioReader::Impl::set_samples_per_read(const int64_t samples_per_read)
 {
 	readerimpl_->set_samples_per_read(samples_per_read);
 }
@@ -654,7 +656,7 @@ bool AudioReader::configurable_read_buffer() const
 }
 
 
-void AudioReader::set_samples_per_read(const int64_t &samples_per_read)
+void AudioReader::set_samples_per_read(const int64_t samples_per_read)
 {
 	impl_->set_samples_per_read(samples_per_read);
 }
@@ -669,7 +671,18 @@ int64_t AudioReader::samples_per_read() const
 std::unique_ptr<AudioSize> AudioReader::acquire_size(
 	const std::string &filename) const
 {
-	return impl_->acquire_size(filename);
+	auto size = impl_->acquire_size(filename);
+
+	if (size->total_samples() > MAX_SAMPLES_TO_READ)
+	{
+		ARCS_LOG_WARNING << "File seems to contain "
+			<< size->total_samples()
+			<< " but redbook defines a maximum of "
+			<< MAX_SAMPLES_TO_READ
+			<< ". File does not seem to be a compact disc image";
+	}
+
+	return size;
 }
 
 
