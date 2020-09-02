@@ -366,21 +366,6 @@ int64_t WavpackOpenFile::Impl::total_pcm_samples() const
 				"Could not determine total number of samples");
 	}
 
-	// We do not need to handle files with more samples than redbook allows
-	// since we only check compact disc images.
-
-	static const int64_t legal_max_pcm =
-		CDDA.MAX_BLOCK_ADDRESS * CDDA.SAMPLES_PER_FRAME;
-	// TODO Should be a libarcsdec global
-
-	if (total_pcm_samples > legal_max_pcm)
-	{
-		throw InvalidAudioException("Number of samples is too big: "
-				+ std::to_string(total_pcm_samples)
-				+ " where legal maximum is "
-				+ std::to_string(legal_max_pcm));
-	}
-
 	return total_pcm_samples;
 }
 
