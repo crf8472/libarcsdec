@@ -11,21 +11,20 @@
 /**
  * \file
  *
- * Tests for all API classes exported by readerwvpk.hpp
+ * Tests for classes in readerwvpk.cpp
  */
 
 
-TEST_CASE ( "WAVPACK_WAV_PCM_CDDA_t constants", "[readerwvpk]" )
+TEST_CASE ( "WAVPACK_CDDA_t constants are correct", "[readerwvpk]" )
 {
-	arcsdec::details::wavpack::WAVPACK_WAV_PCM_CDDA_t w;
+	arcsdec::details::wavpack::WAVPACK_CDDA_t w;
 
-	CHECK(  w.wav_format_only() );
-	CHECK(  w.lossless()        );
-	CHECK( !w.floats_ok()       );
-
+	CHECK(  w.lossless()              );
+	CHECK(  w.bytes_per_sample() == 2 );
+	CHECK(  w.wav_format_only()       );
+	CHECK( !w.floats_ok()             );
 	CHECK(  w.at_least_version() == 1 );
 	CHECK(  w.at_most_version()  == 5 );
-	CHECK(  w.bytes_per_sample() == 2 );
 }
 
 
