@@ -17,6 +17,7 @@
 #define __LIBARCSDEC_READERWVPK_DETAILS_HPP__
 
 #include <cstdint>
+#include <exception>
 #include <memory>
 #include <string>
 #include <vector>
@@ -46,6 +47,31 @@ namespace wavpack
  *
  * @{
  */
+
+
+/**
+ * \brief Encapsulates error code from the libwavpack API.
+ */
+class LibwavpackException final : public std::exception
+{
+public:
+
+	/**
+	 * \brief Construct the message from value and function name.
+	 *
+	 * \param[in] value Unexpected return value
+	 * \param[in] name  Name of function that returned the unexpected value
+	 * \param[in] error_msg Error message from libwavpack
+	 */
+	LibwavpackException(const std::string &value, const std::string &name,
+			const std::string &error_msg);
+
+	char const * what() const noexcept override;
+
+private:
+
+	std::string msg_;
+};
 
 
 /**
@@ -239,7 +265,13 @@ public:
 	/**
 	 * \brief Returns the total number of 32bit PCM samples this file contains.
 	 *
+	 * Will return 0 instead of error values or values that are bigger than
+	 * 0xFFFFFFFF.
+	 *
 	 * \return Total number of 32bit PCM samples in this file
+	 *
+	 * \throw LibwavpackException   If libwavpack does return a negative value
+	 * \throw InvalidAudioException If the size exceeds the legal maximum
 	 */
 	int64_t total_pcm_samples() const;
 
@@ -248,6 +280,8 @@ public:
 	 * FALSE.
 	 *
 	 * \return TRUE iff the channel ordering is left/right, otherwise FALSE.
+	 *
+	 * \throw InvalidAudioException If the channel ordering is unexpected
 	 */
 	bool channel_order() const;
 
@@ -280,9 +314,11 @@ public:
 	 * \param[in,out] buffer The buffer to read the samples to
 	 *
 	 * \return Number of 32 bit PCM samples actually read
+	 *
+	 * \throw invalid_argument If buffer.size() < (pcm_samples_to_read * 2)
 	 */
 	int64_t read_pcm_samples(const int64_t pcm_samples_to_read,
-		std::vector<int32_t> *buffer) const;
+		std::vector<int32_t> &buffer) const;
 
 
 private:

@@ -17,15 +17,19 @@ extern "C" {
 
 #include <cstdint>
 #include <memory>
+#include <stdexcept> // for invalid_argument
 #include <sstream>   // for ostringstream
 #include <string>
 #include <vector>
 
+#ifndef __LIBARCSTK_IDENTIFIER_HPP__
+#include <arcstk/identifier.hpp>     // for CDDA
+#endif
 #ifndef __LIBARCSTK_CALCULATE_HPP__
 #include <arcstk/calculate.hpp>
 #endif
 #ifndef __LIBARCSTK_SAMPLES_HPP__
-#include <arcstk/samples.hpp>
+#include <arcstk/samples.hpp>        // for SampleSequence
 #endif
 #ifndef __LIBARCSTK_LOGGING_HPP__
 #include <arcstk/logging.hpp>
@@ -51,6 +55,29 @@ using arcstk::AudioSize;
 using arcstk::CDDA;
 using arcstk::InvalidAudioException;
 using arcstk::SampleSequence;
+
+
+LibwavpackException::LibwavpackException(const std::string &value,
+		const std::string &name, const std::string &error_msg)
+	: msg_ {}
+{
+	std::ostringstream msg;
+	msg << "libwavpack: Function " << name  << " returned unexpected value '"
+		<< value << "'";
+
+	if (not error_msg.empty())
+	{
+		msg << ", error message: '" << error_msg << "'";
+	}
+
+	msg_ = msg.str();
+}
+
+
+char const * LibwavpackException::what() const noexcept
+{
+	return msg_.c_str();
+}
 
 
 /**
@@ -179,7 +206,7 @@ public:
 	 * \return Number of 32 bit PCM samples actually read
 	 */
 	int64_t read_pcm_samples(const int64_t pcm_samples_to_read,
-		std::vector<int32_t> *buffer) const;
+		std::vector<int32_t> &buffer) const;
 
 	// Delete copy assignment operator
 	WavpackOpenFile::Impl& operator = (WavpackOpenFile::Impl &file) = delete;
@@ -249,26 +276,23 @@ WavpackOpenFile::Impl::Impl(const std::string &filename)
 	: context_()
 {
 	int   flags = OPEN_WVC | OPEN_NO_CHECKSUM ;
-	char *error = nullptr;
 
+	char *error = nullptr;
 	context_ = WavpackOpenFileInput(filename.c_str(), error, flags, 0);
 
 	if (!context_)
 	{
-		std::string info = "Wavpack file could not be opened";
-		std::string error_msg;
+		ARCS_LOG_ERROR << "Wavpack file could not be opened";
 
+		std::string error_msg;
 		if (error)
 		{
 			error_msg = std::string(error);
-
-			ARCS_LOG_ERROR << info << ": " << error_msg;
-
 			free(error);
 			error = nullptr;
 		}
 
-		throw FileReadException("[libwavpack] " + info + ": " + error_msg);
+		throw LibwavpackException("NULL", "WavpackOpenFileInput", error_msg);
 	}
 }
 
@@ -285,7 +309,7 @@ WavpackOpenFile::Impl::~Impl() noexcept
 		} else
 		{
 			ARCS_LOG_ERROR <<
-				"Problem closing audio file. Possible leak!";
+				"WavpackCloseFile could not close audio file. Possible leak!";
 		}
 	}
 }
@@ -341,22 +365,27 @@ int WavpackOpenFile::Impl::bytes_per_sample() const
 
 int64_t WavpackOpenFile::Impl::total_pcm_samples() const
 {
-	// We do not need to handle files with more than 0xFFFFFFFF samples
-	// since we only check compact disc images
-
 	int64_t total_pcm_samples = WavpackGetNumSamples64(context_);
 
 	if (total_pcm_samples == -1)
 	{
-		ARCS_LOG_ERROR << "Could not determine total number of samples";
-		return 0;
+		throw LibwavpackException("-1", "WavpackGetNumSamples64",
+				"Could not determine total number of samples");
 	}
 
-	if (total_pcm_samples > 0xFFFFFFFF) // maximum value for uint32_t
+	// We do not need to handle files with more samples than redbook allows
+	// since we only check compact disc images.
+
+	static const int64_t legal_max_pcm =
+		CDDA.MAX_BLOCK_ADDRESS * CDDA.SAMPLES_PER_FRAME;
+	// TODO Should be a libarcsdec global
+
+	if (total_pcm_samples > legal_max_pcm)
 	{
-		ARCS_LOG_ERROR << "Number of samples is too big: "
-				+ std::to_string(total_pcm_samples);
-		return 0;
+		throw InvalidAudioException("Number of samples is too big: "
+				+ std::to_string(total_pcm_samples)
+				+ " where legal maximum is "
+				+ std::to_string(legal_max_pcm));
 	}
 
 	return total_pcm_samples;
@@ -443,24 +472,25 @@ bool WavpackOpenFile::Impl::needs_channel_reorder() const
 
 int64_t WavpackOpenFile::Impl::read_pcm_samples(
 		const int64_t pcm_samples_to_read,
-		std::vector<int32_t> *buffer) const
+		std::vector<int32_t> &buffer) const
 {
-	auto total_samples =
+	const auto samples_to_read =
 		static_cast<uint64_t>(pcm_samples_to_read * CDDA.NUMBER_OF_CHANNELS);
 
-	if (buffer->size() < total_samples)
+	if (buffer.size() < samples_to_read)
 	{
-		ARCS_LOG_ERROR << "Buffer size " << buffer->size()
-				<< " is too small for the requested "
-				<< std::to_string(pcm_samples_to_read)
-				<< " samples. At least size of "
-				<< (pcm_samples_to_read * CDDA.NUMBER_OF_CHANNELS)
-				<< " integers is required.";
+		std::ostringstream msg;
+		msg << "Buffer size " << buffer.size()
+			<< " is too small for the requested "
+			<< std::to_string(pcm_samples_to_read)
+			<< " samples. At least size of "
+			<< (pcm_samples_to_read * CDDA.NUMBER_OF_CHANNELS)
+			<< " integers is required.";
 
-		return 0;
+		throw std::invalid_argument(msg.str());
 	}
 
-	auto samples_read = WavpackUnpackSamples(context_, &((*buffer)[0]),
+	const auto samples_read = WavpackUnpackSamples(context_, &(buffer[0]),
 			pcm_samples_to_read);
 
 	ARCS_LOG_DEBUG << "    Read " << samples_read << " PCM samples (32 bit)";
@@ -555,7 +585,7 @@ bool WavpackOpenFile::needs_channel_reorder() const
 
 
 int64_t WavpackOpenFile::read_pcm_samples(const int64_t pcm_samples_to_read,
-		std::vector<int32_t> *buffer) const
+		std::vector<int32_t> &buffer) const
 {
 	return impl_->read_pcm_samples(pcm_samples_to_read, buffer);
 }
@@ -744,7 +774,7 @@ void WavpackAudioReaderImpl::do_process_file(const std::string &filename)
 		ARCS_LOG_DEBUG << "Completed validation of Wavpack file";
 	}
 
-	int64_t total_samples { file.total_pcm_samples() };
+	const int64_t total_samples { file.total_pcm_samples() };
 	ARCS_LOG_INFO << "Total samples: " << total_samples;
 
 
@@ -762,49 +792,48 @@ void WavpackAudioReaderImpl::do_process_file(const std::string &filename)
 	{
 		SampleSequence<int32_t, false> sequence(file.channel_order());
 
-		std::vector<int32_t> samples;
-		using buffersize_t = typename decltype(samples)::size_type;
-		auto buffersize = static_cast<buffersize_t>(this->samples_per_read());
-		samples.resize(buffersize);
+		std::vector<int32_t> buffer;
+		using buffersize_t = typename decltype(buffer)::size_type;
+
+		buffer.resize(static_cast<buffersize_t>(this->samples_per_read()));
 
 		// Request Half the Number of Samples in a Block in one Read.
 		// Thus a Sequence will Have Exactly the Size of a Block.
-		const int64_t wv_sample_read = this->samples_per_read() / 2;
+		const int64_t wv_samples_to_read = this->samples_per_read() / 2;
 
-		int64_t samples_read = 0;
-		for (int64_t i = total_samples; i > 0; i -= wv_sample_read)
+		int64_t wv_samples_read = 0;
+		for (int64_t i = total_samples; i > 0; i -= wv_samples_to_read)
 		{
 			ARCS_LOG_DEBUG << "READ SEQUENCE, remaining samples " << i;
 
-			samples_read = file.read_pcm_samples(wv_sample_read, &samples);
+			wv_samples_read = file.read_pcm_samples(wv_samples_to_read, buffer);
 
-			if (samples_read != wv_sample_read)
+			if (wv_samples_read != wv_samples_to_read)
 			{
 				// Chunk is Smaller than Declared.
 				// This is only Allowed for the Last Chunk.
 				// The Last Chunk must have size total_samples % wv_sample_count
 				// what is Precisely the Value i has After the Last Loop Run.
 
-				if (samples_read != i)
+				if (wv_samples_read != i)
 				{
 					std::ostringstream msg;
 					msg << "    Read unexpected number of samples: "
-						<< samples_read
+						<< wv_samples_read
 						<< ", but expected "
-						<< wv_sample_read;
+						<< wv_samples_to_read;
 
 					throw FileReadException(msg.str());
 				}
 
-				buffersize = static_cast<buffersize_t>(
-						samples_read * CDDA.NUMBER_OF_CHANNELS);
-				samples.resize(buffersize);
+				buffer.resize(static_cast<buffersize_t>(
+						wv_samples_read * CDDA.NUMBER_OF_CHANNELS));
 			}
 
-			ARCS_LOG_DEBUG << "    Size: " << samples.size()
+			ARCS_LOG_DEBUG << "    Size: " << buffer.size()
 					<< " integers, add to current block";
 
-			sequence.wrap(samples.data(), samples.size());
+			sequence.wrap(buffer.data(), buffer.size());
 			// Note: we use the Number of 16-bit-samples _per_channel_, not
 			// the total number of 16 bit samples in the chunk.
 
