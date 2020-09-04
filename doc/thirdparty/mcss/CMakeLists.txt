@@ -158,5 +158,6 @@ else()
 	)
 endif()
 
+add_dependencies  (mcss_doc init_doc ) ## required boiler plate
 add_dependencies  (doc mcss_doc )
 

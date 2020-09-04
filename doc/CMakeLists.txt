@@ -59,9 +59,17 @@ set (DOXYGEN_USE_MDFILE_AS_MAINPAGE "${DOC_MAINPAGE}" )
 
 
 
-## --- Generate documentation output directory
+## --- Add pre-execution hook target for 'doc'
+## All top-level targets in subdirectories must add dependency 'init_doc'
 
-file (MAKE_DIRECTORY "${DOC_GEN_DIR}" )
+add_custom_target( init_doc
+	COMMAND ${CMAKE_COMMAND}
+		-DDOC_GEN_DIR=${DOC_GEN_DIR}
+		-P ${CMAKE_CURRENT_SOURCE_DIR}/init.cmake
+	BYPRODUCTS ${DOC_GEN_DIR}
+	WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+	COMMENT "Initialize target doc"
+)
 
 
 
@@ -109,6 +117,7 @@ configure_file ("${DOC_TEXTS_SOURCE_DIR}/MAINPAGE.md" "${DOC_MAINPAGE}" @ONLY )
 ## HTML output that gives as this nice, cosy feeling of the Nineties.
 
 add_custom_target (doc )
+
 
 
 ## --- If some thirdparty documentation tool was requested, use it

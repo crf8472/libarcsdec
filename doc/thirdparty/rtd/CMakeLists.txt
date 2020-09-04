@@ -69,6 +69,7 @@ add_requirements_target (rtd_requirements
 add_custom_target (rtd_doc DEPENDS "${OUTPUT_MAINPAGE}" )
 add_dependencies  (rtd_doc rtd_requirements )
 
+add_dependencies  (rtd_doc init_doc ) ## required boiler plate
 add_dependencies  (doc rtd_doc )
 
 

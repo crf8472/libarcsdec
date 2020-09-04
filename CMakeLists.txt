@@ -81,9 +81,6 @@ set (PROJECT_LOG_DIR          "${PROJECT_BINARY_DIR}/log" )
 ## "Target directory for generated sources and configuration"
 set (PROJECT_BUILD_SOURCE_DIR "${PROJECT_BINARY_DIR}/generated-sources" )
 
-## "Target directory for generated documentation"
-set (PROJECT_BUILD_DOC_DIR    "${PROJECT_BINARY_DIR}/generated-docs" )
-
 set (INSTALL_LIBRARY_DIR   "${CMAKE_INSTALL_PREFIX}/lib"
 	CACHE PATH "Installation directory for library (.so) files" )
 
