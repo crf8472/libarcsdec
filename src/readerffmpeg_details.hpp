@@ -235,7 +235,7 @@ public:
 	 *
 	 * \throws std::invalid_argument If either \c context or \c stream is NULL
 	 */
-	void set_source(::AVFormatContext* context, const int stream_index);
+	void set_source(::AVFormatContext* fctx, const int stream_index);
 
 	/**
 	 * \brief Return the frame source set for this instance.
@@ -449,16 +449,15 @@ struct IsSupported final
 	 * compressed must actually be refused since the ARCSs are guaranteed to be
 	 * irrelevant and misleading.)
 	 *
-	 * \todo Add support for more PCM formats, for example there could be
-	 * AV_CODEC_ID_PCM_U16LE, AV_CODEC_ID_PCM_U16BE, AV_CODEC_ID_PCM_S32LE,
-	 * AV_CODEC_ID_PCM_S32BE, AV_CODEC_ID_PCM_U32LE, AV_CODEC_ID_PCM_U32BE,
-	 * WMALOSSLESS and maybe more if reasonable.
-	 *
 	 * \param[in] id The codec to test
 	 *
 	 * \return TRUE iff the codec is supported, otherwise FALSE.
 	 */
 	static bool codec(const ::AVCodecID id);
+	// Add support for more PCM formats, for example there could be
+	// AV_CODEC_ID_PCM_U16LE, AV_CODEC_ID_PCM_U16BE, AV_CODEC_ID_PCM_S32LE,
+	// AV_CODEC_ID_PCM_S32BE, AV_CODEC_ID_PCM_U32LE, AV_CODEC_ID_PCM_U32BE,
+	// WMALOSSLESS and maybe more if reasonable.
 };
 
 

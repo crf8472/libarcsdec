@@ -58,8 +58,8 @@ using arcstk::SampleSequence;
  * Each call of the callback can call one of the handler methods.
  *
  * It is not the responsibility of the FlacMetadataHandler to inform the
- * internal \ref Calculation about the total number of samples or bytes. This is done
- * within the implementation of metadata_callback().
+ * internal \c Calculation about the total number of samples or bytes. This is
+ * done within the implementation of metadata_callback().
  */
 class FlacMetadataHandler final : public ReaderValidatingHandler
 {
@@ -94,7 +94,7 @@ public:
  * containing 44.100 Hz/16 bit Stereo PCM data samples.
  *
  * This class provides the PCM sample data as a succession of blocks of 32 bit
- * PCM samples to its \ref Calculation. The first block starts with the very
+ * PCM samples to its \c Calculation. The first block starts with the very
  * first PCM sample in the file. The streaminfo metadata block is validated to
  * conform to CDDA.
  */
