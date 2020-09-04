@@ -16,15 +16,14 @@ extern "C" {
 #include <sys/stat.h> // for stat
 }
 
-#include <algorithm>  // for min
 #include <cstdint>
 #include <fstream>
 #include <functional>
 #include <iomanip>    // for debug
-#include <locale>     // for tolower
 #include <memory>
-#include <sstream>
+#include <sstream>    // for ostringstream
 #include <string>
+#include <vector>
 
 #ifndef __LIBARCSTK_CALCULATE_HPP__
 #include <arcstk/calculate.hpp>
@@ -64,7 +63,7 @@ constexpr unsigned int  RIFFWAV_PCM_CDDA_t::BYTES_[13][2];
 
 constexpr unsigned char RIFFWAV_PCM_CDDA_t::any_;
 
-const std::array<unsigned char, 44> RIFFWAV_PCM_CDDA_t::WAVPCM_HEADER_ =
+const std::array<unsigned char, 40> RIFFWAV_PCM_CDDA_t::WAVPCM_HEADER_ =
 {
 	0x52, 0x49, 0x46, 0x46, // BE: 'R','I','F','F'
 	any_, any_, any_, any_, // LE: filesize in bytes - 8
@@ -77,15 +76,15 @@ const std::array<unsigned char, 44> RIFFWAV_PCM_CDDA_t::WAVPCM_HEADER_ =
 	0x10, 0xB1, 0x02, 0x00, // LE: dwAvgBytesPerSec: 176400
 	0x04, 0x00,             // LE: wBlockAlign: 4
 	0x10, 0x00,             // LE: wBitsPerSample: 16
-	0x64, 0x61, 0x74, 0x61, // BE: Data Subchunk Header: 'd','a','t','a'
-	any_, any_, any_, any_  // LE: Data Subchunk Size
+	0x64, 0x61, 0x74, 0x61  // BE: Data Subchunk Header: 'd','a','t','a'
+                            // LE: Data Subchunk Size
 };
 
 
 uint32_t RIFFWAV_PCM_CDDA_t::header(FIELD field) const
 {
-	auto offset = BYTES_[field][OFFSET];
-	auto endpos = BYTES_[field][LENGTH] - 1;
+	const auto offset = BYTES_[field][OFFSET];
+	const auto endpos = BYTES_[field][LENGTH] - 1;
 
 	uint32_t field_val = 0;
 
@@ -181,7 +180,7 @@ uint32_t RIFFWAV_PCM_CDDA_t::data_subchunk_id() const
 }
 
 
-const std::array<unsigned char, 44>& RIFFWAV_PCM_CDDA_t::header()
+const std::array<unsigned char, 40>& RIFFWAV_PCM_CDDA_t::header()
 {
 	return WAVPCM_HEADER_;
 }
@@ -716,14 +715,14 @@ void PCMBlockReader::register_block_consumer(const std::function<void(
 int64_t PCMBlockReader::read_blocks(std::ifstream &in,
 		const int64_t &total_pcm_bytes)
 {
-	std::vector<uint32_t> samples;
-	samples.resize(
-		static_cast<decltype(samples)::size_type>(this->samples_per_block()));
+	std::vector<uint32_t> samples; // FIXME Use symbolized sample type
 
-	int64_t bytes_per_block =
+	const int64_t sample_type_size = static_cast<int64_t>(sizeof(samples[0]));
+
+	const int64_t bytes_per_block =
 		static_cast<int64_t>(this->samples_per_block()) * CDDA.BYTES_PER_SAMPLE;
 
-	int estimated_blocks = total_pcm_bytes / bytes_per_block
+	const int estimated_blocks = total_pcm_bytes / bytes_per_block
 				+ (total_pcm_bytes % bytes_per_block ? 1 : 0);
 
 	ARCS_LOG_DEBUG << "START READING " << total_pcm_bytes
@@ -734,10 +733,10 @@ int64_t PCMBlockReader::read_blocks(std::ifstream &in,
 	int64_t total_bytes_read   = 0;
 	int64_t total_blocks_read  = 0;
 
-	const int64_t sample_type_size = static_cast<int>(sizeof(uint32_t));
-						// FIXME Use symbolized sample type  ^^^^^^^^!
-
 	int64_t read_bytes = this->samples_per_block() * sample_type_size;
+
+	using buffersize_t = typename decltype(samples)::size_type;
+	samples.resize(static_cast<buffersize_t>(this->samples_per_block()));
 
 	while (total_bytes_read < total_pcm_bytes)
 	{
@@ -746,8 +745,7 @@ int64_t PCMBlockReader::read_blocks(std::ifstream &in,
 		if (samples_todo < this->samples_per_block())
 		{
 			// Avoid trailing zeros in buffer
-			samples.resize(
-					static_cast<decltype(samples)::size_type>(samples_todo));
+			samples.resize(static_cast<buffersize_t>(samples_todo));
 
 			read_bytes = samples_todo * sample_type_size;
 		}
@@ -761,7 +759,6 @@ int64_t PCMBlockReader::read_blocks(std::ifstream &in,
 		catch (const std::ifstream::failure& f)
 		{
 			total_bytes_read += in.gcount();
-
 			throw FileReadException(f.what(), total_bytes_read + 1);
 		}
 		total_bytes_read += read_bytes;
@@ -777,12 +774,13 @@ int64_t PCMBlockReader::read_blocks(std::ifstream &in,
 		ARCS_LOG(DEBUG1) << "      " << samples.size()
 				<< " Stereo PCM samples (32 bit)";
 
-		if (not consume_)
+		if (consume_)
+		{
+			this->consume_(samples.begin(), samples.end());
+		} else
 		{
 			ARCS_LOG_ERROR << "No block consumer registered.";
-			continue;
 		}
-		this->consume_(samples.begin(), samples.end());
 	}
 
 	ARCS_LOG_DEBUG << "END READING after " << total_blocks_read << " blocks";
@@ -822,7 +820,6 @@ int64_t WavAudioReaderImpl::retrieve_file_size_bytes(
 		static_cast<void>(rc);
 	}
 
-	//return static_cast<uint64_t>(stat_buf.st_size);
 	return stat_buf.st_size;
 }
 
@@ -847,20 +844,15 @@ int64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 	catch (const std::ifstream::failure& f)
 	{
 		total_bytes_read += in.gcount();
-
-		//ARCS_LOG_ERROR << "Failed to read chunk descriptor from file: "
-		//		<< f.what();
-
 		throw FileReadException(f.what(), total_bytes_read + 1);
 	}
 	total_bytes_read += bytes_to_read;
 
-	WavPartParser parser;
-
-	audio_handler_->chunk_descriptor(parser.chunk_descriptor(bytes));
-
 
 	// Traverse subchunks, looking for 'fmt ' and 'data' thereafter
+
+	WavPartParser parser;
+	audio_handler_->chunk_descriptor(parser.chunk_descriptor(bytes));
 
 	bytes.resize(WavPartParser::WAV_BYTES_PER_SUBCHUNK_HEADER);
 
@@ -879,10 +871,6 @@ int64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 		catch (const std::ifstream::failure& f)
 		{
 			total_bytes_read += in.gcount();
-
-			//ARCS_LOG_ERROR << "Failed to read subchunk header from file: "
-			//		<< f.what();
-
 			throw FileReadException(f.what(), total_bytes_read + 1);
 		}
 		total_bytes_read += bytes_to_read;
@@ -898,7 +886,7 @@ int64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 
 		audio_handler_->start_subchunk(subchunk_header);
 
-		const WAV_CDDA_t& valid = audio_handler_->validator();
+		const auto& valid = audio_handler_->validator();
 
 		// Subchunk: 'fmt '
 
@@ -926,10 +914,6 @@ int64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 			catch (const std::ifstream::failure& f)
 			{
 				total_bytes_read += in.gcount();
-
-				//ARCS_LOG_ERROR << "Failed to read format subchunk from file: "
-				//	<< f.what();
-
 				throw FileReadException(f.what(), total_bytes_read + 1);
 			}
 			total_bytes_read += bytes_to_read;
@@ -946,7 +930,7 @@ int64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 
 		if (subchunk_header.id == valid.data_subchunk_id())
 		{
-			// Pass total_pcm_bytes to Caller and inform \ref Calculation instance
+			// Pass total_pcm_bytes to Caller and inform Calculation instance
 
 			total_pcm_bytes = subchunk_header.size; // return parameter
 
@@ -963,30 +947,25 @@ int64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 
 				// Read audio bytes in blocks
 
-				PCMBlockReader block_reader(this->samples_per_read());
+				PCMBlockReader reader(this->samples_per_read());
 
-				block_reader.register_block_consumer(
+				reader.register_block_consumer(
 					std::bind(&WavAudioReaderImpl::process_samples, this,
 						std::placeholders::_1, std::placeholders::_2)
 					);
 
-				auto block_bytes_read =
-					block_reader.read_blocks(in, total_pcm_bytes);
-
+				auto block_bytes_read = reader.read_blocks(in, total_pcm_bytes);
 				total_bytes_read += block_bytes_read;
 
 				if (block_bytes_read != total_pcm_bytes)
 				{
-					std::stringstream ss;
-					ss << "Expected to read "
+					std::ostringstream msg;
+					msg << "Expected to read "
 						<< total_pcm_bytes
 						<< " audio bytes but could only read "
 						<< block_bytes_read
 						<< " audio bytes.";
-
-					ARCS_LOG_ERROR << ss.str();
-
-					throw FileReadException(ss.str(), total_bytes_read + 1);
+					throw FileReadException(msg.str(), total_bytes_read + 1);
 				}
 			}
 
@@ -1066,14 +1045,11 @@ void WavAudioReaderImpl::process_file(const std::string &filename,
 	}
 	catch (const std::ifstream::failure& f)
 	{
-		int64_t total_bytes_read = in.gcount();
-
-		//ARCS_LOG_ERROR << "Failed to open audio file: " << f.what();
-
+		const int64_t total_bytes_read = in.gcount();
 		throw FileReadException(f.what(), total_bytes_read + 1);
 	}
 
-	int64_t bytes_read =
+	const int64_t bytes_read =
 		this->process_file_worker(in, calculate, total_pcm_bytes);
 
 	ARCS_LOG_DEBUG << "Read " << bytes_read << " bytes from audio file";
@@ -1086,7 +1062,6 @@ void WavAudioReaderImpl::process_file(const std::string &filename,
 	}
 	catch (const std::ifstream::failure& f)
 	{
-		//ARCS_LOG_ERROR << "Failed to close audio file: " << f.what();
 		throw FileReadException(f.what());
 	}
 

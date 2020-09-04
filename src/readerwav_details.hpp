@@ -239,7 +239,7 @@ private:
 	/**
 	 * \brief Canonical header of a CDDA compliant RIFF WAVE file in PCM format.
 	 */
-	static const std::array<unsigned char, 44> WAVPCM_HEADER_;
+	static const std::array<unsigned char, 40> WAVPCM_HEADER_;
 
 	/**
 	 * \brief Returns canonical value of specified header field
@@ -337,7 +337,7 @@ public:
 	/**
 	 * \brief Canoncial RIFF/WAVE header for PCM encoding.
 	 */
-	static const std::array<unsigned char, 44>& header();
+	static const std::array<unsigned char, 40>& header();
 
 	/**
 	 * \brief Compare to bytes that are accepted to have arbitrary values.
