@@ -49,4 +49,13 @@ A detailed HowTo explaining different build scenarios and all build switches see
 BUILD.md.
 
 
+
+\section Version
+
+This documentation was generated from commit
+[@PROJECT_GIT_DESCRIBE@]
+(https://codeberg.org/tristero/libarcsdec/commit/@PROJECT_GIT_COMMIT@).
+
+
 [1]: https://codeberg.org/tristero/libarcstk
+
