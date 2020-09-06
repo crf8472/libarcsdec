@@ -15,9 +15,10 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <utility>  // for tuple
 
 extern "C" {
-#include <libcue/libcue.h>
+#include <libcue/libcue.h>  // for Cd
 }
 
 namespace arcsdec
@@ -38,6 +39,14 @@ namespace libcue
  * @{
  */
 
+
+/**
+ * \brief Type for raw CUE data.
+ */
+using CueInfo = std::tuple<uint16_t, std::vector<int32_t>, std::vector<int32_t>,
+		std::vector<std::string>>;
+
+
 /**
  * \brief Functor for freeing Cd* instances.
  */
@@ -52,22 +61,6 @@ struct FreeCd final
  */
 using CdPtr = std::unique_ptr<::Cd, FreeCd>;
 
-
-/**
- * \brief Service method: Convert a long value to int32_t.
- *
- * \param[in] value The value to convert
- * \param[in] name  Name of the value to show in error message
- *
- * \throw InvalidMetadataException If \c value negative or too big
- *
- * \return The converted value
- */
-int32_t cast_or_throw(const signed long value, const std::string &name);
-
-
-// forward declaration (for use in CueOpenFile)
-class CueInfo;
 
 /**
  * \brief Represents an opened CUEsheet file.
@@ -88,12 +81,8 @@ public:
 	 */
 	explicit CueOpenFile(const std::string &filename);
 
-	// make class non-copyable
-	CueOpenFile(const CueOpenFile &file) = delete;
-	CueOpenFile& operator = (CueOpenFile &file) = delete;
-
-	CueOpenFile(CueOpenFile &&file) noexcept = default;
-	CueOpenFile& operator = (CueOpenFile &&file) noexcept = default;
+	CueOpenFile(CueOpenFile &&file) noexcept;
+	CueOpenFile& operator = (CueOpenFile &&file) noexcept;
 
 	/**
 	 * \brief Returns all TOC information from the file.
@@ -112,89 +101,6 @@ private:
 
 
 /**
- * \brief Represents track offsets, track lengths and audio filenames.
- */
-class CueInfo final
-{
-	// CueOpenFile::parse_info() is a friend method of CueInfo since it
-	// constructs CueInfos exclusively
-	friend CueInfo CueOpenFile::parse_info();
-
-public:
-
-	/**
-	 * \brief Number of tracks specified in the CUE file.
-	 *
-	 * \return Number of tracks according to the CUEsheet
-	 */
-	uint16_t track_count() const;
-
-	/**
-	 * \brief Return the frame offsets specified in the CUE file.
-	 *
-	 * \return The list of offsets, index corresponds to the track number
-	 */
-	std::vector<int32_t> offsets() const;
-
-	/**
-	 * \brief Return the track lengths (in frames) specified in the CUE file.
-	 *
-	 * \return The list of lengths, index corresponds to the track number
-	 */
-	std::vector<int32_t> lengths() const;
-
-	/**
-	 * \brief Return the track audiofile names.
-	 *
-	 * \return The list of audio filenames, index corresponds to the track
-	 * number
-	 */
-	std::vector<std::string> audiofilenames() const;
-
-private:
-
-	/**
-	 * \brief Default constructor.
-	 */
-	CueInfo();
-
-	/**
-	 * \brief Append next track to instance.
-	 *
-	 * \param[in] offset        Track offset
-	 * \param[in] length        Track length
-	 * \param[in] audiofilename Audiofile containing the track
-	 */
-	void append_track(
-			const int32_t &offset,
-			const int32_t &length,
-			const std::string &audiofilename);
-
-	/**
-	 * \brief Number of tracks specified in the CUE file.
-	 *
-	 * Represented as unsigned integer to make comparing with sizes easier.
-	 */
-	uint16_t track_count_;
-
-	/**
-	 * \brief Frame offsets specified in the CUE file.
-	 */
-	std::vector<int32_t> offsets_;
-
-	/**
-	 * \brief Track lengths specified in the CUE file.
-	 */
-	std::vector<int32_t> lengths_;
-
-	/**
-	 * \brief Names of the audio files specified in the CUE file.
-	 */
-	std::vector<std::string> audiofilenames_;
-};
-
-
-/**
  * \brief Implementation for libcue-based reading of CUESheets.
  */
 class CueParserImpl final : public MetadataParserImpl
@@ -204,11 +110,13 @@ public:
 	/**
 	 * \brief Return CUE data.
 	 *
+	 * \param[in] filename Name of the file to read.
+	 *
 	 * \return The CueInfo of the parsed CUEsheet
 	 *
 	 * \throw FileReadException If the file could not be read
 	 */
-	CueInfo read(const std::string &filename);
+	CueInfo parse_worker(const std::string &filename);
 
 private:
 

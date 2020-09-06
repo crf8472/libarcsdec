@@ -11,8 +11,8 @@
 #include <stdexcept>  // for runtime_error
 #include <string>     // for string
 
-#ifndef __LIBARCSTK_CALCULATE_HPP__
-#include <arcstk/calculate.hpp>
+#ifndef __LIBARCSTK_IDENTIFIER_HPP__
+#include <arcstk/identifier.hpp>
 #endif
 
 #ifndef __LIBARCSDEC_DESCRIPTORS_HPP__
@@ -74,10 +74,6 @@ public:
 	 * \brief Virtual default destructor.
 	 */
 	virtual ~MetadataParserImpl() noexcept;
-
-	// class is non-copyable
-	MetadataParserImpl(const MetadataParserImpl &) = delete;
-	MetadataParserImpl& operator = (const MetadataParserImpl &) = delete;
 
 	/**
 	 * \brief Parses a metadata file.
@@ -144,12 +140,8 @@ public:
 	 */
 	MetadataParser(std::unique_ptr<MetadataParserImpl> impl);
 
-	// class is non-copyable
-	MetadataParser(const MetadataParser &) = delete;
-	MetadataParser& operator = (const MetadataParser &) = delete;
-
-	MetadataParser(MetadataParser &&) noexcept = default;
-	MetadataParser& operator = (MetadataParser &&) noexcept = default;
+	MetadataParser(MetadataParser &&) noexcept;
+	MetadataParser& operator = (MetadataParser &&) noexcept;
 
 	/**
 	 * \brief Parses a metadata file.
@@ -195,6 +187,19 @@ public:
 	 */
 	explicit MetadataParseException(const std::string &what_arg);
 };
+
+
+/**
+ * \brief Service method: Convert a long value to int32_t.
+ *
+ * \param[in] value The value to convert
+ * \param[in] name  Name of the value to show in error message
+ *
+ * \throw invalid_argument If \c value is out of the range of type int32_t
+ *
+ * \return The numerical value as int32_t
+ */
+int32_t cast_or_throw(const signed long value, const std::string &name);
 
 /// @}
 

@@ -16,15 +16,13 @@ extern "C" {
 }
 
 #include <cstdio>    // for fopen, fclose, FILE
-#include <iomanip>   // for debug
-#include <limits>    // for numeric_limits
-#include <sstream>   // for debug
-#include <stdexcept>
-#include <string>    // from .h
-#include <vector>    // from .h
+#include <sstream>   // for ostringstream
+#include <stdexcept> // for invalid_argument
+#include <string>    // from .hpp
+#include <vector>    // from .hpp
 
-#ifndef __LIBARCSTK_CALCULATE_HPP__
-#include <arcstk/calculate.hpp>
+#ifndef __LIBARCSTK_IDENTIFIER_HPP__
+#include <arcstk/identifier.hpp>  // for TOC, make_toc, InvalidMetadataException
 #endif
 #ifndef __LIBARCSTK_LOGGING_HPP__
 #include <arcstk/logging.hpp>
@@ -57,9 +55,9 @@ namespace details
 namespace libcue
 {
 
-using arcstk::InvalidMetadataException;
 using arcstk::TOC;
 using arcstk::make_toc;
+using arcstk::InvalidMetadataException;
 
 
 // FreeCd
@@ -75,24 +73,13 @@ void FreeCd::operator()(::Cd* cd) const
 }
 
 
-// cast_or_throw
-
-
-int32_t cast_or_throw(const signed long value, const std::string &name)
-{
-	if (value > std::numeric_limits<int32_t>::max())
-	{
-		std::ostringstream msg;
-		msg << "Value '" << name << "': " << value << " too big for int32_t";
-
-		throw InvalidMetadataException(msg.str());
-	}
-
-	return static_cast<int32_t>(value);
-}
-
-
 // CueOpenFile
+
+
+CueOpenFile::CueOpenFile(CueOpenFile &&file) noexcept = default;
+
+
+CueOpenFile& CueOpenFile::operator = (CueOpenFile &&file) noexcept = default;
 
 
 CueOpenFile::CueOpenFile(const std::string &filename)
@@ -165,7 +152,14 @@ CueInfo CueOpenFile::parse_info()
 		throw MetadataParseException(ss.str());
 	}
 
-	CueInfo cue_info;
+	std::vector<int32_t>     offsets;
+	std::vector<int32_t>     lengths;
+	std::vector<std::string> filenames;
+
+	offsets.reserve(static_cast<decltype( offsets )::size_type>(track_count));
+	lengths.reserve(static_cast<decltype( lengths )::size_type>(track_count));
+	filenames.reserve(static_cast<decltype( filenames )::size_type>(
+				track_count));
 
 	// types according to libcue-API
 	long trk_offset = 0;
@@ -181,9 +175,6 @@ CueInfo CueOpenFile::parse_info()
 		if (!trk)
 		{
 			ARCS_LOG_ERROR << "Could not retrieve track " << i;
-
-			cue_info.append_track(0, 0, std::string());
-
 			continue;
 		}
 
@@ -229,93 +220,46 @@ CueInfo CueOpenFile::parse_info()
 		// of the last track, you would have to subtract its offset from the
 		// offset of the non-existent following track.
 
-		cue_info.append_track(
-				cast_or_throw(trk_offset, "track offset"),
-				cast_or_throw(trk_length, "track length"),
-				audiofilename);
+		try
+		{
+			offsets.emplace_back(cast_or_throw(trk_offset, "track offset"));
+			lengths.emplace_back(cast_or_throw(trk_length, "track length"));
+		} catch (const std::invalid_argument &e)
+		{
+			std::ostringstream msg;
+			msg << "Track " << i << ": ";
+			msg << e.what();
+
+			throw InvalidMetadataException(msg.str());
+		}
+
+		filenames.emplace_back(audiofilename);
 	}
 
-	// Basic verification
-
-	if (static_cast<uint16_t>(track_count) != cue_info.track_count())
-	{
-		ARCS_LOG_WARNING << "Expected " << track_count << " tracks, but parsed "
-			<< cue_info.track_count() << " tracks ";
-	}
-
-	return cue_info;
-}
-
-
-// CueInfo
-
-
-CueInfo::CueInfo()
-	: track_count_(0)
-	, offsets_()
-	, lengths_()
-	, audiofilenames_()
-{
-	// empty
-}
-
-
-uint16_t CueInfo::track_count() const
-{
-	return track_count_;
-}
-
-
-std::vector<int32_t> CueInfo::offsets() const
-{
-	return offsets_;
-}
-
-
-std::vector<int32_t> CueInfo::lengths() const
-{
-	return lengths_;
-}
-
-
-std::vector<std::string> CueInfo::audiofilenames() const
-{
-	return audiofilenames_;
-}
-
-
-void CueInfo::append_track(
-		const int32_t &offset,
-		const int32_t &length,
-		const std::string &audiofilename)
-{
-	offsets_.push_back(offset);
-	lengths_.push_back(length);
-	audiofilenames_.push_back(audiofilename);
-
-	++track_count_;
+	return std::make_tuple(track_count, std::move(offsets),
+			std::move(lengths), std::move(filenames));
 }
 
 
 // CueParserImpl
 
 
-CueInfo CueParserImpl::read(const std::string &filename)
+CueInfo CueParserImpl::parse_worker(const std::string &filename)
 {
-	CueOpenFile cue_file(filename);
+	auto cue_file = CueOpenFile { filename };
 	return cue_file.parse_info();
 }
 
 
 std::unique_ptr<TOC> CueParserImpl::do_parse(const std::string &filename)
 {
-	CueInfo cue_info = this->read(filename);
+	auto cue_info = this->parse_worker(filename);
 
 	return make_toc(
-			cue_info.track_count(),
-			cue_info.offsets(),
-			cue_info.lengths(),
-			cue_info.audiofilenames());
+			std::get<0>(cue_info),  // track count
+			std::get<1>(cue_info),  // offsets
+			std::get<2>(cue_info),  // lengths
+			std::get<3>(cue_info)); // filenames
 }
 
 
@@ -361,7 +305,6 @@ bool DescriptorCUE::do_accepts_bytes(
 std::unique_ptr<FileReader> DescriptorCUE::do_create_reader() const
 {
 	auto impl = std::make_unique<details::libcue::CueParserImpl>();
-
 	return std::make_unique<MetadataParser>(std::move(impl));
 }
 

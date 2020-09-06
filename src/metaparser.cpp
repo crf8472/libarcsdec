@@ -9,6 +9,7 @@
 #include "metaparser.hpp"
 #endif
 
+#include <limits>    // for numeric_limits
 #include <memory>
 #include <string>
 
@@ -21,6 +22,8 @@ namespace arcsdec
 {
 inline namespace v_1_0_0
 {
+
+using arcstk::InvalidMetadataException;
 
 
 // MetadataParserImpl
@@ -54,6 +57,13 @@ MetadataParser::MetadataParser(std::unique_ptr<MetadataParserImpl> impl)
 }
 
 
+MetadataParser::MetadataParser(MetadataParser &&) noexcept = default;
+
+
+MetadataParser& MetadataParser::operator = (MetadataParser &&) noexcept
+= default;
+
+
 std::unique_ptr<TOC> MetadataParser::parse(const std::string &filename)
 {
 	ARCS_LOG_DEBUG << "Try to read metadata file '" << filename << "'";
@@ -81,7 +91,24 @@ MetadataParseException::MetadataParseException(const std::string &what_arg)
 	// empty
 }
 
-} // namespace v_1_0_0
 
+// cast_or_throw
+
+
+int32_t cast_or_throw(const signed long value, const std::string &name)
+{
+	if (value < std::numeric_limits<int32_t>::min() or
+			value > std::numeric_limits<int32_t>::max())
+	{
+		std::ostringstream msg;
+		msg << "Value '" << name << "': " << value << " too big for int32_t";
+
+		throw std::invalid_argument(msg.str());
+	}
+
+	return static_cast<int32_t>(value);
+}
+
+} // namespace v_1_0_0
 } // namespace arcsdec
 
