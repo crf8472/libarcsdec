@@ -152,14 +152,19 @@ CueInfo CueOpenFile::parse_info()
 		throw MetadataParseException(ss.str());
 	}
 
-	std::vector<int32_t>     offsets;
-	std::vector<int32_t>     lengths;
+	using lba_type = int32_t;
+
+	std::vector<lba_type>     offsets;
+	std::vector<lba_type>     lengths;
 	std::vector<std::string> filenames;
 
-	offsets.reserve(static_cast<decltype( offsets )::size_type>(track_count));
-	lengths.reserve(static_cast<decltype( lengths )::size_type>(track_count));
-	filenames.reserve(static_cast<decltype( filenames )::size_type>(
-				track_count));
+	using offsets_sz = decltype( offsets )::size_type;
+	using lengths_sz = decltype( lengths )::size_type;
+	using filenames_sz = decltype( filenames )::size_type;
+
+	offsets.reserve(static_cast<offsets_sz>(track_count));
+	lengths.reserve(static_cast<lengths_sz>(track_count));
+	filenames.reserve(static_cast<filenames_sz>(track_count));
 
 	// types according to libcue-API
 	long trk_offset = 0;
@@ -222,8 +227,8 @@ CueInfo CueOpenFile::parse_info()
 
 		try
 		{
-			offsets.emplace_back(cast_or_throw(trk_offset, "track offset"));
-			lengths.emplace_back(cast_or_throw(trk_length, "track length"));
+			offsets.emplace_back(cast_or_throw<lba_type>(trk_offset));
+			lengths.emplace_back(cast_or_throw<lba_type>(trk_length));
 		} catch (const std::invalid_argument &e)
 		{
 			std::ostringstream msg;

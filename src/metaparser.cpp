@@ -91,24 +91,6 @@ MetadataParseException::MetadataParseException(const std::string &what_arg)
 	// empty
 }
 
-
-// cast_or_throw
-
-
-int32_t cast_or_throw(const signed long value, const std::string &name)
-{
-	if (value < std::numeric_limits<int32_t>::min() or
-			value > std::numeric_limits<int32_t>::max())
-	{
-		std::ostringstream msg;
-		msg << "Value '" << name << "': " << value << " too big for int32_t";
-
-		throw std::invalid_argument(msg.str());
-	}
-
-	return static_cast<int32_t>(value);
-}
-
 } // namespace v_1_0_0
 } // namespace arcsdec
 

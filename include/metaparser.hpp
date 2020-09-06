@@ -189,17 +189,63 @@ public:
 };
 
 
+namespace details
+{
+
 /**
- * \brief Service method: Convert a long value to int32_t.
+ * \brief Returns TRUE if types S and T are either both signed or both unsigned.
+ *
+ * \tparam S Left type
+ * \tparam T Right type
+ */
+template <typename S, typename T>
+struct signedness : public std::integral_constant<bool,
+	(std::is_signed<S>::value && std::is_signed<T>::value)
+	|| (std::is_unsigned<S>::value && std::is_unsigned<T>::value)>
+{
+	// empty
+};
+
+} // namespace details
+
+
+/**
+ * \brief Service method: Cast a value of some integral type to an integral
+ * type of smaller range.
+ *
+ * The types must either both be signed or both be unsigned.
+ *
+ * If the input type is within the range of the target type, the cast is
+ * performed, otherwise an exception is thrown.
  *
  * \param[in] value The value to convert
- * \param[in] name  Name of the value to show in error message
  *
- * \throw invalid_argument If \c value is out of the range of type int32_t
+ * \throw out_of_range If \c value is out of the range of target type
  *
- * \return The numerical value as int32_t
+ * \return The numerical value
  */
-int32_t cast_or_throw(const signed long value, const std::string &name);
+template <typename S, typename T,
+		 std::enable_if_t<details::signedness<S, T>::value, int> = 0>
+auto cast_or_throw(const T value) -> S
+{
+	if (value < std::numeric_limits<S>::min())
+	{
+		std::ostringstream msg;
+		msg << "Value " << value << " too small to cast";
+
+		throw std::out_of_range(msg.str());
+	}
+
+	if (value > std::numeric_limits<S>::max())
+	{
+		std::ostringstream msg;
+		msg << "Value " <<  value << " too big to cast";
+
+		throw std::out_of_range(msg.str());
+	}
+
+	return static_cast<S>(value);
+}
 
 /// @}
 
