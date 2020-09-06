@@ -50,7 +50,6 @@ namespace ffmpeg
 using arcstk::SampleInputIterator;
 using arcstk::AudioSize;
 using arcstk::Logging;
-using arcstk::InvalidAudioException;
 using arcstk::CDDA;
 using arcstk::SampleSequence;
 using arcstk::LOGLEVEL;
@@ -655,38 +654,6 @@ int32_t in_bytes(const int total_samples, const ::AVSampleFormat f)
 }
 
 
-// validate_cdda
-
-
-bool validate_cdda(::AVCodecContext *cctx)
-{
-	bool is_validated = true;
-
-	CDDAValidator validator;
-
-	if (not validator.bits_per_sample(
-				::av_get_bytes_per_sample(cctx->sample_fmt) * CHAR_BIT))
-	{
-		ARCS_LOG_ERROR << "Not CDDA: not 16 bits per sample";
-		is_validated = false;
-	}
-
-	if (not validator.num_channels(cctx->channels))
-	{
-		ARCS_LOG_ERROR << "Not CDDA: not stereo";
-		is_validated = false;
-	}
-
-	if (not validator.samples_per_second(cctx->sample_rate))
-	{
-		ARCS_LOG_ERROR << "Not CDDA: sample rate is not 44100 Hz";
-		is_validated = false;
-	}
-
-	return is_validated;
-}
-
-
 // IsSupported
 
 
@@ -720,6 +687,44 @@ bool IsSupported::codec(const ::AVCodecID id)
 		// ::AV_CODEC_ID_WAVPACK: // Removed: could not check for lossy
 
 	return codecs.find(id) != codecs.end();
+}
+
+
+// FFmpegValidator
+
+
+bool FFmpegValidator::validate_cdda(::AVCodecContext *cctx)
+{
+	bool is_validated = true;
+
+	// TODO Subclass DefaultValidator to use error stack correctly
+
+	if (not CDDAValidator::bits_per_sample(
+				::av_get_bytes_per_sample(cctx->sample_fmt) * CHAR_BIT))
+	{
+		ARCS_LOG_ERROR << "Not CDDA: not 16 bits per sample";
+		is_validated = false;
+	}
+
+	if (not CDDAValidator::num_channels(cctx->channels))
+	{
+		ARCS_LOG_ERROR << "Not CDDA: not stereo";
+		is_validated = false;
+	}
+
+	if (not CDDAValidator::samples_per_second(cctx->sample_rate))
+	{
+		ARCS_LOG_ERROR << "Not CDDA: sample rate is not 44100 Hz";
+		is_validated = false;
+	}
+
+	return is_validated;
+}
+
+
+AudioValidator::codec_set_type FFmpegValidator::do_codecs() const
+{
+	return { }; // Does not validate any codecs, only CDDA
 }
 
 
@@ -774,14 +779,8 @@ std::unique_ptr<FFmpegAudioStream> FFmpegAudioStreamLoader::load(
 	}
 
 
-	if (not validate_cdda(cctx.get()))
-	{
-		std::stringstream message;
-		message << "Audio is not CDDA compliant";
-
-		ARCS_LOG_ERROR << message.str();
-		throw InvalidAudioException(message.str());
-	}
+	FFmpegValidator validator;
+	validator.validate_cdda(cctx.get());
 
 
 	// Configure file object with ffmpeg properties

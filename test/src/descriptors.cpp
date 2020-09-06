@@ -263,3 +263,66 @@ TEST_CASE ( "FileReaderSelection", "[filereaderselection]" )
 	}
 }
 
+
+TEST_CASE ( "FileTest", "[filetest]" )
+{
+	using arcsdec::FileTest;
+	using arcsdec::FileTestName;
+	using arcsdec::FileTestBytes;
+
+
+	SECTION ( "Equality comparison is correct" )
+	{
+		std::unique_ptr<FileTest> t01 = std::make_unique<FileTestName>();
+		std::unique_ptr<FileTest> t02 = std::make_unique<FileTestBytes>(0, 7);
+
+		CHECK ( *t01 != *t02 );
+
+		std::unique_ptr<FileTest> t03 = std::make_unique<FileTestBytes>(0, 7);
+
+		CHECK ( *t02 == *t03 );
+
+		std::unique_ptr<FileTest> t04 = std::make_unique<FileTestBytes>(0, 12);
+
+		CHECK ( *t02 != *t04 );
+		CHECK ( *t03 != *t04 );
+	}
+}
+
+
+TEST_CASE ( "FileTestBytes", "[filetestbytes]" )
+{
+	using arcsdec::FileTest;
+	using arcsdec::FileTestBytes;
+
+	SECTION ( "Equality comparison is correct" )
+	{
+		FileTestBytes t01 = FileTestBytes( 0, 18);
+		FileTestBytes t02 = FileTestBytes(10,  7);
+
+		CHECK ( t01 != t02 );
+
+		FileTestBytes t03 = FileTestBytes(10,  7);
+
+		CHECK ( t02 == t03 );
+
+		FileTestBytes t04 = FileTestBytes(10,  9);
+
+		CHECK ( t02 != t04 );
+		CHECK ( t03 != t04 );
+	}
+
+	SECTION ( "Swapping works correctly with std::swap" )
+	{
+		FileTestBytes t01(0, 12);
+		FileTestBytes t02(4, 33);
+
+		std::swap( t01,  t02);
+
+		CHECK ( t01.offset() ==  4 );
+		CHECK ( t01.length() == 33 );
+		CHECK ( t02.offset() ==  0 );
+		CHECK ( t02.length() == 12 );
+	}
+}
+

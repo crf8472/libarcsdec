@@ -403,14 +403,6 @@ AVCodecContextPtr create_audio_decoder(::AVFormatContext *fctx,
 
 
 /**
- * \brief Validates stream for CDDA compliance.
- *
- * \param[in] cctx The AVCodecContext to analyze
- */
-bool validate_cdda(::AVCodecContext* cctx);
-
-
-/**
  * \brief Turn an amount of samples into the equivalent number of bytes.
  *
  * \param[in] total_samples The amount of 16-bit samples
@@ -458,6 +450,26 @@ struct IsSupported final
 	// AV_CODEC_ID_PCM_U16LE, AV_CODEC_ID_PCM_U16BE, AV_CODEC_ID_PCM_S32LE,
 	// AV_CODEC_ID_PCM_S32BE, AV_CODEC_ID_PCM_U32LE, AV_CODEC_ID_PCM_U32BE,
 	// WMALOSSLESS and maybe more if reasonable.
+};
+
+
+/**
+ * \brief Validator for AVCodecContext instances.
+ */
+class FFmpegValidator : public DefaultValidator
+{
+public:
+
+	/**
+	 * \brief Validates stream for CDDA compliance.
+	 *
+	 * \param[in] cctx The AVCodecContext to analyze
+	 */
+	bool validate_cdda(::AVCodecContext* cctx);
+
+private:
+
+	codec_set_type do_codecs() const override;
 };
 
 

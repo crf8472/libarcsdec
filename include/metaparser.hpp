@@ -4,12 +4,12 @@
 /**
  * \file
  *
- * \brief An interface for parsing TOC informations
+ * \brief API for implementing MetadataParsers
  */
 
-
-#include <memory>
-#include <string>
+#include <memory>     // for unique_ptr
+#include <stdexcept>  // for runtime_error
+#include <string>     // for string
 
 #ifndef __LIBARCSTK_CALCULATE_HPP__
 #include <arcstk/calculate.hpp>
@@ -19,48 +19,65 @@
 #include "descriptors.hpp"
 #endif
 
-
 namespace arcsdec
 {
-
 inline namespace v_1_0_0
 {
 
 using arcstk::TOC;
 
 /**
- * \internal
- * \defgroup metaparser API for parsing metadata/toc files
+ * \defgroup metaparser API for implementing MetadataParsers
  *
- * \brief Interface for implementing and creating
- * \link MetadataParser MetadataParsers\endlink.
+ * \brief API for implementing \link MetadataParser MetadataParsers\endlink.
  *
- * The interface for reading audio files is provided by class MetadataParser
- * that internally holds a concrete instance of MetadataParserImpl.
+ * Class MetadataParser provides an interface for parsing TOC files.
  *
- * The MetadataParser provides the parse operation on the input file that yields
+ * The MetadataParser provides function \c parse() to parse the input file to
  * a TOC instance. The information represented by the TOC instance undergoes
  * some basic consistency checks while constructing the TOC object.
  *
- * The concrete reading of a given metadata file is implemented by the
- * subclasses of MetadataParserImpl.
+ * A MetadataParser internally holds a concrete instance of MetadataParserImpl.
+ * MetadataParserImpl can be subclassed to implement the capabilities of a
+ * MetadataParser.
+ *
+ * The concrete reading of a given TOC file is implemented by the subclasses
+ * of MetadataParserImpl.
+ *
+ * A parse error is reported by a MetadataParseException.
+ *
+ * CreateMetadataParser creates a MetadataParser from a selection of readers and
+ * a given filename.
  *
  * @{
  */
 
 
 /**
- * \brief Implementation of a MetadataParser.
+ * \brief Abstract base class for MetadataParser implementations.
+ *
+ * Concrete subclasses of MetadataParserImpl implement MetadataParsers for a
+ * concrete FileReaderDescriptor.
+ *
+ * Instances of subclasses are non-copyable but movable.
  */
 class MetadataParserImpl
 {
-
 public:
+
+	/**
+	 * \brief Default constructor.
+	 */
+	MetadataParserImpl();
 
 	/**
 	 * \brief Virtual default destructor.
 	 */
 	virtual ~MetadataParserImpl() noexcept;
+
+	// class is non-copyable
+	MetadataParserImpl(const MetadataParserImpl &) = delete;
+	MetadataParserImpl& operator = (const MetadataParserImpl &) = delete;
 
 	/**
 	 * \brief Parses a metadata file.
@@ -81,6 +98,10 @@ public:
 	 */
 	std::unique_ptr<FileReaderDescriptor> descriptor() const;
 
+protected:
+
+	MetadataParserImpl(MetadataParserImpl &&) noexcept;
+	MetadataParserImpl& operator = (MetadataParserImpl &&) noexcept;
 
 private:
 
@@ -108,9 +129,11 @@ private:
 
 
 /**
- * \brief Interface for MetadataParsers
+ * \brief Parse metadata files and provide the content as a TOC instance.
+ *
+ * Instances of this class are non-copyable but movable.
  */
-class MetadataParser : public FileReader
+class MetadataParser final : public FileReader
 {
 public:
 
@@ -121,10 +144,12 @@ public:
 	 */
 	MetadataParser(std::unique_ptr<MetadataParserImpl> impl);
 
-	/**
-	 * \brief Default destructor.
-	 */
-	virtual ~MetadataParser() noexcept override;
+	// class is non-copyable
+	MetadataParser(const MetadataParser &) = delete;
+	MetadataParser& operator = (const MetadataParser &) = delete;
+
+	MetadataParser(MetadataParser &&) noexcept = default;
+	MetadataParser& operator = (MetadataParser &&) noexcept = default;
 
 	/**
 	 * \brief Parses a metadata file.
@@ -138,6 +163,8 @@ public:
 	 */
 	std::unique_ptr<TOC> parse(const std::string &filename);
 
+private:
+
 	/**
 	 * \brief Implementation of a MetadataParser.
 	 */
@@ -145,6 +172,13 @@ public:
 
 	std::unique_ptr<FileReaderDescriptor> do_descriptor() const override;
 };
+
+
+/**
+ * \brief Functor for safe creation of a MetadataParser.
+ */
+struct CreateMetadataParser final : public CreateReader<MetadataParser>
+{ /*empty*/ };
 
 
 /**
@@ -162,18 +196,9 @@ public:
 	explicit MetadataParseException(const std::string &what_arg);
 };
 
-
-/**
- * \brief Functor for safe creation of a MetadataParser.
- */
-struct CreateMetadataParser final : public CreateReader<MetadataParser>
-{ /*empty*/ };
-
-
 /// @}
 
 } // namespace v_1_0_0
-
 } // namespace arcsdec
 
 #endif

@@ -1,7 +1,7 @@
 /**
  * \file
  *
- * Implements interface for parsing TOC informations
+ * \brief Implements API for implementing MetadataParsers.
  */
 
 
@@ -19,12 +19,14 @@
 
 namespace arcsdec
 {
-
 inline namespace v_1_0_0
 {
 
 
 // MetadataParserImpl
+
+
+MetadataParserImpl::MetadataParserImpl() = default;
 
 
 MetadataParserImpl::~MetadataParserImpl() noexcept = default;
@@ -50,9 +52,6 @@ MetadataParser::MetadataParser(std::unique_ptr<MetadataParserImpl> impl)
 {
 	// empty
 }
-
-
-MetadataParser::~MetadataParser() noexcept = default;
 
 
 std::unique_ptr<TOC> MetadataParser::parse(const std::string &filename)

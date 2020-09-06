@@ -48,6 +48,8 @@ namespace wave
  * the format subchunk will cause the validation to fail. Non-standard
  * subchunks are ignored. RIFX containers are currently not supported.
  *
+ * PCMBlockReader reads raw PCM samples from an input stream.
+ *
  * \todo This implementation silently relies on a little endian plattform.
  *
  * @{
@@ -535,11 +537,6 @@ class WavPartParser
 public:
 
 	/**
-	 * \brief Default constructor.
-	 */
-	WavPartParser();
-
-	/**
 	 * \brief Virtual default destructor.
 	 */
 	virtual ~WavPartParser() noexcept;
@@ -589,14 +586,6 @@ public:
 	 */
 	WavFormatSubchunk format_subchunk(const WavSubchunkHeader &header,
 			const std::vector<char> &bytes);
-
-
-private:
-
-	/**
-	 * \brief Internal byte converter
-	 */
-	ByteConverter convert_;
 };
 
 
@@ -623,9 +612,8 @@ enum CONFIG : uint32_t
  * audio format. This handler class uses an instance of WAV_CDDA_t to perform
  * the actual checks against the expected format.
  */
-class WavAudioHandler : public ReaderValidatingHandler
+class WavAudioHandler final : public DefaultValidator
 {
-
 private:
 
 	/**
@@ -642,7 +630,6 @@ private:
 		S_VALIDATED_DATA    =   16
 	};
 
-
 public:
 
 	/**
@@ -651,11 +638,6 @@ public:
 	 * \param[in] valid_values An object representing the valid reference values
 	 */
 	explicit WavAudioHandler(std::unique_ptr<WAV_CDDA_t> valid_values);
-
-	/**
-	 * \brief Virtual destructor.
-	 */
-	virtual ~WavAudioHandler() noexcept;
 
 	/**
 	 * \brief Return phyiscal file size.
@@ -743,19 +725,11 @@ public:
 	bool requests_all_subchunks();
 
 	/**
-	 * \brief Called when audio processing failed.
-	 *
-	 * \throws InvalidAudioException if audio processing failed
-	 */
-	void fail();
-
-	/**
 	 * \brief Return the internal validation object.
 	 *
 	 * \return Internal validation object.
 	 */
 	const WAV_CDDA_t& validator();
-
 
 protected:
 
@@ -785,38 +759,9 @@ protected:
 	 */
 	void unset_state(const STATE &state);
 
-	/**
-	 * \brief Implements chunk_descriptor().
-	 *
-	 * \param[in] chunk_descriptor The WavChunkDescriptor as parsed
-	 */
-	virtual void do_chunk_descriptor(
-			const WavChunkDescriptor &chunk_descriptor);
-
-	/**
-	 * \brief Implements subchunk_format().
-	 *
-	 * \param[in] format_subchunk The WavFormatSubchunk as parsed
-	 */
-	virtual void do_subchunk_format(
-			const WavFormatSubchunk &format_subchunk);
-
-	/**
-	 * \brief Implements subchunk_data().
-	 *
-	 * \param[in] subchunk_size The size of the data subchunk as parsed
-	 */
-	virtual void do_subchunk_data(const uint32_t &subchunk_size);
-
-	/**
-	 * \brief Implements fail().
-	 *
-	 * \throws InvalidAudioException if audio processing failed
-	 */
-	virtual void do_fail();
-
-
 private:
+
+	codec_set_type do_codecs() const override;
 
 	/**
 	 * \brief Configuration: physical file size in bytes as passed from the

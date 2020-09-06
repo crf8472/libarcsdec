@@ -1,10 +1,9 @@
 /**
- * \file parsercue.cpp Implements parser for CUESheets
+ * \file
  *
+ * \brief Implements libcue-based parser for CUESheets.
  */
 
-
-#include "descriptors.hpp"
 #ifndef __LIBARCSDEC_PARSERCUE_HPP__
 #include "parsercue.hpp"
 #endif
@@ -48,11 +47,11 @@ extern "C" {
 
 namespace arcsdec
 {
-
 inline namespace v_1_0_0
 {
-
-namespace
+namespace details
+{
+namespace libcue
 {
 
 using arcstk::InvalidMetadataException;
@@ -69,25 +68,49 @@ using arcstk::make_toc;
  */
 
 
-// forward declaration (for use in CueOpenFile)
-class CueInfo;
+/**
+ * \brief Service method: Convert a long value to int32_t.
+ *
+ * \param[in] value The value to convert
+ * \param[in] name  Name of the value to show in error message
+ *
+ * \throw InvalidMetadataException If \c value negative or too big
+ *
+ * \return The converted value
+ */
+int32_t cast_or_throw(const signed long value, const std::string &name);
+
+int32_t cast_or_throw(const signed long value, const std::string &name)
+{
+	if (value > std::numeric_limits<int32_t>::max())
+	{
+		std::ostringstream msg;
+		msg << "Value '" << name << "': " << value << " too big for int32_t";
+
+		throw InvalidMetadataException(msg.str());
+	}
+
+	return static_cast<int32_t>(value);
+}
 
 
 // CueOpenFile
 
 
-/**
- * Represents an opened CUEsheet file. This class is the only symbol that
- * depends on libcue API as an implementation detail.
- */
-class CueOpenFile
-{
+// forward declaration (for use in CueOpenFile)
+class CueInfo;
 
+/**
+ * \brief Represents an opened CUEsheet file.
+ *
+ * Instances of this class are non-copyable but movable.
+ */
+class CueOpenFile final
+{
 public:
 
 	/**
-	 * Open CUEsheet with the given name. This class does RAII and does
-	 * not require you to manually close the instance.
+	 * \brief Open CUEsheet with the given name.
 	 *
 	 * \param[in] filename The CUEsheet file to read
 	 *
@@ -96,113 +119,83 @@ public:
 	 */
 	explicit CueOpenFile(const std::string &filename);
 
-	/**
-	 * Destructor
-	 */
-	virtual ~CueOpenFile() noexcept;
+	// make class non-copyable
+	CueOpenFile(const CueOpenFile &file) = delete;
+	CueOpenFile& operator = (CueOpenFile &file) = delete;
+
+	CueOpenFile(CueOpenFile &&file) noexcept = default;
+	CueOpenFile& operator = (CueOpenFile &&file) noexcept = default;
 
 	/**
-	 * Returns all TOC information from the file.
+	 * \brief Destructor.
+	 */
+	~CueOpenFile() noexcept;
+
+	/**
+	 * \brief Returns all TOC information from the file.
 	 *
 	 * \return CueInfo representing the TOC information
 	 */
 	CueInfo parse_info();
 
-
-protected:
-
-	/**
-	 * Service method: Convert a long value to int32_t.
-	 *
-	 * \param[in] value The value to convert
-	 * \param[in] name  Name of the value to show in error message
-	 *
-	 * \throw InvalidMetadataException If \c value negative or too big
-	 *
-	 * \return The converted value
-	 */
-	int32_t cast_or_throw(const signed long &value, const std::string &name)
-		const;
-
-
 private:
 
 	/**
-	 * Internal libcue-based representation
+	 * \brief Internal libcue-based representation.
 	 */
 	::Cd* cd_info_;
-
-
-	// make class non-copyable (1/2)
-	CueOpenFile(const CueOpenFile &file) = delete;
-
-	// make class non-copyable (2/2)
-	CueOpenFile& operator = (CueOpenFile &file) = delete;
 };
 
 
 /**
- * Represents information on track offsets, track lengths and audio filenames
- * from the CUE sheet.
- *
- * Since CueInfos are exclusively constructed by a builder, they have no setter
- * methods. For convenience, there is a parameterless default constructor that
- * enables to construct an empty CueInfo instance.
+ * \brief Represents track offsets, track lengths and audio filenames.
  */
-class CueInfo
+class CueInfo final
 {
-
 	// CueOpenFile::parse_info() is a friend method of CueInfo since it
 	// constructs CueInfos exclusively
 	friend CueInfo CueOpenFile::parse_info();
 
-
 public:
 
 	/**
-	 * Default destructor
-	 */
-	virtual ~CueInfo() noexcept;
-
-	/**
-	 * Number of tracks specified in the CUE file
+	 * \brief Number of tracks specified in the CUE file.
 	 *
 	 * \return Number of tracks according to the CUEsheet
 	 */
 	uint16_t track_count() const;
 
 	/**
-	 * Return the frame offsets specified in the CUE file
+	 * \brief Return the frame offsets specified in the CUE file.
 	 *
 	 * \return The list of offsets, index corresponds to the track number
 	 */
 	std::vector<int32_t> offsets() const;
 
 	/**
-	 * Return the track lengths (in frames) specified in the CUE file
+	 * \brief Return the track lengths (in frames) specified in the CUE file.
 	 *
 	 * \return The list of lengths, index corresponds to the track number
 	 */
 	std::vector<int32_t> lengths() const;
 
 	/**
-	 * Return the track audiofile names
+	 * \brief Return the track audiofile names.
 	 *
 	 * \return The list of audio filenames, index corresponds to the track
 	 * number
 	 */
 	std::vector<std::string> audiofilenames() const;
 
-
 private:
 
 	/**
-	 * Default constructor.
+	 * \brief Default constructor.
 	 */
 	CueInfo();
 
 	/**
-	 * Append next track to instance.
+	 * \brief Append next track to instance.
 	 *
 	 * \param[in] offset Track offset
 	 * \param[in] length Track length
@@ -214,24 +207,24 @@ private:
 			const std::string &audiofilename);
 
 	/**
-	 * Number of tracks specified in the CUE file
+	 * \brief Number of tracks specified in the CUE file.
 	 *
 	 * Represented as unsigned integer to make comparing with sizes easier.
 	 */
 	uint16_t track_count_;
 
 	/**
-	 * Frame offsets specified in the CUE file
+	 * \brief Frame offsets specified in the CUE file.
 	 */
 	std::vector<int32_t> offsets_;
 
 	/**
-	 * Track lenghts specified in the CUE file
+	 * \brief Track lenghts specified in the CUE file.
 	 */
 	std::vector<int32_t> lengths_;
 
 	/**
-	 * Name of the audio file for the respective track
+	 * \brief Name of the audio file for the respective track.
 	 */
 	std::vector<std::string> audiofilenames_;
 };
@@ -401,21 +394,6 @@ CueInfo CueOpenFile::parse_info()
 }
 
 
-int32_t CueOpenFile::cast_or_throw(const long &value, const std::string &name)
-	const
-{
-	if (value > std::numeric_limits<int32_t>::max())
-	{
-		std::ostringstream msg;
-		msg << "Value '" << name << "': " << value << " too big for int32_t";
-
-		throw InvalidMetadataException(msg.str());
-	}
-
-	return static_cast<int32_t>(value);
-}
-
-
 // CueInfo
 
 
@@ -427,9 +405,6 @@ CueInfo::CueInfo()
 {
 	// empty
 }
-
-
-CueInfo::~CueInfo() noexcept = default;
 
 
 uint16_t CueInfo::track_count() const
@@ -477,20 +452,10 @@ void CueInfo::append_track(
  * Reads a CUE file and exposes the relevant information as CueInfo. Note that
  * CueParser exclusively populates CueInfo objects.
  */
-class CueParserImpl : public MetadataParserImpl
+class CueParserImpl final : public MetadataParserImpl
 {
 
 public:
-
-	/**
-	 * Default constructor
-	 */
-	CueParserImpl();
-
-	/**
-	 * Default destructor
-	 */
-	virtual ~CueParserImpl() noexcept override;
 
 	/**
 	 * Return CUE data.
@@ -501,24 +466,12 @@ public:
 	 */
 	CueInfo read(const std::string &filename);
 
-	/**
-	 * Return name of the CUE file
-	 *
-	 * \return The filename of the audio file described by the CUEsheet
-	 */
-	std::string filename() const;
-
 
 private:
 
 	std::unique_ptr<TOC> do_parse(const std::string &filename) override;
 
 	std::unique_ptr<FileReaderDescriptor> do_descriptor() const override;
-
-	/**
-	 * Name of the last parsed CUE file
-	 */
-	std::string filename_;
 };
 
 
@@ -528,28 +481,10 @@ private:
 // CueParserImpl
 
 
-CueParserImpl::CueParserImpl()
-	:filename_()
-{
-	//empty
-}
-
-
-CueParserImpl::~CueParserImpl() noexcept = default;
-
-
 CueInfo CueParserImpl::read(const std::string &filename)
 {
-	filename_ = filename;
-
-	CueOpenFile cue_file(this->filename());
+	CueOpenFile cue_file(filename);
 	return cue_file.parse_info();
-}
-
-
-std::string CueParserImpl::filename() const
-{
-	return filename_;
 }
 
 
@@ -571,7 +506,8 @@ std::unique_ptr<FileReaderDescriptor> CueParserImpl::do_descriptor() const
 }
 
 
-} // namespace
+} // namespace libcue
+} // namespace details
 
 
 // DescriptorCUE
@@ -605,7 +541,7 @@ bool DescriptorCUE::do_accepts_bytes(
 
 std::unique_ptr<FileReader> DescriptorCUE::do_create_reader() const
 {
-	auto impl = std::make_unique<CueParserImpl>();
+	auto impl = std::make_unique<details::libcue::CueParserImpl>();
 
 	return std::make_unique<MetadataParser>(std::move(impl));
 }
@@ -638,6 +574,5 @@ const auto d = RegisterMetadataDescriptor<DescriptorCUE>{};
 } // namespace
 
 } // namespace v_1_0_0
-
 } // namespace arcsdec
 

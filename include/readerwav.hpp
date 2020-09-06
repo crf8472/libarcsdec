@@ -1,7 +1,7 @@
 /**
  * \file
  *
- * \brief Audio reader for RIFF/WAV audio files with PCM
+ * \brief Audio reader for RIFF/WAVE audio files with PCM
  */
 
 
@@ -26,9 +26,9 @@ inline namespace v_1_0_0
 
 /**
  * \internal
- * \defgroup readerwav Audio: RIFF/WAV with PCM encoding
+ * \defgroup readerwav Audio: RIFF/WAVE with PCM encoding
  *
- * \brief AudioReader for RIFF/WAV files with CDDA-compliant PCM data.
+ * \brief AudioReader for RIFF/WAVE files with CDDA-compliant PCM data.
  *
  * Additional fields in the format subchunk are not supported. Validation
  * requires CDDA conform samples in PCM format. Non-standard subchunks are
@@ -39,9 +39,9 @@ inline namespace v_1_0_0
 
 
 /**
- * \brief Reader for RIFF WAV files containing PCM data.
+ * \brief Reader for RIFF WAVE files containing PCM data.
  *
- * Represents a RIFF WAV container holding PCM samples conforming to CDDA. That
+ * Represents a RIFF WAVE container holding PCM samples conforming to CDDA. That
  * is 16 bit, 2 channels, 44100 samples/sec as integer representation
  * exclusively.
  */
@@ -64,9 +64,9 @@ public:
 private:
 
 	/**
-	 * \brief Returns "RIFF/WAV (PCM)".
+	 * \brief Returns "RIFF/WAVE (PCM)".
 	 *
-	 * \return "RIFF/WAV (PCM)"
+	 * \return "RIFF/WAVE (PCM)"
 	 */
 	std::string do_name() const override;
 

@@ -296,7 +296,6 @@ private:
  */
 class SampleProvider : public ISampleProvider
 {
-
 public:
 
 	/**
@@ -305,6 +304,10 @@ public:
 	SampleProvider();
 
 	SampleProvider(const SampleProvider &rhs) = delete;
+	SampleProvider& operator = (const SampleProvider &rhs) = delete;
+
+	SampleProvider(SampleProvider &&) = default;
+	SampleProvider& operator = (SampleProvider &&) = default;
 
 	void register_appendsamples(
 			std::function<void(SampleInputIterator, SampleInputIterator)> f)
@@ -317,9 +320,6 @@ public:
 	void register_processor(SampleProcessor &processor) final;
 
 	const SampleProcessor* processor() const final;
-
-	SampleProvider& operator = (const SampleProvider &rhs) = delete;
-
 
 protected:
 
@@ -336,7 +336,6 @@ protected:
 	void process_endinput(const int32_t last_sample_index) override;
 
 	SampleProcessor* use_processor();
-
 
 private:
 

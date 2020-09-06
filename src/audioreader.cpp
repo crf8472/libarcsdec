@@ -1,7 +1,7 @@
 /**
  * \file
  *
- * Implements interface and toolkit for reading and validating audio files
+ * \brief Implements API for implementing AudioReaders.
  */
 
 
@@ -36,20 +36,10 @@ const int32_t MAX_SAMPLES_TO_READ =
 	CDDA.MAX_BLOCK_ADDRESS * CDDA.SAMPLES_PER_FRAME;
 
 
-// ByteConverter
+// LittleEndianBytes
 
 
-ByteConverter::~ByteConverter() noexcept = default;
-
-
-uint8_t ByteConverter::byte_to_uint8(const char &b) const
-{
-	return b & 0xFF;
-}
-
-
-int16_t ByteConverter::le_bytes_to_int16(const char &b1,
-		const char &b2) const
+int16_t LittleEndianBytes::to_int16(const char &b1, const char &b2)
 {
 	uint16_t val =
 			static_cast<uint16_t>(b2 & 0xFF) << 8 |
@@ -84,17 +74,16 @@ int16_t ByteConverter::le_bytes_to_int16(const char &b1,
 }
 
 
-uint16_t ByteConverter::le_bytes_to_uint16(const char &b1,
-		const char &b2) const
+uint16_t LittleEndianBytes::to_uint16(const char &b1, const char &b2)
 {
-	return le_bytes_to_int16(b1, b2) & 0xFFFF;
+	return to_int16(b1, b2) & 0xFFFF;
 }
 
 
-int32_t ByteConverter::le_bytes_to_int32(const char &b1,
+int32_t LittleEndianBytes::to_int32(const char &b1,
 		const char &b2,
 		const char &b3,
-		const char &b4) const
+		const char &b4)
 {
 	uint32_t val =
 			static_cast<uint32_t>(b4 & 0xFF) << 24 |
@@ -102,27 +91,30 @@ int32_t ByteConverter::le_bytes_to_int32(const char &b1,
 			static_cast<uint32_t>(b2 & 0xFF) <<  8 |
 			static_cast<uint32_t>(b1 & 0xFF);
 
-	// NOTE Same note as in le_bytes_to_int16() applies
+	// NOTE Same note as in to_int16() applies
 	return static_cast<int32_t>(val);
 	// separate explicit cast to avoid -Wsign-conversion firing
 }
 
 
-uint32_t ByteConverter::le_bytes_to_uint32(const char &b1,
+uint32_t LittleEndianBytes::to_uint32(const char &b1,
 		const char &b2,
 		const char &b3,
-		const char &b4) const
+		const char &b4)
 {
-	return static_cast<uint32_t>(le_bytes_to_int32(b1, b2, b3, b4));
+	return static_cast<uint32_t>(to_int32(b1, b2, b3, b4));
 }
 
 
-int32_t ByteConverter::be_bytes_to_int32(const char &b1,
+// BigEndianBytes
+
+
+int32_t BigEndianBytes::to_int32(const char &b1,
 		const char &b2,
 		const char &b3,
-		const char &b4) const
+		const char &b4)
 {
-	return le_bytes_to_int32(b4, b3, b2, b1);
+	return LittleEndianBytes::to_int32(b4, b3, b2, b1);
 	/*
 	uint32_t val =
 			static_cast<uint32_t>(b1 & 0xFF) << 24 |
@@ -130,27 +122,24 @@ int32_t ByteConverter::be_bytes_to_int32(const char &b1,
 			static_cast<uint32_t>(b3 & 0xFF) <<  8 |
 			static_cast<uint32_t>(b4 & 0xFF);
 
-	// NOTE Same note as in le_bytes_to_int16() applies
+	// NOTE Same note as in to_int16() applies
 	return static_cast<int32_t>(val);
 	// separate cast to avoid -Wsign-conversion firing
 	*/
 }
 
 
-uint32_t ByteConverter::be_bytes_to_uint32(const char &b1,
+uint32_t BigEndianBytes::to_uint32(const char &b1,
 		const char &b2,
 		const char &b3,
-		const char &b4) const
+		const char &b4)
 {
 	//return be_bytes_to_int32(b1, b2, b3, b4) & 0xFFFFFFFF;
-	return static_cast<uint32_t>(be_bytes_to_int32(b1, b2, b3, b4));
+	return static_cast<uint32_t>(BigEndianBytes::to_int32(b1, b2, b3, b4));
 }
 
 
 // CDDAValidator
-
-
-CDDAValidator::~CDDAValidator() noexcept = default;
 
 
 bool CDDAValidator::bits_per_sample(const int &bits_per_sample)
@@ -171,44 +160,110 @@ bool CDDAValidator::samples_per_second(const int &samples_per_second)
 }
 
 
-// ReaderValidatingHandler
+// InvalidAudioException
 
 
-ReaderValidatingHandler::ReaderValidatingHandler()
+InvalidAudioException::InvalidAudioException(const std::string &what_arg)
+	: std::logic_error { what_arg }
+{
+	// empty
+}
+
+
+InvalidAudioException::InvalidAudioException(const char *what_arg)
+	: std::logic_error { what_arg }
+{
+	// empty
+}
+
+
+// AudioValidator
+
+
+AudioValidator::AudioValidator()
 	: errors_()
 {
   // empty
 }
 
 
-ReaderValidatingHandler::~ReaderValidatingHandler() noexcept = default;
+AudioValidator::~AudioValidator() noexcept = default;
 
 
-void ReaderValidatingHandler::error(const std::string &msg)
+AudioValidator::codec_set_type AudioValidator::codecs() const
+{
+	return this->do_codecs();
+}
+
+
+bool AudioValidator::bits_per_sample(const int bits_per_sample)
+{
+	if (not this->assert_true("Test (CDDA): Bits per sample",
+			CDDAValidator::bits_per_sample(bits_per_sample),
+			"Number of bits per sample does not conform to CDDA"))
+	{
+		this->on_failure();
+		return false;
+	}
+
+	return true;
+}
+
+
+bool AudioValidator::samples_per_second(const int sps)
+{
+	if (not this->assert_true("Test (CDDA): Sample Rate",
+			CDDAValidator::samples_per_second(sps),
+			"Number of samples per second does not conform to CDDA"))
+	{
+		this->on_failure();
+		return false;
+	}
+
+	return true;
+}
+
+
+bool AudioValidator::num_channels(const int num_channels)
+{
+	if (not this->assert_true("Test (CDDA): Channels",
+			CDDAValidator::num_channels(num_channels),
+			"Number of channels does not conform to CDDA"))
+	{
+		this->on_failure();
+		return false;
+	}
+
+	return true;
+}
+
+
+void AudioValidator::error(const std::string &msg)
 {
 	errors_.push_back(msg);
 }
 
 
-bool ReaderValidatingHandler::has_errors()
-{
-	return not errors_.empty();
-}
-
-
-std::vector<std::string> ReaderValidatingHandler::get_errors()
-{
-	return errors_;
-}
-
-
-std::string ReaderValidatingHandler::last_error()
+const std::string& AudioValidator::last_error() const
 {
 	return errors_.back();
 }
 
 
-bool ReaderValidatingHandler::assert_equals(
+bool AudioValidator::has_errors() const
+{
+	return not errors_.empty();
+}
+
+
+const AudioValidator::error_list_type&
+	AudioValidator::get_errors() const
+{
+	return errors_;
+}
+
+
+bool AudioValidator::assert_equals(
 		const std::string &label,
 		int value,
 		int proper_value,
@@ -235,7 +290,7 @@ bool ReaderValidatingHandler::assert_equals(
 }
 
 
-bool ReaderValidatingHandler::assert_equals_u(
+bool AudioValidator::assert_equals_u(
 		const std::string &label,
 		uint32_t value,
 		uint32_t proper_value,
@@ -262,7 +317,7 @@ bool ReaderValidatingHandler::assert_equals_u(
 }
 
 
-bool ReaderValidatingHandler::assert_at_least(
+bool AudioValidator::assert_at_least(
 		const std::string &label,
 		int value,
 		int proper_value,
@@ -289,7 +344,7 @@ bool ReaderValidatingHandler::assert_at_least(
 }
 
 
-bool ReaderValidatingHandler::assert_at_most(
+bool AudioValidator::assert_at_most(
 		const std::string &label,
 		int value,
 		int proper_value,
@@ -316,7 +371,7 @@ bool ReaderValidatingHandler::assert_at_most(
 }
 
 
-bool ReaderValidatingHandler::assert_true(
+bool AudioValidator::assert_true(
 		const std::string &label,
 		bool value,
 		const std::string error_msg)
@@ -338,6 +393,26 @@ bool ReaderValidatingHandler::assert_true(
 }
 
 
+void AudioValidator::log_error_stack() const
+{
+	for (const auto& error : this->get_errors())
+	{
+		ARCS_LOG_ERROR << error;
+	}
+
+	ARCS_LOG_ERROR << "=> Validation failed";
+}
+
+
+// DefaultValidator
+
+
+void DefaultValidator::on_failure()
+{
+	throw InvalidAudioException(this->last_error());
+}
+
+
 // AudioReaderImpl
 
 
@@ -345,6 +420,13 @@ AudioReaderImpl::AudioReaderImpl() = default;
 
 
 AudioReaderImpl::~AudioReaderImpl() noexcept = default;
+
+
+AudioReaderImpl::AudioReaderImpl(AudioReaderImpl &&) noexcept = default;
+
+
+AudioReaderImpl& AudioReaderImpl::operator = (AudioReaderImpl &&) noexcept
+= default;
 
 
 bool AudioReaderImpl::configurable_read_buffer() const
@@ -452,7 +534,7 @@ int64_t BufferedAudioReaderImpl::do_samples_per_read() const
 
 
 /**
- * Private implementation of AudioReader
+ * \brief Private implementation of AudioReader.
  */
 class AudioReader::Impl final
 {
@@ -518,12 +600,6 @@ public:
 	 * \return Descriptor for this implementation.
 	 */
 	std::unique_ptr<FileReaderDescriptor> descriptor() const;
-
-	/**
-	 *
-	 * \return The reader interface implementation
-	 */
-	const AudioReaderImpl& readerimpl();
 
 	/**
 	 *
@@ -608,12 +684,6 @@ void AudioReader::Impl::process_file(const std::string &filename)
 std::unique_ptr<FileReaderDescriptor> AudioReader::Impl::descriptor() const
 {
 	return readerimpl_->descriptor();
-}
-
-
-const AudioReaderImpl& AudioReader::Impl::readerimpl()
-{
-	return *readerimpl_;
 }
 
 

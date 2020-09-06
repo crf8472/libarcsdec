@@ -61,7 +61,7 @@ using arcstk::SampleSequence;
  * internal \c Calculation about the total number of samples or bytes. This is
  * done within the implementation of metadata_callback().
  */
-class FlacMetadataHandler final : public ReaderValidatingHandler
+class FlacMetadataHandler final : public DefaultValidator
 {
 public:
 
@@ -86,6 +86,10 @@ public:
 	 * \return TRUE if metadata indicates CDDA conformity, otherwise FALSE
 	 */
 	bool streaminfo(const FLAC::Metadata::StreamInfo &streaminfo);
+
+private:
+
+	codec_set_type do_codecs() const override;
 };
 
 

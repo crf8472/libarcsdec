@@ -28,10 +28,13 @@
 
 namespace arcsdec
 {
-
 inline namespace v_1_0_0
 {
 
+/**
+ * \internal
+ * \brief Implementation details.
+ */
 namespace details
 {
 
@@ -135,9 +138,10 @@ const std::vector<std::string>& libarcsdec_libs();
 
 
 /**
- * \defgroup descriptors API for file reading
+ * \defgroup descriptors API for selecting FileReaders
  *
- * \brief API for creating FileReaders for specified file formats.
+ * \brief API for selecting \link FileReader FileReaders\endlink for given
+ * input files.
  *
  * Abstract class FileReaderSelection provides the API for the mechanism to
  * check a specified input file for a matching FileReaderDescriptor. If a
@@ -230,7 +234,7 @@ enum class Codec : unsigned
 	PCM_S32LE,
 	PCM_S32LE_PLANAR,
 	FLAC,
-	WAVEPACK,
+	WAVPACK,
 	MONKEY,
 	ALAC,
 	WMALOSSLESS
@@ -277,10 +281,10 @@ class FileReaderDescriptor;
 
 
 /**
- * \brief Abstract base class for all FileReaders.
+ * \brief Abstract base class for \link FileReader FileReaders\endlink.
  *
- * This class ensures a common base type for all readers. Therefore, all readers
- * can be built and provided by the same creation framework.
+ * \see AudioReader
+ * \see MetadataParser
  */
 class FileReader
 {
@@ -290,6 +294,9 @@ public:
 	 * \brief Default constructor.
 	 */
 	FileReader();
+
+	FileReader(const FileReader &) = delete;
+	FileReader& operator = (const FileReader &) = delete;
 
 	/**
 	 * \brief Virtual default destructor.
@@ -302,6 +309,11 @@ public:
 	 * \return Descriptor for this FileReader instance
 	 */
 	std::unique_ptr<FileReaderDescriptor> descriptor() const;
+
+protected:
+
+	FileReader(FileReader &&rhs) = default;
+	FileReader& operator = (FileReader &&rhs) = default;
 
 private:
 
@@ -317,7 +329,6 @@ namespace details
 {
 
 /**
- * \internal
  * \brief Downcast a FileReader to a specialized ReaderType.
  *
  * The operation is safe: if the cast fails, the input pointer is returned
@@ -374,7 +385,6 @@ auto cast_reader(std::unique_ptr<FileReader> file_reader) noexcept
 
 
 /**
- * \internal
  * \brief Worker: Read \c length bytes from file \c filename starting at
  * position \c offset.
  *
@@ -394,7 +404,6 @@ std::vector<unsigned char> read_bytes(const std::string &filename,
 
 
 /**
- * \internal
  * \brief Worker: Provides the suffix of a given filename.
  *
  * The suffix is the part of filename following the last occurrence of
@@ -502,6 +511,8 @@ bool operator == (const FileReaderDescriptor &lhs,
  * A FileReaderDescriptor provides all required information to decide
  * whether a a given file can be read by readers conforming to this descriptor.
  * It can create an opaque reader that can read the file.
+ *
+ * FileReaderDescriptors are supposed to be stateless.
  */
 class FileReaderDescriptor : public Comparable<FileReaderDescriptor>
 {
@@ -520,8 +531,7 @@ public:
 	/**
 	 * \brief Empty constructor.
 	 */
-	FileReaderDescriptor()
-		: suffices_ { } { /* empty */ }
+	FileReaderDescriptor();
 
 	/**
 	 * \brief Virtual default destructor.
@@ -622,7 +632,7 @@ protected:
 	 */
 	FileReaderDescriptor(const decltype( suffices_ ) suffices)
 		: suffices_ { suffices } { /* empty */ }
-	// TODO suffices_ should be static since it depends on type, not on instance
+	// TODO suffices_ vary with class not with instance, should be static
 
 private:
 
@@ -725,15 +735,18 @@ bool operator == (const FileTest &lhs, const FileTest &rhs);
 
 /**
  * \brief A test whether a given FileReaderDescriptor matches a criterion.
+ *
+ * FileTest instances are polymorphically comparable to support their use
+ * in containers.
  */
-class FileTest
+class FileTest : public Comparable<FileTest>
 {
 public:
 
 	friend bool operator == (const FileTest &lhs, const FileTest &rhs);
 
 	/**
-	 * \brief Constructor.
+	 * \brief Default constructor.
 	 */
 	FileTest();
 
@@ -762,7 +775,18 @@ public:
 
 protected:
 
-	virtual bool equals(const FileTest &) const;
+	FileTest(const FileTest &) = default;
+	FileTest& operator = (const FileTest &) = default;
+
+	/**
+	 * \brief TRUE if instance equals \c rhs.
+	 *
+	 * \param[in] rhs Right hand side of the comparison
+	 *
+	 * \returns TRUE if instance equals \c rhs.
+	 */
+	virtual bool equals(const FileTest &rhs) const
+	= 0;
 
 private:
 
@@ -794,7 +818,21 @@ public:
 	 * \param[in] offset The offset in bytes where this sequence starts
 	 * \param[in] length Number of bytes in the sequence
 	 */
-	FileTestBytes(const uint64_t &offset, const uint32_t &length);
+	FileTestBytes(const uint32_t &offset, const uint32_t &length);
+
+	/**
+	 * \brief Offset.
+	 *
+	 * \return Offset
+	 */
+	uint32_t offset() const;
+
+	/**
+	 * \brief Length.
+	 *
+	 * \return Length
+	 */
+	uint32_t length() const;
 
 protected:
 
@@ -810,7 +848,7 @@ private:
 	/**
 	 * \brief Byte offset of the byte sequence in the file.
 	 */
-	uint64_t offset_;
+	uint32_t offset_;
 
 	/**
 	 * \brief Number of bytes to read from the start position.
@@ -830,6 +868,10 @@ private:
 
 	bool do_passes(const FileReaderDescriptor &desc,
 			const std::string &filename) const override;
+
+protected:
+
+	bool equals(const FileTest &) const override;
 };
 
 
@@ -846,6 +888,11 @@ private:
 class FileReaderSelector
 {
 public:
+
+	/**
+	 * \brief Default constructor.
+	 */
+	FileReaderSelector();
 
 	/**
 	 * \brief Virtual default destructor.
@@ -887,6 +934,11 @@ public:
 			const std::set<std::unique_ptr<FileTest>> &tests,
 			const std::set<std::unique_ptr<FileReaderDescriptor>> &descs)
 		const;
+
+protected:
+
+	FileReaderSelector(const FileReaderSelector &rhs) = default;
+	FileReaderSelector& operator = (const FileReaderSelector &rhs) = default;
 
 private:
 
@@ -938,6 +990,7 @@ private:
 
 
 /**
+ * \internal
  * \brief Function pointer to function returning std::unique_ptr<T>.
  *
  * \tparam T The type the function should return a unique_ptr to
@@ -960,10 +1013,12 @@ public:
 	 */
 	FileReaderSelection();
 
-	// class is non-copy-constructible
+	// class is non-copyable
 	FileReaderSelection(const FileReaderSelection &) = delete;
+	FileReaderSelection& operator = (const FileReaderSelection &) = delete;
 
 	// TODO Move constructor
+	// TODO Move assignment
 
 	/**
 	 * \brief Virtual default destructor.
@@ -1102,11 +1157,6 @@ public:
 	 */
 	bool no_tests() const;
 
-	// class is non-copy-assignable
-	FileReaderSelection& operator = (const FileReaderSelection &) = delete;
-
-	// TODO Move assignment
-
 private:
 
 	// forward declaration
@@ -1125,6 +1175,14 @@ private:
 class FileReaderRegistry
 {
 public:
+
+	/**
+	 * \brief Default constructor.
+	 */
+	FileReaderRegistry();
+
+	// TODO Move constructor
+	// TODO Move assignment
 
 	/**
 	 * \brief Create a reader for the specified audio file.
@@ -1196,7 +1254,10 @@ public:
 
 protected:
 
-	~FileReaderRegistry() noexcept = default;
+	~FileReaderRegistry() noexcept;
+
+	FileReaderRegistry(const FileReaderRegistry &) = default;
+	FileReaderRegistry& operator = (const FileReaderRegistry &) = default;
 
 	/**
 	 * \brief Instantiate the FileReader with the given name.
@@ -1222,6 +1283,7 @@ private:
 
 
 /**
+ * \internal
  * \brief Functor to safely create a unique_ptr to a downcasted FileReader.
  *
  * It will either provide a valid FileReader of the requested type or will
@@ -1245,21 +1307,22 @@ struct CreateReader
 					+ filename + "'");
 		}
 
-		auto readers = details::cast_reader<ReaderType>(std::move(file_reader));
+		auto rc = details::cast_reader<ReaderType>(std::move(file_reader));
 
-		if (!readers.first)
+		if (!rc.first)
 		{
-			throw InputFormatException("Could not acquire reader for TOC file: "
+			throw InputFormatException("Could not acquire reader for file: "
 					+ filename);
 		}
 
-		return std::move(readers.first);
+		return std::move(rc.first);
 		// XXX Prevents RVO, but omitting the move causes compile error.
 	}
 };
 
 
 /**
+ * \internal
  * \brief Instantiate FileReaderDescriptor.
  *
  * \tparam T    The type to instantiate
@@ -1273,6 +1336,7 @@ std::unique_ptr<FileReaderDescriptor> make_descriptor(Args&&... args)
 
 
 /**
+ * \internal
  * \brief Register a FileReaderDescriptor type for audio input.
  *
  * \tparam D The descriptor type to register
@@ -1295,6 +1359,7 @@ public:
 
 
 /**
+ * \internal
  * \brief Register a FileReaderDescriptor type for TOC/metadata input.
  *
  * \tparam D The descriptor type to register

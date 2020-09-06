@@ -1,5 +1,7 @@
 /**
- * \file descriptors.cpp Implementation of a selection toolkit for FileReaders
+ * \file
+ *
+ * \brief Implementation of a selection toolkit for FileReaders
  */
 
 #ifndef __LIBARCSDEC_DESCRIPTORS_HPP__
@@ -35,10 +37,8 @@ extern "C"
 
 namespace arcsdec
 {
-
 inline namespace v_1_0_0
 {
-
 namespace details
 {
 
@@ -382,6 +382,13 @@ int64_t FileReadException::byte_pos() const
 // FileReaderDescriptor
 
 
+FileReaderDescriptor::FileReaderDescriptor()
+		: suffices_ { }
+{
+	// empty
+}
+
+
 FileReaderDescriptor::~FileReaderDescriptor() noexcept = default;
 
 
@@ -513,27 +520,33 @@ bool FileTest::passes(const FileReaderDescriptor &desc,
 }
 
 
-bool FileTest::equals(const FileTest &/*rhs*/) const
-{
-	return true; // default implementation for subclasses without members
-}
-
-
 bool operator == (const FileTest &lhs, const FileTest &rhs)
 {
-	return typeid(lhs) == typeid(rhs) and lhs.equals(rhs);
+	return lhs.equals(rhs);
 }
 
 
 // FileTestBytes
 
 
-FileTestBytes::FileTestBytes(const uint64_t &offset,
+FileTestBytes::FileTestBytes(const uint32_t &offset,
 		const uint32_t &length)
 	: offset_(offset)
 	, length_(length)
 {
 	// empty
+}
+
+
+uint32_t FileTestBytes::offset() const
+{
+	return offset_;
+}
+
+
+uint32_t FileTestBytes::length() const
+{
+	return length_;
 }
 
 
@@ -548,6 +561,10 @@ std::string FileTestBytes::do_description() const
 bool FileTestBytes::do_passes(const FileReaderDescriptor &desc,
 		const std::string &filename) const
 {
+	ARCS_LOG(DEBUG1) << "Do the " << length_ << " bytes starting on offset "
+		<< offset_ << " in file " << filename <<
+		" match the definition in descriptor " << desc.name() << "?";
+
 	auto bytes = details::read_bytes(filename, offset_, length_);
 	return desc.accepts_bytes(bytes, offset_);
 }
@@ -582,11 +599,19 @@ bool FileTestName::do_passes(const FileReaderDescriptor &desc,
 }
 
 
+bool FileTestName::equals(const FileTest &rhs) const
+{
+	return typeid(*this) == typeid(rhs);
+}
+
+
 // FileReaderSelector
 
 
-FileReaderSelector::~FileReaderSelector() noexcept
-= default;
+FileReaderSelector::FileReaderSelector() = default;
+
+
+FileReaderSelector::~FileReaderSelector() noexcept = default;
 
 
 bool FileReaderSelector::matches(
@@ -1040,12 +1065,18 @@ bool FileReaderSelection::no_tests() const
 // FileReaderRegistry
 
 
+FileReaderRegistry::FileReaderRegistry() = default;
+
+
+FileReaderRegistry::~FileReaderRegistry() noexcept = default;
+
+
 std::unique_ptr<FileReaderSelection> FileReaderRegistry::audio_selection_;
+
 
 std::unique_ptr<FileReaderSelection> FileReaderRegistry::toc_selection_;
 
 
 } // namespace v_1_0_0
-
 } // namespace arcsdec
 

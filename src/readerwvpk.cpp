@@ -52,7 +52,6 @@ namespace wavpack
 using arcstk::SampleInputIterator;
 using arcstk::AudioSize;
 using arcstk::CDDA;
-using arcstk::InvalidAudioException;
 using arcstk::SampleSequence;
 
 
@@ -575,7 +574,7 @@ int64_t WavpackOpenFile::read_pcm_samples(const int64_t pcm_samples_to_read,
 
 WavpackValidatingHandler::WavpackValidatingHandler(
 		std::unique_ptr<WAVPACK_CDDA_t> valid_values)
-	: ReaderValidatingHandler()
+	: DefaultValidator()
 	, valid_(std::move(valid_values))
 {
 	// empty
@@ -623,10 +622,8 @@ bool WavpackValidatingHandler::validate_mode(const WavpackOpenFile &file)
 
 bool WavpackValidatingHandler::validate_cdda(const WavpackOpenFile &file)
 {
-	CDDAValidator validate;
-
 	if (not this->assert_true("Test: Bits per sample",
-		validate.bits_per_sample(file.bits_per_sample()),
+		CDDAValidator::bits_per_sample(file.bits_per_sample()),
 		"Number of bits per sample does not conform to CDDA"))
 	{
 		ARCS_LOG_ERROR << this->last_error();
@@ -634,7 +631,7 @@ bool WavpackValidatingHandler::validate_cdda(const WavpackOpenFile &file)
 	}
 
 	if (not this->assert_true("Test: Channels",
-		validate.num_channels(file.num_channels()),
+		CDDAValidator::num_channels(file.num_channels()),
 		"Number of channels does not conform to CDDA"))
 	{
 		ARCS_LOG_ERROR << this->last_error();
@@ -663,7 +660,7 @@ bool WavpackValidatingHandler::validate_cdda(const WavpackOpenFile &file)
 	}
 
 	if (not this->assert_true("Test: Samples per second",
-		validate.samples_per_second(file.samples_per_second()),
+		CDDAValidator::samples_per_second(file.samples_per_second()),
 		"Number of samples per second does not conform to CDDA"))
 	{
 		ARCS_LOG_ERROR << this->last_error();
@@ -701,6 +698,12 @@ bool WavpackValidatingHandler::validate_version(const WavpackOpenFile &file)
 	}
 
 	return true;
+}
+
+
+AudioValidator::codec_set_type WavpackValidatingHandler::do_codecs() const
+{
+	return { Codec::WAVPACK };
 }
 
 
@@ -885,13 +888,13 @@ bool DescriptorWavpack::do_accepts_bytes(
 
 bool DescriptorWavpack::do_accepts(Codec codec) const
 {
-	return codec == Codec::WAVEPACK;
+	return codec == Codec::WAVPACK;
 }
 
 
 std::set<Codec> DescriptorWavpack::do_codecs() const
 {
-	return { Codec::WAVEPACK };
+	return { Codec::WAVPACK };
 }
 
 

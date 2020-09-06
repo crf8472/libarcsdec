@@ -52,7 +52,6 @@ namespace wave
 using arcstk::SampleInputIterator;
 using arcstk::AudioSize;
 using arcstk::CDDA;
-using arcstk::InvalidAudioException;
 
 
 // RIFFWAV_PCM_CDDA_t
@@ -283,13 +282,6 @@ constexpr uint8_t WavPartParser::WAV_BYTES_PER_SUBCHUNK_HEADER;
 constexpr uint8_t WavPartParser::WAV_BYTES_IN_FMT_SUBCHUNK;
 
 
-WavPartParser::WavPartParser()
-	: convert_()
-{
-	// empty
-}
-
-
 WavPartParser::~WavPartParser() noexcept = default;
 
 
@@ -304,16 +296,16 @@ WavChunkDescriptor WavPartParser::chunk_descriptor(
 	return WavChunkDescriptor(
 
 		// parse RIFF/RIFX header
-		convert_.be_bytes_to_uint32(bytes[0], bytes[1], bytes[ 2], bytes[ 3]),
+		BigEndianBytes::to_uint32(bytes[0], bytes[1], bytes[ 2], bytes[ 3]),
 
 		// real header size in bytes
 		WAV_BYTES_PER_RIFF_HEADER,
 
 		// parse file size declaration
-		convert_.le_bytes_to_uint32(bytes[4], bytes[5], bytes[ 6], bytes[ 7]),
+		LittleEndianBytes::to_uint32(bytes[4], bytes[5], bytes[ 6], bytes[ 7]),
 
 		// parse file format declaration ("WAV")
-		convert_.be_bytes_to_uint32(bytes[8], bytes[9], bytes[10], bytes[11])
+		BigEndianBytes::to_uint32(bytes[8], bytes[9], bytes[10], bytes[11])
 	);
 }
 
@@ -328,10 +320,10 @@ WavSubchunkHeader WavPartParser::subchunk_header(const std::vector<char> &bytes)
 	return WavSubchunkHeader(
 
 		// parse subchunk id
-		convert_.be_bytes_to_uint32(bytes[0], bytes[1], bytes[2], bytes[3]),
+		BigEndianBytes::to_uint32(bytes[0], bytes[1], bytes[2], bytes[3]),
 
 		// parse subchunk size
-		convert_.le_bytes_to_uint32(bytes[4], bytes[5], bytes[6], bytes[7])
+		LittleEndianBytes::to_uint32(bytes[4], bytes[5], bytes[6], bytes[7])
 	);
 }
 
@@ -350,26 +342,26 @@ WavFormatSubchunk WavPartParser::format_subchunk(
 		header,
 
 		// wFormatTag
-		convert_.le_bytes_to_uint16(bytes[ 0], bytes[ 1]),
+		LittleEndianBytes::to_uint16(bytes[ 0], bytes[ 1]),
 
 		// wChannels
-		convert_.le_bytes_to_uint16(bytes[ 2], bytes[ 3]),
+		LittleEndianBytes::to_uint16(bytes[ 2], bytes[ 3]),
 
 		// dwSamplesPerSec
 		static_cast<int>(
-		convert_.le_bytes_to_uint32(bytes[ 4], bytes[ 5], bytes[ 6], bytes[ 7])
+		LittleEndianBytes::to_uint32(bytes[ 4], bytes[ 5], bytes[ 6], bytes[ 7])
 		),
 
 		// dwAvgBytesPerSec
 		static_cast<int>(
-		convert_.le_bytes_to_uint32(bytes[ 8], bytes[ 9], bytes[10], bytes[11])
+		LittleEndianBytes::to_uint32(bytes[ 8], bytes[ 9], bytes[10], bytes[11])
 		),
 
 		// wBlockAlign
-		convert_.le_bytes_to_uint16(bytes[12], bytes[13]),
+		LittleEndianBytes::to_uint16(bytes[12], bytes[13]),
 
 		// wBitsPerSample
-		convert_.le_bytes_to_uint16(bytes[14], bytes[15])
+		LittleEndianBytes::to_uint16(bytes[14], bytes[15])
 	);
 }
 
@@ -378,7 +370,7 @@ WavFormatSubchunk WavPartParser::format_subchunk(
 
 
 WavAudioHandler::WavAudioHandler(std::unique_ptr<WAV_CDDA_t> valid)
-	: ReaderValidatingHandler()
+	: DefaultValidator()
 	, phys_file_size_(0)
 	, valid_(std::move(valid))
 	, config_( C_RESPECT_HEADER | C_RESPECT_FORMAT | C_RESPECT_DATA )
@@ -386,9 +378,6 @@ WavAudioHandler::WavAudioHandler(std::unique_ptr<WAV_CDDA_t> valid)
 {
 	// empty
 }
-
-
-WavAudioHandler::~WavAudioHandler() noexcept = default;
 
 
 int64_t WavAudioHandler::physical_file_size()
@@ -429,41 +418,6 @@ void WavAudioHandler::start_subchunk(
 void WavAudioHandler::chunk_descriptor(
 	const WavChunkDescriptor &descriptor)
 {
-	this->do_chunk_descriptor(descriptor);
-
-	if (this->has_errors())
-	{
-		this->fail(); // throws exception
-	}
-}
-
-
-void WavAudioHandler::subchunk_format(
-		const WavFormatSubchunk &format_subchunk)
-{
-	this->do_subchunk_format(format_subchunk);
-
-	if (this->has_errors())
-	{
-		this->fail(); // throws exception
-	}
-}
-
-
-void WavAudioHandler::subchunk_data(const uint32_t &subchunk_size)
-{
-	this->do_subchunk_data(subchunk_size);
-
-	if (this->has_errors())
-	{
-		this->fail(); // throws exception
-	}
-}
-
-
-void WavAudioHandler::do_chunk_descriptor(
-	const WavChunkDescriptor &descriptor)
-{
 	ARCS_LOG(DEBUG1) << "Try to validate RIFF/WAV Header";
 
 	if (not this->has_config(C_RESPECT_HEADER))
@@ -476,8 +430,7 @@ void WavAudioHandler::do_chunk_descriptor(
 		descriptor.id, valid_->chunk_id(),
 		"Unexpected header start"))
 	{
-		ARCS_LOG_ERROR << this->last_error();
-		return;
+		this->on_failure();
 	}
 
 	// RIFFWAV_PCM_CDDA declares file size - 8.
@@ -490,16 +443,14 @@ void WavAudioHandler::do_chunk_descriptor(
 		this->physical_file_size(),
 		"Unexpected header start"))
 	{
-		ARCS_LOG_ERROR << this->last_error();
-		return;
+		this->on_failure();
 	}
 
 	if (not this->assert_equals_u("Test: Header declares WAVE format?",
 		descriptor.format, valid_->format(),
 		"Header does not declare WAVE format"))
 	{
-		ARCS_LOG_ERROR << this->last_error();
-		return;
+		this->on_failure();
 	}
 
 	ARCS_LOG(DEBUG1) << "RIFF/WAV Header validated";
@@ -508,7 +459,7 @@ void WavAudioHandler::do_chunk_descriptor(
 }
 
 
-void WavAudioHandler::do_subchunk_format(
+void WavAudioHandler::subchunk_format(
 		const WavFormatSubchunk &format_subchunk)
 {
 	ARCS_LOG(DEBUG1) << "Try to validate format subchunk";
@@ -518,8 +469,7 @@ void WavAudioHandler::do_subchunk_format(
 		"Id of subchunk is not 'fmt ' but "
 		+ std::to_string(format_subchunk.id)))
 	{
-		ARCS_LOG_ERROR << this->last_error();
-		return;
+		this->on_failure();
 	}
 
 	if (not this->assert_equals_u("Test: format subchunk size",
@@ -527,46 +477,18 @@ void WavAudioHandler::do_subchunk_format(
 		valid_->fmt_subchunk_size(),
 		"Unexpected format subchunk size"))
 	{
-		ARCS_LOG_ERROR << this->last_error();
-		return;
+		this->on_failure();
 	}
 
-	{
-		CDDAValidator validate;
-
-		if (not this->assert_true("Test (CDDA): Channels [wChannels]",
-			validate.num_channels(format_subchunk.wChannels),
-			"Number of channels does not conform to CDDA"))
-		{
-			ARCS_LOG_ERROR << this->last_error();
-			return;
-		}
-
-		if (not this->assert_true(
-			"Test (CDDA): Samples per second [dwSamplesPerSec]",
-			validate.samples_per_second(format_subchunk.dwSamplesPerSec),
-			"Number of channels does not conform to CDDA"))
-		{
-			ARCS_LOG_ERROR << this->last_error();
-			return;
-		}
-
-		if (not this->assert_true(
-			"Test (CDDA): Bits per sample [wBitsPerSample]",
-			validate.bits_per_sample(format_subchunk.wBitsPerSample),
-			"Number of bits per sample does not conform to CDDA"))
-		{
-			ARCS_LOG_ERROR << this->last_error();
-			return;
-		}
-	}
+	this->bits_per_sample(format_subchunk.wBitsPerSample);
+	this->samples_per_second(format_subchunk.dwSamplesPerSec);
+	this->num_channels(format_subchunk.wChannels);
 
 	if (not this->assert_equals("Test: wFormatTag is PCM",
 		format_subchunk.wFormatTag, valid_->wFormatTag(),
 		"wFormatTag is not PCM"))
 	{
-		ARCS_LOG_ERROR << this->last_error();
-		return;
+		this->on_failure();
 	}
 
 	if (not this->assert_equals_u("Test: dwAvgBytesPerSec is CDDA",
@@ -574,8 +496,7 @@ void WavAudioHandler::do_subchunk_format(
 		valid_->dwAvgBytesPerSec(),
 		"dwAvgBytesPerSec is not CDDA"))
 	{
-		ARCS_LOG_ERROR << this->last_error();
-		return;
+		this->on_failure();
 	}
 
 	if (not this->assert_equals("Test: wBlockAlign is CDDA",
@@ -583,8 +504,7 @@ void WavAudioHandler::do_subchunk_format(
 		valid_->wBlockAlign(),
 		"wBlockAlign is not CDDA"))
 	{
-		ARCS_LOG_ERROR << this->last_error();
-		return;
+		this->on_failure();
 	}
 
 	this->unset_state(S_STARTED_FORMAT);
@@ -594,7 +514,7 @@ void WavAudioHandler::do_subchunk_format(
 }
 
 
-void WavAudioHandler::do_subchunk_data(const uint32_t &subchunk_size)
+void WavAudioHandler::subchunk_data(const uint32_t &subchunk_size)
 {
 	ARCS_LOG(DEBUG1) << "Try to validate data subchunk";
 
@@ -607,8 +527,7 @@ void WavAudioHandler::do_subchunk_data(const uint32_t &subchunk_size)
 		// therefore mean that we did not encounter the format
 		// subchunk so far.
 
-		ARCS_LOG_ERROR << this->last_error();
-		return;
+		this->on_failure();
 	}
 
 	if (not this->assert_true("Test: regular data subchunk size?",
@@ -616,8 +535,7 @@ void WavAudioHandler::do_subchunk_data(const uint32_t &subchunk_size)
 		"Incomplete samples, subchunk size is not a multiple of "
 		+ std::to_string(CDDA.BYTES_PER_SAMPLE)))
 	{
-		ARCS_LOG_ERROR << this->last_error();
-		return;
+		this->on_failure();
 	}
 
 	this->unset_state(S_STARTED_DATA);
@@ -636,12 +554,6 @@ bool WavAudioHandler::has_state(const STATE &state)
 bool WavAudioHandler::requests_all_subchunks()
 {
 	return config_ & C_RESPECT_TRAILING;
-}
-
-
-void WavAudioHandler::fail()
-{
-	this->do_fail();
 }
 
 
@@ -675,18 +587,18 @@ void WavAudioHandler::set_config(const CONFIG &option)
 }
 
 
-void WavAudioHandler::do_fail()
+AudioValidator::codec_set_type WavAudioHandler::do_codecs() const
 {
-	auto errors = this->get_errors();
-
-	for (const auto& msg : errors)
-	{
-		ARCS_LOG_ERROR << msg;
-	}
-
-	ARCS_LOG_ERROR << "Validation failed";
-
-	throw InvalidAudioException("Validation failed");
+	return {
+		Codec::PCM_S16BE,
+		Codec::PCM_S16BE_PLANAR,
+		Codec::PCM_S16LE,
+		Codec::PCM_S16LE_PLANAR,
+		Codec::PCM_S32BE,
+		Codec::PCM_S32BE_PLANAR,
+		Codec::PCM_S32LE,
+		Codec::PCM_S32LE_PLANAR
+	};
 }
 
 
@@ -1278,7 +1190,7 @@ std::unique_ptr<FileReaderDescriptor> DescriptorWavPCM::do_clone() const
 
 namespace {
 
-const auto d = std::make_unique<RegisterAudioDescriptor<DescriptorWavPCM>>();
+const auto d = RegisterAudioDescriptor<DescriptorWavPCM>();
 
 } // namespace
 

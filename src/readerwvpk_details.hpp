@@ -315,7 +315,7 @@ private:
  * \brief A handler to validate wavpack files for whether they can be processed
  * by this WavpackAudioReaderImpl.
  */
-class WavpackValidatingHandler : public ReaderValidatingHandler
+class WavpackValidatingHandler : public DefaultValidator
 {
 public:
 
@@ -367,6 +367,8 @@ public:
 	bool validate_version(const WavpackOpenFile &file);
 
 private:
+
+	codec_set_type do_codecs() const override;
 
 	/**
 	 * \brief Configuration: Reference values for validation.

@@ -47,7 +47,6 @@ namespace flac
 using arcstk::SampleInputIterator;
 using arcstk::AudioSize;
 using arcstk::CDDA;
-using arcstk::InvalidAudioException;
 using arcstk::SampleSequence;
 
 
@@ -68,8 +67,6 @@ bool FlacMetadataHandler::streaminfo(
 
 	// Validate sampling rate, channels and bps for CDDA compliance
 
-	static CDDAValidator validate;
-
 	if (streaminfo.get_bits_per_sample() > std::numeric_limits<int>::max())
 	{
 		ARCS_LOG_ERROR << "Number of bits per sample exceeds size of int";
@@ -77,7 +74,7 @@ bool FlacMetadataHandler::streaminfo(
 	} // Check this explicitly because we will cast to int
 
 	if (not this->assert_true("Test (CDDA): Bits per sample",
-		validate.bits_per_sample(
+		CDDAValidator::bits_per_sample(
 			static_cast<int>(streaminfo.get_bits_per_sample())),
 		"Number of bits per sample does not conform to CDDA"))
 	{
@@ -91,7 +88,8 @@ bool FlacMetadataHandler::streaminfo(
 	} // Check this explicitly because we will cast to int
 
 	if (not this->assert_true("Test (CDDA): Channels",
-		validate.num_channels(static_cast<int>(streaminfo.get_channels())),
+		CDDAValidator::num_channels(
+			static_cast<int>(streaminfo.get_channels())),
 		"Number of channels does not conform to CDDA"))
 	{
 		return false;
@@ -104,7 +102,7 @@ bool FlacMetadataHandler::streaminfo(
 	} // Check this explicitly because we will cast to int
 
 	if (not this->assert_true("Test (CDDA): Samples per second",
-		validate.samples_per_second(
+		CDDAValidator::samples_per_second(
 			static_cast<int>(streaminfo.get_sample_rate())),
 		"Number of samples per second does not conform to CDDA"))
 	{
@@ -112,6 +110,12 @@ bool FlacMetadataHandler::streaminfo(
 	}
 
 	return true;
+}
+
+
+AudioValidator::codec_set_type FlacMetadataHandler::do_codecs() const
+{
+	return { Codec::FLAC };
 }
 
 
