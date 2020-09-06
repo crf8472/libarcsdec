@@ -41,10 +41,20 @@ namespace libcue
 
 
 /**
+ * \brief Type for amounts of lba frames.
+ *
+ * This type is a signed integral type.
+ */
+using lba_type = int32_t;
+
+
+/**
  * \brief Type for raw CUE data.
  */
-using CueInfo = std::tuple<uint16_t, std::vector<int32_t>, std::vector<int32_t>,
-		std::vector<std::string>>;
+using CueInfo = std::tuple<uint16_t, // track count
+	std::vector<lba_type>,           // offsets
+	std::vector<lba_type>,           // lengths
+	std::vector<std::string>>;       // filenames
 
 
 /**

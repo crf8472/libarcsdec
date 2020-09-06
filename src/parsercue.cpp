@@ -152,14 +152,12 @@ CueInfo CueOpenFile::parse_info()
 		throw MetadataParseException(ss.str());
 	}
 
-	using lba_type = int32_t;
-
-	std::vector<lba_type>     offsets;
-	std::vector<lba_type>     lengths;
+	std::vector<lba_type>    offsets;
+	std::vector<lba_type>    lengths;
 	std::vector<std::string> filenames;
 
-	using offsets_sz = decltype( offsets )::size_type;
-	using lengths_sz = decltype( lengths )::size_type;
+	using offsets_sz   = decltype( offsets )::size_type;
+	using lengths_sz   = decltype( lengths )::size_type;
 	using filenames_sz = decltype( filenames )::size_type;
 
 	offsets.reserve(static_cast<offsets_sz>(track_count));
