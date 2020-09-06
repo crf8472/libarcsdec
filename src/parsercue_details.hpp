@@ -12,6 +12,7 @@
 #define __LIBARCSDEC_PARSERCUE_DETAILS_HPP__
 
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -28,6 +29,7 @@ namespace details
 namespace libcue
 {
 
+
 /**
  * \internal \defgroup parserCueImpl Implementation details of CUESheet parsing
  *
@@ -35,6 +37,21 @@ namespace libcue
  *
  * @{
  */
+
+/**
+ * \brief Functor for freeing Cd* instances.
+ */
+struct FreeCd final
+{
+	void operator()(::Cd* cd) const;
+};
+
+
+/**
+ * \brief A unique_ptr for Cd using FreeCd as a custom deleter.
+ */
+using CdPtr = std::unique_ptr<::Cd, FreeCd>;
+
 
 /**
  * \brief Service method: Convert a long value to int32_t.
@@ -79,11 +96,6 @@ public:
 	CueOpenFile& operator = (CueOpenFile &&file) noexcept = default;
 
 	/**
-	 * \brief Destructor.
-	 */
-	~CueOpenFile() noexcept;
-
-	/**
 	 * \brief Returns all TOC information from the file.
 	 *
 	 * \return CueInfo representing the TOC information
@@ -95,7 +107,7 @@ private:
 	/**
 	 * \brief Internal libcue-based representation.
 	 */
-	::Cd* cd_info_;
+	CdPtr cd_info_;
 };
 
 
@@ -207,7 +219,8 @@ private:
 
 /// @}
 
-} // namespace ffmpeg
+
+} // namespace libcue
 } // namespace details
 } // namespace v_1_0_0
 } // namespace arcsdec

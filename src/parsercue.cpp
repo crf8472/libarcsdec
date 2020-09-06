@@ -62,6 +62,19 @@ using arcstk::TOC;
 using arcstk::make_toc;
 
 
+// FreeCd
+
+
+void FreeCd::operator()(::Cd* cd) const
+{
+	if (cd)
+	{
+		::cd_delete(cd);
+		cd = nullptr;
+	}
+}
+
+
 // cast_or_throw
 
 
@@ -85,6 +98,8 @@ int32_t cast_or_throw(const signed long value, const std::string &name)
 CueOpenFile::CueOpenFile(const std::string &filename)
 	: cd_info_(nullptr)
 {
+	::Cd* cd_info = nullptr;
+
 	{ // begin scope of FILE f
 #ifdef MSC_SAFECODE
 		FILE* f = 0;
@@ -100,79 +115,68 @@ CueOpenFile::CueOpenFile(const std::string &filename)
 			std::ostringstream message;
 			message << "Failed to open CUEsheet file: " << filename;
 
-			ARCS_LOG_ERROR << message.str();
 			throw FileReadException(message.str());
 		}
 
 		ARCS_LOG(DEBUG1) << "Start reading CUEsheet file with libcue";
 
-		cd_info_ = ::cue_parse_file(f);
+		cd_info = ::cue_parse_file(f);
 
 		// Close file
 
 		if (std::fclose(f)) // fclose returns 0 on success and EOF on error
 		{
-			::cd_delete(cd_info_);
-			cd_info_ = nullptr;
+			::cd_delete(cd_info);
+			cd_info = nullptr;
 
 			std::ostringstream message;
 			message << "Failed to close CUEsheet file after reading: "
 				<< filename;
 
-			ARCS_LOG_ERROR << message.str();
 			throw FileReadException(message.str());
 		}
 	} // scope of FILE f
 
-	if (!cd_info_)
+	if (!cd_info)
 	{
 		std::ostringstream message;
 		message << "Failed to parse CUEsheet file: " << filename;
 
-		ARCS_LOG_ERROR << message.str();
 		throw MetadataParseException(message.str());
 	}
+
+	cd_info_ = CdPtr(cd_info);
 
 	ARCS_LOG(DEBUG1) << "CUEsheet file successfully read";
 }
 
 
-CueOpenFile::~CueOpenFile() noexcept
-{
-	if (cd_info_)
-	{
-		::cd_delete(cd_info_);
-	}
-}
-
-
 CueInfo CueOpenFile::parse_info()
 {
-	int track_count = ::cd_get_ntrack(cd_info_);
+	auto cd_info = cd_info_.get();
 
-	if (track_count < 0 or track_count > 99)
+	const int track_count = ::cd_get_ntrack(cd_info);
+
+	if (track_count < 0 or track_count > 99) // FIXME Use CDDA constants
 	{
 		std::ostringstream ss;
 		ss << "Invalid number of tracks: " << track_count;
-
-		ARCS_LOG_ERROR << ss.str();
 
 		throw MetadataParseException(ss.str());
 	}
 
 	CueInfo cue_info;
 
-	// return types according to libcue-API
+	// types according to libcue-API
 	long trk_offset = 0;
 	long trk_length = 0;
-
-	Track* trk = nullptr;
+	::Track* trk = nullptr;
 
 	// Read offset, length + filename for each track in CUE file
 
 	for (int i = 1; i <= track_count; ++i)
 	{
-		trk = ::cd_get_track(cd_info_, i);
+		trk = ::cd_get_track(cd_info, i);
 
 		if (!trk)
 		{
