@@ -149,8 +149,8 @@ private:
 	/**
 	 * \brief Append next track to instance.
 	 *
-	 * \param[in] offset Track offset
-	 * \param[in] length Track length
+	 * \param[in] offset        Track offset
+	 * \param[in] length        Track length
 	 * \param[in] audiofilename Audiofile containing the track
 	 */
 	void append_track(
@@ -171,12 +171,12 @@ private:
 	std::vector<int32_t> offsets_;
 
 	/**
-	 * \brief Track lenghts specified in the CUE file.
+	 * \brief Track lengths specified in the CUE file.
 	 */
 	std::vector<int32_t> lengths_;
 
 	/**
-	 * \brief Name of the audio file for the respective track.
+	 * \brief Names of the audio files specified in the CUE file.
 	 */
 	std::vector<std::string> audiofilenames_;
 };
@@ -190,7 +190,7 @@ class CueParserImpl final : public MetadataParserImpl
 public:
 
 	/**
-	 * Return CUE data.
+	 * \brief Return CUE data.
 	 *
 	 * \return The CueInfo of the parsed CUEsheet
 	 *
