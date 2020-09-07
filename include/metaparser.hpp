@@ -34,8 +34,7 @@ using arcstk::TOC;
  * Class MetadataParser provides an interface for parsing TOC files.
  *
  * The MetadataParser provides function \c parse() to parse the input file to
- * a TOC instance. The information represented by the TOC instance undergoes
- * some basic consistency checks while constructing the TOC object.
+ * a arcstk::TOC instance. The TOC object is constructed using arcstk::make_toc.
  *
  * A MetadataParser internally holds a concrete instance of MetadataParserImpl.
  * MetadataParserImpl can be subclassed to implement the capabilities of a
@@ -59,6 +58,7 @@ using arcstk::TOC;
  * Concrete subclasses of MetadataParserImpl implement MetadataParsers for a
  * concrete FileReaderDescriptor.
  *
+ * \note
  * Instances of subclasses are non-copyable but movable.
  */
 class MetadataParserImpl
@@ -127,6 +127,7 @@ private:
 /**
  * \brief Parse metadata files and provide the content as a TOC instance.
  *
+ * \note
  * Instances of this class are non-copyable but movable.
  */
 class MetadataParser final : public FileReader
@@ -169,8 +170,10 @@ private:
 /**
  * \brief Functor for safe creation of a MetadataParser.
  */
-struct CreateMetadataParser final : public CreateReader<MetadataParser>
-{ /*empty*/ };
+struct CreateMetadataParser final : public details::CreateReader<MetadataParser>
+{
+	// empty
+};
 
 
 /**

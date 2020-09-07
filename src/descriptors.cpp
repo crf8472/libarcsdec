@@ -42,65 +42,6 @@ inline namespace v_1_0_0
 namespace details
 {
 
-// TODO Linux/Unix only
-std::vector<std::string> list_libs(const std::string &object_name)
-{
-	// C-Style stuff: Messing with glibc to get shared object paths
-	// Use dlfcn.h and link.h. Do not know a better way yet.
-
-	const auto* object = object_name.empty() ? nullptr : object_name.c_str();
-
-	// TODO Hardcodes the SO we load on runtime and may completely fail
-	auto* handle = ::dlopen(object, RTLD_LAZY);
-	//auto* handle = ::dlopen(object, RTLD_LAZY);
-	// If calles with NULL for first parameter, dlopen returns the list for
-	// the main executable. Take this, then figure out libarcsdec.so, then load.
-
-	if (!handle)
-	{
-		throw std::runtime_error(::dlerror());
-	}
-
-	using OpaqueStruct =
-		struct opaque_struct
-		{
-			void*  pointers[3];
-			struct opaque_struct* ptr;
-		};
-
-	auto* pter = reinterpret_cast<OpaqueStruct*>(handle)->ptr;
-
-	if (!pter)
-	{
-		throw std::runtime_error("Got null instead of shared object handle");
-	}
-
-	using LinkMap = struct link_map;
-
-	auto* lmap  = reinterpret_cast<LinkMap*>(pter->ptr);
-
-	if (!lmap)
-	{
-		throw std::runtime_error("Shared object handle contained no link_map");
-	}
-
-	// Traverse link_map for names
-
-	auto so_list = std::vector<std::string>{};
-
-	while (lmap)
-	{
-		so_list.push_back(lmap->l_name); // FIXME Choose initial capacity
-
-		lmap = lmap->l_next;
-	}
-
-	::dlclose(handle);
-
-	return so_list;
-}
-
-
 void escape(std::string &input, const char c, const std::string &escape_seq)
 {
 	std::size_t lookHere = 0;
@@ -124,6 +65,66 @@ std::regex libname_pattern(const std::string &libname)
 
 	return std::regex(".*\\b" + e_name + "\\.so(\\.[0-9]+)*$",
 			std::regex::icase);
+}
+
+
+// TODO This is Linux/Unix only
+std::vector<std::string> runtime_deps(const std::string &object_name)
+{
+	// C-Style stuff: Messing with glibc to get shared object paths
+	// Use dlfcn.h and link.h. Do not know a better way yet.
+
+	const auto* object = object_name.empty() ? nullptr : object_name.c_str();
+
+	// TODO Hardcodes the SO we load on runtime and may completely fail
+	auto* handle = ::dlopen(object, RTLD_LAZY);
+	// If called with NULL for first parameter, dlopen returns the list for
+	// the main executable. Take this, then figure out libarcsdec.so, then load.
+
+	if (!handle)
+	{
+		throw std::runtime_error(::dlerror());
+	}
+
+	using OpaqueStruct =
+		struct opaque_struct
+		{
+			void*  pointers[3];
+			struct opaque_struct* ptr;
+		};
+
+	auto* pter = reinterpret_cast<OpaqueStruct*>(handle)->ptr;
+
+	if (!pter)
+	{
+		::dlclose(handle);
+		throw std::runtime_error("Got null instead of shared object handle");
+	}
+
+	using LinkMap = struct link_map;
+
+	auto* lmap  = reinterpret_cast<LinkMap*>(pter->ptr);
+
+	if (!lmap)
+	{
+		::dlclose(handle);
+		throw std::runtime_error("Shared object handle contained no link_map");
+	}
+
+	// Traverse link_map for names
+
+	auto so_list = std::vector<std::string>{};
+
+	while (lmap)
+	{
+		so_list.push_back(lmap->l_name); // FIXME Choose initial capacity
+
+		lmap = lmap->l_next;
+	}
+
+	::dlclose(handle);
+
+	return so_list;
 }
 
 
@@ -164,7 +165,7 @@ std::vector<std::string> acquire_libarcsdec_libs()
 
 	// Runtime deps from main executable
 
-	auto so_list = list_libs("");
+	auto so_list = runtime_deps("");
 
 	// Runtime deps of libarcsdec
 
@@ -172,8 +173,8 @@ std::vector<std::string> acquire_libarcsdec_libs()
 
 	if (libarcsdec_so.empty())
 	{
-		ARCS_LOG_WARNING << "Could not retrieve any runtime dependencies from"
-			" libarcsdec";
+		ARCS_LOG_WARNING <<
+			"Could not retrieve any runtime dependencies from libarcsdec";
 
 		return {}; // libarcsdec was not found
 	}
@@ -181,7 +182,7 @@ std::vector<std::string> acquire_libarcsdec_libs()
 	ARCS_LOG_DEBUG << "Inspect " << libarcsdec_so
 		<< " for runtime dependencies";
 
-	return list_libs(libarcsdec_so);
+	return runtime_deps(libarcsdec_so);
 }
 
 
@@ -1066,9 +1067,6 @@ bool FileReaderSelection::no_tests() const
 
 
 FileReaderRegistry::FileReaderRegistry() = default;
-
-
-FileReaderRegistry::~FileReaderRegistry() noexcept = default;
 
 
 std::unique_ptr<FileReaderSelection> FileReaderRegistry::audio_selection_;

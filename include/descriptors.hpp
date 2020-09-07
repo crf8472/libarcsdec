@@ -38,7 +38,7 @@ inline namespace v_1_0_0
 namespace details
 {
 
-/**
+/* -NO_DOXYGEN-
  * \brief Traits for case insensitive string comparison.
  *
  * Thanks to Herb Sutter: http://www.gotw.ca/gotw/029.htm
@@ -74,22 +74,26 @@ struct ci_char_traits : public std::char_traits<char>
 };
 
 
-/**
+/* -NO_DOXYGEN-
  * \brief Case insensitive comparable string.
  */
 using ci_string = std::basic_string<char, ci_char_traits>;
 
 
 /**
- * \brief Load runtime dependencies of \c object_name.
+ * \internal
+ * \defgroup libinfoImpl API for implementing info functions about descriptors
  *
- * If \c object_name is empty, the runtime dependencies of the main executable
- * are loaded.
+ * \ingroup descriptors
  *
- * \param[in] object_name Name of the object to get dependencies for.
+ * \brief API for implementing info functions about descriptors.
+ *
+ * \warning
+ * This API is currently *nix-only. It uses only dlopen and operates only on
+ * sonames.
+ *
+ * @{
  */
-std::vector<std::string> list_libs(const std::string &object_name);
-
 
 /**
  * \brief Escape a character in a string with another string.
@@ -102,12 +106,13 @@ void escape(std::string &input, const char c, const std::string &seq);
 
 
 /**
- * \brief Construct search pattern from library name.
+ * \brief Service: construct soname search pattern from library name.
  *
  * The library name should be the first part of the soname without any
  * suffices, e.g. 'libfoo', 'libFLAC++' but not 'libwavpack.so.4' or 'quux.dll'.
  *
- * This function is *nix-specific and constructs a search pattern for shared
+ * \warning
+ * This function is *nix-specific. It constructs a search pattern for shared
  * objects.
  *
  * \param[in] libname The library name to turn into a pattern
@@ -118,21 +123,44 @@ std::regex libname_pattern(const std::string &libname);
 
 
 /**
- * \brief Find a lib in the list of libarcsdec runtime dependencies.
+ * \brief Service: load runtime dependencies of an object.
+ *
+ * If \c object_name is empty, the runtime dependencies of the main executable
+ * are loaded.
+ *
+ * \warning
+ * This function is *nix-specific. It inspects binaries with dlopen.
+ *
+ * \param[in] object_name Name of the object to get dependencies for.
+ *
+ * \return List of runtime dependencies of an object
+ */
+std::vector<std::string> runtime_deps(const std::string &object_name);
+
+
+/**
+ * \brief Find shared object in the list of libarcsdec runtime dependencies.
+ *
+ * List \c list is a list of sonames, it can be created by using runtime_deps.
+ * The \c name is the same format as the input for libname_pattern.
  *
  * \param[in] list List of library so filepaths
  * \param[in] name Name of the lib (e.g. libFLAC++, libavformat etc.)
  *
- * \return Filepath for the lib or empty string.
+ * \return Filepath for the object or empty string.
  */
 const std::string& find_lib(const std::vector<std::string> &list,
 		const std::string &name);
 
 
 /**
- * \brief Global list of libarcsdec runtime dependency libraries.
+ * \brief Comprehensive list of libarcsdec runtime dependency libraries.
+ *
+ * \return Comprehensive list of libarcsdec runtime dependency libraries.
  */
 const std::vector<std::string>& libarcsdec_libs();
+
+/// @}
 
 } // namespace details
 
@@ -254,7 +282,7 @@ std::string name(Codec codec);
 
 /**
  * \internal
- * \brief Adds inequality to classes defining equality operator==.
+ * \brief Adds inequality operator to classes defining equality operator==.
  */
 template <typename T>
 struct Comparable
@@ -283,6 +311,10 @@ class FileReaderDescriptor;
 /**
  * \brief Abstract base class for \link FileReader FileReaders\endlink.
  *
+ * \note
+ * Instances of this class are non-copyable and non-movable but provide
+ * protected special members for move that can be used in subclasses.
+ *
  * \see AudioReader
  * \see MetadataParser
  */
@@ -294,9 +326,6 @@ public:
 	 * \brief Default constructor.
 	 */
 	FileReader();
-
-	FileReader(const FileReader &) = delete;
-	FileReader& operator = (const FileReader &) = delete;
 
 	/**
 	 * \brief Virtual default destructor.
@@ -312,8 +341,8 @@ public:
 
 protected:
 
-	FileReader(FileReader &&rhs) = default;
-	FileReader& operator = (FileReader &&rhs) = default;
+	FileReader(FileReader &&rhs) noexcept = default;
+	FileReader& operator = (FileReader &&rhs) noexcept = default;
 
 private:
 
@@ -513,6 +542,10 @@ bool operator == (const FileReaderDescriptor &lhs,
  * It can create an opaque reader that can read the file.
  *
  * FileReaderDescriptors are supposed to be stateless.
+ *
+ * \note
+ * Instances of this class are non-copyable and non-movable but provide
+ * protected special members for copy and move that can be used in subclasses.
  */
 class FileReaderDescriptor : public Comparable<FileReaderDescriptor>
 {
@@ -634,6 +667,13 @@ protected:
 		: suffices_ { suffices } { /* empty */ }
 	// TODO suffices_ vary with class not with instance, should be static
 
+	FileReaderDescriptor(const FileReaderDescriptor &) = default;
+	FileReaderDescriptor& operator = (const FileReaderDescriptor &) = default;
+
+	FileReaderDescriptor(FileReaderDescriptor &&) noexcept = default;
+	FileReaderDescriptor& operator = (FileReaderDescriptor &&) noexcept
+		= default;
+
 private:
 
 	/**
@@ -738,6 +778,10 @@ bool operator == (const FileTest &lhs, const FileTest &rhs);
  *
  * FileTest instances are polymorphically comparable to support their use
  * in containers.
+ *
+ * \note
+ * Instances of this class are non-copyable and non-movable but provide
+ * protected special members for copy and move that can be used in subclasses.
  */
 class FileTest : public Comparable<FileTest>
 {
@@ -777,6 +821,9 @@ protected:
 
 	FileTest(const FileTest &) = default;
 	FileTest& operator = (const FileTest &) = default;
+
+	FileTest(FileTest &&) noexcept = default;
+	FileTest& operator = (FileTest &&) noexcept = default;
 
 	/**
 	 * \brief TRUE if instance equals \c rhs.
@@ -884,6 +931,12 @@ protected:
  * It implements two different decisions. Implementing matches() defines which
  * descriptors are candidates to be selected. Implementing select() defines
  * which of the matching candidates is concretely selected.
+ *
+ * \note
+ * Instances of this class are non-copyable and non-movable but provide
+ * protected special members for copy and move that can be used in subclasses.
+ *
+ * \see DefaultSelector
  */
 class FileReaderSelector
 {
@@ -940,6 +993,9 @@ protected:
 	FileReaderSelector(const FileReaderSelector &rhs) = default;
 	FileReaderSelector& operator = (const FileReaderSelector &rhs) = default;
 
+	FileReaderSelector(FileReaderSelector &&rhs) = default;
+	FileReaderSelector& operator = (FileReaderSelector &&rhs) = default;
+
 private:
 
 	/**
@@ -990,21 +1046,14 @@ private:
 
 
 /**
- * \internal
- * \brief Function pointer to function returning std::unique_ptr<T>.
- *
- * \tparam T The type the function should return a unique_ptr to
- */
-template <class T>
-using FunctionReturning = std::unique_ptr<T>(*)();
-
-
-/**
  * \brief Traversable selection of available FileReader descriptors.
  *
  * Default constructor initializes the selection with a DefaultSelector.
+ *
+ * \note
+ * Instances of this class are non-copyable but movable.
  */
-class FileReaderSelection
+class FileReaderSelection final
 {
 public:
 
@@ -1013,17 +1062,13 @@ public:
 	 */
 	FileReaderSelection();
 
-	// class is non-copyable
-	FileReaderSelection(const FileReaderSelection &) = delete;
-	FileReaderSelection& operator = (const FileReaderSelection &) = delete;
-
-	// TODO Move constructor
-	// TODO Move assignment
+	FileReaderSelection(FileReaderSelection &&) noexcept = default;
+	FileReaderSelection& operator = (FileReaderSelection &&) noexcept = default;
 
 	/**
-	 * \brief Virtual default destructor.
+	 * \brief Default destructor.
 	 */
-	virtual ~FileReaderSelection() noexcept;
+	~FileReaderSelection() noexcept; // Required by pimpl
 
 	/**
 	 * \brief Add a descriptor to the list of descriptors for which a FileReader
@@ -1170,7 +1215,37 @@ private:
 
 
 /**
+ * \brief Instantiate FileReaderDescriptor.
+ *
+ * \tparam T    The type to instantiate
+ * \tparam Args The constructor arguments
+ */
+template <class T, typename... Args> // TODO SFINAE stuff
+std::unique_ptr<FileReaderDescriptor> make_descriptor(Args&&... args)
+{
+	return std::make_unique<T>(std::forward<Args>(args)...);
+}
+
+
+/**
+ * \internal
+ * \brief Function pointer to function returning std::unique_ptr<T>.
+ *
+ * \tparam T The type the return unique_ptr holds
+ */
+template <class T>
+using FunctionReturningUniquePtr = std::unique_ptr<T>(*)();
+
+
+/**
  * \brief A global singleton registry holding all compiled-in FileDescriptors.
+ *
+ * \note
+ * Instances of this class are non-copyable and non-movable but provide
+ * protected special members for copy and move that can be used in subclasses.
+ *
+ * \note
+ * This class is non-final but does not support polymorphic deletion.
  */
 class FileReaderRegistry
 {
@@ -1180,9 +1255,6 @@ public:
 	 * \brief Default constructor.
 	 */
 	FileReaderRegistry();
-
-	// TODO Move constructor
-	// TODO Move assignment
 
 	/**
 	 * \brief Create a reader for the specified audio file.
@@ -1254,10 +1326,13 @@ public:
 
 protected:
 
-	~FileReaderRegistry() noexcept;
+	~FileReaderRegistry() noexcept = default;
 
 	FileReaderRegistry(const FileReaderRegistry &) = default;
 	FileReaderRegistry& operator = (const FileReaderRegistry &) = default;
+
+	FileReaderRegistry(FileReaderRegistry &&) noexcept = default;
+	FileReaderRegistry& operator = (FileReaderRegistry &&) noexcept = default;
 
 	/**
 	 * \brief Instantiate the FileReader with the given name.
@@ -1269,7 +1344,7 @@ protected:
 	 * \return Instance returned by \c create
 	 */
 	static std::unique_ptr<FileReaderDescriptor> call(
-			FunctionReturning<FileReaderDescriptor> create)
+			FunctionReturningUniquePtr<FileReaderDescriptor> create)
 	{
 		return create();
 	}
@@ -1282,18 +1357,34 @@ private:
 };
 
 
+namespace details
+{
+
 /**
- * \internal
  * \brief Functor to safely create a unique_ptr to a downcasted FileReader.
  *
  * It will either provide a valid FileReader of the requested type or will
  * throw. It will never silently fail nor provide a nullptr.
+ *
+ * \warning
+ * This class is non-abstract and non-final and does not support polymorphic
+ * deletion. It is intended to be used for private inheritance to stateless
+ * subclasses.
+ *
+ * \tparam ReaderType Concrete type of the required FileReader
+ *
+ * \see CreateAudioReader
+ * \see CreateMetadataParser
  */
 template <class ReaderType>
 struct CreateReader
 {
-	virtual ~CreateReader() noexcept = default;
-
+	/**
+	 * \brief Return a unique_ptr to an instance of the specified \c ReaderType.
+	 *
+	 * \param[in] selection The FileReaderSelection to choose from
+	 * \param[in] filename  The name of the file to choose a FileReader
+	 */
 	auto operator()(const FileReaderSelection &selection,
 			const std::string &filename) const -> std::unique_ptr<ReaderType>
 	{
@@ -1318,38 +1409,30 @@ struct CreateReader
 		return std::move(rc.first);
 		// XXX Prevents RVO, but omitting the move causes compile error.
 	}
+
+protected:
+
+	/**
+	 * \brief Default constructor.
+	 */
+	~CreateReader() noexcept = default;
 };
 
-
-/**
- * \internal
- * \brief Instantiate FileReaderDescriptor.
- *
- * \tparam T    The type to instantiate
- * \tparam Args The constructor arguments
- */
-template <class T, typename... Args> // TODO SFINAE stuff
-std::unique_ptr<FileReaderDescriptor> make_descriptor(Args&&... args)
-{
-	return std::make_unique<T>(std::forward<Args>(args)...);
-}
+} // namespace details
 
 
 /**
- * \internal
  * \brief Register a FileReaderDescriptor type for audio input.
  *
  * \tparam D The descriptor type to register
  */
 template <class D>
-class RegisterAudioDescriptor : public FileReaderRegistry //TODO SFINAE stuff
+class RegisterAudioDescriptor final : private FileReaderRegistry
 {
 public:
 
 	/**
 	 * \brief Register a descriptor
-	 *
-	 * \param[in] name The name to register the application type
 	 */
 	RegisterAudioDescriptor()
 	{
@@ -1359,20 +1442,17 @@ public:
 
 
 /**
- * \internal
  * \brief Register a FileReaderDescriptor type for TOC/metadata input.
  *
  * \tparam D The descriptor type to register
  */
 template <class D>
-class RegisterMetadataDescriptor : public FileReaderRegistry //TODO SFINAE stuff
+class RegisterMetadataDescriptor final : private FileReaderRegistry
 {
 public:
 
 	/**
-	 * \brief Register a descriptor by a specific name
-	 *
-	 * \param[in] name The name to register the application type
+	 * \brief Register a descriptor
 	 */
 	RegisterMetadataDescriptor()
 	{

@@ -16,15 +16,13 @@
 
 namespace arcsdec
 {
-
 inline namespace v_1_0_0
 {
 
 /**
- * \internal
- * \defgroup sampleproc Interface for processing samples
+ * \defgroup sampleproc API for processing samples
  *
- * \brief Interface for processing samples
+ * \brief API for processing samples.
  *
  * @{
  */
@@ -56,10 +54,12 @@ struct BLOCKSIZE_t
 	 * \brief Minimum buffer size in number of PCM 32 bit samples.
 	 *
 	 * Currently, this is 256 KiB.
+	 *
+	 * This is the maximal size of a fLaC frame. This setting entails that at
+	 * least one fLaC frame of maximal size is guaranteed to fit in a block of
+	 * minimal size.
 	 */
 	const int32_t MIN     = 65536; // == 256 * 1024 / 4
-	// The size of a maximal fLaC block. This entails that at least one fLaC
-	// frame is guaranteed to fit in a block of minimal size.
 };
 
 
@@ -70,7 +70,7 @@ extern const BLOCKSIZE_t BLOCKSIZE;
 
 
 /**
- * Interface for processing samples provided by an AudioReaderImpl
+ * \brief Interface for processing samples provided by an AudioReaderImpl.
  */
 class SampleProcessor
 {
@@ -366,11 +366,9 @@ private:
 	SampleProcessor* processor_;
 };
 
-
 /// @}
 
 } // namespace v_1_0_0
-
 } // namespace arcsdec
 
 #endif

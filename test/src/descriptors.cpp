@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <regex>
 #include <iostream>
+#include <type_traits>
 
 #ifndef __LIBARCSDEC_DESCRIPTORS_HPP__
 #include "descriptors.hpp"
@@ -131,6 +132,9 @@ TEST_CASE ( "Load runtime dependencies", "" )
 }
 
 
+// TODO is_audio_format
+
+
 TEST_CASE ( "read_bytes", "[read_bytes]" )
 {
 	using arcsdec::FileReadException;
@@ -189,6 +193,161 @@ TEST_CASE ( "read_bytes", "[read_bytes]" )
 }
 
 
+TEST_CASE ( "FileReader", "[filereader]")
+{
+	using arcsdec::FileReader;
+
+	SECTION ( "Copy constructor and assignment operator are not declared" )
+	{
+		CHECK ( not std::is_copy_constructible<FileReader>::value );
+		CHECK ( not std::is_copy_assignable<FileReader>::value );
+	}
+
+
+	SECTION ( "Move constructor and assignment operator are not accessible" )
+	{
+		CHECK ( not std::is_nothrow_move_constructible<FileReader>::value );
+		CHECK ( not std::is_nothrow_move_assignable<FileReader>::value );
+	}
+
+	// TODO Test for move
+}
+
+
+TEST_CASE ( "FileTest", "[filetest]" )
+{
+	using arcsdec::FileTest;
+	using arcsdec::FileTestName;
+	using arcsdec::FileTestBytes;
+
+
+	SECTION ( "Copy constructor and assignment operator are not declared" )
+	{
+		CHECK ( not std::is_copy_constructible<FileTest>::value );
+		CHECK ( not std::is_copy_assignable<FileTest>::value );
+	}
+
+
+	SECTION ( "Move constructor and assignment operator are not declared" )
+	{
+		CHECK ( not std::is_nothrow_move_constructible<FileTest>::value );
+		CHECK ( not std::is_nothrow_move_assignable<FileTest>::value );
+	}
+
+
+	SECTION ( "Equality comparison is correct" )
+	{
+		std::unique_ptr<FileTest> t01 = std::make_unique<FileTestName>();
+		std::unique_ptr<FileTest> t02 = std::make_unique<FileTestBytes>(0, 7);
+
+		CHECK ( *t01 != *t02 );
+
+		std::unique_ptr<FileTest> t03 = std::make_unique<FileTestBytes>(0, 7);
+
+		CHECK ( *t02 == *t03 );
+
+		std::unique_ptr<FileTest> t04 = std::make_unique<FileTestBytes>(0, 12);
+
+		CHECK ( *t02 != *t04 );
+		CHECK ( *t03 != *t04 );
+	}
+}
+
+
+TEST_CASE ( "FileTestBytes", "[filetestbytes]" )
+{
+	using arcsdec::FileTest;
+	using arcsdec::FileTestBytes;
+
+
+	SECTION ( "Is final")
+	{
+		CHECK ( std::is_final<FileTestBytes>::value );
+	}
+
+	SECTION ( "Copy constructor and assignment operator are declared" )
+	{
+		CHECK ( std::is_copy_constructible<FileTestBytes>::value );
+		CHECK ( std::is_copy_assignable<FileTestBytes>::value );
+	}
+
+	SECTION ( "Move constructor and assignment operator are declared" )
+	{
+		CHECK ( std::is_nothrow_move_constructible<FileTestBytes>::value );
+		CHECK ( std::is_nothrow_move_assignable<FileTestBytes>::value );
+	}
+
+	SECTION ( "Equality comparison is correct" )
+	{
+		FileTestBytes t01 = FileTestBytes( 0, 18);
+		FileTestBytes t02 = FileTestBytes(10,  7);
+
+		CHECK ( t01 != t02 );
+
+		FileTestBytes t03 = FileTestBytes(10,  7);
+
+		CHECK ( t02 == t03 );
+
+		FileTestBytes t04 = FileTestBytes(10,  9);
+
+		CHECK ( t02 != t04 );
+		CHECK ( t03 != t04 );
+	}
+
+	SECTION ( "Swapping works correctly with std::swap" )
+	{
+		FileTestBytes t01(0, 12);
+		FileTestBytes t02(4, 33);
+
+		std::swap( t01,  t02);
+
+		CHECK ( t01.offset() ==  4 );
+		CHECK ( t01.length() == 33 );
+		CHECK ( t02.offset() ==  0 );
+		CHECK ( t02.length() == 12 );
+	}
+}
+
+
+TEST_CASE ( "FileReaderSelector", "[filereaderselector]")
+{
+	using arcsdec::FileReaderSelector;
+
+	SECTION ( "Copy constructor and assignment operator are not declared" )
+	{
+		CHECK ( not std::is_copy_constructible<FileReaderSelector>::value );
+		CHECK ( not std::is_copy_assignable<FileReaderSelector>::value );
+	}
+
+	SECTION ( "Move constructor and assignment operator are not declared" )
+	{
+		CHECK ( not std::is_nothrow_move_constructible<FileReaderSelector>::value );
+		CHECK ( not std::is_nothrow_move_assignable<FileReaderSelector>::value );
+	}
+}
+
+
+TEST_CASE ( "DefaultSelector", "[defaultselector]")
+{
+	using arcsdec::DefaultSelector;
+
+	SECTION ( "Copy constructor and assignment operator are declared" )
+	{
+		CHECK ( std::is_copy_constructible<DefaultSelector>::value );
+		CHECK ( std::is_copy_assignable<DefaultSelector>::value );
+	}
+
+	SECTION ( "Move constructor and assignment operator are declared" )
+	{
+		CHECK ( std::is_nothrow_move_constructible<DefaultSelector>::value );
+		CHECK ( std::is_nothrow_move_assignable<DefaultSelector>::value );
+	}
+
+
+	// TODO Test for move constructor
+}
+
+
 TEST_CASE ( "FileReaderSelection", "[filereaderselection]" )
 {
 	using arcsdec::FileReaderSelection;
@@ -200,6 +359,24 @@ TEST_CASE ( "FileReaderSelection", "[filereaderselection]" )
 	REQUIRE ( selection.empty() );
 	REQUIRE ( selection.total_tests() == 0 );
 	REQUIRE ( selection.no_tests() );
+
+
+	SECTION ( "Is final")
+	{
+		CHECK ( std::is_final<FileReaderSelection>::value );
+	}
+
+	SECTION ( "Copy constructor and assignment operator are not declared" )
+	{
+		CHECK ( not std::is_copy_constructible<FileReaderSelection>::value );
+		CHECK ( not std::is_copy_assignable<FileReaderSelection>::value );
+	}
+
+	SECTION ( "Move constructor and assignment operator are declared" )
+	{
+		CHECK ( std::is_nothrow_move_constructible<FileReaderSelection>::value );
+		CHECK ( std::is_nothrow_move_assignable<FileReaderSelection>::value );
+	}
 
 	SECTION ( "Adding descriptors works correctly" )
 	{
@@ -264,65 +441,69 @@ TEST_CASE ( "FileReaderSelection", "[filereaderselection]" )
 }
 
 
-TEST_CASE ( "FileTest", "[filetest]" )
+TEST_CASE ( "FileReaderRegistry", "[filereaderregistry]")
 {
-	using arcsdec::FileTest;
-	using arcsdec::FileTestName;
-	using arcsdec::FileTestBytes;
+	using arcsdec::FileReaderRegistry;
+	using arcsdec::RegisterAudioDescriptor;
+	using arcsdec::RegisterMetadataDescriptor;
+	using arcsdec::DescriptorWavPCM;
+
+	using AudioDescriptorTestType = RegisterAudioDescriptor<DescriptorWavPCM>;
+	using MetadataDescriptorTestType =
+		RegisterMetadataDescriptor<DescriptorWavPCM>;
 
 
-	SECTION ( "Equality comparison is correct" )
+	SECTION ( "Copy constructor and assignment operator are declared protected" )
 	{
-		std::unique_ptr<FileTest> t01 = std::make_unique<FileTestName>();
-		std::unique_ptr<FileTest> t02 = std::make_unique<FileTestBytes>(0, 7);
+		// not in base class
+		CHECK ( not std::is_copy_constructible<FileReaderRegistry>::value );
+		CHECK ( not std::is_copy_assignable<FileReaderRegistry>::value );
 
-		CHECK ( *t01 != *t02 );
+		// available in subclass
+		CHECK ( std::is_copy_constructible<AudioDescriptorTestType>::value );
+		CHECK ( std::is_copy_assignable<AudioDescriptorTestType>::value );
+		CHECK ( std::is_copy_constructible<MetadataDescriptorTestType>::value );
+		CHECK ( std::is_copy_assignable<MetadataDescriptorTestType>::value );
+	}
 
-		std::unique_ptr<FileTest> t03 = std::make_unique<FileTestBytes>(0, 7);
+	SECTION ( "Move constructor and assignment operator are declared protected" )
+	{
+		// not in base class
+		CHECK ( not std::is_nothrow_move_constructible<FileReaderRegistry>::value );
+		CHECK ( not std::is_nothrow_move_assignable<FileReaderRegistry>::value );
 
-		CHECK ( *t02 == *t03 );
-
-		std::unique_ptr<FileTest> t04 = std::make_unique<FileTestBytes>(0, 12);
-
-		CHECK ( *t02 != *t04 );
-		CHECK ( *t03 != *t04 );
+		// available in subclass
+		CHECK ( std::is_nothrow_move_constructible<AudioDescriptorTestType>::value );
+		CHECK ( std::is_nothrow_move_assignable<AudioDescriptorTestType>::value );
+		CHECK ( std::is_nothrow_move_constructible<MetadataDescriptorTestType>::value );
+		CHECK ( std::is_nothrow_move_assignable<MetadataDescriptorTestType>::value );
 	}
 }
 
 
-TEST_CASE ( "FileTestBytes", "[filetestbytes]" )
+// TODO CreateReader
+
+
+TEST_CASE ( "Register Descriptor Functors",
+		"[registeraudiodescriptor, registermetadatadescriptor]")
 {
-	using arcsdec::FileTest;
-	using arcsdec::FileTestBytes;
+	using arcsdec::RegisterAudioDescriptor;
+	using arcsdec::RegisterMetadataDescriptor;
+	using arcsdec::DescriptorWavPCM;
 
-	SECTION ( "Equality comparison is correct" )
+	using AudioDescriptorTestType = RegisterAudioDescriptor<DescriptorWavPCM>;
+	using MetadataDescriptorTestType =
+		RegisterMetadataDescriptor<DescriptorWavPCM>;
+
+
+	SECTION ( "RegisterAudioDescriptor<> is final" )
 	{
-		FileTestBytes t01 = FileTestBytes( 0, 18);
-		FileTestBytes t02 = FileTestBytes(10,  7);
-
-		CHECK ( t01 != t02 );
-
-		FileTestBytes t03 = FileTestBytes(10,  7);
-
-		CHECK ( t02 == t03 );
-
-		FileTestBytes t04 = FileTestBytes(10,  9);
-
-		CHECK ( t02 != t04 );
-		CHECK ( t03 != t04 );
+		CHECK ( std::is_final<AudioDescriptorTestType>::value );
 	}
 
-	SECTION ( "Swapping works correctly with std::swap" )
+	SECTION ( "RegisterMetadataDescriptor<> is final" )
 	{
-		FileTestBytes t01(0, 12);
-		FileTestBytes t02(4, 33);
-
-		std::swap( t01,  t02);
-
-		CHECK ( t01.offset() ==  4 );
-		CHECK ( t01.length() == 33 );
-		CHECK ( t02.offset() ==  0 );
-		CHECK ( t02.length() == 12 );
+		CHECK ( std::is_final<MetadataDescriptorTestType>::value );
 	}
 }
 

@@ -1051,7 +1051,7 @@ std::string DescriptorWavPCM::do_name() const
 LibInfo DescriptorWavPCM::do_libraries() const
 {
 	return { { "-genuine-",
-		details::find_lib(details::list_libs(""), LIBARCSDEC_NAME) } };
+		details::find_lib(details::runtime_deps(""), LIBARCSDEC_NAME) } };
 }
 
 

@@ -10,6 +10,7 @@
 
 #include <memory>
 #include <set>
+#include <stdexcept>  // for logic_error
 #include <string>
 #include <tuple>
 #include <utility>
@@ -41,7 +42,6 @@
 
 namespace arcsdec
 {
-
 inline namespace v_1_0_0
 {
 
@@ -53,19 +53,6 @@ using arcstk::ChecksumSet;
 using arcstk::make_arid;
 using arcstk::make_context;
 using arcstk::make_empty_arid;
-
-
-
-/**
- * \internal \defgroup calculatorsImpl Implementation
- *
- * \ingroup calculators
- *
- * \brief Implementation details of \ref calculators
- *
- * Contains the private implementations of ARCSCalculator and ARIdCalculator.
- * @{
- */
 
 
 /**
@@ -211,9 +198,6 @@ private:
 	 */
 	arcstk::checksum::type type_;
 };
-
-
-/** @} */
 
 
 // TOCParser::Impl
@@ -434,7 +418,7 @@ std::pair<Checksums, ARId> ARCSCalculator::Impl::calculate(
 
 	if (!calc)
 	{
-		// TODO Throw something
+		throw std::logic_error("Could not instantiate Calculation object");
 	}
 
 	this->process_file(audiofilename, *calc, BLOCKSIZE.DEFAULT, false);
@@ -589,7 +573,7 @@ ChecksumSet ARCSCalculator::Impl::calculate_track(
 
 	if (!calc)
 	{
-		// TODO Throw something
+		throw std::logic_error("Could not instantiate Calculation object");
 	}
 
 	this->process_file(audiofilename, *calc, BLOCKSIZE.DEFAULT, false);
@@ -665,9 +649,6 @@ TOCParser::TOCParser()
 }
 
 
-TOCParser::~TOCParser() noexcept = default;
-
-
 std::unique_ptr<TOC> TOCParser::parse(const std::string &metafilename) const
 {
 	return impl_->parse(metafilename);
@@ -695,9 +676,6 @@ ARIdCalculator::ARIdCalculator()
 	impl_->set_toc_selection(FileReaderRegistry::toc_selection());
 	impl_->set_audio_selection(FileReaderRegistry::audio_selection());
 }
-
-
-ARIdCalculator::~ARIdCalculator() noexcept = default;
 
 
 std::unique_ptr<ARId> ARIdCalculator::calculate(const std::string &metafilename)
@@ -757,9 +735,6 @@ ARCSCalculator::ARCSCalculator(const arcstk::checksum::type type)
 }
 
 
-ARCSCalculator::~ARCSCalculator() noexcept = default;
-
-
 std::pair<Checksums, ARId> ARCSCalculator::calculate(
 		const std::string &audiofilename, const TOC &toc)
 {
@@ -810,6 +785,5 @@ arcstk::checksum::type ARCSCalculator::type() const
 }
 
 } // namespace v_1_0_0
-
 } // namespace arcsdec
 

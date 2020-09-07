@@ -62,7 +62,7 @@ using arcstk::ChecksumSet;
 /**
  * \brief Format-independent parser for CD TOC metadata files.
  */
-class TOCParser
+class TOCParser final
 {
 public:
 
@@ -70,11 +70,6 @@ public:
 	 * \brief Constructor.
 	 */
 	TOCParser();
-
-	/**
-	 * \brief Virtual default destructor.
-	 */
-	virtual ~TOCParser() noexcept;
 
 	/**
 	 * \brief Parse the metadata file to a TOC object.
@@ -114,7 +109,7 @@ private:
 /**
  * \brief Calculate AccurateRip ID of an album.
  */
-class ARIdCalculator
+class ARIdCalculator final
 {
 public:
 
@@ -122,11 +117,6 @@ public:
 	 * \brief Constructor.
 	 */
 	ARIdCalculator();
-
-	/**
-	 * \brief Virtual default destructor.
-	 */
-	virtual ~ARIdCalculator() noexcept;
 
 	/**
 	 * \brief Calculate ARId using the specified metadata file.
@@ -212,11 +202,6 @@ public:
 	 * \param[in] type The Checksum type to calculate.
 	 */
 	ARCSCalculator(const arcstk::checksum::type type);
-
-	/**
-	 * \brief Non-virtual default destructor.
-	 */
-	~ARCSCalculator() noexcept;
 
 	/**
 	 * \brief Calculate ARCS values for an audio file, using the given TOC.

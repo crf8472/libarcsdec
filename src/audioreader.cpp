@@ -717,6 +717,12 @@ AudioReader::AudioReader(std::unique_ptr<AudioReaderImpl> impl)
 }
 
 
+AudioReader::AudioReader(AudioReader &&) noexcept = default;
+
+
+AudioReader& AudioReader::operator = (AudioReader &&) noexcept = default;
+
+
 AudioReader::~AudioReader() noexcept = default;
 
 

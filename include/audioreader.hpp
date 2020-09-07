@@ -98,6 +98,7 @@ extern const int32_t MAX_SAMPLES_TO_READ;
  * Concrete subclasses of AudioReaderImpl implement AudioReaders for a concrete
  * FileReaderDescriptor.
  *
+ * \note
  * Instances of subclasses are non-copyable but movable.
  */
 class AudioReaderImpl : public virtual SampleProvider
@@ -113,10 +114,6 @@ public:
 	 * \brief Virtual default destructor.
 	 */
 	virtual ~AudioReaderImpl() noexcept;
-
-	// class is non-copyable
-	AudioReaderImpl(const AudioReaderImpl &) = delete;
-	AudioReaderImpl& operator = (const AudioReaderImpl &) = delete;
 
 	/**
 	 * \brief Provides implementation for acquire_size() of a AudioReader.
@@ -233,6 +230,7 @@ private:
  *
  * A AudioReader can process an audio file and return the processing results.
  *
+ * \note
  * Instances of this class are non-copyable but movable.
  */
 class AudioReader final : public FileReader
@@ -254,12 +252,8 @@ public:
 	 */
 	explicit AudioReader(std::unique_ptr<AudioReaderImpl> impl);
 
-	// class is non-copyable
-	AudioReader(const AudioReader &) = delete;
-	AudioReader& operator = (const AudioReader &) = delete;
-
-	AudioReader(AudioReader &&) noexcept = default;
-	AudioReader& operator = (AudioReader &&) noexcept = default;
+	AudioReader(AudioReader &&) noexcept;
+	AudioReader& operator = (AudioReader &&) noexcept;
 
 	/**
 	 * \brief Default destructor.
@@ -341,7 +335,10 @@ private:
 /**
  * \brief Functor for safe creation of an AudioReader.
  */
-struct CreateAudioReader final : public CreateReader<AudioReader> { /*empty*/ };
+struct CreateAudioReader final : public details::CreateReader<AudioReader>
+{
+	// empty
+};
 
 
 /**
@@ -384,6 +381,7 @@ public:
  * audio codecs, i.e. codecs that are actively validated. If the subclass does
  * not validate any aspects of the codec, it should return an empty set.
  *
+ * \note
  * Instances of subclasses are non-copyable but movable.
  *
  * \see DefaultValidator
@@ -406,11 +404,6 @@ public:
 	 * \brief Empty constructor.
 	 */
 	AudioValidator();
-
-	// class is non-copyable
-	AudioValidator(const AudioValidator &) = delete;
-	AudioValidator& operator = (const AudioValidator &)
-		= delete;
 
 	/**
 	 * \brief Virtual default destructor.
