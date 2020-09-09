@@ -149,8 +149,8 @@ void Free_AVFormatContext::operator()(::AVFormatContext* fctx) const
 {
 	if (fctx)
 	{
-		::avformat_close_input(&fctx);
-		// Does call ::avformat_free_context internally
+		::avformat_close_input(&fctx); // Calls ::avformat_free_context
+		fctx = nullptr;
 	}
 }
 
@@ -165,8 +165,8 @@ void Free_AVCodecContext::operator()(::AVCodecContext* cctx) const
 {
 	if (cctx)
 	{
-		::avcodec_free_context(&cctx);
-		// Does call ::avcodec_close internally
+		::avcodec_free_context(&cctx); // Calls ::avcodec_close internally
+		cctx = nullptr;
 	}
 }
 
@@ -180,6 +180,7 @@ void operator << (std::ostream &out, const ::AVCodecContext *cctx);
 void Free_AVPacket::operator()(::AVPacket* packet) const
 {
 	::av_packet_free(&packet);
+	packet = nullptr;
 }
 
 
@@ -209,6 +210,7 @@ AVPacketPtr Make_AVPacketPtr::operator()() const
 void Free_AVFrame::operator()(::AVFrame* frame) const
 {
 	::av_free(frame);
+	frame = nullptr;
 }
 
 
@@ -862,8 +864,10 @@ FFmpegAudioStream::FFmpegAudioStream()
 	, num_planes_       { 0 }
 	, channels_swapped_ { false }
 	, total_samples_declared_ { 0 }
-	, update_audiosize_ { }
+	, start_input_      { }
 	, append_samples_   { }
+	, update_audiosize_ { }
+	, end_input_        { }
 {
 	// empty
 }
@@ -893,6 +897,12 @@ bool FFmpegAudioStream::channels_swapped() const
 }
 
 
+void FFmpegAudioStream::register_start_input(std::function<void()> func)
+{
+	start_input_ = func;
+}
+
+
 void FFmpegAudioStream::register_append_samples(
 		std::function<void(SampleInputIterator begin,
 			SampleInputIterator end)> func)
@@ -905,6 +915,12 @@ void FFmpegAudioStream::register_update_audiosize(
 		std::function<void(const AudioSize &size)> func)
 {
 	update_audiosize_ = func;
+}
+
+
+void FFmpegAudioStream::register_end_input(std::function<void()> func)
+{
+	end_input_ = func;
 }
 
 
@@ -921,7 +937,7 @@ int64_t FFmpegAudioStream::traverse_samples()
 
 	auto total_samples = int32_t { 0 };
 
-	// Fill queue to its average size
+	// Fill queue to its defined average size
 
 	queue.set_source(formatContext_.get(), stream_index());
 	queue.set_decoder(codecContext_.get());
@@ -938,7 +954,7 @@ int64_t FFmpegAudioStream::traverse_samples()
 	ARCS_LOG_DEBUG << "Loaded " << queue.size() << " encoded packets to queue";
 	ARCS_LOG_DEBUG << "Start to manage decoding queue";
 
-	// Manage queue while new frames are available
+	// Manage queue as long as new frames are available
 
 	auto frame = AVFramePtr { nullptr };
 
@@ -946,7 +962,7 @@ int64_t FFmpegAudioStream::traverse_samples()
 	{
 		total_samples += frame->nb_samples;
 
-		this->pass_frame(frame.get());
+		this->pass_frame(frame.get()); // TODO Instead:: fill decode buffer
 
 		if (not queue.enqueue_frame())
 		{
@@ -1025,54 +1041,41 @@ void FFmpegAudioStream::pass_frame(const ::AVFrame* frame) const
 {
 	const auto format = static_cast<::AVSampleFormat>(frame->format);
 
-	// The single plane will contain the samples for both stereo channels,
-	// therefore the amount of bytes has to be multiplied with the number
-	// of channels for interleaved data.
-	const uint64_t bytes_per_plane = static_cast<uint64_t>(
-		in_bytes(frame->nb_samples, format) * (num_planes() == 2 ? 1 : 2));
-	// We do not use frame->linesize[0] because it seems to add
-	// optional bytes sometimes (padding?)
-
-	// Note:: ffmpeg "normalizes" the channel ordering away, so we will ignore
-	// it and process anything als left0/right1
-
-	// TODO Find less ugly implementation
-
-	if (::AV_SAMPLE_FMT_S16P == format)
+	switch (format)
 	{
-		SampleSequence<int16_t, true> sequence;
-		sequence.wrap_bytes(frame->data[0], frame->data[1], bytes_per_plane);
+		case ::AV_SAMPLE_FMT_S16 :/* int16_t, interleaved - e.g. Format::AIFF */
+			{
+				auto sequence = sequence_for<::AV_SAMPLE_FMT_S16>(frame);
+				append_samples_(sequence.begin(), sequence.end());
+				break;
+			}
+		case ::AV_SAMPLE_FMT_S16P:/* int16_t, planar - e.g. MONKEY, ALAC */
+			{
+				auto sequence = sequence_for<::AV_SAMPLE_FMT_S16P>(frame);
+				append_samples_(sequence.begin(), sequence.end());
+				break;
+			}
+		case ::AV_SAMPLE_FMT_S32 :/* int32_t, interleaved - e.g. FLAC */
+			{
+				auto sequence = sequence_for<::AV_SAMPLE_FMT_S32>(frame);
+				append_samples_(sequence.begin(), sequence.end());
+				break;
+			}
+		case ::AV_SAMPLE_FMT_S32P:/* int32_t, planar - e.g. WAVPACK */
+			{
+				auto sequence = sequence_for<::AV_SAMPLE_FMT_S32P>(frame);
+				append_samples_(sequence.begin(), sequence.end());
+				break;
+			}
+		default:
+			{
+				std::ostringstream msg;
+				msg << "Cannot pass sequence with unknown sample format: "
+					<< ::av_get_sample_fmt_name(format);
 
-		append_samples_(sequence.begin(), sequence.end());
-	} else
-	if (::AV_SAMPLE_FMT_S16  == format)
-	{
-		SampleSequence<int16_t, false> sequence;
-		sequence.wrap_bytes(frame->data[0], bytes_per_plane);
-
-		append_samples_(sequence.begin(), sequence.end());
-	} else
-	if (::AV_SAMPLE_FMT_S32P == format) // e.g. flac reader
-	{
-		SampleSequence<int32_t, true> sequence;
-		sequence.wrap_bytes(frame->data[0], frame->data[1], bytes_per_plane);
-
-		append_samples_(sequence.begin(), sequence.end());
-	} else
-	if (::AV_SAMPLE_FMT_S32  == format) // e.g. wavpack reader
-	{
-		SampleSequence<int32_t, false> sequence;
-		sequence.wrap_bytes(frame->data[0], bytes_per_plane);
-
-		append_samples_(sequence.begin(), sequence.end());
-	} else
-	{
-		std::ostringstream msg;
-		msg << "Cannot pass sequence with unknown sample format: "
-			<< ::av_get_sample_fmt_name(format);
-
-		throw std::invalid_argument(msg.str());
-	}
+				throw std::invalid_argument(msg.str());
+			}
+	}// switch
 }
 
 
@@ -1125,19 +1128,19 @@ void FFmpegAudioReaderImpl::do_process_file(const std::string &filename)
 
 	AudioSize size;
 	size.set_total_samples(audiostream->total_samples_declared());
-	this->process_audiosize(size);
+	this->call_updateaudiosize(size);
 
 
 	// Register this AudioReaderImpl instance as the target for samples and
 	// metadata updates
 
 	audiostream->register_append_samples(
-		std::bind(&FFmpegAudioReaderImpl::process_samples,
+		std::bind(&FFmpegAudioReaderImpl::call_appendsamples,
 			this,
 			std::placeholders::_1, std::placeholders::_2));
 
 	audiostream->register_update_audiosize(
-		std::bind(&FFmpegAudioReaderImpl::process_audiosize,
+		std::bind(&FFmpegAudioReaderImpl::call_updateaudiosize,
 			this,
 			std::placeholders::_1));
 
@@ -1527,8 +1530,8 @@ std::set<Codec> DescriptorFFmpeg::do_codecs() const
 		Codec::FLAC,
 		// not WAVEPACK
 		Codec::MONKEY,
-		Codec::ALAC,
-		Codec::WMALOSSLESS
+		Codec::ALAC
+		//TODO Codec::WMALOSSLESS
 	};
 }
 
@@ -1550,8 +1553,8 @@ std::set<Format> DescriptorFFmpeg::do_formats() const
 		Format::M4A,
 		Format::OGG,
 		// not WV,
-		Format::AIFF,
-		Format::WMA
+		Format::AIFF
+		//TODO Format::WMA
 	};
 }
 

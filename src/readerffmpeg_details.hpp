@@ -54,7 +54,10 @@ namespace ffmpeg
 {
 
 using arcstk::SampleInputIterator;
+using arcstk::SampleSequence;
 using arcstk::AudioSize;
+using arcstk::PlanarSamples;
+using arcstk::InterleavedSamples;
 
 /**
  * \internal \defgroup readerffmpegImpl Implementation
@@ -200,6 +203,162 @@ struct Make_AVFramePtr final
 {
 	AVFramePtr operator()() const;
 };
+
+
+/**
+ * \brief Determine a base type for samples of specified size and signedness.
+ */
+template <int S, bool is_signed>
+struct SampleType { /* empty */ };
+
+// legal specializations
+template<> struct SampleType<2, true>  { using type =  int16_t; };
+template<> struct SampleType<2, false> { using type = uint16_t; };
+template<> struct SampleType<4, true>  { using type =  int32_t; };
+template<> struct SampleType<4, false> { using type = uint32_t; };
+
+
+/**
+ * \brief Size-in-bytes of a type denoted by AVSampleFormat.
+ */
+template <enum ::AVSampleFormat>
+struct SampleSize { /* empty */ };
+
+// legal specializations
+template<> struct SampleSize<::AV_SAMPLE_FMT_S16>
+{ constexpr static std::size_t value = 2; };
+template<> struct SampleSize<::AV_SAMPLE_FMT_S16P>
+{ constexpr static std::size_t value = 2; };
+template<> struct SampleSize<::AV_SAMPLE_FMT_S32>
+{ constexpr static std::size_t value = 4; };
+template<> struct SampleSize<::AV_SAMPLE_FMT_S32P>
+{ constexpr static std::size_t value = 4; };
+
+
+/**
+ * \brief Signedness of a type denoted by AVSampleFormat.
+ */
+template <enum ::AVSampleFormat>
+struct IsSigned { /* empty */ };
+
+// specializations
+template<> struct IsSigned<::AV_SAMPLE_FMT_S16>  : std::true_type {/*empty*/};
+template<> struct IsSigned<::AV_SAMPLE_FMT_S16P> : std::true_type {/*empty*/};
+template<> struct IsSigned<::AV_SAMPLE_FMT_S32>  : std::true_type {/*empty*/};
+template<> struct IsSigned<::AV_SAMPLE_FMT_S32P> : std::true_type {/*empty*/};
+
+
+/**
+ * \brief Planarity of a type denoted by AVSampleFormat.
+ */
+template <enum ::AVSampleFormat>
+struct IsPlanar { /* empty */ };
+
+// specializations
+template<> struct IsPlanar<::AV_SAMPLE_FMT_S16>  : std::false_type {/*empty*/};
+template<> struct IsPlanar<::AV_SAMPLE_FMT_S16P> : std::true_type  {/*empty*/};
+template<> struct IsPlanar<::AV_SAMPLE_FMT_S32>  : std::false_type {/*empty*/};
+template<> struct IsPlanar<::AV_SAMPLE_FMT_S32P> : std::true_type  {/*empty*/};
+
+
+
+/**
+ * \brief Create PlanarSamples of the type denoted by AVSampleFormat \c F.
+ *
+ * \tparam S Integer type that represents a 16 bit stereo sample
+ */
+template <typename S>
+auto instantiate_sequence(std::true_type) -> PlanarSamples<S>
+{
+	return SampleSequence<S, true> {};
+}
+
+
+/**
+ * \brief Create InterleavedSamples of the type denoted by AVSampleFormat \c F.
+ *
+ * \tparam S Integer type that represents a 16 bit stereo sample
+ */
+template <typename S>
+auto instantiate_sequence(std::false_type) -> InterleavedSamples<S>
+{
+	return SampleSequence<S, false> {};
+}
+
+
+/**
+ * \brief A container policy defines how to access the sample data in
+ * \c Container to be wrapped in a SampleSequence.
+ */
+template <bool is_planar, typename S, typename Container,
+		typename SequenceType = SampleSequence<S, is_planar>>
+		//typename = details::IsSampleType<S>, // TODO SFINAE stuff
+struct ContainerPolicy { /* empty */ };
+
+
+// ContainerPolicy specialization for byte-wrapping AVFrame (planar)
+template <typename S, typename SequenceType>
+struct ContainerPolicy<true, S, ::AVFrame, SequenceType>
+{
+	static uint8_t* buffer0(const ::AVFrame *f) { return f->data[0]; }
+	static uint8_t* buffer1(const ::AVFrame *f) { return f->data[1]; }
+
+	static std::size_t bytes_per_plane(const ::AVFrame *f)
+	{
+		return static_cast<std::size_t>(f->nb_samples) * sizeof(S);
+	}
+
+	static void wrap(const ::AVFrame *f, SequenceType &sequence)
+	{
+		sequence.wrap_bytes(buffer0(f), buffer1(f), bytes_per_plane(f));
+	}
+};
+
+
+// ContainerPolicy specialization for byte-wrapping AVFrame (interleaved)
+template <typename S, typename SequenceType>
+struct ContainerPolicy<false, S, ::AVFrame, SequenceType>
+{
+	static uint8_t* buffer0(const ::AVFrame *f) { return f->data[0]; }
+
+	static std::size_t bytes_per_plane(const ::AVFrame *f)
+	{
+		return
+			static_cast<std::size_t>(f->nb_samples * f->channels) * sizeof(S);
+	}
+
+	static void wrap(const ::AVFrame *f, SampleSequence<S, false> &sequence)
+	{
+		sequence.wrap_bytes(buffer0(f), bytes_per_plane(f));
+	}
+};
+
+// Note:: libavcodec "normalizes" the channel ordering away, so we will ignore
+// it and process anything als left0/right1
+
+
+
+/**
+ * \brief Wrap an AVFrame in a compatible SampleSequence.
+ *
+ * \tparam F The sample format to handle
+ *
+ * \return SampleSequence instance wrapping the input frame
+ */
+template <::AVSampleFormat F,
+	typename S =
+		typename SampleType<SampleSize<F>::value, IsSigned<F>::value>::type>
+auto sequence_for(const ::AVFrame* frame)
+	-> SampleSequence<S, IsPlanar<F>::value>
+{
+	auto sequence = instantiate_sequence<S>(
+			std::integral_constant<bool, IsPlanar<F>::value>());
+
+	using Policy  = ContainerPolicy<IsPlanar<F>::value, S, ::AVFrame>;
+	Policy::wrap(frame, sequence);
+
+	return sequence;
+}
 
 
 /**
@@ -541,8 +700,10 @@ public:
 
 	// make class non-copyable
 	FFmpegAudioStream (const FFmpegAudioStream &file) = delete;
+	FFmpegAudioStream& operator = (const FFmpegAudioStream &file) = delete;
 
 	FFmpegAudioStream (FFmpegAudioStream &&file) = default;
+	FFmpegAudioStream& operator = (FFmpegAudioStream &&file) = default;
 
 	/**
 	 * \brief Return the sample format of this file.
@@ -603,16 +764,11 @@ public:
 	int64_t traverse_samples();
 
 	/**
-	 * \brief Traverse all 16 bit samples in the file, thereby accumulating 32
-	 * bit samples in a buffer and automatically flushing it once it is full.
+	 * \brief Register the start_input() method.
 	 *
-	 * Returns the number of samples processed. Note that this number may differ
-	 * from the number returned by total_samples_declared().
-	 *
-	 * \return Number of 32 bit PCM samples enumerated.
-	 * \throw FileReadException If an error occurrs while reading the file
+	 * \param[in] func The start_input() method to use while reading
 	 */
-	//int64_t traverse_samples_old();
+	void register_start_input(std::function<void()> func);
 
 	/**
 	 * \brief Register the append_samples() method.
@@ -631,26 +787,14 @@ public:
 	void register_update_audiosize(
 			std::function<void(const AudioSize &size)> func);
 
-	// make class non-copyable
-	FFmpegAudioStream& operator = (const FFmpegAudioStream &file) = delete;
-
-	FFmpegAudioStream& operator = (FFmpegAudioStream &&file) = default;
+	/**
+	 * \brief Register the end_input() method.
+	 *
+	 * \param[in] func The end_input() method to use while reading
+	 */
+	void register_end_input(std::function<void()> func);
 
 private:
-
-	/**
-	 * \brief Decode a single packet completely.
-	 *
-	 * \param[in]  packet    The packet to decode (call-by-value ensures copy)
-	 * \param[in]  frame     The frame pointer to use for decoding
-	 * \param[out] samples16 Accumulative counter for 16 bit samples
-	 * \param[out] frames    Accumulative counter of frames read
-	 * \param[out] bytes     Accumulative counter of bytes read
-	 *
-	 * \return TRUE iff samples were decoded from the packet, otherwise FALSE
-	 */
-	//bool decode_packet_old(::AVPacket packet, ::AVFrame* frame,
-	//		int64_t* samples16, int64_t* frames, int64_t* bytes);
 
 	/**
 	 * \brief Get the index of the decoded audio stream.
@@ -667,21 +811,6 @@ private:
 	 * \param[in] frame The frame to pass
 	 */
 	void pass_frame(const ::AVFrame* frame) const;
-
-	/**
-	 * \brief Pass a sequence of samples to consumer.
-	 *
-	 * \param[in] ch0 Samples for channel 0 (all samples in non-planar layout)
-	 * \param[in] ch1 Samples for channel 1 (nullptr in non-planar layout)
-	 * \param[in] bytes_per_plane Number of bytes per plane
-	 * \param[in] f   Sample format
-	 *
-	 * \return 0 on success, otherwise non-zero error code
-	 *
-	 * \throws invalid_argument If the sample format is unknown
-	 */
-	void pass_samples(const uint8_t* ch0, const uint8_t* ch1,
-		const int32_t bytes_per_plane, const ::AVSampleFormat f) const;
 
 	/**
 	 * \brief Internal format context pointer.
@@ -715,9 +844,9 @@ private:
 	int64_t total_samples_declared_;
 
 	/**
-	 * \brief Callback for notifying outside world about the correct AudioSize.
+	 * \brief Callback for starting input.
 	 */
-	std::function<void(const AudioSize &size)> update_audiosize_;
+	std::function<void()> start_input_;
 
 	/**
 	 * \brief Callback for notifying outside world about a new sequence of
@@ -725,6 +854,16 @@ private:
 	 */
 	std::function<void(SampleInputIterator begin, SampleInputIterator end)>
 		append_samples_;
+
+	/**
+	 * \brief Callback for notifying outside world about the correct AudioSize.
+	 */
+	std::function<void(const AudioSize &size)> update_audiosize_;
+
+	/**
+	 * \brief Callback for ending input.
+	 */
+	std::function<void()> end_input_;
 
 	/**
 	 * \brief Constructor.
@@ -777,4 +916,3 @@ private:
 } // namespace arcsdec
 
 #endif
-

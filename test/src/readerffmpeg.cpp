@@ -36,6 +36,15 @@ TEST_CASE ( "DescriptorFFmpeg", "[readerffmpeg]" )
 }
 
 
+//TEST_CASE ( "TypeSize" )
+//{
+//	using arcsdec::details::ffmpeg::TypeSize;
+//
+//	CHECK ( TypeSize(::AV_SAMPLE_FMT_S16) == 2 );
+//	CHECK ( TypeSize(::AV_SAMPLE_FMT_S32) == 4 );
+//}
+
+
 TEST_CASE ( "PacketQueue", "[packetqueue]" )
 {
 	using arcsdec::details::ffmpeg::AVFormatContextPtr;
