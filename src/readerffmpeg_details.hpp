@@ -372,8 +372,8 @@ class PacketQueue final
 
 public:
 
-	using size_type  = typename Impl::size_type;
-	using value_type = typename Impl::value_type;
+	using size_type      = typename Impl::size_type;
+	using value_type     = typename Impl::value_type;
 
 	/**
 	 * \brief Constructor.
@@ -455,6 +455,13 @@ public:
 	 * \return Current number of packets in the queue.
 	 */
 	std::size_t size() const;
+
+	/**
+	 * \brief TRUE iff the queue is empty.
+	 *
+	 * \return  TRUE iff the queue is empty, otherwise FALSE
+	 */
+	bool empty() const;
 
 private:
 
@@ -876,13 +883,9 @@ private:
  * \brief Audio file reader implemented by FFmpeg API.
  *
  * This is a AudioReader implementation by libavformat and libavcodec. It can
- * open files in virtually every combination of container and audio format that
- * ffmpeg supports.
+ * open files in virtually any combination of container and audio format.
  *
  * It is internally limited to a set of lossless codecs.
- *
- * For CDDA compliant formats, it provides 16 bit samples as int16_t and
- * therefore requires a buffer interface for this sample format.
  */
 class FFmpegAudioReaderImpl : public AudioReaderImpl
 {

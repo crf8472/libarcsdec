@@ -414,6 +414,12 @@ std::size_t PacketQueue::size() const
 }
 
 
+bool PacketQueue::empty() const
+{
+	return packets_.empty();
+}
+
+
 ::AVCodecContext* PacketQueue::decoder()
 {
 	return cctx_;
@@ -976,25 +982,30 @@ int64_t FFmpegAudioStream::traverse_samples()
 
 	// Flush queue
 
-	std::vector<AVFramePtr> frames;
-	frames.reserve(queue.size());
+	std::vector<AVFramePtr> decoded_frames;
+	decoded_frames.reserve(queue.size());
 	// TODO Using a vector is not the nicest solution, consider AVAudioFifo
 	// https://ffmpeg.org/doxygen/trunk/structAVAudioFifo.html
 
-	auto drained = bool { false };
+	auto last_size = decltype( queue )::size_type { 0 };
 
-	flush: // Flush all frames from decoder
+
+	// Flush all frames from decoder
+
+	flush:
+
+	last_size = decoded_frames.size();
 
 	while ((frame = queue.dequeue_frame()))
 	{
 		total_samples += frame->nb_samples;
 
-		frames.push_back(std::move(frame));
+		decoded_frames.push_back(std::move(frame));
 	}
 
 	// Respect delayed frames (if any)
 
-	if (not drained)
+	if (decoded_frames.size() > last_size) // Did flushing add samples?
 	{
 		if (AV_CODEC_CAP_DELAY & codecContext_->codec->capabilities)
 		{
@@ -1007,13 +1018,15 @@ int64_t FFmpegAudioStream::traverse_samples()
 			if (::avcodec_send_packet(codecContext_.get(), nullptr) < 0)
 			{
 				ARCS_LOG_DEBUG << "Could not get any delayed frames";
+				// TODO This is an error, handle it!
 			} else
 			{
-				ARCS_LOG_DEBUG << "Seems there are delayed frames, flush";
-				drained = true;
 				goto flush; // Flush again in "draining" mode
 			}
 		}
+	} else
+	{
+		ARCS_LOG_DEBUG << "Seems there are no delayed frames, just proceed";
 	}
 
 	// Update audiosize
@@ -1021,14 +1034,11 @@ int64_t FFmpegAudioStream::traverse_samples()
 	AudioSize updated_size;
 	updated_size.set_total_samples(total_samples);
 
-	ARCS_LOG_INFO << "Update total number of samples to: "
-		<< updated_size.total_samples();
-
 	update_audiosize_(updated_size);
 
 	// Pass last samples
 
-	for (auto& f : frames)
+	for (auto& f : decoded_frames)
 	{
 		this->pass_frame(f.get());
 	}
@@ -1123,16 +1133,12 @@ void FFmpegAudioReaderImpl::do_process_file(const std::string &filename)
 		ARCS_LOG_INFO << "FFmpeg says, channels are swapped.";
 	}
 
+	// Register this AudioReaderImpl instance as the stream's callback provider.
+	// This is kind of hacky since it imitates how a SampleProcessor is
+	// attached to a SampleProvider.
 
-	// Provide estimation
-
-	AudioSize size;
-	size.set_total_samples(audiostream->total_samples_declared());
-	this->call_updateaudiosize(size);
-
-
-	// Register this AudioReaderImpl instance as the target for samples and
-	// metadata updates
+	audiostream->register_start_input(
+		std::bind(&FFmpegAudioReaderImpl::call_startinput, this));
 
 	audiostream->register_append_samples(
 		std::bind(&FFmpegAudioReaderImpl::call_appendsamples,
@@ -1143,6 +1149,16 @@ void FFmpegAudioReaderImpl::do_process_file(const std::string &filename)
 		std::bind(&FFmpegAudioReaderImpl::call_updateaudiosize,
 			this,
 			std::placeholders::_1));
+
+	audiostream->register_end_input(
+		std::bind(&FFmpegAudioReaderImpl::call_endinput, this));
+
+
+	// Provide estimation
+
+	AudioSize size;
+	size.set_total_samples(audiostream->total_samples_declared());
+	this->call_updateaudiosize(size);
 
 
 	// Process file
