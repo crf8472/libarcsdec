@@ -127,25 +127,27 @@ class BufferProcessor final : public  virtual SampleProviderBase
 							, public  virtual SampleProcessor
 							, private virtual BlockAccumulator
 {
-
 public:
 
 	/**
 	 * \brief Default constructor
 	 */
-	BufferProcessor();
+	BufferProcessor()
+		: BlockAccumulator(BLOCKSIZE.DEFAULT)
+	{
+		this->init();
+	}
 
 	/**
 	 * \brief Constructs a BufferProcessor with buffer of size samples_per_block.
 	 *
 	 * \param[in] samples_per_block Number of 32 bit PCM samples in one block
 	 */
-	explicit BufferProcessor(const int32_t samples_per_block);
-
-	/**
-	 * \brief Default destructor
-	 */
-	virtual ~BufferProcessor() noexcept override;
+	explicit BufferProcessor(const int32_t samples_per_block)
+		: BlockAccumulator(samples_per_block)
+	{
+		this->init();
+	}
 
 	/**
 	 * \brief Reset the buffer to its initial state, thereby discarding its
@@ -153,98 +155,56 @@ public:
 	 *
 	 * The current buffer capacity is preserved.
 	 */
-	void reset();
+	void reset()
+	{
+		this->init();
+	}
 
 	/**
 	 * \brief Flush the buffer.
 	 */
-	void flush();
-
+	void flush()
+	{
+		BlockAccumulator::flush();
+	}
 
 private:
 
-	void do_start_input() override;
+	void do_start_input() override
+	{
+		this->signal_startinput();
+	}
 
 	void do_append_samples(SampleInputIterator begin, SampleInputIterator end)
-		override;
+		override
+	{
+		this->append_to_block(begin, end);
+		// append_to_block does signal_appendsamples() when flushing the buffer
+	}
 
-	void do_update_audiosize(const AudioSize &size) override;
+	void do_update_audiosize(const AudioSize &size) override
+	{
+		// do nothing, just pass on to registered processor
+		this->signal_updateaudiosize(size);
+	}
 
-	void do_end_input() override;
+	void do_end_input() override
+	{
+		this->flush();
 
-	void hook_post_attachprocessor() override;
+		// pass on to registered processor
+		this->signal_endinput();
+	}
+
+	void hook_post_attachprocessor() override
+	{
+		// Attach SampleProcessor to the inherited BlockAccumulator
+		this->register_block_consumer(
+			std::bind(&SampleProcessor::append_samples, this->use_processor(),
+				std::placeholders::_1, std::placeholders::_2));
+	}
 };
 
-
-// BufferProcessor
-
-
-BufferProcessor::BufferProcessor()
-	: BlockAccumulator(BLOCKSIZE.DEFAULT)
-{
-	this->init();
-}
-
-
-BufferProcessor::BufferProcessor(const int32_t samples_per_block)
-	: BlockAccumulator(samples_per_block)
-{
-	this->init();
-}
-
-
-BufferProcessor::~BufferProcessor() noexcept = default;
-
-
-void BufferProcessor::reset()
-{
-	this->init();
-}
-
-
-void BufferProcessor::flush()
-{
-	BlockAccumulator::flush();
-}
-
-
-void BufferProcessor::do_start_input()
-{
-	this->signal_startinput();
-}
-
-
-void BufferProcessor::do_append_samples(SampleInputIterator begin,
-		SampleInputIterator end)
-{
-	this->append_to_block(begin, end);
-	// append_to_block does signal_appendsamples() when flushing the buffer
-}
-
-
-void BufferProcessor::do_update_audiosize(const AudioSize &size)
-{
-	// do nothing, just pass on to registered processor
-	this->signal_updateaudiosize(size);
-}
-
-
-void BufferProcessor::do_end_input()
-{
-	this->flush();
-
-	// pass on to registered processor
-	this->signal_endinput();
-}
-
-
-void BufferProcessor::hook_post_attachprocessor()
-{
-	// Attach SampleProcessor to the inherited BlockAccumulator
-	this->register_block_consumer(
-		std::bind(&SampleProcessor::append_samples, this->use_processor(),
-			std::placeholders::_1, std::placeholders::_2));
-}
 
 /**
  * \brief Private implementation of a TOCParser.
