@@ -756,7 +756,6 @@ void WavpackAudioReaderImpl::do_process_file(const std::string &filename)
 	}
 
 	const int64_t total_samples { file.total_pcm_samples() };
-	ARCS_LOG_INFO << "Total samples: " << total_samples;
 
 
 	// Notify about correct size

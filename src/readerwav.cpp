@@ -844,10 +844,7 @@ int64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 		{
 			// Pass total_pcm_bytes to Caller and inform Calculation instance
 
-			total_pcm_bytes = subchunk_header.size; // return parameter
-
-			ARCS_LOG_INFO << "Total samples: " <<
-				(total_pcm_bytes / CDDA.BYTES_PER_SAMPLE);
+			total_pcm_bytes = subchunk_header.size; // remind: output parameter
 
 			audio_handler_->subchunk_data(subchunk_header.size);
 
