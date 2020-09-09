@@ -1141,31 +1141,30 @@ void FFmpegAudioReaderImpl::do_process_file(const std::string &filename)
 	}
 
 	// Register this AudioReaderImpl instance as the stream's callback provider.
-	// This is kind of hacky since it imitates how a SampleProcessor is
-	// attached to a SampleProvider.
+	// This imitates how a SampleProcessor is attached to a SampleProvider.
 
 	audiostream->register_start_input(
-		std::bind(&FFmpegAudioReaderImpl::call_startinput, this));
+		std::bind(&FFmpegAudioReaderImpl::signal_startinput, this));
 
 	audiostream->register_append_samples(
-		std::bind(&FFmpegAudioReaderImpl::call_appendsamples,
+		std::bind(&FFmpegAudioReaderImpl::signal_appendsamples,
 			this,
 			std::placeholders::_1, std::placeholders::_2));
 
 	audiostream->register_update_audiosize(
-		std::bind(&FFmpegAudioReaderImpl::call_updateaudiosize,
+		std::bind(&FFmpegAudioReaderImpl::signal_updateaudiosize,
 			this,
 			std::placeholders::_1));
 
 	audiostream->register_end_input(
-		std::bind(&FFmpegAudioReaderImpl::call_endinput, this));
+		std::bind(&FFmpegAudioReaderImpl::signal_endinput, this));
 
 
 	// Provide estimation
 
 	AudioSize size;
 	size.set_total_samples(audiostream->total_samples_declared());
-	this->call_updateaudiosize(size);
+	this->signal_updateaudiosize(size);
 
 
 	// Process file

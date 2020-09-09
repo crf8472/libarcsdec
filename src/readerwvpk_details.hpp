@@ -380,7 +380,7 @@ private:
 /**
  * \brief Implementation of a AudioReader for the Wavpack format.
  */
-class WavpackAudioReaderImpl : public BufferedAudioReaderImpl
+class WavpackAudioReaderImpl final : public BufferedAudioReaderImpl
 {
 public:
 
@@ -392,7 +392,7 @@ public:
 	/**
 	 * \brief Default destructor.
 	 */
-	virtual ~WavpackAudioReaderImpl() noexcept override;
+	~WavpackAudioReaderImpl() noexcept final;
 
 	/**
 	 * \brief Register a validating handler.
@@ -403,12 +403,14 @@ public:
 
 private:
 
+	void hook_post_attachprocessor() final { /* empty */ }
+
 	std::unique_ptr<AudioSize> do_acquire_size(const std::string &filename)
-		override;
+		final;
 
-	void do_process_file(const std::string &filename) override;
+	void do_process_file(const std::string &filename) final;
 
-	std::unique_ptr<FileReaderDescriptor> do_descriptor() const override;
+	std::unique_ptr<FileReaderDescriptor> do_descriptor() const final;
 
 	/**
 	 * \brief Perform the actual validation process.

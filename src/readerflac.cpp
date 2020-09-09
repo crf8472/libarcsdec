@@ -135,7 +135,7 @@ FlacAudioReaderImpl::FlacAudioReaderImpl()
 		const ::FLAC__int32 *const buffer[])
 {
 	smplseq_.wrap(buffer[0], buffer[1], frame->header.blocksize);
-	this->call_appendsamples(smplseq_.begin(), smplseq_.end());
+	this->signal_appendsamples(smplseq_.begin(), smplseq_.end());
 
 	return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
 }
@@ -153,7 +153,7 @@ void FlacAudioReaderImpl::metadata_callback(
 			// Inform calculator instance about sample count
 
 			size.set_total_samples(metadata->data.stream_info.total_samples);
-			this->call_updateaudiosize(size);
+			this->signal_updateaudiosize(size);
 
 			// Streaminfo could already have been validated explicitly
 

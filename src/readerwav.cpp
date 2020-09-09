@@ -852,14 +852,14 @@ int64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 			{
 				AudioSize audiosize;
 				audiosize.set_pcm_byte_count(subchunk_header.size);
-				this->call_updateaudiosize(audiosize);
+				this->signal_updateaudiosize(audiosize);
 
 				// Read audio bytes in blocks
 
 				PCMBlockReader reader(this->samples_per_read());
 
 				reader.register_block_consumer(
-					std::bind(&WavAudioReaderImpl::call_appendsamples, this,
+					std::bind(&WavAudioReaderImpl::signal_appendsamples, this,
 						std::placeholders::_1, std::placeholders::_2)
 					);
 

@@ -318,7 +318,7 @@ private:
  * further SampleProcessor instances registered. Provides a convenience method
  * for registering a Calculation as addressee of all updates.
  */
-class SampleBuffer  : public  virtual SampleProvider
+class SampleBuffer  : public  virtual SampleProviderBase
 					, public  virtual SampleProcessor
 					, private virtual BlockAccumulator
 {

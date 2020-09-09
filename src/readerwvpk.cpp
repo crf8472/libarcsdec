@@ -763,7 +763,7 @@ void WavpackAudioReaderImpl::do_process_file(const std::string &filename)
 	{
 		AudioSize size;
 		size.set_total_samples(total_samples);
-		this->call_updateaudiosize(size);
+		this->signal_updateaudiosize(size);
 	}
 
 
@@ -819,7 +819,7 @@ void WavpackAudioReaderImpl::do_process_file(const std::string &filename)
 			// Note: we use the Number of 16-bit-samples _per_channel_, not
 			// the total number of 16 bit samples in the chunk.
 
-			this->call_appendsamples(sequence.begin(), sequence.end());
+			this->signal_appendsamples(sequence.begin(), sequence.end());
 		}
 	}
 }

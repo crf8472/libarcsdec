@@ -869,7 +869,7 @@ private:
  * the 4 bytes following byte 0x2C. The format subchunk is validated to conform
  * to CDDA.
  */
-class WavAudioReaderImpl : public BufferedAudioReaderImpl
+class WavAudioReaderImpl final : public BufferedAudioReaderImpl
 {
 
 public:
@@ -882,7 +882,7 @@ public:
 	/**
 	 * \brief Virtual destructor.
 	 */
-	virtual ~WavAudioReaderImpl() noexcept override;
+	virtual ~WavAudioReaderImpl() noexcept final;
 
 	/**
 	 * \brief Register a validation handler.
@@ -894,12 +894,14 @@ public:
 
 private:
 
+	void hook_post_attachprocessor() final { /* empty */ }
+
 	std::unique_ptr<AudioSize> do_acquire_size(const std::string &filename)
-		override;
+		final;
 
-	void do_process_file(const std::string &filename) override;
+	void do_process_file(const std::string &filename) final;
 
-	std::unique_ptr<FileReaderDescriptor> do_descriptor() const override;
+	std::unique_ptr<FileReaderDescriptor> do_descriptor() const final;
 
 	/**
 	 * \brief Service method: acquire the physical file size in bytes.

@@ -101,7 +101,7 @@ extern const int32_t MAX_SAMPLES_TO_READ;
  * \note
  * Instances of subclasses are non-copyable but movable.
  */
-class AudioReaderImpl : public virtual SampleProvider
+class AudioReaderImpl : public SampleProviderBase
 {
 public:
 
@@ -109,11 +109,6 @@ public:
 	 * \brief Default constructor.
 	 */
 	AudioReaderImpl();
-
-	/**
-	 * \brief Virtual default destructor.
-	 */
-	virtual ~AudioReaderImpl() noexcept;
 
 	/**
 	 * \brief Provides implementation for acquire_size() of a AudioReader.
@@ -315,7 +310,7 @@ public:
 	 *
 	 * \param[in] processor SampleProcessor to use
 	 *
-	 * \todo This should be part of a SampleProvider interface
+	 * \todo This should be part of a SampleProviderBase interface
 	 */
 	void set_processor(SampleProcessor &processor);
 

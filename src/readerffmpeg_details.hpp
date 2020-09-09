@@ -887,7 +887,7 @@ private:
  *
  * It is internally limited to a set of lossless codecs.
  */
-class FFmpegAudioReaderImpl : public AudioReaderImpl
+class FFmpegAudioReaderImpl final : public AudioReaderImpl
 {
 public:
 
@@ -899,16 +899,18 @@ public:
 	/**
 	 * \brief Virtual default destructor.
 	 */
-	~FFmpegAudioReaderImpl() noexcept override;
+	~FFmpegAudioReaderImpl() noexcept final;
 
 private:
 
+	void hook_post_attachprocessor() final { /* empty */ }
+
 	std::unique_ptr<AudioSize> do_acquire_size(const std::string &filename)
-		override;
+		final;
 
-	void do_process_file(const std::string &filename) override;
+	void do_process_file(const std::string &filename) final;
 
-	std::unique_ptr<FileReaderDescriptor> do_descriptor() const override;
+	std::unique_ptr<FileReaderDescriptor> do_descriptor() const final;
 };
 
 /// @}

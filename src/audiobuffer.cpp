@@ -272,7 +272,7 @@ void SampleBuffer::flush()
 
 void SampleBuffer::do_start_input()
 {
-	this->call_startinput();
+	this->signal_startinput();
 }
 
 
@@ -280,14 +280,14 @@ void SampleBuffer::do_append_samples(SampleInputIterator begin,
 		SampleInputIterator end)
 {
 	this->append_to_block(begin, end);
-	// append_to_block does call_appendsamples() when flushing the buffer
+	// append_to_block does signal_appendsamples() when flushing the buffer
 }
 
 
 void SampleBuffer::do_update_audiosize(const AudioSize &size)
 {
 	// do nothing, just pass on to registered processor
-	this->call_updateaudiosize(size);
+	this->signal_updateaudiosize(size);
 }
 
 
@@ -296,7 +296,7 @@ void SampleBuffer::do_end_input()
 	this->flush();
 
 	// pass on to registered processor
-	this->call_endinput();
+	this->signal_endinput();
 }
 
 

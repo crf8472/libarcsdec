@@ -29,7 +29,7 @@ inline namespace v_1_0_0
 
 using arcstk::SampleInputIterator;
 using arcstk::AudioSize;
-using arcstk::Calculation;
+
 
 /**
  * \brief Symbolic constants for certain block sizes
@@ -70,7 +70,7 @@ extern const BLOCKSIZE_t BLOCKSIZE;
 
 
 /**
- * \brief Interface for processing samples as provided by an AudioReaderImpl.
+ * \brief Interface for processing samples as provided by a SampleProvider.
  */
 class SampleProcessor
 {
@@ -127,7 +127,13 @@ public:
 	 */
 	int64_t samples_processed() const;
 
-	// TODO clone()
+protected:
+
+	SampleProcessor(const SampleProcessor &) = default;
+	SampleProcessor& operator = (const SampleProcessor &) = default;
+
+	SampleProcessor(SampleProcessor &&) noexcept = default;
+	SampleProcessor& operator = (SampleProcessor &&) noexcept = default;
 
 private:
 
@@ -173,91 +179,27 @@ private:
 
 
 /**
- * \brief Adapter to wrap a Calculation in an unbuffered SampleProcessor.
- */
-class CalculationProcessor final : virtual public SampleProcessor
-{
-public:
-
-	/**
-	 * \brief Converting constructor for Calculation instances.
-	 *
-	 * \param[in] calculation The Calculation to use
-	 */
-	CalculationProcessor(Calculation &calculation);
-
-	/**
-	 * \brief Virtual default destructor.
-	 */
-	~CalculationProcessor() noexcept override;
-
-	CalculationProcessor(const CalculationProcessor &rhs) noexcept = delete;
-	CalculationProcessor& operator = (const CalculationProcessor &rhs) noexcept
-		= delete;
-
-private:
-
-	void do_start_input() override;
-
-	void do_append_samples(SampleInputIterator begin, SampleInputIterator end)
-		override;
-
-	void do_update_audiosize(const AudioSize &size) override;
-
-	void do_end_input() override;
-
-	/**
-	 * \brief Internal pointer to the calculation to wrap.
-	 */
-	Calculation *calculation_;
-};
-
-
-/**
  * \brief Inteface for providers of sample sequences.
+ *
+ * A SampleProvider is a source for sample sequences and updated AudioSize
+ * values. It can signal different events while processing the audio input.
+ * A SampleProcessor can be attached to it as an addressee of those events.
+ *
+ * \see SampleProviderBase
  */
-class ISampleProvider
+class SampleProvider
 {
 public:
 
 	/**
+	 * \brief Constructor.
+	 */
+	SampleProvider();
+
+	/**
 	 * \brief Virtual default destructor.
 	 */
-	virtual ~ISampleProvider() noexcept;
-
-	/**
-	 * \brief Register a function callback called as \c start_input().
-	 *
-	 * \param[in] f The function to register
-	 */
-	virtual void register_startinput(std::function<void()> f)
-	= 0;
-
-	/**
-	 * \brief Register a function callback called as \c append_samples().
-	 *
-	 * \param[in] f The function to register
-	 */
-	virtual void register_appendsamples(
-			std::function<void(SampleInputIterator, SampleInputIterator)> f)
-	= 0;
-
-	/**
-	 * \brief Register a function callback called as \c update_audiosize().
-	 *
-	 * \param[in] f The function to register
-	 */
-	virtual void register_updateaudiosize(
-			std::function<void(const AudioSize &)> f)
-	= 0;
-
-	/**
-	 * \brief Register a function callback called as \c end_input().
-	 *
-	 * \param[in] f The function to register
-	 */
-	virtual void register_endinput(std::function<void()> f)
-	= 0;
+	virtual ~SampleProvider() noexcept;
 
 	/**
 	 * \brief Register a SampleProcessor.
@@ -270,7 +212,63 @@ public:
 	 *
 	 * \param[in] processor The SampleProcessor to use
 	 */
-	virtual void attach_processor(SampleProcessor &processor)
+	void attach_processor(SampleProcessor &processor);
+
+	/**
+	 * \brief Return the registered SampleProcessor.
+	 *
+	 * \return The SampleProcessor the reader uses
+	 */
+	const SampleProcessor* processor() const;
+
+	/**
+	 * \brief Signal the processor that input starts.
+	 */
+	void signal_startinput();
+
+	/**
+	 * \brief Signal the processor to append the following range of samples.
+	 *
+	 * \param[in] begin Start of the sample sequence
+	 * \param[in] end   End of the sample sequence
+	 */
+	void signal_appendsamples(SampleInputIterator begin,
+			SampleInputIterator end);
+
+	/**
+	 * \brief Signal the processor to update the audio size.
+	 *
+	 * \param[in] size The updated value to signal
+	 */
+	void signal_updateaudiosize(const AudioSize &size);
+
+	/**
+	 * \brief Signal the processor that input ends.
+	 */
+	void signal_endinput();
+
+protected:
+
+	SampleProvider(const SampleProvider &) = default;
+	SampleProvider& operator = (const SampleProvider &) = default;
+
+	SampleProvider(SampleProvider &&) noexcept = default;
+	SampleProvider& operator = (SampleProvider &&) noexcept = default;
+
+private:
+
+	/**
+	 * \brief Register a SampleProcessor.
+	 *
+	 * This will register all callback methods of the \c processor. Already
+	 * registered callbacks will be overwritten by this method.
+	 *
+	 * The method is a mere convenience for completely registering a single
+	 * SampleProcessor instance.
+	 *
+	 * \param[in] processor The SampleProcessor to use
+	 */
+	virtual void do_attach_processor(SampleProcessor &processor)
 	= 0;
 
 	/**
@@ -278,107 +276,123 @@ public:
 	 *
 	 * \return The SampleProcessor the reader uses
 	 */
-	virtual const SampleProcessor* processor() const
-	= 0;
-
-private:
-
-	/**
-	 * \brief Call the registered \c start_input() callback.
-	 */
-	virtual void call_startinput()
+	virtual const SampleProcessor* do_processor() const
 	= 0;
 
 	/**
-	 * \brief Call the registered \c append_samples() callback.
-	 *
-	 * \param[in] begin Iterator pointing to the begin of the sequence
-	 * \param[in] end   Iterator pointing to the end of the sequence
+	 * \brief Implements signal_startinput().
 	 */
-	virtual void call_appendsamples(
-			SampleInputIterator begin, SampleInputIterator end)
+	virtual void do_signal_startinput()
 	= 0;
 
 	/**
-	 * \brief Call the registered \c update_audiosize() callback.
+	 * \brief Implements signal_appendsamples().
 	 *
-	 * The actual method call is just passed to the registered SampleProcessor.
-	 *
-	 * \param[in] size AudioSize to report
+	 * \param[in] begin Start of the sample sequence
+	 * \param[in] end   End of the sample sequence
 	 */
-	virtual void call_updateaudiosize(const AudioSize &size)
+	virtual void do_signal_appendsamples(SampleInputIterator begin,
+			SampleInputIterator end)
 	= 0;
 
 	/**
-	 * \brief Call the registered \c end_input() callback.
+	 * \brief Signal the processor to update the audio size.
 	 *
-	 * \param[in] last_sample_index The 0-based index of the last sample.
+	 * \param[in] size The updated value to signal
 	 */
-	virtual void call_endinput()
+	virtual void do_signal_updateaudiosize(const AudioSize &size)
+	= 0;
+
+	/**
+	 * \brief Implements signal_endinput().
+	 */
+	virtual void do_signal_endinput()
 	= 0;
 };
 
 
 /**
- * \brief A provider of sample sequences.
+ * \brief Base class for SampleProvider implementations.
  *
- * It can have functions registered for starting and ending input,
- * appending samples and updating buffer size.
+ * Implements SampleProvider.
  */
-class SampleProvider : public ISampleProvider
+class SampleProviderBase : virtual public SampleProvider
 {
 public:
 
 	/**
 	 * \brief Constructor
 	 */
-	SampleProvider();
-
-	SampleProvider(const SampleProvider &rhs) = delete;
-	SampleProvider& operator = (const SampleProvider &rhs) = delete;
-
-	SampleProvider(SampleProvider &&) = default;
-	SampleProvider& operator = (SampleProvider &&) = default;
-
-	void register_startinput(std::function<void()> f) final;
-
-	void register_appendsamples(
-			std::function<void(SampleInputIterator, SampleInputIterator)> f)
-		final;
-
-	void register_updateaudiosize(std::function<void(const AudioSize &size)>)
-		final;
-
-	void register_endinput(std::function<void()> f) final;
-
-	void attach_processor(SampleProcessor &processor) final;
-
-	const SampleProcessor* processor() const final;
+	SampleProviderBase();
 
 protected:
 
+	SampleProviderBase(const SampleProviderBase &rhs) = default;
+	SampleProviderBase& operator = (const SampleProviderBase &rhs) = default;
+
+	SampleProviderBase(SampleProviderBase &&) noexcept = default;
+	SampleProviderBase& operator = (SampleProviderBase &&) noexcept = default;
+
 	/**
-	 * \brief Default destructor.
+	 * \brief Register a function callback called as \c start_input().
+	 *
+	 * \param[in] f The function to register
 	 */
-	~SampleProvider() noexcept override;
+	void register_startinput(std::function<void()> f);
 
-	void call_startinput() override;
+	/**
+	 * \brief Register a function callback called as \c append_samples().
+	 *
+	 * \param[in] f The function to register
+	 */
+	void register_appendsamples(
+			std::function<void(SampleInputIterator, SampleInputIterator)> f);
 
-	void call_appendsamples(SampleInputIterator begin, SampleInputIterator end)
-		override;
+	/**
+	 * \brief Register a function callback called as \c update_audiosize().
+	 *
+	 * \param[in] f The function to register
+	 */
+	void register_updateaudiosize(
+			std::function<void(const AudioSize &)> f);
 
-	void call_updateaudiosize(const AudioSize &size) override;
+	/**
+	 * \brief Register a function callback called as \c end_input().
+	 *
+	 * \param[in] f The function to register
+	 */
+	void register_endinput(std::function<void()> f);
 
-	void call_endinput() override;
+	/**
+	 * \brief Default implementation of attach_processor().
+	 */
+	void attach_processor_impl(SampleProcessor &processor);
 
+	/**
+	 * \brief Use the internal SampleProcessor.
+	 */
 	SampleProcessor* use_processor();
 
 private:
 
+	void do_signal_startinput() final;
+
+	void do_signal_appendsamples(SampleInputIterator begin,
+			SampleInputIterator end) final;
+
+	void do_signal_updateaudiosize(const AudioSize &size) final;
+
+	void do_signal_endinput() final;
+
+	void do_attach_processor(SampleProcessor &processor) final;
+
+	const SampleProcessor* do_processor() const final;
+
 	/**
-	 * \brief Hook to be called before leaving register_processor().
+	 * \brief Hook to be called immediately before leaving attach_processor().
 	 */
-	virtual void hook_post_attachprocessor();
+	virtual void hook_post_attachprocessor()
+	= 0;
 
 	/**
 	 * \brief Callback pointer for indicating the start of the sample input.

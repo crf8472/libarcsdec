@@ -419,9 +419,6 @@ void DefaultValidator::on_failure()
 AudioReaderImpl::AudioReaderImpl() = default;
 
 
-AudioReaderImpl::~AudioReaderImpl() noexcept = default;
-
-
 AudioReaderImpl::AudioReaderImpl(AudioReaderImpl &&) noexcept = default;
 
 

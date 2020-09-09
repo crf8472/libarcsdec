@@ -38,6 +38,9 @@
 #ifndef __LIBARCSDEC_METAPARSER_HPP__
 #include "metaparser.hpp"
 #endif
+#ifndef __LIBARCSDEC_SAMPLEPROC_HPP__
+#include "sampleproc.hpp"
+#endif
 
 
 namespace arcsdec
@@ -53,6 +56,63 @@ using arcstk::ChecksumSet;
 using arcstk::make_arid;
 using arcstk::make_context;
 using arcstk::make_empty_arid;
+
+
+/**
+ * \brief Provide a SampleProcessor that updates a Calculation.
+ */
+class CalculationProcessor final : public SampleProcessor
+{
+public:
+
+	/**
+	 * \brief Converting constructor for Calculation instances.
+	 *
+	 * \param[in] calculation The Calculation to use
+	 */
+	CalculationProcessor(Calculation &calculation)
+		: calculation_ (&calculation)
+	{
+		// empty
+	}
+
+	/**
+	 * \brief Default destructor.
+	 */
+	~CalculationProcessor() noexcept final = default;
+
+	CalculationProcessor(const CalculationProcessor &rhs) noexcept = delete;
+	CalculationProcessor& operator = (const CalculationProcessor &rhs) noexcept
+		= delete;
+
+private:
+
+	void do_start_input() final
+	{
+		/* empty */
+	}
+
+	void do_append_samples(SampleInputIterator begin, SampleInputIterator end)
+		final
+	{
+		calculation_->update(begin, end);
+	}
+
+	void do_update_audiosize(const AudioSize &size) final
+	{
+		calculation_->update_audiosize(size);
+	}
+
+	void do_end_input() final
+	{
+		/* empty */
+	}
+
+	/**
+	 * \brief Internal pointer to the calculation to wrap.
+	 */
+	Calculation *calculation_;
+};
 
 
 /**
