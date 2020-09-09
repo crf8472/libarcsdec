@@ -1,17 +1,21 @@
 /**
- * \file sampleproc.cpp Implements interface for processing samples
+ * \file
+ *
+ * \brief Implements interface for processing samples
  */
 
 
 #ifndef __LIBARCSDEC_SAMPLEPROC_HPP__
 #include "sampleproc.hpp"
 #endif
+#ifndef __LIBARCSTK_LOGGING_HPP__
+#include <arcstk/logging.hpp>
+#endif
 
 
 
 namespace arcsdec
 {
-
 inline namespace v_1_0_0
 {
 
@@ -35,6 +39,8 @@ SampleProcessor::~SampleProcessor() noexcept = default;
 
 void SampleProcessor::start_input()
 {
+	ARCS_LOG(DEBUG1) << "Called start_input()";
+
 	this->do_start_input();
 }
 
@@ -42,6 +48,8 @@ void SampleProcessor::start_input()
 void SampleProcessor::append_samples(SampleInputIterator begin,
 		SampleInputIterator end)
 {
+	ARCS_LOG(DEBUG1) << "Called append_samples()";
+
 	this->do_append_samples(begin, end);
 
 	++total_sequences_;
@@ -51,12 +59,19 @@ void SampleProcessor::append_samples(SampleInputIterator begin,
 
 void SampleProcessor::update_audiosize(const AudioSize &size)
 {
+	ARCS_LOG(DEBUG1) << "Called update_audiosize()";
+
+	ARCS_LOG_INFO << "Update total number of samples to: "
+		<< size.total_samples();
+
 	this->do_update_audiosize(size);
 }
 
 
 void SampleProcessor::end_input()
 {
+	ARCS_LOG(DEBUG1) << "Called end_input()";
+
 	this->do_end_input();
 }
 
@@ -226,6 +241,5 @@ void SampleProvider::hook_post_attachprocessor()
 }
 
 } // namespace v_1_0_0
-
 } // namespace arcsdec
 

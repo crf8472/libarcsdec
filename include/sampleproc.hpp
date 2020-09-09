@@ -321,6 +321,9 @@ private:
 
 /**
  * \brief A provider of sample sequences.
+ *
+ * It can have functions registered for starting and ending input,
+ * appending samples and updating buffer size.
  */
 class SampleProvider : public ISampleProvider
 {
