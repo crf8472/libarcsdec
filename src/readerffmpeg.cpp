@@ -939,7 +939,10 @@ int FFmpegAudioStream::num_planes() const
 int64_t FFmpegAudioStream::traverse_samples()
 {
 	PacketQueue queue;
-	const auto avg_queue_size = decltype( queue )::size_type { 12 };
+	using queue_size_t = decltype( queue )::size_type;
+
+	const auto avg_queue_size = queue_size_t { 12 };
+	const auto allowed_diff   = queue_size_t {  1 };
 
 	auto total_samples = int32_t { 0 };
 
@@ -970,10 +973,14 @@ int64_t FFmpegAudioStream::traverse_samples()
 
 		this->pass_frame(frame.get()); // TODO Instead:: fill decode buffer
 
-		if (not queue.enqueue_frame())
+		// queue too small?
+		if ((avg_queue_size - queue.size()) > allowed_diff)
 		{
-			// TODO EOF reached
-			break;
+			if (not queue.enqueue_frame())
+			{
+				// TODO EOF reached
+				break;
+			}
 		}
 	}
 
