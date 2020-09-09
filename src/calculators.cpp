@@ -116,6 +116,137 @@ private:
 
 
 /**
+ * \brief Sample format and reader independent sample buffer.
+ *
+ * Enhances BlockAccumulator to a SampleProcessor that also transports the
+ * AudioSize update and is also a SampleProvider - which means it can have a
+ * further SampleProcessor instances registered. Provides a convenience method
+ * for registering a Calculation as addressee of all updates.
+ */
+class BufferProcessor final : public  virtual SampleProviderBase
+							, public  virtual SampleProcessor
+							, private virtual BlockAccumulator
+{
+
+public:
+
+	/**
+	 * \brief Default constructor
+	 */
+	BufferProcessor();
+
+	/**
+	 * \brief Constructs a BufferProcessor with buffer of size samples_per_block.
+	 *
+	 * \param[in] samples_per_block Number of 32 bit PCM samples in one block
+	 */
+	explicit BufferProcessor(const int32_t samples_per_block);
+
+	/**
+	 * \brief Default destructor
+	 */
+	virtual ~BufferProcessor() noexcept override;
+
+	/**
+	 * \brief Reset the buffer to its initial state, thereby discarding its
+	 * content.
+	 *
+	 * The current buffer capacity is preserved.
+	 */
+	void reset();
+
+	/**
+	 * \brief Flush the buffer.
+	 */
+	void flush();
+
+
+private:
+
+	void do_start_input() override;
+
+	void do_append_samples(SampleInputIterator begin, SampleInputIterator end)
+		override;
+
+	void do_update_audiosize(const AudioSize &size) override;
+
+	void do_end_input() override;
+
+	void hook_post_attachprocessor() override;
+};
+
+
+// BufferProcessor
+
+
+BufferProcessor::BufferProcessor()
+	: BlockAccumulator(BLOCKSIZE.DEFAULT)
+{
+	this->init();
+}
+
+
+BufferProcessor::BufferProcessor(const int32_t samples_per_block)
+	: BlockAccumulator(samples_per_block)
+{
+	this->init();
+}
+
+
+BufferProcessor::~BufferProcessor() noexcept = default;
+
+
+void BufferProcessor::reset()
+{
+	this->init();
+}
+
+
+void BufferProcessor::flush()
+{
+	BlockAccumulator::flush();
+}
+
+
+void BufferProcessor::do_start_input()
+{
+	this->signal_startinput();
+}
+
+
+void BufferProcessor::do_append_samples(SampleInputIterator begin,
+		SampleInputIterator end)
+{
+	this->append_to_block(begin, end);
+	// append_to_block does signal_appendsamples() when flushing the buffer
+}
+
+
+void BufferProcessor::do_update_audiosize(const AudioSize &size)
+{
+	// do nothing, just pass on to registered processor
+	this->signal_updateaudiosize(size);
+}
+
+
+void BufferProcessor::do_end_input()
+{
+	this->flush();
+
+	// pass on to registered processor
+	this->signal_endinput();
+}
+
+
+void BufferProcessor::hook_post_attachprocessor()
+{
+	// Attach SampleProcessor to the inherited BlockAccumulator
+	this->register_block_consumer(
+		std::bind(&SampleProcessor::append_samples, this->use_processor(),
+			std::placeholders::_1, std::placeholders::_2));
+}
+
+/**
  * \brief Private implementation of a TOCParser.
  */
 class TOCParser::Impl final
@@ -565,7 +696,7 @@ void ARCSCalculator::Impl::process_file(const std::string &audiofilename,
 	const bool buffer_size_is_legal =
 			(BLOCKSIZE.MIN <= buffer_size and buffer_size <= BLOCKSIZE.MAX);
 
-	CalculationProcessor proc { calc };
+	CalculationProcessor calculator { calc };
 
 	if (use_cbuffer and !reader->configurable_read_buffer()
 			and buffer_size_is_legal)
@@ -574,8 +705,8 @@ void ARCSCalculator::Impl::process_file(const std::string &audiofilename,
 
 		// Conversion/Buffering was explicitly requested
 
-		SampleBuffer buffer(buffer_size);
-		buffer.attach_processor(proc);
+		BufferProcessor buffer(buffer_size);
+		buffer.attach_processor(calculator);
 
 		ARCS_LOG(DEBUG1) << "Configure sample buffer of size: "
 			<< std::to_string(buffer_size) << " bytes";
@@ -613,7 +744,7 @@ void ARCSCalculator::Impl::process_file(const std::string &audiofilename,
 				<< "was requested.";
 		}
 
-		reader->set_processor(proc);
+		reader->set_processor(calculator);
 	}
 
 	reader->process_file(audiofilename);

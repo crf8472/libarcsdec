@@ -7,17 +7,8 @@
  * \brief Toolkit for buffering audio samples
  */
 
-#include <chrono>
 #include <functional>
-#include <fstream>
-#include <memory>
-
-#ifndef __LIBARCSTK_CALCULATE_HPP__
-#include <arcstk/samples.hpp>   // AudioSize, Calculation, SampleInputIterator
-#endif
-#ifndef __LIBARCSTK_SAMPLES_HPP__
-#include <arcstk/samples.hpp>   // SampleSequence
-#endif
+#include <vector>
 
 #ifndef __LIBARCSDEC_SAMPLEPROC_HPP__
 #include "sampleproc.hpp"
@@ -67,7 +58,7 @@ inline namespace v_1_0_0
  * BlockAccumulator buffers up sequences of samples until the defined buffer
  * size is reached.
  *
- * Classes SampleBuffer and PCMBlockReader are built on this API.
+ * Classes BufferProcessor and PCMBlockReader are built on this API.
  *
  * @{
  */
@@ -171,6 +162,9 @@ private:
 	 */
 	int32_t samples_per_block_;
 };
+
+
+class SampleInputIterator;
 
 
 /**
@@ -301,73 +295,12 @@ private:
 	/**
 	 * \brief Internal sample buffer
 	 */
-	std::vector<uint32_t> samples_;
+	std::vector<uint32_t> samples_; // TODO Use arcstk::sample_t
 
 	/**
 	 * \brief Number of samples processed
 	 */
 	int32_t samples_appended_;
-};
-
-
-/**
- * \brief Sample format and reader independent sample buffer.
- *
- * Enhances BlockAccumulator to a SampleProcessor that also transports the
- * AudioSize update and is also a SampleProvider - which means it can have a
- * further SampleProcessor instances registered. Provides a convenience method
- * for registering a Calculation as addressee of all updates.
- */
-class SampleBuffer  : public  virtual SampleProviderBase
-					, public  virtual SampleProcessor
-					, private virtual BlockAccumulator
-{
-
-public:
-
-	/**
-	 * \brief Default constructor
-	 */
-	SampleBuffer();
-
-	/**
-	 * \brief Constructs a SampleBuffer with buffer of size samples_per_block.
-	 *
-	 * \param[in] samples_per_block Number of 32 bit PCM samples in one block
-	 */
-	explicit SampleBuffer(const int32_t samples_per_block);
-
-	/**
-	 * \brief Default destructor
-	 */
-	virtual ~SampleBuffer() noexcept override;
-
-	/**
-	 * \brief Reset the buffer to its initial state, thereby discarding its
-	 * content.
-	 *
-	 * The current buffer capacity is preserved.
-	 */
-	void reset();
-
-	/**
-	 * \brief Flush the buffer.
-	 */
-	void flush();
-
-
-private:
-
-	void do_start_input() override;
-
-	void do_append_samples(SampleInputIterator begin, SampleInputIterator end)
-		override;
-
-	void do_update_audiosize(const AudioSize &size) override;
-
-	void do_end_input() override;
-
-	void hook_post_attachprocessor() override;
 };
 
 /// @}

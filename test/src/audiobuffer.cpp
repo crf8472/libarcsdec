@@ -5,14 +5,11 @@
 #include "audiobuffer.hpp"
 #endif
 
+#ifndef __LIBARCSTK_SAMPLES_HPP__
+#include <arcstk/samples.hpp>
+#endif
 #ifndef __LIBARCSTK_IDENTIFIER_HPP__
 #include <arcstk/identifier.hpp> // for CDDA
-#endif
-#ifndef __LIBARCSTK_calculate_HPP__
-#include <arcstk/calculate.hpp> // for SampleInputIterator implementation
-#endif
-#ifndef __LIBARCSTK_IDENTIFIER_HPP__
-#include <arcstk/samples.hpp>
 #endif
 
 /**
@@ -55,13 +52,5 @@ TEST_CASE ( "BlockAccumulator", "[audiobuffer] [blockaccumulator]" )
 
 		//accumulator.flush();
 	}
-}
-
-
-TEST_CASE ( "SampleBuffer", "[audiobuffer] [samplebuffer]" )
-{
-	arcsdec::SampleBuffer buffer;
-
-	CHECK ( buffer.samples_processed() == 0 );
 }
 

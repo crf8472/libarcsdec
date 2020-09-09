@@ -9,17 +9,10 @@
  */
 
 #include <algorithm>
-#include <array>
 #include <cstdint>
-#include <fstream>
 #include <functional>
-#include <memory>
-#include <string>
-#include <vector>
+#include <limits>
 
-#ifndef __LIBARCSTK_CALCULATE_HPP__
-#include <arcstk/calculate.hpp> // for AudioSize, Calculation, SampleInputIterator
-#endif
 #ifndef __LIBARCSTK_LOGGING_HPP__
 #include <arcstk/logging.hpp>
 #endif
@@ -27,7 +20,6 @@
 
 namespace arcsdec
 {
-
 inline namespace v_1_0_0
 {
 
@@ -237,78 +229,6 @@ void BlockAccumulator::init_buffer(const int32_t buffer_size)
 	samples_.resize(static_cast<decltype(samples_)::size_type>(buffer_size));
 }
 
-
-// SampleBuffer
-
-
-SampleBuffer::SampleBuffer()
-	: BlockAccumulator(BLOCKSIZE.DEFAULT)
-{
-	this->init();
-}
-
-
-SampleBuffer::SampleBuffer(const int32_t samples_per_block)
-	: BlockAccumulator(samples_per_block)
-{
-	this->init();
-}
-
-
-SampleBuffer::~SampleBuffer() noexcept = default;
-
-
-void SampleBuffer::reset()
-{
-	this->init();
-}
-
-
-void SampleBuffer::flush()
-{
-	BlockAccumulator::flush();
-}
-
-
-void SampleBuffer::do_start_input()
-{
-	this->signal_startinput();
-}
-
-
-void SampleBuffer::do_append_samples(SampleInputIterator begin,
-		SampleInputIterator end)
-{
-	this->append_to_block(begin, end);
-	// append_to_block does signal_appendsamples() when flushing the buffer
-}
-
-
-void SampleBuffer::do_update_audiosize(const AudioSize &size)
-{
-	// do nothing, just pass on to registered processor
-	this->signal_updateaudiosize(size);
-}
-
-
-void SampleBuffer::do_end_input()
-{
-	this->flush();
-
-	// pass on to registered processor
-	this->signal_endinput();
-}
-
-
-void SampleBuffer::hook_post_attachprocessor()
-{
-	// Attach SampleProcessor to the inherited BlockAccumulator
-	this->register_block_consumer(
-		std::bind(&SampleProcessor::append_samples, this->use_processor(),
-			std::placeholders::_1, std::placeholders::_2));
-}
-
 } // namespace v_1_0_0
-
 } // namespace arcsdec
 
