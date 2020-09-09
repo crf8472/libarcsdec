@@ -72,6 +72,11 @@ public:
 	TOCParser();
 
 	/**
+	 * \brief Destructor.
+	 */
+	~TOCParser() noexcept; // required for completeness of Impl
+
+	/**
 	 * \brief Parse the metadata file to a TOC object.
 	 *
 	 * \param[in] metafilename Name of the metadatafile
@@ -117,6 +122,11 @@ public:
 	 * \brief Constructor.
 	 */
 	ARIdCalculator();
+
+	/**
+	 * \brief Destructor.
+	 */
+	~ARIdCalculator() noexcept; // required for completeness of Impl
 
 	/**
 	 * \brief Calculate ARId using the specified metadata file.
@@ -202,6 +212,11 @@ public:
 	 * \param[in] type The Checksum type to calculate.
 	 */
 	ARCSCalculator(const arcstk::checksum::type type);
+
+	/**
+	 * \brief Destructor.
+	 */
+	~ARCSCalculator() noexcept; // required for completeness of Impl
 
 	/**
 	 * \brief Calculate ARCS values for an audio file, using the given TOC.

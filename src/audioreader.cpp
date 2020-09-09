@@ -626,7 +626,7 @@ AudioReader::Impl::Impl(std::unique_ptr<AudioReaderImpl> readerimpl,
 			SampleProcessor &processor)
 	: readerimpl_(std::move(readerimpl))
 {
-	readerimpl_->register_processor(processor);
+	readerimpl_->attach_processor(processor);
 }
 
 
@@ -689,7 +689,7 @@ std::unique_ptr<FileReaderDescriptor> AudioReader::Impl::descriptor() const
 
 void AudioReader::Impl::set_processor(SampleProcessor &processor)
 {
-	readerimpl_->register_processor(processor);
+	readerimpl_->attach_processor(processor);
 }
 
 

@@ -270,59 +270,37 @@ void SampleBuffer::flush()
 }
 
 
-//void SampleBuffer::notify_total_samples(const uint32_t sample_count)
-//{
-//	ARCS_LOG_DEBUG << "Total samples updated to: " << sample_count;
-//
-//	AudioSize size;
-//	size.set_sample_count(sample_count);
-//
-//	this->process_audiosize(size);
-//}
-
-
-//void SampleBuffer::register_processor(Calculation &calc)
-//{
-//	this->register_appendsamples(
-//			std::bind(&Calculation::update, &calc,
-//				std::placeholders::_1, std::placeholders::_2));
-//
-//	this->register_updatesize(
-//			std::bind(&Calculation::update_audiosize, &calc,
-//				std::placeholders::_1));
-//
-//	// Attach Calculation to the inherited BlockAccumulator
-//	this->register_block_consumer(
-//		std::bind(&Calculation::update, &calc,
-//			std::placeholders::_1, std::placeholders::_2));
-//}
+void SampleBuffer::do_start_input()
+{
+	this->call_startinput();
+}
 
 
 void SampleBuffer::do_append_samples(SampleInputIterator begin,
 		SampleInputIterator end)
 {
 	this->append_to_block(begin, end);
-	// append_to_block calls process_samples() once the buffer is full
+	// append_to_block does call_appendsamples() when flushing the buffer
 }
 
 
 void SampleBuffer::do_update_audiosize(const AudioSize &size)
 {
 	// do nothing, just pass on to registered processor
-	this->process_audiosize(size);
+	this->call_updateaudiosize(size);
 }
 
 
-void SampleBuffer::do_end_input(const int32_t last_sample_index)
+void SampleBuffer::do_end_input()
 {
 	this->flush();
 
 	// pass on to registered processor
-	this->process_endinput(last_sample_index);
+	this->call_endinput();
 }
 
 
-void SampleBuffer::hook_post_register_processor()
+void SampleBuffer::hook_post_attachprocessor()
 {
 	// Attach SampleProcessor to the inherited BlockAccumulator
 	this->register_block_consumer(

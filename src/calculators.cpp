@@ -505,7 +505,7 @@ void ARCSCalculator::Impl::process_file(const std::string &audiofilename,
 	const bool buffer_size_is_legal =
 			(BLOCKSIZE.MIN <= buffer_size and buffer_size <= BLOCKSIZE.MAX);
 
-	SampleProcessorAdapter proc { calc };
+	CalculationProcessor proc { calc };
 
 	if (use_cbuffer and !reader->configurable_read_buffer()
 			and buffer_size_is_legal)
@@ -515,7 +515,7 @@ void ARCSCalculator::Impl::process_file(const std::string &audiofilename,
 		// Conversion/Buffering was explicitly requested
 
 		SampleBuffer buffer(buffer_size);
-		buffer.register_processor(proc);
+		buffer.attach_processor(proc);
 
 		ARCS_LOG(DEBUG1) << "Configure sample buffer of size: "
 			<< std::to_string(buffer_size) << " bytes";
@@ -649,6 +649,9 @@ TOCParser::TOCParser()
 }
 
 
+TOCParser::~TOCParser() noexcept = default;
+
+
 std::unique_ptr<TOC> TOCParser::parse(const std::string &metafilename) const
 {
 	return impl_->parse(metafilename);
@@ -676,6 +679,9 @@ ARIdCalculator::ARIdCalculator()
 	impl_->set_toc_selection(FileReaderRegistry::toc_selection());
 	impl_->set_audio_selection(FileReaderRegistry::audio_selection());
 }
+
+
+ARIdCalculator::~ARIdCalculator() noexcept = default;
 
 
 std::unique_ptr<ARId> ARIdCalculator::calculate(const std::string &metafilename)
@@ -726,6 +732,9 @@ ARCSCalculator::ARCSCalculator()
 {
 	impl_->set_selection(FileReaderRegistry::audio_selection());
 }
+
+
+ARCSCalculator::~ARCSCalculator() noexcept = default;
 
 
 ARCSCalculator::ARCSCalculator(const arcstk::checksum::type type)

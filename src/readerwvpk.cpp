@@ -52,7 +52,7 @@ namespace wavpack
 using arcstk::SampleInputIterator;
 using arcstk::AudioSize;
 using arcstk::CDDA;
-using arcstk::SampleSequence;
+using arcstk::InterleavedSamples;
 
 
 LibwavpackException::LibwavpackException(const std::string &value,
@@ -764,16 +764,18 @@ void WavpackAudioReaderImpl::do_process_file(const std::string &filename)
 	{
 		AudioSize size;
 		size.set_total_samples(total_samples);
-		this->process_audiosize(size);
+		this->call_updateaudiosize(size);
 	}
 
 
 	// Samples reading loop
 
 	{
-		SampleSequence<int32_t, false> sequence(file.channel_order());
+		using sample_t = int32_t;
 
-		std::vector<int32_t> buffer;
+		InterleavedSamples<sample_t> sequence(file.channel_order());
+
+		std::vector<sample_t> buffer;
 		using buffersize_t = typename decltype(buffer)::size_type;
 
 		buffer.resize(static_cast<buffersize_t>(this->samples_per_read()));
@@ -818,7 +820,7 @@ void WavpackAudioReaderImpl::do_process_file(const std::string &filename)
 			// Note: we use the Number of 16-bit-samples _per_channel_, not
 			// the total number of 16 bit samples in the chunk.
 
-			this->process_samples(sequence.begin(), sequence.end());
+			this->call_appendsamples(sequence.begin(), sequence.end());
 		}
 	}
 }

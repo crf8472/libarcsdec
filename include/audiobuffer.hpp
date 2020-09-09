@@ -358,14 +358,16 @@ public:
 
 private:
 
+	void do_start_input() override;
+
 	void do_append_samples(SampleInputIterator begin, SampleInputIterator end)
 		override;
 
 	void do_update_audiosize(const AudioSize &size) override;
 
-	void do_end_input(const int32_t last_sample_index) override;
+	void do_end_input() override;
 
-	void hook_post_register_processor() override;
+	void hook_post_attachprocessor() override;
 };
 
 /// @}
