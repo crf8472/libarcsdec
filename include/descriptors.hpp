@@ -214,11 +214,11 @@ enum class Format : unsigned
 	M4A,
 	OGG,
 	WV,
-	AIFF,
-	WMA
+	AIFF
 	// ... add more audio formats here
 };
 // TODO Raw
+// TODO WMA
 
 
 /**
@@ -264,10 +264,10 @@ enum class Codec : unsigned
 	FLAC,
 	WAVPACK,
 	MONKEY,
-	ALAC,
-	WMALOSSLESS
+	ALAC
 };
 // TODO Raw
+// TODO WMALOSSLESS
 
 
 /**
