@@ -203,7 +203,6 @@ void SampleProviderBase::do_signal_endinput()
 void SampleProviderBase::do_attach_processor(SampleProcessor &processor)
 {
 	this->attach_processor_impl(processor);
-	this->hook_post_attachprocessor();
 }
 
 

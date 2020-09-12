@@ -403,8 +403,6 @@ public:
 
 private:
 
-	void hook_post_attachprocessor() final { /* empty */ }
-
 	std::unique_ptr<AudioSize> do_acquire_size(const std::string &filename)
 		final;
 

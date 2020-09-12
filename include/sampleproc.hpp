@@ -327,6 +327,8 @@ public:
 
 protected:
 
+	~SampleProviderBase() noexcept = default;
+
 	SampleProviderBase(const SampleProviderBase &rhs) = default;
 	SampleProviderBase& operator = (const SampleProviderBase &rhs) = default;
 
@@ -387,12 +389,6 @@ private:
 	void do_attach_processor(SampleProcessor &processor) final;
 
 	const SampleProcessor* do_processor() const final;
-
-	/**
-	 * \brief Hook to be called immediately before leaving attach_processor().
-	 */
-	virtual void hook_post_attachprocessor()
-	= 0;
 
 	/**
 	 * \brief Callback pointer for indicating the start of the sample input.
