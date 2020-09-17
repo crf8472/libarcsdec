@@ -31,7 +31,7 @@ using arcstk::AudioSize;
 
 
 /**
- * \brief Symbolic constants for certain block sizes
+ * \brief Symbolic constants for certain block sizes (in PCM 32 bit samples).
  */
 struct BLOCKSIZE_t
 {
@@ -201,13 +201,7 @@ public:
 	virtual ~SampleProvider() noexcept;
 
 	/**
-	 * \brief Register a SampleProcessor.
-	 *
-	 * This will register all callback methods of the \c processor. Already
-	 * registered callbacks will be overwritten by this method.
-	 *
-	 * The method is a mere convenience for completely registering a single
-	 * SampleProcessor instance.
+	 * \brief Attach a SampleProcessor.
 	 *
 	 * \param[in] processor The SampleProcessor to use
 	 */
@@ -335,36 +329,6 @@ protected:
 	SampleProviderBase& operator = (SampleProviderBase &&) noexcept = default;
 
 	/**
-	 * \brief Register a function callback called as \c start_input().
-	 *
-	 * \param[in] f The function to register
-	 */
-	void register_startinput(std::function<void()> f);
-
-	/**
-	 * \brief Register a function callback called as \c append_samples().
-	 *
-	 * \param[in] f The function to register
-	 */
-	void register_appendsamples(
-			std::function<void(SampleInputIterator, SampleInputIterator)> f);
-
-	/**
-	 * \brief Register a function callback called as \c update_audiosize().
-	 *
-	 * \param[in] f The function to register
-	 */
-	void register_updateaudiosize(
-			std::function<void(const AudioSize &)> f);
-
-	/**
-	 * \brief Register a function callback called as \c end_input().
-	 *
-	 * \param[in] f The function to register
-	 */
-	void register_endinput(std::function<void()> f);
-
-	/**
 	 * \brief Default implementation of attach_processor().
 	 */
 	void attach_processor_impl(SampleProcessor &processor);
@@ -388,27 +352,6 @@ private:
 	void do_attach_processor(SampleProcessor &processor) final;
 
 	const SampleProcessor* do_processor() const final;
-
-	/**
-	 * \brief Callback pointer for indicating the start of the sample input.
-	 */
-	std::function<void()> start_input_;
-
-	/**
-	 * \brief Callback pointer for appending samples sequences to processing.
-	 */
-	std::function<void(SampleInputIterator begin, SampleInputIterator end)>
-		append_samples_;
-
-	/**
-	 * \brief Callback pointer for updateing the AudioSize.
-	 */
-	std::function<void(const AudioSize &size)> update_audiosize_;
-
-	/**
-	 * \brief Callback pointer for indicating the end of the sample input.
-	 */
-	std::function<void()> end_input_;
 
 	/**
 	 * \brief Internal pointer to the SampleProcessor.

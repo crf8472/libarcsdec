@@ -8,6 +8,7 @@
 #ifndef __LIBARCSDEC_SAMPLEPROC_HPP__
 #include "sampleproc.hpp"
 #endif
+
 #ifndef __LIBARCSTK_LOGGING_HPP__
 #include <arcstk/logging.hpp>
 #endif
@@ -18,6 +19,8 @@ namespace arcsdec
 {
 inline namespace v_1_0_0
 {
+
+using arcstk::SampleInputIterator;
 
 
 const BLOCKSIZE_t BLOCKSIZE;
@@ -138,65 +141,34 @@ void SampleProvider::signal_endinput()
 
 
 SampleProviderBase::SampleProviderBase()
-	: start_input_{}
-	, append_samples_{}
-	, update_audiosize_{}
-	, end_input_{}
-	, processor_{}
+	: processor_{}
 {
 	// empty
 }
 
 
-void SampleProviderBase::register_startinput(std::function<void()> func)
-{
-	this->start_input_ = func;
-}
-
-
-void SampleProviderBase::register_appendsamples(
-		std::function<void(SampleInputIterator begin,
-			SampleInputIterator end)> func)
-{
-	this->append_samples_ = func;
-}
-
-
-void SampleProviderBase::register_updateaudiosize(
-		std::function<void(const AudioSize &size)> func)
-{
-	this->update_audiosize_ = func;
-}
-
-
-void SampleProviderBase::register_endinput(std::function<void()> func)
-{
-	this->end_input_ = func;
-}
-
-
 void SampleProviderBase::do_signal_startinput()
 {
-	this->start_input_();
+	use_processor()->start_input();
 }
 
 
 void SampleProviderBase::do_signal_appendsamples(
 		SampleInputIterator begin, SampleInputIterator end)
 {
-	this->append_samples_(begin, end);
+	use_processor()->append_samples(begin, end);
 }
 
 
 void SampleProviderBase::do_signal_updateaudiosize(const AudioSize &size)
 {
-	this->update_audiosize_(size);
+	use_processor()->update_audiosize(size);
 }
 
 
 void SampleProviderBase::do_signal_endinput()
 {
-	this->end_input_();
+	use_processor()->end_input();
 }
 
 
@@ -209,20 +181,6 @@ void SampleProviderBase::do_attach_processor(SampleProcessor &processor)
 void SampleProviderBase::attach_processor_impl(SampleProcessor &processor)
 {
 	processor_ = &processor;
-
-	this->register_startinput(
-			std::bind(&SampleProcessor::start_input, &processor));
-
-	this->register_appendsamples(
-			std::bind(&SampleProcessor::append_samples, &processor,
-				std::placeholders::_1, std::placeholders::_2));
-
-	this->register_updateaudiosize(
-			std::bind(&SampleProcessor::update_audiosize, &processor,
-				std::placeholders::_1));
-
-	this->register_endinput(
-			std::bind(&SampleProcessor::end_input, &processor));
 }
 
 

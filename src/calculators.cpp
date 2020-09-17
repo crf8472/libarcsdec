@@ -8,6 +8,7 @@
 #include "calculators.hpp"
 #endif
 
+#include <functional>
 #include <memory>
 #include <set>
 #include <stdexcept>  // for logic_error
@@ -20,7 +21,7 @@
 #include <arcstk/identifier.hpp>
 #endif
 #ifndef __LIBARCSTK_CALCULATE_HPP__
-#include <arcstk/calculate.hpp>
+#include <arcstk/calculate.hpp>      // for Checksums, SampleInputIterator, ...
 #endif
 #ifndef __LIBARCSTK_LOGGING_HPP__
 #include <arcstk/logging.hpp>
@@ -53,6 +54,7 @@ using arcstk::ARId;
 using arcstk::Calculation;
 using arcstk::Checksums;
 using arcstk::ChecksumSet;
+using arcstk::SampleInputIterator;
 using arcstk::make_arid;
 using arcstk::make_context;
 using arcstk::make_empty_arid;
@@ -115,7 +117,9 @@ private:
 };
 
 
-/**
+// Stub for implementing a sample buffer (not functional yet)
+
+/* *
  * \brief Sample format and reader independent sample buffer.
  *
  * Enhances BlockAccumulator to a SampleProcessor that also transports the
@@ -123,86 +127,89 @@ private:
  * further SampleProcessor instances registered. Provides a convenience method
  * for registering a Calculation as addressee of all updates.
  */
-class BufferProcessor final : public  virtual SampleProviderBase
-							, public  virtual SampleProcessor
-							, private virtual BlockAccumulator
+class BufferProcessor final : public SampleProcessor
+							, public SampleProviderBase
 {
 public:
 
 	/**
-	 * \brief Default constructor
-	 */
-	BufferProcessor()
-		: BlockAccumulator(BLOCKSIZE.DEFAULT)
-	{
-		this->init();
-	}
-
-	/**
-	 * \brief Constructs a BufferProcessor with buffer of size samples_per_block.
+	 * \brief Constructs a BufferProcessor with buffer with specified size.
 	 *
 	 * \param[in] samples_per_block Number of 32 bit PCM samples in one block
 	 */
-	explicit BufferProcessor(const int32_t samples_per_block)
-		: BlockAccumulator(samples_per_block)
+	explicit BufferProcessor(const int32_t /*samples_per_block*/)
+		//: accumulator_ { total_samples }
 	{
-		this->init();
+		// TODO Implement constructor
+
+		//accumulator_.init();
+
+		// Attach hook_flush() as the consumer
+		//accumulator_.register_block_consumer(
+		//	std::bind(&BufferProcessor::hook_flush, this,
+			//	std::placeholders::_1, std::placeholders::_2));
 	}
 
 	/**
-	 * \brief Reset the buffer to its initial state, thereby discarding its
-	 * content.
+	 * \brief Default constructor.
 	 *
-	 * The current buffer capacity is preserved.
+	 * Initializes the buffer size as BLOCKSIZE.DEFAULT.
 	 */
-	void reset()
-	{
-		this->init();
-	}
-
-	/**
-	 * \brief Flush the buffer.
-	 */
-	void flush()
-	{
-		BlockAccumulator::flush();
-	}
+	BufferProcessor() : BufferProcessor(BLOCKSIZE.DEFAULT) { /* empty */ };
 
 private:
 
-	void do_start_input() override
+	// SampleProcessor functions
+
+	void do_start_input() final
 	{
-		this->signal_startinput();
+		this->signal_startinput(); // just pass through
 	}
 
-	void do_append_samples(SampleInputIterator begin, SampleInputIterator end)
-		override
+	void do_append_samples(SampleInputIterator begin,
+			SampleInputIterator end) final
 	{
-		this->append_to_block(begin, end);
-		// append_to_block does signal_appendsamples() when flushing the buffer
+		// TODO Implement do_append_samples()
+
+		//accumulator_.append_to_block(begin, end);
+		// Calls its consumer when flushing the buffer
+		// Consumer is signal_appendsamples()
+		this->signal_appendsamples(begin, end);
 	}
 
-	void do_update_audiosize(const AudioSize &size) override
+	void do_update_audiosize(const AudioSize &size) final
 	{
-		// do nothing, just pass on to registered processor
-		this->signal_updateaudiosize(size);
+		this->signal_updateaudiosize(size); // just pass through
 	}
 
-	void do_end_input() override
+	void do_end_input() final
 	{
-		this->flush();
+		// TODO Implement do_end_input()
 
-		// pass on to registered processor
+		//accumulator_.flush(); // This calls signal_appendsamples() 1 more time
+
 		this->signal_endinput();
+		//accumulator_.init();
 	}
 
-	void hook_post_attachprocessor() override
+	/**
+	 * \brief Consumer function for flushing the internal buffer.
+	 *
+	 * Triggers signal_appensamples().
+	 *
+	 * \param[in] begin Begin of the sample sequence
+	 * \param[in] end   End of the sample sequence
+	 */
+	void hook_flush(SampleInputIterator begin, SampleInputIterator end)
 	{
-		// Attach SampleProcessor to the inherited BlockAccumulator
-		this->register_block_consumer(
-			std::bind(&SampleProcessor::append_samples, this->use_processor(),
-				std::placeholders::_1, std::placeholders::_2));
+		ARCS_LOG_DEBUG << "Buffer is flushed";
+		this->signal_appendsamples(begin, end);
 	}
+
+	/**
+	 * \brief Internal buffer.
+	 */
+	//BlockAccumulator accumulator_;
 };
 
 
@@ -317,10 +324,9 @@ private:
 	 * \param[in] audiofilename  Name  of the audiofile
 	 * \param[in] calc           The Calculation to use
 	 * \param[in] buffer_size    Buffer size in number of samples
-	 * \param[in] use_cbuffer    Enforce a converting buffer
 	 */
 	void process_file(const std::string &audiofilename, Calculation& calc,
-		const int32_t buffer_size, const bool use_cbuffer) const;
+		const int32_t buffer_size) const;
 
 	/**
 	 * \brief Worker: check samples_todo() and warn if < 0 and error if > 0
@@ -572,7 +578,7 @@ std::pair<Checksums, ARId> ARCSCalculator::Impl::calculate(
 		throw std::logic_error("Could not instantiate Calculation object");
 	}
 
-	this->process_file(audiofilename, *calc, BLOCKSIZE.DEFAULT, false);
+	this->process_file(audiofilename, *calc, BLOCKSIZE.DEFAULT);
 
 	this->log_completeness_check(*calc);
 
@@ -645,8 +651,7 @@ ChecksumSet ARCSCalculator::Impl::calculate(
 
 
 void ARCSCalculator::Impl::process_file(const std::string &audiofilename,
-		Calculation& calc, const int32_t buffer_size, const bool use_cbuffer)
-		const
+		Calculation& calc, const int32_t buffer_size) const
 {
 	CreateAudioReader audioreader;
 	auto reader = audioreader(selection(), audiofilename);
@@ -658,55 +663,33 @@ void ARCSCalculator::Impl::process_file(const std::string &audiofilename,
 
 	CalculationProcessor calculator { calc };
 
-	if (use_cbuffer and !reader->configurable_read_buffer()
-			and buffer_size_is_legal)
+	if (reader->configurable_read_buffer())
 	{
-		ARCS_LOG_DEBUG << "Buffering for sample conversion requested";
+		ARCS_LOG_DEBUG << "AudioReader provides configurable read buffer";
 
-		// Conversion/Buffering was explicitly requested
-
-		BufferProcessor buffer(buffer_size);
-		buffer.attach_processor(calculator);
-
-		ARCS_LOG(DEBUG1) << "Configure sample buffer of size: "
-			<< std::to_string(buffer_size) << " bytes";
-
-		reader->set_processor(buffer);
-	} else
-	{
-		// Conversion/Buffering was not requested
-
-		if (reader->configurable_read_buffer())
+		if (buffer_size_is_legal)
 		{
-			ARCS_LOG_DEBUG << "AudioReader provides configurable read buffer";
+			ARCS_LOG(DEBUG1) << "Configure sample read chunk size: "
+				<< std::to_string(buffer_size) << " bytes";
 
-			if (buffer_size_is_legal)
-			{
-				ARCS_LOG(DEBUG1) << "Configure sample read chunk size: "
-					<< std::to_string(buffer_size) << " bytes";
+			reader->set_samples_per_read(buffer_size);
 
-				reader->set_samples_per_read(buffer_size);
-
-			} else
-			{
-				ARCS_LOG_WARNING << "Specified buffer size of " << buffer_size
-					<< ", but this is not within the legal range of "
-					<< BLOCKSIZE.MIN << " - " << BLOCKSIZE.MAX
-					<< ". Use implementations default instead.";
-
-				// Do nothing, AudioReaderImpl uses its default
-			}
 		} else
 		{
-			ARCS_LOG_INFO << "AudioReader has no configuration option for read "
-				<< "buffer size and no conversion buffer was requested."
-				<< " Use implementation's default since no conversion buffer "
-				<< "was requested.";
-		}
+			ARCS_LOG_WARNING << "Specified buffer size of " << buffer_size
+				<< ", but this is not within the legal range of "
+				<< BLOCKSIZE.MIN << " - " << BLOCKSIZE.MAX
+				<< " samples. Use default implementation instead.";
 
-		reader->set_processor(calculator);
+				// Do nothing, AudioReaderImpl uses its default
+		}
+	} else
+	{
+		ARCS_LOG_INFO << "AudioReader has no configuration option for read "
+			<< "buffer size. Use its default implementation.";
 	}
 
+	reader->set_processor(calculator);
 	reader->process_file(audiofilename);
 }
 
@@ -727,7 +710,7 @@ ChecksumSet ARCSCalculator::Impl::calculate_track(
 		throw std::logic_error("Could not instantiate Calculation object");
 	}
 
-	this->process_file(audiofilename, *calc, BLOCKSIZE.DEFAULT, false);
+	this->process_file(audiofilename, *calc, BLOCKSIZE.DEFAULT);
 
 	// Sanity-check result
 
