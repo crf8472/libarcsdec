@@ -328,7 +328,7 @@ public:
 	/**
 	 * \brief Virtual default destructor.
 	 */
-	virtual ~WavpackValidatingHandler() noexcept;
+	~WavpackValidatingHandler() noexcept override;
 
 	/**
 	 * \brief Validate the format of the wavpack file.
