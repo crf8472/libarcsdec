@@ -115,11 +115,6 @@ public:
 	FlacAudioReaderImpl(const FlacAudioReaderImpl &) = delete;
 	FlacAudioReaderImpl& operator = (const FlacAudioReaderImpl &) = delete;
 
-	// class is movable
-	FlacAudioReaderImpl(FlacAudioReaderImpl &&rhs) noexcept = default;
-	FlacAudioReaderImpl& operator = (FlacAudioReaderImpl &&rhs) noexcept
-		= default;
-
 	/**
 	 * \brief Pass frames to internal handler.
 	 *
