@@ -13,7 +13,6 @@
 #include <arcstk/calculate.hpp>
 #endif
 
-
 namespace arcsdec
 {
 inline namespace v_1_0_0
@@ -316,7 +315,7 @@ private:
  *
  * Implements SampleProvider.
  */
-class SampleProviderBase : virtual public SampleProvider
+class SampleProviderBase : public SampleProvider
 {
 public:
 
