@@ -1,5 +1,8 @@
 #include "catch2/catch.hpp"
 
+#include <stdexcept>
+#include <string>
+
 #ifndef __LIBARCSDEC_READERFFMPEG_HPP__
 #include "readerffmpeg.hpp"
 #endif
@@ -50,13 +53,19 @@ TEST_CASE ( "PacketQueue", "[packetqueue]" )
 	using arcsdec::details::ffmpeg::AVFormatContextPtr;
 	using arcsdec::details::ffmpeg::AVCodecContextPtr;
 	using arcsdec::details::ffmpeg::PacketQueue;
+	using arcsdec::details::ffmpeg::av_err2str;
 
 	::AVFormatContext* ff_fctx = nullptr;
 
-	auto error_fopen =
+	auto error_open_input =
 		::avformat_open_input(&ff_fctx, "test01.wav", nullptr, nullptr);
 
-	REQUIRE ( error_fopen == 0 );
+	if ( error_open_input != 0 )
+	{
+		throw std::runtime_error("av_open_input: " +
+				std::string(av_err2str(error_open_input)));
+	}
+	REQUIRE ( error_open_input == 0 );
 
 	AVFormatContextPtr fctx(ff_fctx);
 
@@ -64,7 +73,16 @@ TEST_CASE ( "PacketQueue", "[packetqueue]" )
 	int stream_idx = ::av_find_best_stream(fctx.get(), ::AVMEDIA_TYPE_AUDIO,
 			-1, -1, &codec, 0);
 
+	if ( stream_idx < 0 )
+	{
+		throw std::runtime_error("av_find_best_stream: " +
+				std::string(av_err2str(stream_idx)));
+	}
 	REQUIRE ( stream_idx >= 0 );
+	if ( !codec )
+	{
+		throw std::runtime_error("av_find_best_stream did not yield a codec");
+	}
 	REQUIRE ( codec );
 
 	::AVStream* stream = fctx->streams[stream_idx];
@@ -84,6 +102,11 @@ TEST_CASE ( "PacketQueue", "[packetqueue]" )
 
 	auto error_copen = ::avcodec_open2(cctx.get(), codec, nullptr);
 
+	if ( error_copen != 0 )
+	{
+		throw std::runtime_error("avcodec_open2: " +
+				std::string(av_err2str(error_copen)));
+	}
 	REQUIRE ( error_copen == 0 );
 
 	PacketQueue queue;
@@ -93,7 +116,7 @@ TEST_CASE ( "PacketQueue", "[packetqueue]" )
 	REQUIRE ( queue.size() == 0 );
 
 
-	SECTION ( "enqueue_frame() loop stops correctly" )
+	SECTION ( "enqueue_frame() loop enqueues all frames" )
 	{
 		int total_frames = 0;
 		while (queue.enqueue_frame())
@@ -104,13 +127,13 @@ TEST_CASE ( "PacketQueue", "[packetqueue]" )
 		CHECK ( total_frames == 2 );
 		CHECK ( queue.size() == 2 );
 
-		// Further enqueueing leads only false but no exception
+		// Further enqueueing yields only false but no exception
 
 		CHECK ( not queue.enqueue_frame() );
 	}
 
 
-	SECTION ( "loop traverses all frames" )
+	SECTION ( "enqueue_frame()/dequeue_frame() loop traverses all samples" )
 	{
 		using arcsdec::details::ffmpeg::AVFramePtr;
 
@@ -128,9 +151,12 @@ TEST_CASE ( "PacketQueue", "[packetqueue]" )
 		}
 
 		CHECK ( total_frames  == 2 );
+		CHECK ( total_samples == 1025 );
 		CHECK ( queue.size()  == 0 );
 
-		CHECK ( total_samples == 1025 );
+		// Further enqueueing yields only false but no exception
+
+		CHECK ( not queue.enqueue_frame() );
 	}
 }
 
