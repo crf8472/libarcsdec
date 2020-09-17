@@ -464,7 +464,7 @@ bool FileReaderDescriptor::do_accepts_name(const std::string &filename) const
 	// XXX Shouldn't this be TRUE?
 
 	auto rc = std::find_if(suffices_.begin(), suffices_.end(),
-			[fname_suffix,this](const decltype( *suffices_.begin() ) &suffix)
+			[fname_suffix](const decltype( suffices_ )::value_type &suffix)
 			{
 				// Perform case insensitive comparison
 				return suffix == details::ci_string { fname_suffix.c_str() };
