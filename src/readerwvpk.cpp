@@ -735,6 +735,8 @@ std::unique_ptr<AudioSize> WavpackAudioReaderImpl::do_acquire_size(
 
 void WavpackAudioReaderImpl::do_process_file(const std::string &filename)
 {
+	this->signal_startinput();
+
 	// Validation
 
 	ARCS_LOG_DEBUG << "Start validating Wavpack file: " << filename;
@@ -822,6 +824,8 @@ void WavpackAudioReaderImpl::do_process_file(const std::string &filename)
 			this->signal_appendsamples(sequence.begin(), sequence.end());
 		}
 	}
+
+	this->signal_endinput();
 }
 
 

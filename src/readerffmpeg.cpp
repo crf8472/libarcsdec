@@ -1159,6 +1159,8 @@ void FFmpegAudioReaderImpl::do_process_file(const std::string &filename)
 	audiostream->register_end_input(
 		std::bind(&FFmpegAudioReaderImpl::signal_endinput, this));
 
+	this->signal_startinput();
+
 
 	// Provide estimation
 
@@ -1171,6 +1173,8 @@ void FFmpegAudioReaderImpl::do_process_file(const std::string &filename)
 
 	auto total_samples_expected { size.total_samples() };
 	auto total_samples          { audiostream->traverse_samples() };
+
+	this->signal_endinput();
 
 
 	// Do some logging

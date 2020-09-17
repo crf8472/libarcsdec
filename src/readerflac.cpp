@@ -241,6 +241,8 @@ std::unique_ptr<AudioSize> FlacAudioReaderImpl::do_acquire_size(
 
 void FlacAudioReaderImpl::do_process_file(const std::string &filename)
 {
+	this->signal_startinput();
+
 	// Process decoded samples
 
 	this->set_md5_checking(false); // We check for checksums for ourselves
@@ -293,6 +295,9 @@ void FlacAudioReaderImpl::do_process_file(const std::string &filename)
 	}
 
 	this->finish();
+
+	this->signal_endinput();
+
 	ARCS_LOG_INFO << "Audio file closed";
 }
 
