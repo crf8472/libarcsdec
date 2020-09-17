@@ -556,9 +556,6 @@ public:
 	Impl(const Impl &rhs) = delete;
 	Impl& operator = (const Impl &rhs) = delete;
 
-	// TODO Move constructor
-	// TODO Move assignment
-
 	/**
 	 *
 	 * \return TRUE if the size of input read at once is configurable
