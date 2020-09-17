@@ -2,6 +2,7 @@
 #define __LIBARCSDEC_AUDIOBUFFER_HPP__
 
 /**
+ * \deprecated
  * \file
  *
  * \brief Toolkit for buffering audio samples
@@ -100,8 +101,6 @@ public:
 	// make class non-copyable (1/2)
 	BlockCreator(const BlockCreator &) = delete;
 
-	// TODO Move constructor
-
 	/**
 	 * \brief Virtual default destructor
 	 */
@@ -124,9 +123,6 @@ public:
 
 	// make class non-copyable (2/2)
 	BlockCreator& operator = (const BlockCreator &) = delete;
-
-	// TODO Move assignment
-
 
 protected:
 
@@ -154,7 +150,6 @@ protected:
 	 */
 	int32_t clip_samples_per_block(const int32_t samples_per_block) const;
 
-
 private:
 
 	/**
@@ -165,6 +160,7 @@ private:
 
 
 /**
+ * \deprecated
  * \brief Basic buffer: specify size, fill with samples and then flush.
  *
  * Accumulates SampleSequences to the configured block size and passes the
@@ -181,7 +177,6 @@ private:
  */
 class BlockAccumulator : public virtual BlockCreator
 {
-
 public:
 
 	/**
@@ -201,8 +196,6 @@ public:
 
 	// make class non-copyable (1/2)
 	BlockAccumulator(const BlockAccumulator &) = delete;
-
-	// TODO Move constructor
 
 	/**
 	 * \brief Virtual default destructor
@@ -250,9 +243,6 @@ public:
 	// make class non-copyable (2/2)
 	BlockAccumulator& operator = (const BlockAccumulator &) = delete;
 
-	// TODO Move assignment
-
-
 protected:
 
 	/**
@@ -262,7 +252,6 @@ protected:
 	 * \param[in] total_samples Reinitialize buffer for new block
 	 */
 	void init_buffer(const int32_t total_samples);
-
 
 private:
 
