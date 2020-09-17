@@ -164,9 +164,6 @@ private:
 };
 
 
-class SampleInputIterator;
-
-
 /**
  * \brief Basic buffer: specify size, fill with samples and then flush.
  *
