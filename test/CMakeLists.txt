@@ -12,7 +12,6 @@ set (MAIN_TEST_CPP   "${TEST_SOURCE_DIR}/main.test.cpp" )
 ## Define testsuites
 
 set (TEST_SETS )
-list (APPEND TEST_SETS audiobuffer  )
 list (APPEND TEST_SETS audioreader  )
 #list (APPEND TEST_SETS calculators  ) ## TODO requires Mock for Calculation
 list (APPEND TEST_SETS descriptors  )
