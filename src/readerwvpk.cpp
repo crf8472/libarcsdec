@@ -452,7 +452,7 @@ int64_t WavpackOpenFile::Impl::read_pcm_samples(
 		std::vector<int32_t> &buffer) const
 {
 	const auto samples_to_read =
-		static_cast<uint64_t>(pcm_samples_to_read * CDDA.NUMBER_OF_CHANNELS);
+		static_cast<uint64_t>(pcm_samples_to_read * CDDA::NUMBER_OF_CHANNELS);
 
 	if (buffer.size() < samples_to_read)
 	{
@@ -461,7 +461,7 @@ int64_t WavpackOpenFile::Impl::read_pcm_samples(
 			<< " is too small for the requested "
 			<< std::to_string(pcm_samples_to_read)
 			<< " samples. At least size of "
-			<< (pcm_samples_to_read * CDDA.NUMBER_OF_CHANNELS)
+			<< (pcm_samples_to_read * CDDA::NUMBER_OF_CHANNELS)
 			<< " integers is required.";
 
 		throw std::invalid_argument(msg.str());
@@ -811,13 +811,13 @@ void WavpackAudioReaderImpl::do_process_file(const std::string &filename)
 				}
 
 				buffer.resize(static_cast<buffersize_t>(
-						wv_samples_read * CDDA.NUMBER_OF_CHANNELS));
+						wv_samples_read * CDDA::NUMBER_OF_CHANNELS));
 			}
 
 			ARCS_LOG_DEBUG << "    Size: " << buffer.size()
 					<< " integers, add to current block";
 
-			sequence.wrap(buffer.data(), buffer.size());
+			sequence.wrap_int_buffer(buffer.data(), buffer.size());
 			// Note: we use the Number of 16-bit-samples _per_channel_, not
 			// the total number of 16 bit samples in the chunk.
 

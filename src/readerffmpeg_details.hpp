@@ -310,7 +310,7 @@ struct ContainerPolicy<true, S, ::AVFrame, SequenceType>
 
 	static void wrap(const ::AVFrame *f, SequenceType &sequence)
 	{
-		sequence.wrap_bytes(buffer0(f), buffer1(f), bytes_per_plane(f));
+		sequence.wrap_byte_buffer(buffer0(f), buffer1(f), bytes_per_plane(f));
 	}
 };
 
@@ -329,7 +329,7 @@ struct ContainerPolicy<false, S, ::AVFrame, SequenceType>
 
 	static void wrap(const ::AVFrame *f, SampleSequence<S, false> &sequence)
 	{
-		sequence.wrap_bytes(buffer0(f), bytes_per_plane(f));
+		sequence.wrap_byte_buffer(buffer0(f), bytes_per_plane(f));
 	}
 };
 
@@ -722,7 +722,7 @@ public:
 	/**
 	 * \brief Number of planes.
 	 *
-	 * 1 for interleaved, 2 (== \c CDDA.NUMBER_OF_CHANNELS= for planar data.
+	 * 1 for interleaved, 2 (== \c CDDA::NUMBER_OF_CHANNELS= for planar data.
 	 *
 	 * \return Number of planes, either 1 for interleaved or 2 for planar.
 	 */

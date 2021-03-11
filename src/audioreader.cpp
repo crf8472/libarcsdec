@@ -33,7 +33,7 @@ using arcstk::CDDA;
 
 
 const int32_t MAX_SAMPLES_TO_READ =
-	CDDA.MAX_BLOCK_ADDRESS * CDDA.SAMPLES_PER_FRAME;
+	CDDA::MAX_BLOCK_ADDRESS * CDDA::SAMPLES_PER_FRAME;
 
 
 // LittleEndianBytes
@@ -144,19 +144,19 @@ uint32_t BigEndianBytes::to_uint32(const char &b1,
 
 bool CDDAValidator::bits_per_sample(const int &bits_per_sample)
 {
-	return CDDA.BITS_PER_SAMPLE == bits_per_sample;
+	return CDDA::BITS_PER_SAMPLE == bits_per_sample;
 }
 
 
 bool CDDAValidator::num_channels(const int &num_channels)
 {
-	return CDDA.NUMBER_OF_CHANNELS == num_channels;
+	return CDDA::NUMBER_OF_CHANNELS == num_channels;
 }
 
 
 bool CDDAValidator::samples_per_second(const int &samples_per_second)
 {
-	return CDDA.SAMPLES_PER_SECOND == samples_per_second;
+	return CDDA::SAMPLES_PER_SECOND == samples_per_second;
 }
 
 

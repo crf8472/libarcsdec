@@ -531,9 +531,9 @@ void WavAudioHandler::subchunk_data(const uint32_t &subchunk_size)
 	}
 
 	if (not this->assert_true("Test: regular data subchunk size?",
-		static_cast<int>(subchunk_size) % CDDA.BYTES_PER_SAMPLE == 0,
+		static_cast<int>(subchunk_size) % CDDA::BYTES_PER_SAMPLE == 0,
 		"Incomplete samples, subchunk size is not a multiple of "
-		+ std::to_string(CDDA.BYTES_PER_SAMPLE)))
+		+ std::to_string(CDDA::BYTES_PER_SAMPLE)))
 	{
 		this->on_failure();
 	}
@@ -632,7 +632,7 @@ int64_t PCMBlockReader::read_blocks(std::ifstream &in,
 	const int64_t sample_type_size = static_cast<int64_t>(sizeof(samples[0]));
 
 	const int64_t bytes_per_block =
-		static_cast<int64_t>(this->samples_per_block()) * CDDA.BYTES_PER_SAMPLE;
+		static_cast<int64_t>(this->samples_per_block()) * CDDA::BYTES_PER_SAMPLE;
 
 	const int estimated_blocks = total_pcm_bytes / bytes_per_block
 				+ (total_pcm_bytes % bytes_per_block ? 1 : 0);
@@ -641,7 +641,7 @@ int64_t PCMBlockReader::read_blocks(std::ifstream &in,
 		<< " bytes in " << std::to_string(estimated_blocks) << " blocks with "
 		<< bytes_per_block << " bytes per block";
 
-	int32_t samples_todo = total_pcm_bytes / CDDA.BYTES_PER_SAMPLE;
+	int32_t samples_todo = total_pcm_bytes / CDDA::BYTES_PER_SAMPLE;
 	int64_t total_bytes_read   = 0;
 	int64_t total_blocks_read  = 0;
 
@@ -698,7 +698,7 @@ int64_t PCMBlockReader::read_blocks(std::ifstream &in,
 	ARCS_LOG_DEBUG << "END READING after " << total_blocks_read << " blocks";
 
 	ARCS_LOG(DEBUG1) << "Read "
-		<< std::to_string(total_bytes_read / CDDA.BYTES_PER_SAMPLE)
+		<< std::to_string(total_bytes_read / CDDA::BYTES_PER_SAMPLE)
 		<< " samples / "
 		<< total_bytes_read << " bytes";
 
@@ -853,7 +853,7 @@ int64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 			if (calculate)
 			{
 				AudioSize audiosize;
-				audiosize.set_pcm_byte_count(subchunk_header.size);
+				audiosize.set_total_pcm_bytes(subchunk_header.size);
 				this->signal_updateaudiosize(audiosize);
 
 				// Read audio bytes in blocks
@@ -1005,7 +1005,7 @@ std::unique_ptr<AudioSize> WavAudioReaderImpl::do_acquire_size(
 	}
 
 	std::unique_ptr<AudioSize> audiosize = std::make_unique<AudioSize>();
-	audiosize->set_pcm_byte_count(static_cast<uint64_t>(total_pcm_bytes));
+	audiosize->set_total_pcm_bytes(static_cast<uint64_t>(total_pcm_bytes));
 	return audiosize;
 }
 
