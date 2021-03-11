@@ -41,6 +41,7 @@ compile_commands.json
 
 # clang files
 .clangd/*
+.cache/*
 
 # vim intermediate files
 *.swp
