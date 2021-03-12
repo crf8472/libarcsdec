@@ -62,7 +62,7 @@ Libarcsdec contains:
 
 ### Mandatory build- and runtime dependencies:
 
-- libarcstk >= 0.1.0-alpha.1
+- libarcstk >= 0.1.0-alpha.2
 - libcue >= 2.0.0
 
 ### Optional default build- and runtime dependencies:
