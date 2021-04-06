@@ -627,7 +627,7 @@ int32_t PCMBlockReader::samples_per_block() const
 
 int32_t PCMBlockReader::min_samples_per_block() const
 {
-	return BLOCKSIZE.MIN;
+	return BLOCKSIZE::MIN;
 }
 
 

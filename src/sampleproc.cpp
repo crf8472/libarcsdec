@@ -23,9 +23,6 @@ inline namespace v_1_0_0
 using arcstk::SampleInputIterator;
 
 
-const BLOCKSIZE_t BLOCKSIZE;
-
-
 // SampleProcessor
 
 

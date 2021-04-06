@@ -33,21 +33,21 @@ using arcstk::AudioSize;
 /**
  * \brief Symbolic constants for certain block sizes (in PCM 32 bit samples).
  */
-struct BLOCKSIZE_t
+struct BLOCKSIZE
 {
 	/**
 	 * \brief Maximum buffer size in number of PCM 32 bit samples.
 	 *
 	 * Currently, this is 256 MiB.
 	 */
-	const int32_t MAX     = 67108864; // == 256 * 1024^2 / 4
+	constexpr static unsigned MAX     = 67108864; // == 256 * 1024^2 / 4
 
 	/**
 	 * \brief Default buffer size in number of PCM 32 bit samples.
 	 *
 	 * Currently, this is 64 MiB.
 	 */
-	const int32_t DEFAULT = 16777216; // == 64 * 1024^2 / 4
+	constexpr static unsigned DEFAULT = 16777216; // == 64 * 1024^2 / 4
 
 	/**
 	 * \brief Minimum buffer size in number of PCM 32 bit samples.
@@ -58,14 +58,8 @@ struct BLOCKSIZE_t
 	 * least one fLaC frame of maximal size is guaranteed to fit in a block of
 	 * minimal size.
 	 */
-	const int32_t MIN     = 65536; // == 256 * 1024 / 4
+	constexpr static unsigned MIN     = 65536; // == 256 * 1024 / 4
 };
-
-
-/**
- * \brief Global symbolic block sizes
- */
-extern const BLOCKSIZE_t BLOCKSIZE;
 
 
 /**

@@ -777,13 +777,13 @@ void WavpackAudioReaderImpl::do_process_file(const std::string &filename)
 		InterleavedSamples<sample_t> sequence(file.channel_order());
 
 		std::vector<sample_t> buffer;
-		using buffersize_t = typename decltype(buffer)::size_type;
 
-		buffer.resize(static_cast<buffersize_t>(this->samples_per_read()));
+		buffer.resize(this->samples_per_read());
 
 		// Request Half the Number of Samples in a Block in one Read.
 		// Thus a Sequence will Have Exactly the Size of a Block.
-		const int64_t wv_samples_to_read = this->samples_per_read() / 2;
+		const int64_t wv_samples_to_read =
+			static_cast<int64_t>(this->samples_per_read() / 2);
 
 		int64_t wv_samples_read = 0;
 		for (int64_t i = total_samples; i > 0; i -= wv_samples_to_read)
@@ -810,7 +810,7 @@ void WavpackAudioReaderImpl::do_process_file(const std::string &filename)
 					throw FileReadException(msg.str());
 				}
 
-				buffer.resize(static_cast<buffersize_t>(
+				buffer.resize(static_cast<std::size_t>(
 						wv_samples_read * CDDA::NUMBER_OF_CHANNELS));
 			}
 

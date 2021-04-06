@@ -417,7 +417,7 @@ void DefaultValidator::on_failure()
 
 
 AudioReaderImpl::AudioReaderImpl()
-	: samples_per_read_ { BLOCKSIZE.DEFAULT }
+	: samples_per_read_ { BLOCKSIZE::DEFAULT }
 {
 	// empty
 }
@@ -430,13 +430,13 @@ AudioReaderImpl& AudioReaderImpl::operator = (AudioReaderImpl &&) noexcept
 = default;
 
 
-void AudioReaderImpl::set_samples_per_read(const int64_t samples_per_read)
+void AudioReaderImpl::set_samples_per_read(const std::size_t samples_per_read)
 {
 	samples_per_read_ = samples_per_read;
 }
 
 
-int64_t AudioReaderImpl::samples_per_read() const
+std::size_t AudioReaderImpl::samples_per_read() const
 {
 	return samples_per_read_;
 }
@@ -493,16 +493,16 @@ public:
 	/**
 	 * Set the number of samples to read in one read operation.
 	 *
-	 * The default is BLOCKSIZE.DEFAULT.
+	 * The default is BLOCKSIZE::DEFAULT.
 	 */
-	void set_samples_per_read(const int64_t samples_per_read);
+	void set_samples_per_read(const std::size_t samples_per_read);
 
 	/**
 	 * Return the number of samples to read in one read operation.
 	 *
 	 * \return Number of samples per read operation.
 	 */
-	int64_t samples_per_read() const;
+	std::size_t samples_per_read() const;
 
 	/**
 	 *
@@ -559,13 +559,13 @@ AudioReader::Impl::Impl(std::unique_ptr<AudioReaderImpl> readerimpl)
 }
 
 
-void AudioReader::Impl::set_samples_per_read(const int64_t samples_per_read)
+void AudioReader::Impl::set_samples_per_read(const std::size_t samples_per_read)
 {
 	readerimpl_->set_samples_per_read(samples_per_read);
 }
 
 
-int64_t AudioReader::Impl::samples_per_read() const
+std::size_t AudioReader::Impl::samples_per_read() const
 {
 	return readerimpl_->samples_per_read();
 }
@@ -642,13 +642,13 @@ AudioReader& AudioReader::operator = (AudioReader &&) noexcept = default;
 AudioReader::~AudioReader() noexcept = default;
 
 
-void AudioReader::set_samples_per_read(const int64_t samples_per_read)
+void AudioReader::set_samples_per_read(const std::size_t samples_per_read)
 {
 	impl_->set_samples_per_read(samples_per_read);
 }
 
 
-int64_t AudioReader::samples_per_read() const
+std::size_t AudioReader::samples_per_read() const
 {
 	return impl_->samples_per_read();
 }

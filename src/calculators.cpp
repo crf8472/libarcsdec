@@ -230,7 +230,7 @@ private:
 	 * \param[in] buffer_size    Buffer size in number of samples
 	 */
 	void process_file(const std::string &audiofilename, Calculation& calc,
-		const int32_t buffer_size) const;
+		const std::size_t buffer_size) const;
 
 	/**
 	 * \brief Worker: check samples_todo() and warn if < 0 and error if > 0
@@ -482,7 +482,7 @@ std::pair<Checksums, ARId> ARCSCalculator::Impl::calculate(
 		throw std::logic_error("Could not instantiate Calculation object");
 	}
 
-	this->process_file(audiofilename, *calc, BLOCKSIZE.DEFAULT);
+	this->process_file(audiofilename, *calc, BLOCKSIZE::DEFAULT);
 
 	this->log_completeness_check(*calc);
 
@@ -555,14 +555,14 @@ ChecksumSet ARCSCalculator::Impl::calculate(
 
 
 void ARCSCalculator::Impl::process_file(const std::string &audiofilename,
-		Calculation& calc, const int32_t /* FIXME std::size_t */ buffer_size) const
+		Calculation& calc, const std::size_t buffer_size) const
 {
 	CreateAudioReader create_reader;
 	auto reader = create_reader(selection(), audiofilename);
 
 	// Configure AudioReader and process file
 
-	if (BLOCKSIZE.MIN <= buffer_size and buffer_size <= BLOCKSIZE.MAX)
+	if (BLOCKSIZE::MIN <= buffer_size and buffer_size <= BLOCKSIZE::MAX)
 	{
 		ARCS_LOG(DEBUG1) << "Sample read chunk size: "
 			<< std::to_string(buffer_size) << " bytes";
@@ -575,7 +575,7 @@ void ARCSCalculator::Impl::process_file(const std::string &audiofilename,
 
 		ARCS_LOG_WARNING << "Specified buffer size of " << buffer_size
 			<< ", but this is not within the legal range of "
-			<< BLOCKSIZE.MIN << " - " << BLOCKSIZE.MAX
+			<< BLOCKSIZE::MIN << " - " << BLOCKSIZE::MAX
 			<< " samples. Use default implementation instead.";
 
 			// Do nothing, AudioReaderImpl uses its default
@@ -604,7 +604,7 @@ ChecksumSet ARCSCalculator::Impl::calculate_track(
 		throw std::logic_error("Could not instantiate Calculation object");
 	}
 
-	this->process_file(audiofilename, *calc, BLOCKSIZE.DEFAULT);
+	this->process_file(audiofilename, *calc, BLOCKSIZE::DEFAULT);
 
 	// Sanity-check result
 

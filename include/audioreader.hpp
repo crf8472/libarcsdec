@@ -139,16 +139,14 @@ public:
 	 *
 	 * \param[in] samples_per_read Number of samples to read/buffer at once.
 	 */
-	void set_samples_per_read(const int64_t samples_per_read);
-	// FIXME Make this std::size_t
+	void set_samples_per_read(const std::size_t samples_per_read);
 
 	/**
 	 * \brief Return the number of samples to read in one read operation.
 	 *
 	 * \return Number of samples per read operation.
 	 */
-	int64_t samples_per_read() const;
-	// FIXME Make this std::size_t
+	std::size_t samples_per_read() const;
 
 	/**
 	 * \brief Create a descriptor for this AudioReader implementation.
@@ -195,7 +193,7 @@ private:
 	/**
 	 * \brief Buffer size as total number of PCM 32 bit samples.
 	 */
-	int64_t samples_per_read_;
+	std::size_t samples_per_read_;
 };
 
 
@@ -241,14 +239,14 @@ public:
 	 *
 	 * \param[in] samples_per_read The number of 32 bit PCM samples per read
 	 */
-	void set_samples_per_read(const int64_t samples_per_read);
+	void set_samples_per_read(const std::size_t samples_per_read);
 
 	/**
 	 * \brief Return the number of samples to read in one read operation.
 	 *
 	 * \return Number of samples per read operation.
 	 */
-	int64_t samples_per_read() const;
+	std::size_t samples_per_read() const;
 
 	/**
 	 * \brief Acquire the AudioSize of a file.
