@@ -638,11 +638,6 @@ bool WavpackValidatingHandler::validate_cdda(const WavpackOpenFile &file)
 		return false;
 	}
 
-	if (file.channel_mask() < 0)
-	{
-		ARCS_LOG_ERROR << "Negative channel mask"; // FIXME Use error stack
-		return false;
-	}
 	if (not this->assert_equals("Test: Channel Mask",
 		file.channel_mask(), 3,
 		"Channel mask does not conform to CDDA"))

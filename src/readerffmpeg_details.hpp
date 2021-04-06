@@ -508,7 +508,7 @@ auto sequence_for(const AVFramePtr &frame)
 
 	return sequence;
 }
-// FIXME sequence_for is only required for FFmpegAudioReaderImpl::pass_frame()
+// Note: sequence_for is only required for FFmpegAudioReaderImpl::pass_frame()
 
 
 /**

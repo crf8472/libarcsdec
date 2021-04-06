@@ -7,8 +7,6 @@
  * \brief Interface for processing samples
  */
 
-#include <functional> // FIXME Seems unnecessary
-
 #ifndef __LIBARCSTK_CALCULATE_HPP__
 #include <arcstk/calculate.hpp>
 #endif
@@ -303,7 +301,7 @@ private:
  *
  * Implements SampleProvider.
  */
-class SampleProviderBase : public SampleProvider
+class SampleProviderBase : public SampleProvider // FIXME Must be abstract
 {
 public:
 

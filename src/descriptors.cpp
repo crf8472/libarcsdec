@@ -117,7 +117,7 @@ std::vector<std::string> runtime_deps(const std::string &object_name)
 
 	while (lmap)
 	{
-		so_list.push_back(lmap->l_name); // FIXME Choose initial capacity
+		so_list.push_back(lmap->l_name);
 
 		lmap = lmap->l_next;
 	}

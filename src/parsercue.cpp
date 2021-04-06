@@ -144,7 +144,7 @@ CueInfo CueOpenFile::parse_info()
 
 	const int track_count = ::cd_get_ntrack(cd_info);
 
-	if (track_count < 0 or track_count > 99) // FIXME Use CDDA constants
+	if (track_count < 0 or track_count > arcstk::CDDA::MAX_TRACKCOUNT)
 	{
 		std::ostringstream ss;
 		ss << "Invalid number of tracks: " << track_count;

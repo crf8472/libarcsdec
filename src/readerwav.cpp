@@ -46,6 +46,9 @@ inline namespace v_1_0_0
 {
 namespace details
 {
+
+using sample_t = uint32_t;
+
 namespace wave
 {
 
@@ -659,7 +662,7 @@ void PCMBlockReader::register_block_consumer(const std::function<void(
 int64_t PCMBlockReader::read_blocks(std::ifstream &in,
 		const int64_t &total_pcm_bytes)
 {
-	std::vector<uint32_t> samples; // FIXME Use symbolized sample type
+	std::vector<sample_t> samples;
 
 	const int64_t sample_type_size = static_cast<int64_t>(sizeof(samples[0]));
 
