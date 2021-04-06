@@ -47,11 +47,8 @@ namespace details
 namespace ffmpeg
 {
 
-using arcstk::SampleInputIterator;
 using arcstk::AudioSize;
 using arcstk::Logging;
-using arcstk::CDDA;
-using arcstk::SampleSequence;
 using arcstk::LOGLEVEL;
 
 extern "C"
@@ -217,7 +214,7 @@ void Free_AVFrame::operator()(::AVFrame* frame) const
 // Make_AVFramePtr
 
 
-AVFramePtr  Make_AVFramePtr::operator()() const
+AVFramePtr Make_AVFramePtr::operator()() const
 {
 	::AVFrame* f = ::av_frame_alloc();
 
@@ -233,46 +230,62 @@ AVFramePtr  Make_AVFramePtr::operator()() const
 void operator << (std::ostream &out, const ::AVStream *stream);
 
 
-// PacketQueue
+// FrameQueue
 
 
-PacketQueue::PacketQueue()
-	: packets_        {}
-	, current_packet_ {}
+FrameQueue::FrameQueue(const std::size_t capacity)
+	: frames_         { }
+	, current_packet_ { }
 	, stream_index_   { 0 }
-	, cctx_   { nullptr }
-	, fctx_   { nullptr }
+	, cctx_           { nullptr }
+	, fctx_           { nullptr }
+	, capacity_       { capacity }
 {
 	// empty
 }
 
 
-void PacketQueue::set_source(::AVFormatContext* fctx, const int stream_index)
+void FrameQueue::set_source(::AVFormatContext* fctx, const int stream_index)
 {
 	fctx_         = fctx;
 	stream_index_ = stream_index;
 }
 
 
-std::pair<const ::AVFormatContext*, const int> PacketQueue::source() const
+std::pair<const ::AVFormatContext*, const int> FrameQueue::source() const
 {
 	return std::make_pair(fctx_, stream_index_);
 }
 
 
-void PacketQueue::set_decoder(::AVCodecContext* cctx)
+void FrameQueue::set_decoder(::AVCodecContext* cctx)
 {
 	cctx_ = cctx;
 }
 
 
-const ::AVCodecContext* PacketQueue::decoder() const
+const ::AVCodecContext* FrameQueue::decoder() const
 {
 	return cctx_;
 }
 
 
-bool PacketQueue::enqueue_frame()
+std::size_t FrameQueue::fill()
+{
+	while (size() < capacity())
+	{
+		if (not enqueue_frame())
+		{
+			// TODO EOF reached
+			break;
+		}
+	}
+
+	return size();
+}
+
+
+bool FrameQueue::enqueue_frame()
 {
 	auto error  = int { -1 };
 	auto packet = make_packet();
@@ -282,10 +295,10 @@ bool PacketQueue::enqueue_frame()
 		error = ::av_read_frame(format_context(), packet.get());
 
 		// For audio, the packet contains:
-		// - an integer number of frames if each frame has a known fixed size
-		//   (e.g. PCM or ADPCM data).
-		// - If the audio frames have a variable size (e.g. MPEG audio), then
-		//   the packet contains one frame.
+		// - If the audio frames have a known fixed size (e.g. PCM or ADPCM),
+		//   an integer number of frames.
+		// - If the audio frames have a variable size (e.g. MPEG audio),
+		//   exactly one frame.
 
 		// On error, packet is blank, like if it came from av_packet_alloc()
 
@@ -304,19 +317,19 @@ bool PacketQueue::enqueue_frame()
 		if (packet->stream_index != stream_index())
 		{
 			::av_packet_unref(packet.get());
+			error = -1;
 
-			error = -1; // Restart loop
 			continue;
 		}
 	}
 
-	packets_.push(std::move(packet));
+	frames_.push(std::move(packet));
 
 	return true;
 }
 
 
-AVFramePtr PacketQueue::dequeue_frame()
+AVFramePtr FrameQueue::dequeue_frame()
 {
 	auto error          = int  { 0 };
 	auto frame          = make_frame();
@@ -332,17 +345,17 @@ AVFramePtr PacketQueue::dequeue_frame()
 			// any frames, so just finish the processing of this packet
 			// and provide next packet to decoder.
 
-			if (packets_.empty())
+			if (frames_.empty())
 			{
 				return nullptr; // enqueue_frame() needs to be called
 			}
 
-			current_packet_ = std::move(packets_.front());
-			packets_.pop();
+			current_packet_ = std::move(frames_.front());
+			frames_.pop();
 
 			try
 			{
-				decode_success = decode_packet();
+				decode_success = decode_packet(current_packet_.get());
 
 			} catch (const FFmpegException &e)
 			{
@@ -384,9 +397,9 @@ AVFramePtr PacketQueue::dequeue_frame()
 }
 
 
-bool PacketQueue::decode_packet()
+bool FrameQueue::decode_packet(::AVPacket *packet)
 {
-	const auto error = ::avcodec_send_packet(decoder(), current_packet_.get());
+	const auto error = ::avcodec_send_packet(decoder(), packet);
 
 	if (error < 0)
 	{
@@ -408,37 +421,49 @@ bool PacketQueue::decode_packet()
 }
 
 
-std::size_t PacketQueue::size() const
+std::size_t FrameQueue::size() const
 {
-	return packets_.size();
+	return frames_.size();
 }
 
 
-bool PacketQueue::empty() const
+std::size_t FrameQueue::capacity() const noexcept
 {
-	return packets_.empty();
+	return capacity_;
 }
 
 
-::AVCodecContext* PacketQueue::decoder()
+void FrameQueue::set_capacity(const std::size_t capacity)
+{
+	capacity_ = capacity;
+}
+
+
+bool FrameQueue::empty() const
+{
+	return frames_.empty();
+}
+
+
+::AVCodecContext* FrameQueue::decoder()
 {
 	return cctx_;
 }
 
 
-::AVFormatContext* PacketQueue::format_context()
+::AVFormatContext* FrameQueue::format_context()
 {
 	return fctx_;
 }
 
 
-int PacketQueue::stream_index() const
+int FrameQueue::stream_index() const
 {
 	return stream_index_;
 }
 
 
-AVPacketPtr PacketQueue::make_packet()
+AVPacketPtr FrameQueue::make_packet()
 {
 	static const Make_AVPacketPtr new_packet;
 
@@ -446,7 +471,7 @@ AVPacketPtr PacketQueue::make_packet()
 }
 
 
-AVFramePtr PacketQueue::make_frame()
+AVFramePtr FrameQueue::make_frame()
 {
 	static const Make_AVFramePtr new_frame;
 
@@ -871,7 +896,7 @@ FFmpegAudioStream::FFmpegAudioStream()
 	, channels_swapped_ { false }
 	, total_samples_declared_ { 0 }
 	, start_input_      { }
-	, append_samples_   { }
+	, push_frame_       { }
 	, update_audiosize_ { }
 	, end_input_        { }
 {
@@ -909,11 +934,10 @@ void FFmpegAudioStream::register_start_input(std::function<void()> func)
 }
 
 
-void FFmpegAudioStream::register_append_samples(
-		std::function<void(SampleInputIterator begin,
-			SampleInputIterator end)> func)
+void FFmpegAudioStream::register_push_frame(
+		std::function<void(AVFramePtr frame)> func)
 {
-	append_samples_ = func;
+	push_frame_ = func;
 }
 
 
@@ -938,43 +962,40 @@ int FFmpegAudioStream::num_planes() const
 
 int64_t FFmpegAudioStream::traverse_samples()
 {
-	PacketQueue queue;
-	using queue_size_t = decltype( queue )::size_type;
-
-	const auto avg_queue_size = queue_size_t { 12 };
-	const auto allowed_diff   = queue_size_t {  1 };
-
-	auto total_samples = int32_t { 0 };
-
-	// Fill queue to its defined average size
-
+	FrameQueue queue(12);
 	queue.set_source(formatContext_.get(), stream_index());
 	queue.set_decoder(codecContext_.get());
 
-	while (queue.size() < avg_queue_size)
-	{
-		if (not queue.enqueue_frame())
-		{
-			// TODO EOF reached
-			break;
-		}
-	}
+
+	// Fill queue to its defined average size
+
+	queue.fill();
 
 	ARCS_LOG_DEBUG << "Loaded " << queue.size() << " encoded packets to queue";
 	ARCS_LOG_DEBUG << "Start to manage decoding queue";
 
+
 	// Manage queue as long as new frames are available
 
+	// Allow 1 packet less than capacity before requesting new packets
+	const auto allowed_diff   = decltype( queue )::size_type { 1 };
+
+	const auto queue_capacity = queue.capacity();
+
+	// current frame
 	auto frame = AVFramePtr { nullptr };
+
+	// total samples in queue
+	auto total_samples = int32_t { 0 };
 
 	while ((frame = queue.dequeue_frame()))
 	{
 		total_samples += frame->nb_samples;
 
-		this->pass_frame(frame.get()); // TODO Instead:: fill decode buffer
+		this->push_frame_(std::move(frame));
 
 		// queue too small?
-		if ((avg_queue_size - queue.size()) > allowed_diff)
+		if ((queue_capacity - queue.size()) > allowed_diff)
 		{
 			if (not queue.enqueue_frame())
 			{
@@ -997,7 +1018,8 @@ int64_t FFmpegAudioStream::traverse_samples()
 	auto last_size = decltype( queue )::size_type { 0 };
 
 
-	// Flush all frames from decoder
+	// Flush all frames from decoder: we need to know the total number of
+	// samples to update the Calculation with the expected number of samples
 
 	flush:
 
@@ -1047,52 +1069,10 @@ int64_t FFmpegAudioStream::traverse_samples()
 
 	for (auto& f : decoded_frames)
 	{
-		this->pass_frame(f.get());
+		this->push_frame_(std::move(f));
 	}
 
 	return total_samples;
-}
-
-
-void FFmpegAudioStream::pass_frame(const ::AVFrame* frame) const
-{
-	const auto format = static_cast<::AVSampleFormat>(frame->format);
-
-	switch (format)
-	{
-		case ::AV_SAMPLE_FMT_S16 :/* int16_t, interleaved - e.g. Format::AIFF */
-			{
-				auto sequence = sequence_for<::AV_SAMPLE_FMT_S16>(frame);
-				append_samples_(sequence.begin(), sequence.end());
-				break;
-			}
-		case ::AV_SAMPLE_FMT_S16P:/* int16_t, planar - e.g. MONKEY, ALAC */
-			{
-				auto sequence = sequence_for<::AV_SAMPLE_FMT_S16P>(frame);
-				append_samples_(sequence.begin(), sequence.end());
-				break;
-			}
-		case ::AV_SAMPLE_FMT_S32 :/* int32_t, interleaved - e.g. FLAC */
-			{
-				auto sequence = sequence_for<::AV_SAMPLE_FMT_S32>(frame);
-				append_samples_(sequence.begin(), sequence.end());
-				break;
-			}
-		case ::AV_SAMPLE_FMT_S32P:/* int32_t, planar - e.g. WAVPACK */
-			{
-				auto sequence = sequence_for<::AV_SAMPLE_FMT_S32P>(frame);
-				append_samples_(sequence.begin(), sequence.end());
-				break;
-			}
-		default:
-			{
-				std::ostringstream msg;
-				msg << "Cannot pass sequence with unknown sample format: "
-					<< ::av_get_sample_fmt_name(format);
-
-				throw std::invalid_argument(msg.str());
-			}
-	}// switch
 }
 
 
@@ -1146,10 +1126,10 @@ void FFmpegAudioReaderImpl::do_process_file(const std::string &filename)
 	audiostream->register_start_input(
 		std::bind(&FFmpegAudioReaderImpl::signal_startinput, this));
 
-	audiostream->register_append_samples(
-		std::bind(&FFmpegAudioReaderImpl::signal_appendsamples,
+	audiostream->register_push_frame(
+		std::bind(&FFmpegAudioReaderImpl::frame_callback,
 			this,
-			std::placeholders::_1, std::placeholders::_2));
+			std::placeholders::_1));
 
 	audiostream->register_update_audiosize(
 		std::bind(&FFmpegAudioReaderImpl::signal_updateaudiosize,
@@ -1201,6 +1181,57 @@ std::unique_ptr<FileReaderDescriptor> FFmpegAudioReaderImpl::do_descriptor()
 	const
 {
 	return std::make_unique<DescriptorFFmpeg>();
+}
+
+
+void FFmpegAudioReaderImpl::frame_callback(AVFramePtr frame)
+{
+	this->pass_frame(std::move(frame));
+
+	// Alternatively, pass_frame_to_buffer() could be used for a configurable
+	// frame buffer but this is currently significantly slower.
+}
+
+
+void FFmpegAudioReaderImpl::pass_frame(AVFramePtr frame)
+{
+	const auto format = static_cast<::AVSampleFormat>(frame->format);
+
+	switch (format)
+	{
+		case ::AV_SAMPLE_FMT_S16 :/* int16_t, interleaved - e.g. Format::AIFF */
+			{
+				auto sequence = sequence_for<::AV_SAMPLE_FMT_S16>(frame);
+				this->signal_appendsamples(sequence.begin(), sequence.end());
+				break;
+			}
+		case ::AV_SAMPLE_FMT_S16P:/* int16_t, planar - e.g. MONKEY, ALAC */
+			{
+				auto sequence = sequence_for<::AV_SAMPLE_FMT_S16P>(frame);
+				this->signal_appendsamples(sequence.begin(), sequence.end());
+				break;
+			}
+		case ::AV_SAMPLE_FMT_S32 :/* int32_t, interleaved - e.g. FLAC */
+			{
+				auto sequence = sequence_for<::AV_SAMPLE_FMT_S32>(frame);
+				this->signal_appendsamples(sequence.begin(), sequence.end());
+				break;
+			}
+		case ::AV_SAMPLE_FMT_S32P:/* int32_t, planar - e.g. WAVPACK */
+			{
+				auto sequence = sequence_for<::AV_SAMPLE_FMT_S32P>(frame);
+				this->signal_appendsamples(sequence.begin(), sequence.end());
+				break;
+			}
+		default:
+			{
+				std::ostringstream msg;
+				msg << "Cannot pass sequence with unknown sample format: "
+					<< ::av_get_sample_fmt_name(format);
+
+				throw std::invalid_argument(msg.str());
+			}
+	}// switch
 }
 
 

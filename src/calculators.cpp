@@ -33,9 +33,6 @@
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__
 #include "audioreader.hpp"
 #endif
-#ifndef __LIBARCSDEC_AUDIOBUFFER_HPP__
-#include "audiobuffer.hpp"
-#endif
 #ifndef __LIBARCSDEC_METAPARSER_HPP__
 #include "metaparser.hpp"
 #endif
@@ -91,22 +88,33 @@ private:
 
 	void do_start_input() final
 	{
+		ARCS_LOG(DEBUG1) << "CALC received: START INPUT";
+
 		/* empty */
 	}
 
 	void do_append_samples(SampleInputIterator begin, SampleInputIterator end)
 		final
 	{
+		ARCS_LOG(DEBUG1) << "CALC received: APPEND SAMPLES";
+
 		calculation_->update(begin, end);
 	}
 
 	void do_update_audiosize(const AudioSize &size) final
 	{
+		ARCS_LOG(DEBUG1) << "CALC received: UPDATE AUDIOSIZE";
+
+		ARCS_LOG_INFO << "Update total number of samples to: "
+			<< size.total_samples(); // TODO let update_audiosize() do this log
+
 		calculation_->update_audiosize(size);
 	}
 
 	void do_end_input() final
 	{
+		ARCS_LOG(DEBUG1) << "CALC received: END INPUT";
+
 		/* empty */
 	}
 
@@ -215,15 +223,7 @@ private:
 	 * \brief Worker: process a file and calculate the results.
 	 *
 	 * The \c buffer_size is specified as number of 32 bit PCM samples. It is
-	 * applied to the created AudioReader's read buffer iff it has a
-	 * configurable_read_buffer(). In this case, parameter \c use_cbuffer will
-	 * stay irrelevant.
-	 *
-	 * If the AudioReader has no configurable_read_buffer(), the behaviour
-	 * depends on the parameter \c use_cbuffer. If it is FALSE, this renders
-	 * \c buffer_size without effect. If it is TRUE, a buffering in the
-	 * specified \c buffer-size will be enforced. Thus, parameter \c use_cbuffer
-	 * controls whether buffering is enforced.
+	 * applied to the created AudioReader's.
 	 *
 	 * \param[in] audiofilename  Name  of the audiofile
 	 * \param[in] calc           The Calculation to use
@@ -420,10 +420,10 @@ std::unique_ptr<ARId> ARIdCalculator::Impl::calculate(const TOC &toc,
 	// The builder has to check its input values either way when it is
 	// requested to start processing.
 
-	CreateAudioReader get_audioreader;
+	CreateAudioReader create_reader;
 
 	const auto audiosize =
-		get_audioreader(audio_selection(), audiofilename)->acquire_size(
+		create_reader(audio_selection(), audiofilename)->acquire_size(
 				audiofilename);
 
 	return make_arid(toc, audiosize->leadout_frame());
@@ -555,43 +555,33 @@ ChecksumSet ARCSCalculator::Impl::calculate(
 
 
 void ARCSCalculator::Impl::process_file(const std::string &audiofilename,
-		Calculation& calc, const int32_t buffer_size) const
+		Calculation& calc, const int32_t /* FIXME std::size_t */ buffer_size) const
 {
-	CreateAudioReader audioreader;
-	auto reader = audioreader(selection(), audiofilename);
+	CreateAudioReader create_reader;
+	auto reader = create_reader(selection(), audiofilename);
 
 	// Configure AudioReader and process file
 
-	const bool buffer_size_is_legal =
-			(BLOCKSIZE.MIN <= buffer_size and buffer_size <= BLOCKSIZE.MAX);
-
-	CalculationProcessor calculator { calc };
-
-	if (reader->configurable_read_buffer())
+	if (BLOCKSIZE.MIN <= buffer_size and buffer_size <= BLOCKSIZE.MAX)
 	{
-		ARCS_LOG_DEBUG << "AudioReader provides configurable read buffer";
+		ARCS_LOG(DEBUG1) << "Sample read chunk size: "
+			<< std::to_string(buffer_size) << " bytes";
 
-		if (buffer_size_is_legal)
-		{
-			ARCS_LOG(DEBUG1) << "Configure sample read chunk size: "
-				<< std::to_string(buffer_size) << " bytes";
+		reader->set_samples_per_read(buffer_size);
 
-			reader->set_samples_per_read(buffer_size);
-
-		} else
-		{
-			ARCS_LOG_WARNING << "Specified buffer size of " << buffer_size
-				<< ", but this is not within the legal range of "
-				<< BLOCKSIZE.MIN << " - " << BLOCKSIZE.MAX
-				<< " samples. Use default implementation instead.";
-
-				// Do nothing, AudioReaderImpl uses its default
-		}
 	} else
 	{
-		ARCS_LOG_INFO << "AudioReader has no configuration option for read "
-			<< "buffer size. Use its default implementation.";
+		// buffer size is illegal
+
+		ARCS_LOG_WARNING << "Specified buffer size of " << buffer_size
+			<< ", but this is not within the legal range of "
+			<< BLOCKSIZE.MIN << " - " << BLOCKSIZE.MAX
+			<< " samples. Use default implementation instead.";
+
+			// Do nothing, AudioReaderImpl uses its default
 	}
+
+	CalculationProcessor calculator { calc };
 
 	reader->set_processor(calculator);
 	reader->process_file(audiofilename);

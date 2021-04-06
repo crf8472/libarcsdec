@@ -7,7 +7,7 @@
  * \brief Interface for processing samples
  */
 
-#include <functional>
+#include <functional> // FIXME Seems unnecessary
 
 #ifndef __LIBARCSTK_CALCULATE_HPP__
 #include <arcstk/calculate.hpp>
@@ -340,18 +340,18 @@ protected:
 
 private:
 
-	void do_signal_startinput() final;
+	void do_signal_startinput() override;
 
 	void do_signal_appendsamples(SampleInputIterator begin,
-			SampleInputIterator end) final;
+			SampleInputIterator end) override;
 
-	void do_signal_updateaudiosize(const AudioSize &size) final;
+	void do_signal_updateaudiosize(const AudioSize &size) override;
 
-	void do_signal_endinput() final;
+	void do_signal_endinput() override;
 
-	void do_attach_processor(SampleProcessor &processor) final;
+	void do_attach_processor(SampleProcessor &processor) override;
 
-	const SampleProcessor* do_processor() const final;
+	const SampleProcessor* do_processor() const override;
 
 	/**
 	 * \brief Internal pointer to the SampleProcessor.

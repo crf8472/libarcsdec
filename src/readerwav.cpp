@@ -606,14 +606,46 @@ AudioValidator::codec_set_type WavAudioHandler::do_codecs() const
 
 
 PCMBlockReader::PCMBlockReader(const int32_t samples_per_block)
-	: BlockCreator(samples_per_block)
-	, consume_()
+	: samples_per_block_ { samples_per_block }
+	, consume_ ()
 {
 	// empty
 }
 
 
-PCMBlockReader::~PCMBlockReader() noexcept = default;
+void PCMBlockReader::set_samples_per_block(const int32_t samples_per_block)
+{
+	samples_per_block_ = samples_per_block;
+}
+
+
+int32_t PCMBlockReader::samples_per_block() const
+{
+	return samples_per_block_;
+}
+
+
+int32_t PCMBlockReader::min_samples_per_block() const
+{
+	return BLOCKSIZE.MIN;
+}
+
+
+int32_t PCMBlockReader::max_samples_per_block() const
+{
+	return std::numeric_limits<decltype(samples_per_block_)>::max();
+}
+
+
+int32_t PCMBlockReader::clip_samples_per_block(
+		const int32_t samples_per_block) const
+{
+	return samples_per_block >= min_samples_per_block()
+		? (samples_per_block <= max_samples_per_block()
+			? samples_per_block
+			: max_samples_per_block())
+		: min_samples_per_block();
+}
 
 
 void PCMBlockReader::register_block_consumer(const std::function<void(

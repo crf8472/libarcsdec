@@ -42,8 +42,6 @@ SampleProcessor::~SampleProcessor() noexcept = default;
 
 void SampleProcessor::start_input()
 {
-	ARCS_LOG(DEBUG1) << "START INPUT";
-
 	this->do_start_input();
 }
 
@@ -51,10 +49,9 @@ void SampleProcessor::start_input()
 void SampleProcessor::append_samples(SampleInputIterator begin,
 		SampleInputIterator end)
 {
-	ARCS_LOG(DEBUG1) << "APPEND SAMPLES";
-
 	this->do_append_samples(begin, end);
 
+	// TODO Move this to calc processor, not every processor needs this
 	++total_sequences_;
 	total_samples_ += std::distance(begin, end);
 }
@@ -62,19 +59,12 @@ void SampleProcessor::append_samples(SampleInputIterator begin,
 
 void SampleProcessor::update_audiosize(const AudioSize &size)
 {
-	ARCS_LOG(DEBUG1) << "UPDATE AUDIOSIZE";
-
-	ARCS_LOG_INFO << "Update total number of samples to: "
-		<< size.total_samples();
-
 	this->do_update_audiosize(size);
 }
 
 
 void SampleProcessor::end_input()
 {
-	ARCS_LOG(DEBUG1) << "END INPUT";
-
 	this->do_end_input();
 }
 

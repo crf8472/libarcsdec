@@ -39,20 +39,11 @@ TEST_CASE ( "DescriptorFFmpeg", "[readerffmpeg]" )
 }
 
 
-//TEST_CASE ( "TypeSize" )
-//{
-//	using arcsdec::details::ffmpeg::TypeSize;
-//
-//	CHECK ( TypeSize(::AV_SAMPLE_FMT_S16) == 2 );
-//	CHECK ( TypeSize(::AV_SAMPLE_FMT_S32) == 4 );
-//}
-
-
-TEST_CASE ( "PacketQueue", "[packetqueue]" )
+TEST_CASE ( "FrameQueue", "[framequeue]" )
 {
 	using arcsdec::details::ffmpeg::AVFormatContextPtr;
 	using arcsdec::details::ffmpeg::AVCodecContextPtr;
-	using arcsdec::details::ffmpeg::PacketQueue;
+	using arcsdec::details::ffmpeg::FrameQueue;
 	using arcsdec::details::ffmpeg::av_err2str;
 
 	::AVFormatContext* ff_fctx = nullptr;
@@ -109,7 +100,7 @@ TEST_CASE ( "PacketQueue", "[packetqueue]" )
 	}
 	REQUIRE ( error_copen == 0 );
 
-	PacketQueue queue;
+	FrameQueue queue;
 	queue.set_source(fctx.get(), stream->index);
 	queue.set_decoder(cctx.get());
 

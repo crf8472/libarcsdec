@@ -133,19 +133,14 @@ public:
 	void process_file(const std::string &filename);
 
 	/**
-	 * \brief Returns TRUE if the number of samples to read at once is
-	 * configurable.
-	 *
-	 * \return TRUE if the number of samples to read at once is configurable.
-	 */
-	bool configurable_read_buffer() const;
-
-	/**
 	 * \brief Set the number of samples to read in one read operation.
 	 *
 	 * The default is BLOCKSIZE::DEFAULT.
+	 *
+	 * \param[in] samples_per_read Number of samples to read/buffer at once.
 	 */
 	void set_samples_per_read(const int64_t samples_per_read);
+	// FIXME Make this std::size_t
 
 	/**
 	 * \brief Return the number of samples to read in one read operation.
@@ -153,6 +148,7 @@ public:
 	 * \return Number of samples per read operation.
 	 */
 	int64_t samples_per_read() const;
+	// FIXME Make this std::size_t
 
 	/**
 	 * \brief Create a descriptor for this AudioReader implementation.
@@ -167,28 +163,6 @@ protected:
 	AudioReaderImpl& operator = (AudioReaderImpl &&) noexcept;
 
 private:
-
-	/**
-	 * \brief Returns TRUE if the number of samples to read at once is
-	 * configurable.
-	 *
-	 * \return TRUE if the number of samples to read at once is configurable.
-	 */
-	virtual bool do_configurable_read_buffer() const;
-
-	/**
-	 * \brief Set the number of samples to read in one read operation.
-	 *
-	 * The default is BLOCKSIZE::DEFAULT.
-	 */
-	virtual void do_set_samples_per_read(const int64_t samples_per_read);
-
-	/**
-	 * \brief Return the number of samples to read in one read operation.
-	 *
-	 * \return Number of samples per read operation.
-	 */
-	virtual int64_t do_samples_per_read() const;
 
 	/**
 	 * \brief Provides implementation for \c acquire_size() of an AudioReader.
@@ -217,6 +191,11 @@ private:
 
 	virtual std::unique_ptr<FileReaderDescriptor> do_descriptor() const
 	= 0;
+
+	/**
+	 * \brief Buffer size as total number of PCM 32 bit samples.
+	 */
+	int64_t samples_per_read_;
 };
 
 
@@ -254,16 +233,6 @@ public:
 	 * \brief Default destructor.
 	 */
 	~AudioReader() noexcept override;
-
-	/**
-	 * \brief Check if the read buffer size can be specified.
-	 *
-	 * Returns TRUE if it can be specified which amount the reader should read
-	 * in one pass.
-	 *
-	 * \return TRUE if this reader has a configurable buffer, otherwise FALSE
-	 */
-	bool configurable_read_buffer() const;
 
 	/**
 	 * \brief Set the number of samples to read in one read operation.
@@ -789,45 +758,6 @@ struct BigEndianBytes final
 			const char &b2,
 			const char &b3,
 			const char &b4);
-};
-
-
-/**
- * \brief AudioReaderImpl with configurable read buffer size
- *
- * \deprecated This class will be removed
- */
-class BufferedAudioReaderImpl : public AudioReaderImpl
-{
-public:
-
-	/**
-	 * \brief Constructor.
-	 */
-	BufferedAudioReaderImpl();
-
-	/**
-	 * \brief Constructor with read size
-	 */
-	explicit BufferedAudioReaderImpl(const int64_t samples_per_read);
-
-	/**
-	 * \brief Destructor
-	 */
-	~BufferedAudioReaderImpl() noexcept override;
-
-private:
-
-	bool do_configurable_read_buffer() const final;
-
-	void do_set_samples_per_read(const int64_t samples_per_read) final;
-
-	int64_t do_samples_per_read() const final;
-
-	/**
-	 * \brief Number of samples to be read in one block
-	 */
-	int64_t samples_per_read_;
 };
 
 /// @}

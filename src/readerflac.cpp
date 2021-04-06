@@ -44,10 +44,7 @@ namespace details
 namespace flac
 {
 
-using arcstk::SampleInputIterator;
 using arcstk::AudioSize;
-using arcstk::CDDA;
-using arcstk::SampleSequence;
 
 
 // FlacMetadataHandler

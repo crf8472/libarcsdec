@@ -416,7 +416,11 @@ void DefaultValidator::on_failure()
 // AudioReaderImpl
 
 
-AudioReaderImpl::AudioReaderImpl() = default;
+AudioReaderImpl::AudioReaderImpl()
+	: samples_per_read_ { BLOCKSIZE.DEFAULT }
+{
+	// empty
+}
 
 
 AudioReaderImpl::AudioReaderImpl(AudioReaderImpl &&) noexcept = default;
@@ -426,21 +430,15 @@ AudioReaderImpl& AudioReaderImpl::operator = (AudioReaderImpl &&) noexcept
 = default;
 
 
-bool AudioReaderImpl::configurable_read_buffer() const
-{
-	return this->do_configurable_read_buffer();
-}
-
-
 void AudioReaderImpl::set_samples_per_read(const int64_t samples_per_read)
 {
-	this->do_set_samples_per_read(samples_per_read);
+	samples_per_read_ = samples_per_read;
 }
 
 
 int64_t AudioReaderImpl::samples_per_read() const
 {
-	return this->do_samples_per_read();
+	return samples_per_read_;
 }
 
 
@@ -457,73 +455,9 @@ void AudioReaderImpl::process_file(const std::string &filename)
 }
 
 
-bool AudioReaderImpl::do_configurable_read_buffer() const
-{
-	return false;
-}
-
-
-void AudioReaderImpl::do_set_samples_per_read(
-		const int64_t /* samples_per_read */)
-{
-	throw std::logic_error(
-		"Try to set read buffer size on an AudioReader that has "
-		"no configurable read buffer");
-}
-
-
-int64_t AudioReaderImpl::do_samples_per_read() const
-{
-	return 0;
-}
-
-
 std::unique_ptr<FileReaderDescriptor> AudioReaderImpl::descriptor() const
 {
 	return this->do_descriptor();
-}
-
-
-// BufferedAudioReaderImpl
-
-
-BufferedAudioReaderImpl::BufferedAudioReaderImpl()
-	: samples_per_read_(BLOCKSIZE.DEFAULT)
-{
-	// empty
-}
-
-
-BufferedAudioReaderImpl::BufferedAudioReaderImpl(
-		const int64_t samples_per_read)
-	: samples_per_read_(samples_per_read)
-{
-	// empty
-}
-
-
-BufferedAudioReaderImpl::~BufferedAudioReaderImpl() noexcept = default;
-
-
-bool BufferedAudioReaderImpl::do_configurable_read_buffer() const
-{
-	return true;
-}
-
-
-void BufferedAudioReaderImpl::do_set_samples_per_read(
-		const int64_t samples_per_read)
-{
-	samples_per_read_ = samples_per_read;
-
-	ARCS_LOG_DEBUG << "Set read buffer size: " << samples_per_read
-		<< " samples";
-}
-
-
-int64_t BufferedAudioReaderImpl::do_samples_per_read() const
-{
-	return samples_per_read_;
 }
 
 
@@ -555,12 +489,6 @@ public:
 
 	Impl(const Impl &rhs) = delete;
 	Impl& operator = (const Impl &rhs) = delete;
-
-	/**
-	 *
-	 * \return TRUE if the size of input read at once is configurable
-	 */
-	bool configurable_read_buffer() const;
 
 	/**
 	 * Set the number of samples to read in one read operation.
@@ -628,12 +556,6 @@ AudioReader::Impl::Impl(std::unique_ptr<AudioReaderImpl> readerimpl)
 	: readerimpl_(std::move(readerimpl))
 {
 	// empty
-}
-
-
-bool AudioReader::Impl::configurable_read_buffer() const
-{
-	return readerimpl_->configurable_read_buffer();
 }
 
 
@@ -718,12 +640,6 @@ AudioReader& AudioReader::operator = (AudioReader &&) noexcept = default;
 
 
 AudioReader::~AudioReader() noexcept = default;
-
-
-bool AudioReader::configurable_read_buffer() const
-{
-	return impl_->configurable_read_buffer();
-}
 
 
 void AudioReader::set_samples_per_read(const int64_t samples_per_read)

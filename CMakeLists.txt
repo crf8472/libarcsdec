@@ -104,7 +104,6 @@ message (STATUS "Changed CMAKE_MODULE_PATH to: ${CMAKE_MODULE_PATH}" )
 ## Build libarcsdec shared library as project target
 
 add_library (${PROJECT_NAME} SHARED
-	"${PROJECT_SOURCE_DIR}/audiobuffer.cpp"
 	"${PROJECT_SOURCE_DIR}/audioreader.cpp"
 	"${PROJECT_SOURCE_DIR}/calculators.cpp"
 	"${PROJECT_SOURCE_DIR}/descriptors.cpp"
@@ -123,7 +122,6 @@ target_include_directories (${PROJECT_NAME}
 
 target_compile_options (${PROJECT_NAME} PRIVATE ${PROJECT_CXX_FLAGS} )
 
-## XXX audiobuffer? readerwav?
 list (APPEND INTERFACE_HEADERS
 	${PROJECT_INCLUDE_DIR}/audioreader.hpp
 	${PROJECT_INCLUDE_DIR}/calculators.hpp

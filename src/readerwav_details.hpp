@@ -22,9 +22,6 @@
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__
 #include "audioreader.hpp"
 #endif
-#ifndef __LIBARCSDEC_AUDIOBUFFER_HPP__
-#include "audiobuffer.hpp" // PCMBlockReader inherits from BlockCreator
-#endif
 
 namespace arcsdec
 {
@@ -794,7 +791,7 @@ private:
  *
  * This is the block reading policy for the RIFF/WAV (PCM) format.
  */
-class PCMBlockReader : public BlockCreator
+class PCMBlockReader final
 {
 
 public:
@@ -804,7 +801,7 @@ public:
 	 *
 	 * \param[in] samples_per_block Number of 32 bit PCM samples in one block
 	 */
-	explicit PCMBlockReader(const int32_t samples_per_block);
+	explicit PCMBlockReader(const int32_t /*FIXME std::size_t*/ samples_per_block);
 
 	// make class non-copyable (1/2)
 	PCMBlockReader(const PCMBlockReader &) = delete;
@@ -812,9 +809,33 @@ public:
 	// TODO Move constructor
 
 	/**
-	 * \brief Virtual default destructor.
+	 * \brief Set the maximal number of samples a block can contain.
+	 *
+	 * \param[in] samples_per_block
+	 *     The number of 32 bit PCM samples in one block
 	 */
-	~PCMBlockReader() noexcept override;
+	void set_samples_per_block(const int32_t samples_per_block);
+
+	/**
+	 * \brief Return the maximal number of samples a block can contain.
+	 *
+	 * \return The number of 32 bit PCM samples that the block can store
+	 */
+	int32_t samples_per_block() const;
+
+	/**
+	 * \brief Returns the minimum block size of this instance
+	 *
+	 * \return Minimum number of samples per block
+	 */
+	int32_t min_samples_per_block() const;
+
+	/**
+	 * \brief Returns the maximum block size of this instance
+	 *
+	 * \return Maximum number of samples per block
+	 */
+	int32_t max_samples_per_block() const;
 
 	/**
 	 * \brief Registers a consuming method for blocks.
@@ -846,8 +867,22 @@ public:
 
 	// TODO Move assignment
 
-
 private:
+
+	/**
+	 * \brief Clip the parameter to be between the values of
+	 * min_samples_per_block() and max_samples_per_block().
+	 *
+	 * \param[in] samples_per_block Requested number of samples per block
+	 *
+	 * \return Valid number of samples per block
+	 */
+	int32_t clip_samples_per_block(const int32_t samples_per_block) const;
+
+	/**
+	 * \brief Number of 32bit PCM samples per block
+	 */
+	int32_t samples_per_block_;
 
 	/**
 	 * \brief Registered callback method to consume a block.
@@ -869,7 +904,7 @@ private:
  * the 4 bytes following byte 0x2C. The format subchunk is validated to conform
  * to CDDA.
  */
-class WavAudioReaderImpl final : public BufferedAudioReaderImpl
+class WavAudioReaderImpl final : public AudioReaderImpl
 {
 
 public:

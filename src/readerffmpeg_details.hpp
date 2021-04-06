@@ -48,6 +48,95 @@ namespace arcsdec
 {
 inline namespace v_1_0_0
 {
+
+
+using arcstk::SampleSequence;
+
+
+/**
+ * \brief Abstract Getter for the first byte buffer.
+ *
+ * Specialize this for adapting sample objects.
+ *
+ * \tparam T The sample object type to get the first byte buffer from
+ */
+template <typename T>
+uint8_t* ByteBuffer(const T* object, const unsigned i);
+
+
+// TODO Template for int_buffer()
+
+
+/**
+ * \brief Abstract Getter for total bytes per channel.
+ *
+ * Specialize this for adapting sample objects.
+ *
+ * \tparam S         The integer type to represent a sample
+ * \tparam is_planar \c TRUE indicates planar buffer, \c FALSE indicates
+ *                   interleaved buffer
+ * \tparam T         The sample object type to get the first byte buffer from
+ */
+template <typename S, bool is_planar, typename T>
+struct BytesPerPlane
+{
+	static std::size_t get(const T* object);
+};
+
+
+/**
+ * \brief Abstract Getter for channel ordering.
+ *
+ * Specialize this for adapting sample objects.
+ *
+ * \tparam S         The integer type to represent a sample
+ * \tparam is_planar \c TRUE indicates planar buffer, \c FALSE indicates
+ *                   interleaved buffer
+ * \tparam T         The sample object type to get the first byte buffer from
+ */
+template <typename S, bool is_planar, typename T>
+struct ChannelOrdering
+{
+	static bool is_leftright(const T* object);
+};
+
+
+/**
+ * \brief A policy to define how to access the sample data in \c Container to be
+ * wrapped in a SampleSequence.
+ *
+ * \tparam is_planar \c TRUE indicates planar buffer, \c FALSE indicates
+ *                   interleaved buffer
+ * \tparam S         The integer type to represent a sample
+ * \tparam Container The sample object container to wrap
+ */
+template <bool is_planar, typename S, typename Container,
+		typename SequenceType = SampleSequence<S, is_planar>>
+		//typename = details::IsSampleType<S>, // TODO SFINAE stuff
+struct WrappingPolicy
+{
+	/* empty */
+};
+
+
+/**
+ * \brief Get the total samples of type \c S in an instance of type \c T.
+ *
+ * If you intend to provide a specialization of FrameBuffer<> for type T,
+ * you also have to provide a specialization of TotalSamples<S, is_planar, T>.
+ *
+ * \tparam S         The integer type to represent a sample
+ * \tparam is_planar \c TRUE indicates planar buffer, \c FALSE indicates
+ *                   interleaved buffer
+ * \tparam T         The sample object type
+ */
+template <typename S, bool is_planar, typename T>
+struct TotalSamples
+{
+	/* empty */
+};
+
+
 namespace details
 {
 namespace ffmpeg
@@ -261,81 +350,142 @@ template<> struct IsPlanar<::AV_SAMPLE_FMT_S32>  : std::false_type {/*empty*/};
 template<> struct IsPlanar<::AV_SAMPLE_FMT_S32P> : std::true_type  {/*empty*/};
 
 
-
 /**
- * \brief Create PlanarSamples of the type denoted by AVSampleFormat \c F.
+ * \brief Create a SampleSequence.
  *
- * \tparam S Integer type that represents a 16 bit stereo sample
+ * \tparam S         Integer type that represents a 16 bit stereo sample
+ * \tparam is_planar The planarity status to use
  */
-template <typename S>
-auto instantiate_sequence(std::true_type) -> PlanarSamples<S>
+template <typename S, bool is_planar>
+struct SequenceInstance
 {
-	return SampleSequence<S, true> {};
+	static auto get() -> SampleSequence<S, is_planar>
+	{
+		return SampleSequence<S, is_planar> {};
+	}
+};
+
+} // namespace ffmpeg
+} // namespace details
+
+
+// Specialization for AVFrame (planar + interleaved)
+template <>
+uint8_t* ByteBuffer(const ::AVFrame* f, const unsigned i)
+{
+	return f->data[i];
 }
 
 
-/**
- * \brief Create InterleavedSamples of the type denoted by AVSampleFormat \c F.
- *
- * \tparam S Integer type that represents a 16 bit stereo sample
- */
+// Specialization for AVFrame (planar)
 template <typename S>
-auto instantiate_sequence(std::false_type) -> InterleavedSamples<S>
+struct BytesPerPlane <S, true, ::AVFrame> // for planar frames
 {
-	return SampleSequence<S, false> {};
-}
-
-
-/**
- * \brief A container policy defines how to access the sample data in
- * \c Container to be wrapped in a SampleSequence.
- */
-template <bool is_planar, typename S, typename Container,
-		typename SequenceType = SampleSequence<S, is_planar>>
-		//typename = details::IsSampleType<S>, // TODO SFINAE stuff
-struct ContainerPolicy { /* empty */ };
-
-
-// ContainerPolicy specialization for byte-wrapping AVFrame (planar)
-template <typename S, typename SequenceType>
-struct ContainerPolicy<true, S, ::AVFrame, SequenceType>
-{
-	static uint8_t* buffer0(const ::AVFrame *f) { return f->data[0]; }
-	static uint8_t* buffer1(const ::AVFrame *f) { return f->data[1]; }
-
-	static std::size_t bytes_per_plane(const ::AVFrame *f)
+	static std::size_t get(const ::AVFrame* f)
 	{
 		return static_cast<std::size_t>(f->nb_samples) * sizeof(S);
-	}
-
-	static void wrap(const ::AVFrame *f, SequenceType &sequence)
-	{
-		sequence.wrap_byte_buffer(buffer0(f), buffer1(f), bytes_per_plane(f));
 	}
 };
 
 
-// ContainerPolicy specialization for byte-wrapping AVFrame (interleaved)
-template <typename S, typename SequenceType>
-struct ContainerPolicy<false, S, ::AVFrame, SequenceType>
+// Specialization for AVFrame (interleaved)
+template <typename S>
+struct BytesPerPlane <S, false, ::AVFrame> // for interleaved frames
 {
-	static uint8_t* buffer0(const ::AVFrame *f) { return f->data[0]; }
-
-	static std::size_t bytes_per_plane(const ::AVFrame *f)
+	static std::size_t get(const ::AVFrame* f)
 	{
 		return
 			static_cast<std::size_t>(f->nb_samples * f->channels) * sizeof(S);
 	}
+};
 
-	static void wrap(const ::AVFrame *f, SampleSequence<S, false> &sequence)
+
+// Specialization for AVFrame
+template <typename S, bool is_planar>
+struct ChannelOrdering <S, is_planar, ::AVFrame>
+{
+	static bool is_leftright(const ::AVFrame* f)
 	{
-		sequence.wrap_byte_buffer(buffer0(f), bytes_per_plane(f));
+		return f->channel_layout == AV_CH_LAYOUT_STEREO;
+	}
+};
+
+
+// Specialization for byte-wrapping AVFrame (planar)
+template <typename S, typename SequenceType>
+struct WrappingPolicy<true, S, details::ffmpeg::AVFramePtr, SequenceType>
+{
+	static SequenceType create(const details::ffmpeg::AVFramePtr &f)
+	{
+		if (!f) { return SequenceType {}; }
+
+		return SequenceType { ByteBuffer(f.get(), 0), ByteBuffer(f.get(), 1),
+			BytesPerPlane<S, true, ::AVFrame>::get(f.get()) };
+
+		// FIXME Add ChannelOrdering::is_leftright(f)
+	}
+
+	static void wrap(const details::ffmpeg::AVFramePtr &f,
+			SequenceType &sequence)
+	{
+		sequence.wrap_byte_buffer(ByteBuffer(f.get(), 0), ByteBuffer(f.get(), 1),
+				BytesPerPlane<S, true, ::AVFrame>::get(f.get()));
+
+		// FIXME Add ChannelOrdering::is_leftright(f)
+	}
+};
+
+
+// Specialization for byte-wrapping AVFrame (interleaved)
+template <typename S, typename SequenceType>
+struct WrappingPolicy<false, S, details::ffmpeg::AVFramePtr, SequenceType>
+{
+	static SequenceType create(const details::ffmpeg::AVFramePtr &f)
+	{
+		if (!f) { return SequenceType {}; }
+
+		return SequenceType { ByteBuffer(f.get(), 0),
+			BytesPerPlane<S, false, ::AVFrame>::get(f.get()) };
+
+		// FIXME Add ChannelOrdering::is_leftright(f)
+	}
+
+	static void wrap(const details::ffmpeg::AVFramePtr &f,
+			SequenceType &sequence)
+	{
+		sequence.wrap_byte_buffer(ByteBuffer(f.get(), 0),
+				BytesPerPlane<S, false, ::AVFrame>::get(f.get()));
+
+		// FIXME Add ChannelOrdering::is_leftright(f)
 	}
 };
 
 // Note:: libavcodec "normalizes" the channel ordering away, so we will ignore
 // it and process anything als left0/right1
 
+
+template <typename S> // planar
+struct TotalSamples <S, true, details::ffmpeg::AVFramePtr>
+{
+	static std::size_t value(const details::ffmpeg::AVFramePtr &f)
+	{
+		return static_cast<std::size_t>(f->nb_samples);
+	}
+};
+
+
+template <typename S> // interleaved
+struct TotalSamples <S, false, details::ffmpeg::AVFramePtr>
+{
+	static std::size_t value(const details::ffmpeg::AVFramePtr &f)
+	{
+		return static_cast<std::size_t>(f->nb_samples * f->channels);
+	}
+};
+
+
+namespace details {
+namespace ffmpeg {
 
 
 /**
@@ -348,27 +498,30 @@ struct ContainerPolicy<false, S, ::AVFrame, SequenceType>
 template <::AVSampleFormat F,
 	typename S =
 		typename SampleType<SampleSize<F>::value, IsSigned<F>::value>::type>
-auto sequence_for(const ::AVFrame* frame)
+auto sequence_for(const AVFramePtr &frame)
 	-> SampleSequence<S, IsPlanar<F>::value>
 {
-	auto sequence = instantiate_sequence<S>(
-			std::integral_constant<bool, IsPlanar<F>::value>());
+	auto sequence = SequenceInstance<S, IsPlanar<F>::value>::get();
 
-	using Policy  = ContainerPolicy<IsPlanar<F>::value, S, ::AVFrame>;
+	using Policy  = WrappingPolicy<IsPlanar<F>::value, S, AVFramePtr>;
 	Policy::wrap(frame, sequence);
 
 	return sequence;
 }
+// FIXME sequence_for is only required for FFmpegAudioReaderImpl::pass_frame()
 
 
 /**
  * \brief A FIFO sequence of AVPacket instances.
  */
-class PacketQueue final
+class FrameQueue final
 {
 	using Impl = std::queue<AVPacketPtr>;
 
-	Impl packets_;
+	/**
+	 * \brief Internal queue implementation.
+	 */
+	Impl frames_;
 
 public:
 
@@ -377,14 +530,27 @@ public:
 
 	/**
 	 * \brief Constructor.
+	 *
+	 * \param[in] capacity Capacity in number of AVPacket instances to enqueue
 	 */
-	PacketQueue();
+	FrameQueue(const std::size_t capacity);
 
-	PacketQueue(const PacketQueue&) = delete;
+	/**
+	 * \brief Constructor.
+	 *
+	 * Constructs a FrameQueue with a default capacity of 12.
+	 */
+	FrameQueue()
+		: FrameQueue (12)
+	{
+		/* empty */
+	};
 
-	PacketQueue& operator = (const PacketQueue&) = delete;
+	FrameQueue(const FrameQueue&) = delete;
 
-	~PacketQueue() noexcept = default;
+	FrameQueue& operator = (const FrameQueue&) = delete;
+
+	~FrameQueue() noexcept = default;
 
 	/**
 	 * \brief Set the AVFormatContext to read from and the AVStream to read.
@@ -416,6 +582,13 @@ public:
 	 * \return Internal AVCodecContext used for decoding packets
 	 */
 	const ::AVCodecContext* decoder() const;
+
+	/**
+	 * \brief Fill queue from assigned decoder.
+	 *
+	 * Fill queue as long as size() < capacity() and decoder provides packets.
+	 */
+	std::size_t fill();
 
 	/**
 	 * \brief Enqueue a single frame from the specified source.
@@ -457,6 +630,20 @@ public:
 	std::size_t size() const;
 
 	/**
+	 * \brief Capacity as number of AVPacket instances to enqueue.
+	 *
+	 * \return Capacity as number of AVPacket instances to enqueue
+	 */
+	std::size_t capacity() const noexcept;
+
+	/**
+	 * \brief Set the capacity.
+	 *
+	 * \param[in] capacity Number of AVPacket instances to be enqueued.
+	 */
+	void set_capacity(const std::size_t capacity);
+
+	/**
 	 * \brief TRUE iff the queue is empty.
 	 *
 	 * \return  TRUE iff the queue is empty, otherwise FALSE
@@ -468,12 +655,16 @@ private:
 	/**
 	 * \brief Pop next packet from queue and decode it.
 	 *
+	 * \param[in] packet The packet to decode
+	 *
 	 * \return TRUE on succes, FALSE if decoder needs more input
 	 */
-	bool decode_packet();
+	bool decode_packet(::AVPacket *packet);
 
 	/**
 	 * \brief Returns the index of the stream to be decoded.
+	 *
+	 * \return Index of the stream to be decoded
 	 */
 	int stream_index() const;
 
@@ -520,6 +711,11 @@ private:
 	 * \brief Internal file format context.
 	 */
 	::AVFormatContext *fctx_;
+
+	/**
+	 * \brief Capacity in number of AVPacket instances.
+	 */
+	std::size_t capacity_;
 };
 
 
@@ -778,13 +974,9 @@ public:
 	void register_start_input(std::function<void()> func);
 
 	/**
-	 * \brief Register the append_samples() method.
-	 *
-	 * \param[in] func The append_samples() method to use while reading
+	 * \brief Register the push_frame() method.
 	 */
-	void register_append_samples(
-		std::function<void(SampleInputIterator begin, SampleInputIterator end)>
-			func);
+	void register_push_frame(std::function<void(AVFramePtr frame)>);
 
 	/**
 	 * \brief Register the update_audiosize() method.
@@ -809,15 +1001,6 @@ private:
 	 * \return Index of the decoded audio stream.
 	 */
 	int stream_index() const;
-
-	/**
-	 * \brief Passes a frame.
-	 *
-	 * Wrapper for pass_samples().
-	 *
-	 * \param[in] frame The frame to pass
-	 */
-	void pass_frame(const ::AVFrame* frame) const;
 
 	/**
 	 * \brief Internal format context pointer.
@@ -856,11 +1039,9 @@ private:
 	std::function<void()> start_input_;
 
 	/**
-	 * \brief Callback for notifying outside world about a new sequence of
-	 * samples.
+	 * \brief Callback for pushing an AVFramePtr
 	 */
-	std::function<void(SampleInputIterator begin, SampleInputIterator end)>
-		append_samples_;
+	std::function<void(AVFramePtr frame)> push_frame_;
 
 	/**
 	 * \brief Callback for notifying outside world about the correct AudioSize.
@@ -903,12 +1084,30 @@ public:
 
 private:
 
+	// AudioReaderImpl
+
 	std::unique_ptr<AudioSize> do_acquire_size(const std::string &filename)
 		final;
 
 	void do_process_file(const std::string &filename) final;
 
 	std::unique_ptr<FileReaderDescriptor> do_descriptor() const final;
+
+	/**
+	 * \brief Callback for decoded single frame.
+	 *
+	 * \param[in] frame Next decoded frame to update Calculation with
+	 */
+	void frame_callback(AVFramePtr frame);
+
+	/**
+	 * \brief Pass single frame to next processor.
+	 *
+	 * \deprecated This function is legacy and will be removed at some point.
+	 *
+	 * \param[in] frame Next decoded frame to update Calculation with
+	 */
+	void pass_frame(AVFramePtr frame);
 };
 
 /// @}
@@ -919,3 +1118,4 @@ private:
 } // namespace arcsdec
 
 #endif
+
