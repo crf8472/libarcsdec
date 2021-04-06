@@ -8,37 +8,37 @@
 
 ## What libarcsdec is
 
-- A high-level API for sample and metadata input for [libarcstk][1]
+- A high-level API for sample and metadata input for [libarcstk][1].
 - A bunch of decoder and parser adapters to let you calculate ARCSs on your
-  already archived lossless audio data
+  already archived lossless audio data.
 - Facility to read virtually any lossless codec from virtually any
-  container file (by the use of external dependencies)
-- Lets you recalculate ARCSs of a CD image at any time after ripping
+  container file (by the use of external dependencies).
+- Lets you recalculate ARCSs of a CD image at any time after ripping.
 - You define the task like "Take this audio and this TOC and just give me the
-  checksums"
-- Hides completely the concrete decoding of audio data
-- Hides completely the parsing of metadata files
+  checksums".
+- Hides completely the concrete decoding of audio data.
+- Hides completely the parsing of metadata files.
 
 The following features are planned, but not yet implemented:
 
-- Metadata parser for compact discs (based on libcdio)
-- Metadata parser for cdrdao's TOC format
-- Generic audio reader based on libsndfile (just as an alternative to ffmpeg)
-- Add OGG support to the audio reader for FLAC/FLAC
-- Add support for embedded CUE sheets to the audio reader for FLAC/FLAC
+- Metadata parser for compact discs (based on libcdio).
+- Metadata parser for cdrdao's TOC format.
+- Generic audio reader based on libsndfile (just as an alternative to ffmpeg).
+- Add OGG support to the audio reader for FLAC/FLAC.
+- Add support for embedded CUE sheets to the audio reader for FLAC/FLAC.
 
 
 ## Current codecs and formats
 
 Libarcsdec contains:
 
-- TOC/Metadata parser for CUE sheets (based on libcue >= 2.0.0)
+- TOC/Metadata parser for CUE sheets (based on libcue >= 2.0.0).
 - Generic audio reader (based on ffmpeg >= 3.1, for any lossless codec in any
   container, e.g. ALAC/M4, ALAC/CAF, APE/APE, AIFF/AIFF, FLAC/OGG ... you name
-  it)
-- Audio reader for FLAC/FLAC files (based on flac/libFLAC++)
-- Audio reader for lossless Wavpack/WV files (based on libwavpack)
-- Native audio reader for RIFFWAV/PCM files
+  it).
+- Audio reader for FLAC/FLAC files (based on flac/libFLAC++).
+- Audio reader for lossless Wavpack/WV files (based on libwavpack).
+- Native audio reader for RIFFWAV/PCM files.
 
 
 ## What libarcsdec does not
@@ -47,8 +47,8 @@ Libarcsdec contains:
   etc.
 - Libarcsdec does not contribute to tasks like verifying/matching, computing of
   the AccurateRip identifier, parsing the AccurateRip response etc. The API for
-  those things is already provided by [libarcstk][1]
-- Libarcsdec does not rip CDs
+  those things is already provided by [libarcstk][1].
+- Libarcsdec does not rip CDs.
 - Libarcsdec offers no network facilities and is not supposed to do so. The
   actual HTTP request for fetching the reference values from AccurateRip is
   better performed by the HTTP networking client of your choice.
@@ -120,10 +120,9 @@ build switches.
 
 ## Current Limitations
 
-- Consider this pre-alpha quality
-- No production release yet - will be 1.0.0
+- No production release yet - will be 1.0.0.
 - API is not considered stable before 1.0.0 (may change any time in any way
-  until then)
+  until then).
 - The strategy to select a reader for a given input is rudimentary: just the
   first reader that passes the format tests is selected. So the reader appearing
   accepting codec/format X occurring first in the list "shadows" all subsequent
@@ -131,14 +130,14 @@ build switches.
 - The readers try to guess the channel ordering to recognize swapped channels.
   The default channel assignment left/right (with left = channel 0, right =
   channel 1) works well but scenarios with different channel assignment
-  are not well tested
+  are not well tested.
 - Some readers may be more robust than others, especially the very fast RIFF/WAV
   PCM reader should be considered a last resort (it is valuable for debugging
-  and testing)
+  and testing).
 - Handling of data tracks is not implemented and data tracks are just processed
   like audio tracks. What happens is completely untested.
-- Untested on big endian plattforms
-- Never built, installed or tested on Windows or Mac OS X
+- Untested on big endian plattforms.
+- Never built, installed or tested on Windows or Mac OS X.
 
 
 ## Bugs
