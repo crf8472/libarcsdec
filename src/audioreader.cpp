@@ -417,7 +417,8 @@ void DefaultValidator::on_failure()
 
 
 AudioReaderImpl::AudioReaderImpl()
-	: samples_per_read_ { BLOCKSIZE::DEFAULT }
+	: processor_ { }
+	, samples_per_read_ { BLOCKSIZE::DEFAULT }
 {
 	// empty
 }
@@ -428,18 +429,6 @@ AudioReaderImpl::AudioReaderImpl(AudioReaderImpl &&) noexcept = default;
 
 AudioReaderImpl& AudioReaderImpl::operator = (AudioReaderImpl &&) noexcept
 = default;
-
-
-void AudioReaderImpl::set_samples_per_read(const std::size_t samples_per_read)
-{
-	samples_per_read_ = samples_per_read;
-}
-
-
-std::size_t AudioReaderImpl::samples_per_read() const
-{
-	return samples_per_read_;
-}
 
 
 std::unique_ptr<AudioSize> AudioReaderImpl::acquire_size(
@@ -455,9 +444,70 @@ void AudioReaderImpl::process_file(const std::string &filename)
 }
 
 
+void AudioReaderImpl::set_samples_per_read(const std::size_t samples_per_read)
+{
+	samples_per_read_ = samples_per_read;
+}
+
+
+std::size_t AudioReaderImpl::samples_per_read() const
+{
+	return samples_per_read_;
+}
+
+
 std::unique_ptr<FileReaderDescriptor> AudioReaderImpl::descriptor() const
 {
 	return this->do_descriptor();
+}
+
+
+void AudioReaderImpl::attach_processor_impl(SampleProcessor &processor)
+{
+	processor_ = &processor;
+}
+
+
+SampleProcessor* AudioReaderImpl::use_processor()
+{
+	return this->processor_;
+}
+
+
+void AudioReaderImpl::do_signal_startinput()
+{
+	use_processor()->start_input();
+}
+
+
+void AudioReaderImpl::do_signal_appendsamples(
+		SampleInputIterator begin, SampleInputIterator end)
+{
+	use_processor()->append_samples(begin, end);
+}
+
+
+void AudioReaderImpl::do_signal_updateaudiosize(const AudioSize &size)
+{
+	use_processor()->update_audiosize(size);
+}
+
+
+void AudioReaderImpl::do_signal_endinput()
+{
+	use_processor()->end_input();
+}
+
+
+void AudioReaderImpl::do_attach_processor(SampleProcessor &processor)
+{
+	this->attach_processor_impl(processor);
+}
+
+
+const SampleProcessor* AudioReaderImpl::do_processor() const
+{
+	return this->processor_;
 }
 
 

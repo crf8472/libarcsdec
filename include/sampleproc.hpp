@@ -102,22 +102,6 @@ public:
 	 */
 	void end_input();
 
-	/**
-	 * \brief Number of sample sequence that this instance has processed.
-	 *
-	 * This value is identical to how often append_samples() was called.
-	 *
-	 * \return Number of sequences processed
-	 */
-	int64_t sequences_processed() const;
-
-	/**
-	 * \brief Number of PCM 32 bit samples processed.
-	 *
-	 * \return Number of samples processed
-	 */
-	int64_t samples_processed() const;
-
 protected:
 
 	SampleProcessor(const SampleProcessor &) = default;
@@ -152,20 +136,6 @@ private:
 	 */
 	virtual void do_end_input()
 	= 0;
-
-	/**
-	 * \brief Sequence counter.
-	 *
-	 * Counts the calls of SampleProcessor::append_samples.
-	 */
-	int64_t total_sequences_;
-
-	/**
-	 * \brief PCM 32 Bit Sample counter.
-	 *
-	 * Counts the total number of processed PCM 32 bit samples.
-	 */
-	int64_t total_samples_;
 };
 
 
@@ -176,7 +146,7 @@ private:
  * values. It can signal different events while processing the audio input.
  * A SampleProcessor can be attached to it as an addressee of those events.
  *
- * \see SampleProviderBase
+ * \see AudioReaderImpl
  */
 class SampleProvider
 {
@@ -191,20 +161,6 @@ public:
 	 * \brief Virtual default destructor.
 	 */
 	virtual ~SampleProvider() noexcept;
-
-	/**
-	 * \brief Attach a SampleProcessor.
-	 *
-	 * \param[in] processor The SampleProcessor to use
-	 */
-	void attach_processor(SampleProcessor &processor);
-
-	/**
-	 * \brief Return the registered SampleProcessor.
-	 *
-	 * \return The SampleProcessor the reader uses
-	 */
-	const SampleProcessor* processor() const;
 
 	/**
 	 * \brief Signal the processor that input starts.
@@ -232,6 +188,20 @@ public:
 	 */
 	void signal_endinput();
 
+	/**
+	 * \brief Attach a SampleProcessor.
+	 *
+	 * \param[in] processor The SampleProcessor to use
+	 */
+	void attach_processor(SampleProcessor &processor);
+
+	/**
+	 * \brief Return the registered SampleProcessor.
+	 *
+	 * \return The SampleProcessor the reader uses
+	 */
+	const SampleProcessor* processor() const;
+
 protected:
 
 	SampleProvider(const SampleProvider &) = default;
@@ -241,28 +211,6 @@ protected:
 	SampleProvider& operator = (SampleProvider &&) noexcept = default;
 
 private:
-
-	/**
-	 * \brief Register a SampleProcessor.
-	 *
-	 * This will register all callback methods of the \c processor. Already
-	 * registered callbacks will be overwritten by this method.
-	 *
-	 * The method is a mere convenience for completely registering a single
-	 * SampleProcessor instance.
-	 *
-	 * \param[in] processor The SampleProcessor to use
-	 */
-	virtual void do_attach_processor(SampleProcessor &processor)
-	= 0;
-
-	/**
-	 * \brief Return the registered SampleProcessor.
-	 *
-	 * \return The SampleProcessor the reader uses
-	 */
-	virtual const SampleProcessor* do_processor() const
-	= 0;
 
 	/**
 	 * \brief Implements signal_startinput().
@@ -293,62 +241,28 @@ private:
 	 */
 	virtual void do_signal_endinput()
 	= 0;
-};
-
-
-/**
- * \brief Base class for SampleProvider implementations.
- *
- * Implements SampleProvider.
- */
-class SampleProviderBase : public SampleProvider // FIXME Must be abstract
-{
-public:
 
 	/**
-	 * \brief Constructor
+	 * \brief Register a SampleProcessor.
+	 *
+	 * This will register all callback methods of the \c processor. Already
+	 * registered callbacks will be overwritten by this method.
+	 *
+	 * The method is a mere convenience for completely registering a single
+	 * SampleProcessor instance.
+	 *
+	 * \param[in] processor The SampleProcessor to use
 	 */
-	SampleProviderBase();
-
-protected:
-
-	~SampleProviderBase() noexcept = default;
-
-	SampleProviderBase(const SampleProviderBase &rhs) = default;
-	SampleProviderBase& operator = (const SampleProviderBase &rhs) = default;
-
-	SampleProviderBase(SampleProviderBase &&) noexcept = default;
-	SampleProviderBase& operator = (SampleProviderBase &&) noexcept = default;
+	virtual void do_attach_processor(SampleProcessor &processor)
+	= 0;
 
 	/**
-	 * \brief Default implementation of attach_processor().
+	 * \brief Return the registered SampleProcessor.
+	 *
+	 * \return The SampleProcessor the reader uses
 	 */
-	void attach_processor_impl(SampleProcessor &processor);
-
-	/**
-	 * \brief Use the internal SampleProcessor.
-	 */
-	SampleProcessor* use_processor();
-
-private:
-
-	void do_signal_startinput() override;
-
-	void do_signal_appendsamples(SampleInputIterator begin,
-			SampleInputIterator end) override;
-
-	void do_signal_updateaudiosize(const AudioSize &size) override;
-
-	void do_signal_endinput() override;
-
-	void do_attach_processor(SampleProcessor &processor) override;
-
-	const SampleProcessor* do_processor() const override;
-
-	/**
-	 * \brief Internal pointer to the SampleProcessor.
-	 */
-	SampleProcessor* processor_;
+	virtual const SampleProcessor* do_processor() const
+	= 0;
 };
 
 /// @}

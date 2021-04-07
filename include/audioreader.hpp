@@ -83,13 +83,14 @@ using arcstk::AudioSize;
 /**
  * \brief Maximum number of PCM 32 bit samples to read from a file.
  *
- * This is equivalent to the product of the maximal lba block adress the redbook
- * standard accepts (449.999 frames) and the number of samples per lba frame
- * (588).
+ * This is equivalent to the product of the maximal lba block address the
+ * redbook standard accepts (449.999 frames) and the number of samples per lba
+ * frame (588).
  *
  * The numerical value is 264.599.412.
  */
 extern const int32_t MAX_SAMPLES_TO_READ;
+// FIXME But we have to expect more samples than redbook allows!
 
 
 /**
@@ -101,7 +102,7 @@ extern const int32_t MAX_SAMPLES_TO_READ;
  * \note
  * Instances of subclasses are non-copyable but movable.
  */
-class AudioReaderImpl : public SampleProviderBase
+class AudioReaderImpl : public SampleProvider
 {
 public:
 
@@ -157,10 +158,39 @@ public:
 
 protected:
 
+	// Avoid -Weffc++ firing
+	AudioReaderImpl(const AudioReaderImpl &) = delete;
+	AudioReaderImpl& operator = (const AudioReaderImpl &) = delete;
+
 	AudioReaderImpl(AudioReaderImpl &&) noexcept;
 	AudioReaderImpl& operator = (AudioReaderImpl &&) noexcept;
 
+	/**
+	 * \brief Default implementation of attach_processor().
+	 */
+	void attach_processor_impl(SampleProcessor &processor);
+
+	/**
+	 * \brief Use the internal SampleProcessor.
+	 */
+	SampleProcessor* use_processor();
+
 private:
+
+	// SampleProvider
+
+	void do_signal_startinput() override;
+
+	void do_signal_appendsamples(SampleInputIterator begin,
+			SampleInputIterator end) override;
+
+	void do_signal_updateaudiosize(const AudioSize &size) override;
+
+	void do_signal_endinput() override;
+
+	void do_attach_processor(SampleProcessor &processor) override;
+
+	const SampleProcessor* do_processor() const override;
 
 	/**
 	 * \brief Provides implementation for \c acquire_size() of an AudioReader.
@@ -189,6 +219,11 @@ private:
 
 	virtual std::unique_ptr<FileReaderDescriptor> do_descriptor() const
 	= 0;
+
+	/**
+	 * \brief Internal pointer to the SampleProcessor.
+	 */
+	SampleProcessor* processor_;
 
 	/**
 	 * \brief Buffer size as total number of PCM 32 bit samples.
@@ -249,6 +284,13 @@ public:
 	std::size_t samples_per_read() const;
 
 	/**
+	 * \brief Register a SampleProcessor instance to pass the read samples to.
+	 *
+	 * \param[in] processor SampleProcessor to use
+	 */
+	void set_processor(SampleProcessor &processor);
+
+	/**
 	 * \brief Acquire the AudioSize of a file.
 	 *
 	 * Acquiring the AudioSize includes validation.
@@ -271,15 +313,6 @@ public:
 	 * \throw FileReadException If the file could not be read
 	 */
 	void process_file(const std::string &filename);
-
-	/**
-	 * \brief Register a SampleProcessor instance to pass the read samples to.
-	 *
-	 * \param[in] processor SampleProcessor to use
-	 *
-	 * \todo This should be part of a SampleProviderBase interface
-	 */
-	void set_processor(SampleProcessor &processor);
 
 private:
 

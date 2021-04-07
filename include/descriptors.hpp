@@ -304,7 +304,6 @@ struct Comparable
 };
 
 
-// forward declaration for FileReader
 class FileReaderDescriptor;
 
 

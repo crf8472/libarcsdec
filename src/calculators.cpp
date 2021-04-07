@@ -71,6 +71,8 @@ public:
 	 */
 	CalculationProcessor(Calculation &calculation)
 		: calculation_ (&calculation)
+		, total_sequences_ { 0 }
+		, total_samples_   { 0 }
 	{
 		// empty
 	}
@@ -83,6 +85,22 @@ public:
 	CalculationProcessor(const CalculationProcessor &rhs) noexcept = delete;
 	CalculationProcessor& operator = (const CalculationProcessor &rhs) noexcept
 		= delete;
+
+	/**
+	 * \brief Number of sample sequence that this instance has processed.
+	 *
+	 * This value is identical to how often append_samples() was called.
+	 *
+	 * \return Number of sequences processed
+	 */
+	int64_t sequences_processed() const;
+
+	/**
+	 * \brief Number of PCM 32 bit samples processed.
+	 *
+	 * \return Number of samples processed
+	 */
+	int64_t samples_processed() const;
 
 private:
 
@@ -98,15 +116,15 @@ private:
 	{
 		ARCS_LOG(DEBUG1) << "CALC received: APPEND SAMPLES";
 
+		++total_sequences_;
+		total_samples_ += std::distance(begin, end);
+
 		calculation_->update(begin, end);
 	}
 
 	void do_update_audiosize(const AudioSize &size) final
 	{
 		ARCS_LOG(DEBUG1) << "CALC received: UPDATE AUDIOSIZE";
-
-		ARCS_LOG_INFO << "Update total number of samples to: "
-			<< size.total_samples(); // TODO let update_audiosize() do this log
 
 		calculation_->update_audiosize(size);
 	}
@@ -122,7 +140,33 @@ private:
 	 * \brief Internal pointer to the calculation to wrap.
 	 */
 	Calculation *calculation_;
+
+	/**
+	 * \brief Sequence counter.
+	 *
+	 * Counts the calls of SampleProcessor::append_samples.
+	 */
+	int64_t total_sequences_;
+
+	/**
+	 * \brief PCM 32 Bit Sample counter.
+	 *
+	 * Counts the total number of processed PCM 32 bit samples.
+	 */
+	int64_t total_samples_;
 };
+
+
+int64_t CalculationProcessor::sequences_processed() const
+{
+	return total_sequences_;
+}
+
+
+int64_t CalculationProcessor::samples_processed() const
+{
+	return total_samples_;
+}
 
 
 /**
@@ -574,11 +618,11 @@ void ARCSCalculator::Impl::process_file(const std::string &audiofilename,
 		// buffer size is illegal
 
 		ARCS_LOG_WARNING << "Specified buffer size of " << buffer_size
-			<< ", but this is not within the legal range of "
+			<< " is not within the legal range of "
 			<< BLOCKSIZE::MIN << " - " << BLOCKSIZE::MAX
-			<< " samples. Use default implementation instead.";
+			<< " samples. Fall back to implementation default.";
 
-			// Do nothing, AudioReaderImpl uses its default
+		// Do nothing, AudioReaderImpl uses its default
 	}
 
 	CalculationProcessor calculator { calc };
