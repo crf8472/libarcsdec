@@ -217,8 +217,6 @@ enum class Format : unsigned
 	AIFF
 	// ... add more audio formats here
 };
-// TODO Raw
-// TODO WMA
 
 
 /**
@@ -266,8 +264,6 @@ enum class Codec : unsigned
 	MONKEY,
 	ALAC
 };
-// TODO Raw
-// TODO WMALOSSLESS
 
 
 /**
@@ -664,7 +660,7 @@ protected:
 	 */
 	FileReaderDescriptor(const decltype( suffices_ ) suffices)
 		: suffices_ { suffices } { /* empty */ }
-	// TODO suffices_ vary with class not with instance, should be static
+	// TODO suffices_ vary with subclass not with instance, should be static
 
 	FileReaderDescriptor(const FileReaderDescriptor &) = default;
 	FileReaderDescriptor& operator = (const FileReaderDescriptor &) = default;

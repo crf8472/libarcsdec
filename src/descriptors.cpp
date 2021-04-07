@@ -68,7 +68,6 @@ std::regex libname_pattern(const std::string &libname)
 }
 
 
-// TODO This is Linux/Unix only
 std::vector<std::string> runtime_deps(const std::string &object_name)
 {
 	// C-Style stuff: Messing with glibc to get shared object paths
@@ -76,7 +75,6 @@ std::vector<std::string> runtime_deps(const std::string &object_name)
 
 	const auto* object = object_name.empty() ? nullptr : object_name.c_str();
 
-	// TODO Hardcodes the SO we load on runtime and may completely fail
 	auto* handle = ::dlopen(object, RTLD_LAZY);
 	// If called with NULL for first parameter, dlopen returns the list for
 	// the main executable. Take this, then figure out libarcsdec.so, then load.
@@ -299,9 +297,9 @@ std::string name(Format format)
 		"CAF",
 		"M4A",
 		"OGG",
-		"WV", // TODO WVC?
+		"WV", // TODO Should we also read WVC?
 		"AIFF",
-		"WMA"
+		"WMA" // TODO Implement and test this
 		// ... add more audio formats here
 	};
 
@@ -326,7 +324,7 @@ std::string name(Codec codec)
 		"WAVEPACK",
 		"MONKEY",
 		"ALAC",
-		"WMALOSSLESS"
+		"WMALOSSLESS" // TODO Implement and test this
 	};
 
 	return names[std::underlying_type_t<Codec>(codec)];
