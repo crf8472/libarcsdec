@@ -1215,9 +1215,12 @@ private:
  * \tparam T    The type to instantiate
  * \tparam Args The constructor arguments
  */
-template <class T, typename... Args> // TODO SFINAE stuff
+template <class T, typename... Args>
 std::unique_ptr<FileReaderDescriptor> make_descriptor(Args&&... args)
 {
+	static_assert(std::is_convertible<T*, FileReaderDescriptor*>::value,
+			"Cannot convert type to FileReaderDescriptor");
+
 	return std::make_unique<T>(std::forward<Args>(args)...);
 }
 
