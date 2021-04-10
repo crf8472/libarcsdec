@@ -96,7 +96,7 @@ using ci_string = std::basic_string<char, ci_char_traits>;
  */
 
 /**
- * \brief Escape a character in a string with another string.
+ * \brief Escape every occurrence of a character with a string.
  *
  * \param[in,out] input Input string to modify
  * \param[in]     c     Character to escape

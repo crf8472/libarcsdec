@@ -61,7 +61,12 @@ std::regex libname_pattern(const std::string &libname)
 	auto e_name = libname;
 
 	escape(e_name, '+', "\\");
-	// TODO traverse string and escape every non-word (\W) character
+	// NOTE We allow SONAMEs to contain '+', which targets libflac++.
+	// We could escape any character that is allowed in a SONAME/libfilename
+	// but has special meaning in a regex. Currently, only libs with
+	// ASCII-characters are recognized.
+
+	// TODO Escape possible "special" characters in SONAMEs
 
 	return std::regex(".*\\b" + e_name + "\\.so(\\.[0-9]+)*$",
 			std::regex::icase);
