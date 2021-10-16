@@ -193,7 +193,6 @@ AVPacketPtr Make_AVPacketPtr::operator()() const
 		throw std::bad_alloc();
 	}
 
-	::av_init_packet(packet);
 	packet->data = nullptr;
 	packet->size = 0;
 
