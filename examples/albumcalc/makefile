@@ -1,7 +1,8 @@
 # Makefile for the example 'albumcalc', part of libarcsdec
 
 CXX     := g++
-CFLAGS  := -std=c++14 -Wall -Wextra -pedantic -larcsdec -larcstk
+## Replace 'g++' with 'clang++' if you like to use clang
+CFLAGS  := -std=c++14 -Wall -Wextra -pedantic -larcstk
 
 PROJECT := albumcalc
 
@@ -9,7 +10,7 @@ PROJECT := albumcalc
 	$(CXX) -c $(CFLAGS) -O3 $<
 
 $(PROJECT) : $(PROJECT).o
-	$(CXX) $(CFLAGS) $< -o $@
+	$(CXX) $(CFLAGS) $< -o $@ ../../build/libarcsdec.so -lcue -lsndfile
 
 clean:
 	rm -f *.o $(PROJECT)
