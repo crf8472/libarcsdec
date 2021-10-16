@@ -1,0 +1,58 @@
+#ifndef __LIBARCSDEC_VERSION_HPP__
+#include "version.hpp"
+#endif
+
+namespace arcsdec
+{
+namespace v_1_0_0
+{
+
+const std::string LIBARCSDEC_NAME = "@PROJECT_NAME@";
+
+const int LIBARCSDEC_VERSION_MAJOR = @PROJECT_VERSION_MAJOR@;
+
+const int LIBARCSDEC_VERSION_MINOR = @PROJECT_VERSION_MINOR@;
+
+const int LIBARCSDEC_VERSION_PATCH = @PROJECT_VERSION_PATCH@;
+
+const std::string LIBARCSDEC_VERSION_SUFFIX = "@PROJECT_VERSION_SUFFIX@";
+
+const std::string LIBARCSDEC_VERSION = "@PROJECT_VERSION_STRING@";
+
+const std::string LIBARCSDEC_GIT_VERSION = "@GIT_VERSION_STRING@";
+
+
+/**
+ * \brief Compares specified version to actual version
+ *
+ * \param[in] major Major version number to test
+ * \param[in] minor Minor version number to test
+ * \param[in] patch Patch level number to test
+ *
+ * \return TRUE if actual version is at least specified version
+ */
+bool api_version_is_at_least(const int major, const int minor, const int patch)
+{
+	if (LIBARCSDEC_VERSION_MAJOR < major)
+	{
+		return false;
+	}
+
+	if (LIBARCSDEC_VERSION_MINOR < minor)
+	{
+		return LIBARCSDEC_VERSION_MAJOR > major;
+	}
+
+	if (LIBARCSDEC_VERSION_PATCH < patch)
+	{
+		return LIBARCSDEC_VERSION_MINOR > minor;
+	}
+
+	return true;
+}
+
+/** @} */
+
+} // namespace v_1_0_0
+} // namespace arcsdec
+

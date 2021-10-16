@@ -3,15 +3,18 @@
 cmake_minimum_required (VERSION 3.9.6 )
 
 ## Set variables corresponding to unspecified versions to the empty string
-## needed for specifying the project version along with the name in project()
+## Required for specifying the project version along with the name in project()
 cmake_policy (SET CMP0048 NEW)
 
 ## Support new IN_LIST if() operator
-## needed for FindDoxygen.cmake
+## Required for FindDoxygen.cmake
 cmake_policy (SET CMP0057 NEW)
 
 
 project (libarcsdec VERSION 0.1.0 LANGUAGES CXX )
+
+
+## --- Setup Version Information
 
 set (PROJECT_BRIEF_DESC "Audio decoder and TOC parser adapters for libarcstk" )
 
@@ -97,6 +100,37 @@ set (INSTALL_CMAKECONFIG_DIR
 set (CMAKE_MODULE_PATH     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules" )
 message (STATUS "Changed CMAKE_MODULE_PATH to: ${CMAKE_MODULE_PATH}" )
 
+## Trigger configuration phase whenever git index changes
+set_property (DIRECTORY APPEND
+	PROPERTY CMAKE_CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/.git/index )
+
+
+
+## --- Update version.cpp with info from git
+
+find_package (Git QUIET REQUIRED )
+
+## Run git to update info
+execute_process (
+	COMMAND ${GIT_EXECUTABLE} describe --always HEAD
+	WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+	RESULT_VARIABLE GIT_EXIT_CODE
+	OUTPUT_VARIABLE GIT_VERSION_STRING
+	OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+## Did running git work?
+if (GIT_EXIT_CODE EQUAL 0 )
+	message (STATUS "git describe HEAD: ${GIT_VERSION_STRING}" )
+else()
+	message (WARNING "Failed to run git describe --always HEAD" )
+endif()
+
+## This presupposes having CMAKE_CONFIGURE_DEPENDS set to .git/index
+configure_file (${PROJECT_SOURCE_DIR}/version.cpp.in
+	${PROJECT_BUILD_SOURCE_DIR}/version.cpp
+	@ONLY )
+
 
 
 ## --- Add and configure project target
@@ -114,11 +148,11 @@ add_library (${PROJECT_NAME} SHARED
 	"${PROJECT_SOURCE_DIR}/readerwav.cpp"
 	## readerwvpk.cpp    is optional and default ON,  depends on libwavpack
 	"${PROJECT_SOURCE_DIR}/sampleproc.cpp"
+	"${PROJECT_BUILD_SOURCE_DIR}/version.cpp"
 )
 
 target_include_directories (${PROJECT_NAME}
-	PUBLIC $<BUILD_INTERFACE:${PROJECT_INCLUDE_DIR}>
-	PUBLIC $<BUILD_INTERFACE:${PROJECT_BUILD_SOURCE_DIR}> ) ## version.hpp
+	PUBLIC $<BUILD_INTERFACE:${PROJECT_INCLUDE_DIR}> )
 
 target_compile_options (${PROJECT_NAME} PRIVATE ${PROJECT_CXX_FLAGS} )
 
@@ -128,7 +162,7 @@ list (APPEND INTERFACE_HEADERS
 	${PROJECT_INCLUDE_DIR}/descriptors.hpp
 	${PROJECT_INCLUDE_DIR}/metaparser.hpp
 	${PROJECT_INCLUDE_DIR}/sampleproc.hpp
-	${PROJECT_BUILD_SOURCE_DIR}/version.hpp )
+	${PROJECT_INCLUDE_DIR}/version.hpp )
 
 set_target_properties (${PROJECT_NAME} PROPERTIES
 	## CXX_STANDARD  14 ## Commented out: already set globally
@@ -272,16 +306,6 @@ else (WITH_FFMPEG)
 	message (STATUS "Build without ffmpeg support" )
 endif (WITH_FFMPEG)
 
-
-## --- Configured files by CMake
-
-## Configure all .in files producing C++ headers files
-
-configure_file (
-	"${PROJECT_INCLUDE_DIR}/version.hpp.in"
-	"${PROJECT_BUILD_SOURCE_DIR}/version.hpp"
-	@ONLY
-)
 
 
 ## --- Install binary and exported header files
@@ -474,52 +498,6 @@ endif (WITH_NATIVE )
 
 message (STATUS "Optimization Flags: ${PROJECT_CXX_FLAGS_OPTIMIZE}" )
 
-
-## --- Ensure version info + current commit is available
-
-find_package (Git QUIET REQUIRED )
-
-## Run git with specified command options
-## return $git_exit_code and $git_output
-macro (RunGit )
-
-	execute_process(COMMAND
-		"${GIT_EXECUTABLE}" ${ARGV}
-		WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-		RESULT_VARIABLE git_exit_code
-		OUTPUT_VARIABLE git_output
-		ERROR_QUIET
-		OUTPUT_STRIP_TRAILING_WHITESPACE )
-
-	if (git_exit_code EQUAL 0 )
-		set (GIT_STATE TRUE )
-	else()
-		set (GIT_STATE FALSE )
-	endif()
-endmacro()
-
-
-set(git_object HEAD)
-
-RunGit ("describe" "--always" "${git_object}")
-
-if (GIT_STATE )
-	set (PROJECT_GIT_DESCRIBE ${git_output} )
-endif()
-
-RunGit ("rev-parse" "${git_object}" )
-
-if (GIT_STATE )
-	set (PROJECT_GIT_COMMIT "${git_output}" )
-endif()
-
-
-set_property(GLOBAL APPEND
-	PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/.git/index"
-)
-
-message (STATUS "Git describe: ${PROJECT_GIT_DESCRIBE}" )
-message (STATUS "Git commit id: ${PROJECT_GIT_COMMIT}" )
 
 
 ## --- Optional: Build tests, using Catch2 testing framework
