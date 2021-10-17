@@ -69,7 +69,6 @@ add_requirements_target (rtd_requirements
 add_custom_target (rtd_doc DEPENDS "${OUTPUT_MAINPAGE}" )
 add_dependencies  (rtd_doc rtd_requirements )
 
-add_dependencies  (rtd_doc init_doc ) ## required boiler plate
 add_dependencies  (doc rtd_doc )
 
 
@@ -87,9 +86,7 @@ if (DOXYGEN_NEEDS_XML_DEDUP )
 	set (EXHALE_EXECUTES_DOXYGEN "False" )
 	set (DOXYFILE "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile" )
 
-	add_doxygen_target (rtd_doxygen "${DOXYFILE}" "${DOXYFILE_TEMPLATE}"
-		"${OUTPUT_INDEX}"
-	)
+	add_doxygen_target (rtd_doxygen ${DOXYFILE} ${OUTPUT_INDEX} )
 
 	add_dependencies (rtd_doc rtd_doxygen )
 

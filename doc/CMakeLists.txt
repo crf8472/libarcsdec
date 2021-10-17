@@ -46,17 +46,6 @@ set (DOC_DOXYFILE_BASE    ${DOC_BINARY_DIR}/Doxyfile-base )
 ## Define the target name and location of the base Doxyfile to be included
 set (DOC_DOXYFILE_BASE_TEMPLATE ${PROJECT_DOC_DIR}/Doxyfile.in )
 
-## CMake controlled values in the Doxyfile base template
-set (DOXYGEN_OUTPUT_DIRECTORY "${DOC_GEN_DIR}" )
-string (REPLACE ";" " " DOXYGEN_STRIP_FROM_PATH
-	"${PROJECT_INCLUDE_DIR}/;${PROJECT_BUILD_SOURCE_DIR}/" )
-string (REPLACE ";" " " DOXYGEN_STRIP_FROM_INC_PATH
-	"${PROJECT_INCLUDE_DIR}/;${PROJECT_BUILD_SOURCE_DIR}/" )
-string (REPLACE ";" " " DOXYGEN_INPUT
-	"${PROJECT_INCLUDE_DIR};${PROJECT_BUILD_SOURCE_DIR};${DOC_TEXTS_GEN_DIR}" )
-set (DOXYGEN_FILE_PATTERNS "*.hpp *.md" )
-set (DOXYGEN_USE_MDFILE_AS_MAINPAGE "${DOC_MAINPAGE}" )
-
 
 
 ## --- Generate documentation output directory
@@ -64,43 +53,67 @@ set (DOXYGEN_USE_MDFILE_AS_MAINPAGE "${DOC_MAINPAGE}" )
 add_custom_command (
 	OUTPUT  ${DOC_GEN_DIR}
 	PRE_BUILD
-	COMMAND ${CMAKE_COMMAND} -E make_directory ${DOC_GEN_DIR} )
+	COMMAND ${CMAKE_COMMAND}
+	ARGS    -E make_directory ${DOC_GEN_DIR} )
 
 
 add_custom_target (create_output_dir DEPENDS ${DOC_GEN_DIR} )
 
 
+## --- Generate base doxyfile
 
-## --- Build internal docs if requested
+## Set CMake controlled values in the Doxyfile base template
 
-option (WITH_INTERNAL_DOCS "Build documentation also for internal APIs" OFF )
+set (DOXYGEN_OUTPUT_DIRECTORY       "${DOC_GEN_DIR}/doxygen" )
+set (DOXYGEN_FILE_PATTERNS          "*.hpp *.md" )
+set (DOXYGEN_USE_MDFILE_AS_MAINPAGE "${DOC_MAINPAGE}" )
 
-if (WITH_INTERNAL_DOCS )
+
+## Build internal docs if requested
+
+if (WITH_INTERNAL_DOCS)
 
 	message (STATUS "Will build documentation also for internal APIs" )
 
-	set (DOXYGEN_INTERNAL_DOCS "YES" )
-	set (DOXYGEN_INPUT
-		"${DOXYGEN_INPUT} ${PROJECT_SOURCE_DIR}" )
 	set (DOXYGEN_STRIP_FROM_PATH
 		"${DOXYGEN_STRIP_FROM_PATH} ${PROJECT_SOURCE_DIR}/" )
+
 	set (DOXYGEN_STRIP_FROM_INC_PATH
 		"${DOXYGEN_STRIP_FROM_INC_PATH} ${PROJECT_SOURCE_DIR}/" )
 
-	set (DOC_COMMENT "${DOC_COMMENT} (also internal APIs)" )
+	set (DOXYGEN_INTERNAL_DOCS "YES" )
+
+	set (DOXYGEN_INPUT "${DOXYGEN_INPUT} ${PROJECT_SOURCE_DIR}" )
+
+	## Not passed to doxygen, cmake only
 	set (DOC_SOURCES ${DOC_SOURCES} ${PRIVATE_HEADERS} )
+
+	set (DOC_COMMENT "${DOC_COMMENT} (also internal APIs)" )
 
 else ()
 
+	string (REPLACE ";" " " DOXYGEN_STRIP_FROM_PATH
+		"${PROJECT_INCLUDE_DIR}/;${PROJECT_BUILD_SOURCE_DIR}/" )
+
+	string (REPLACE ";" " " DOXYGEN_STRIP_FROM_INC_PATH
+		"${PROJECT_INCLUDE_DIR}/;${PROJECT_BUILD_SOURCE_DIR}/" )
+
 	set (DOXYGEN_INTERNAL_DOCS "NO" )
+
+	string (REPLACE ";" " " DOXYGEN_INPUT
+		"${PROJECT_INCLUDE_DIR};${PROJECT_BUILD_SOURCE_DIR};${DOC_TEXTS_GEN_DIR}" )
 
 endif (WITH_INTERNAL_DOCS)
 
 
 
-## --- Configure doxyfile and static mainpage
+## --- Rule to build base Doxyfile
 
-configure_file (${DOC_DOXYFILE_BASE_TEMPLATE} ${DOC_DOXYFILE_BASE} @ONLY )
+configure_file ( ${DOC_DOXYFILE_BASE_TEMPLATE} ${DOC_DOXYFILE_BASE} @ONLY )
+
+
+
+## --- Generate static mainpage
 
 configure_file (${DOC_TEXTS_SOURCE_DIR}/MAINPAGE.md.in ${DOC_MAINPAGE} @ONLY )
 
@@ -144,18 +157,10 @@ if (LOAD_GENERATORS AND DOXYGEN_VERSION VERSION_GREATER_EQUAL 1.8.16 )
 endif()
 
 
-## DOXYGEN_NEEDS_XML_DEDUP must be set before actually loading the
-## CMAKE scripts for generators
+## Note: DOXYGEN_NEEDS_XML_DEDUP must be set _before_ actually loading the
+## CMAKE scripts for generators with add_subdirectory()!
 
 if (LOAD_GENERATORS )
-
-	## --- Target summing up all prequisites
-	##
-	## When adding a generator target in a subdirectory, add THIS target as a
-	## dependency to it as it is done in doc/thirdparty/mcss/CMakeLists.txt.
-	add_custom_target (doc_prerequisites
-		DEPENDS ${DOC_SOURCES} ${DOC_DOXYFILE_BASE} )
-	add_dependencies (doc_prerequisites create_output_dir )
 
 	## Configure virtual Python Sandbox
 	add_subdirectory ("thirdparty/python-virtualenv" EXCLUDE_FROM_ALL )
@@ -171,11 +176,9 @@ if (DOXYGEN_NEEDS_XML_DEDUP )
 	## Setup deduplication script. We don't know whether it is actually
 	## used, but it's in place.
 
-	set (DEDUP_INDEX_SCRIPT "${DOC_BINARY_DIR}/dedup_index.py" )
-
 	configure_file (
 		"${PROJECT_DOC_DIR}/thirdparty/doxygen/dedup_index.py"
-		"${DEDUP_INDEX_SCRIPT}"
+		"${DOC_BINARY_DIR}/dedup_index.py"
 		@ONLY
 	)
 
@@ -199,40 +202,6 @@ if (DOXYGEN_NEEDS_XML_DEDUP )
 endif()
 
 
-macro (add_doxygen_dedup DOXY_PRIMARY_TARGET XMLFILE )
-
-	set (STAMP_FILE "${XMLFILE}.deduplicated" )
-
-	add_custom_command (
-		OUTPUT  "${STAMP_FILE}"
-		COMMAND "${PYTHON_CMD}" "${DEDUP_INDEX_SCRIPT}" "${XMLFILE}"
-		COMMAND ${CMAKE_COMMAND}
-		ARGS    -E touch "${STAMP_FILE}"
-		DEPENDS "${XMLFILE}"
-		WORKING_DIRECTORY "${DOC_GEN_DIR}"
-		COMMENT "Eliminate duplicate compounds in doxygen XML for target ${DOXY_PRIMARY_TARGET}"
-		VERBATIM
-	)
-
-	set (DEDUP_TARGET "${DOXY_PRIMARY_TARGET}_dedup" )
-
-	message (STATUS "Add doxygen dedup target ${DEDUP_TARGET}" )
-
-	add_custom_target (${DEDUP_TARGET} DEPENDS "${STAMP_FILE}" )
-
-	if (PYTHON_ENV_AVAILABLE )
-
-		add_dependencies  (${DEDUP_TARGET} doxygen_requirements )
-	endif()
-
-	add_dependencies  (${DEDUP_TARGET} ${DOXY_PRIMARY_TARGET} )
-
-	unset (DOXY_PRIMARY_TARGET )
-	unset (DEDUP_TARGET )
-	unset (XMLFILE )
-endmacro()
-
-
 
 ## --- Provide macro for subdir CMake configs to request doxygen runs
 
@@ -250,17 +219,41 @@ macro (add_doxygen_target DOXY_TARGET DOXYFILE INDEXFILE )
 	## Handle possible deduplication requirement
 	if (DOXYGEN_NEEDS_XML_DEDUP )
 
+		## Setup doxygen run target
 		add_custom_target (${DOXY_TARGET}_run DEPENDS ${INDEXFILE} )
+		add_dependencies  (${DOXY_TARGET}_run create_output_dir )
 
-		add_doxygen_dedup (${DOXY_TARGET}_run ${INDEXFILE} )
+		set (STAMP_FILE ${INDEXFILE}.deduplicated )
 
+		add_custom_command (
+			OUTPUT  ${STAMP_FILE}
+			COMMAND ${PYTHON_CMD}
+			ARGS    ${DOC_BINARY_DIR}/dedup_index.py ${INDEXFILE}
+			COMMAND ${CMAKE_COMMAND}
+			ARGS    -E touch ${STAMP_FILE}
+			DEPENDS ${INDEXFILE}
+			WORKING_DIRECTORY "${DOC_GEN_DIR}"
+			COMMENT "Remove duplicate compounds in ${INDEXFILE}"
+			VERBATIM
+		)
 
+		## Setup deduplication target
+		add_custom_target (${DOXY_TARGET}_dedup DEPENDS ${STAMP_FILE} )
+		add_dependencies  (${DOXY_TARGET}_dedup ${DOXY_TARGET}_run )
+		if (PYTHON_ENV_AVAILABLE )
+
+			add_dependencies  (${DOXY_TARGET}_dedup doxygen_requirements )
+		endif()
+
+		## Setup doxygen target
 		add_custom_target (${DOXY_TARGET} )
+		add_dependencies  (${DOXY_TARGET} ${DOXY_TARGET}_dedup )
 
-		add_dependencies  (${DOXY_TARGET}     ${DOXY_TARGET}_run_dedup )
+		unset (STAMPFILE )
 	else()
 
 		add_custom_target (${DOXY_TARGET} DEPENDS ${INDEXFILE} )
+		add_dependencies  (${DOXY_TARGET} create_output_dir )
 	endif()
 endmacro()
 
@@ -279,7 +272,7 @@ if (NOT LOAD_GENERATORS )
 
 	message (STATUS "Will build documentation with pure doxygen (HTML)" )
 
-	set (DOC_OUTPUT_MAINPAGE ${DOC_GEN_DIR}/html/index.html )
+	set (DOC_OUTPUT_MAINPAGE ${DOXYGEN_OUTPUT_DIRECTORY}/html/index.html )
 
 	add_custom_command (
 		OUTPUT  ${DOC_OUTPUT_MAINPAGE}
@@ -291,7 +284,7 @@ if (NOT LOAD_GENERATORS )
 	)
 
 	add_custom_target (plain_doc DEPENDS ${DOC_OUTPUT_MAINPAGE} )
-	add_dependencies (plain_doc create_output_dir )
+	add_dependencies  (plain_doc create_output_dir )
 
 	add_dependencies  (doc plain_doc )
 
