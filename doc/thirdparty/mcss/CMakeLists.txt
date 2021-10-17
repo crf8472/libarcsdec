@@ -32,6 +32,7 @@ set (OUTPUT_MAINPAGE   "${DOXYGEN_OUTPUT_DIRECTORY}/html/index.html" )
 set (OUTPUT_INDEX      "${DOXYGEN_OUTPUT_DIRECTORY}/xml/index.xml" )
 set (DOXYFILE_TEMPLATE "${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in" )
 set (DOXYFILE          "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile" )
+set (CONFPY            "${CMAKE_CURRENT_BINARY_DIR}/conf.py" )
 
 set (MCSS_REPO_URL       "https://github.com/mosra/m.css.git" )
 set (MCSS_SCRIPT_RELPATH "documentation/doxygen.py" )
@@ -40,7 +41,7 @@ set (MCSS_SCRIPT_RELPATH "documentation/doxygen.py" )
 ## set (MCSS_SCRIPT_RELPATH "doxygen/dox2html5.py" )
 
 
-add_custom_target (mcss_doc DEPENDS "${OUTPUT_MAINPAGE}" )
+add_custom_target (mcss_doc DEPENDS ${OUTPUT_MAINPAGE} )
 
 
 ## --- Define m.css to be checked out/updated while configuring
@@ -55,7 +56,8 @@ if (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.11.0" )
 
 	FetchContent_Declare (m_css
 		GIT_REPOSITORY    "${MCSS_REPO_URL}"
-		#GIT_TAG          ... use always HEAD of master
+		#GIT_TAG          ... use always HEAD of default branch
+		#PATCH_COMMAND     ${GIT_EXECUTABLE} apply ${CMAKE_CURRENT_SOURCE_DIR}/mcss-doxygen19x.patch
 		UPDATE_COMMAND    ${GIT_EXECUTABLE} pull
 	)
 
@@ -82,12 +84,12 @@ else() ## No FetchContent module available
 
 	ExternalProject_Add (mcss_provide
 		GIT_REPOSITORY    ${MCSS_REPO_URL}
-		#GIT_TAG          ... use always HEAD of master
+		#GIT_TAG          ... use always HEAD of default branch
 		GIT_SHALLOW       true
 		GIT_PROGRESS      true
 		TIMEOUT           10
 		# DOWNLOAD_COMMAND use default
-		PATCH_COMMDAND    ""
+		PATCH_COMMAND     ""
 		UPDATE_COMMAND    ${GIT_EXECUTABLE} pull
 		CONFIGURE_COMMAND ""
 		BUILD_COMMAND     ""
@@ -115,26 +117,27 @@ add_requirements_target (mcss_requirements
 add_dependencies (mcss_doc mcss_requirements )
 
 
-## --- Prepare Doxygen XML generation
+## --- Build rule for running m.css
 
-configure_file ("${DOXYFILE_TEMPLATE}" "${DOXYFILE}" @ONLY )
+configure_file ("${DOXYFILE_TEMPLATE}"                   "${DOXYFILE}" @ONLY )
+configure_file ("${CMAKE_CURRENT_SOURCE_DIR}/conf.py.in" "${CONFPY}"   @ONLY )
 
-if (DOXYGEN_PREFERS_SEPARATE )
+
+
+if (DOXYGEN_NEEDS_XML_DEDUP )
 
 	## Doxygen needs to run separately from m.css since we want to post-process
 	## its XML output.
 
-	add_doxygen_target (mcss_doxygen "${DOXYFILE}" "${DOXYFILE_TEMPLATE}"
-		"${OUTPUT_INDEX}"
-	)
+	add_doxygen_target (mcss_doxygen ${DOXYFILE} ${OUTPUT_INDEX} )
 
 	add_dependencies (mcss_doc mcss_doxygen )
 
 	add_custom_command (
 		OUTPUT  "${OUTPUT_MAINPAGE}"
-		COMMAND "${PYTHON_CMD}" "${MCSS_CMD}" --no-doxygen "${DOXYFILE}"
+		COMMAND "${PYTHON_CMD}" "${MCSS_CMD}" --no-doxygen "${CONFPY}"
 				2> "${PROJECT_LOG_DIR}/MCSS.log"
-		DEPENDS "${OUTPUT_INDEX}"
+		DEPENDS ${OUTPUT_INDEX} ${DOC_SOURCES}
 		WORKING_DIRECTORY "${DOC_GEN_DIR}"
 		COMMENT "${DOC_COMMENT}"
 		VERBATIM
@@ -145,11 +148,9 @@ else()
 
 	add_custom_command (
 		OUTPUT  "${OUTPUT_MAINPAGE}"
-		COMMAND "${PYTHON_CMD}" "${MCSS_CMD}" "${DOXYFILE}"
+		COMMAND "${PYTHON_CMD}" "${MCSS_CMD}" "${CONFPY}"
 				2> "${PROJECT_LOG_DIR}/MCSS.log"
-		DEPENDS "${DOC_DOXYFILE_BASE_TEMPLATE}"
-				"${DOC_DOXYFILE_BASE}"
-				"${DOXYFILE_TEMPLATE}"
+		DEPENDS "${DOC_DOXYFILE_BASE}"
 				"${DOXYFILE}"
 				${DOC_SOURCES}
 		WORKING_DIRECTORY "${DOC_GEN_DIR}"
@@ -158,6 +159,8 @@ else()
 	)
 endif()
 
-add_dependencies  (mcss_doc init_doc ) ## required boiler plate
-add_dependencies  (doc mcss_doc )
+## Claim prerequisites for mcss_doc
+add_dependencies (mcss_doc doc_prerequisites )
+
+add_dependencies (doc mcss_doc )
 

@@ -80,7 +80,7 @@ add_dependencies  (doc rtd_doc )
 set (EXHALE_EXECUTES_DOXYGEN "True" )
 
 
-if (DOXYGEN_XML_NEEDS_DEDUP )
+if (DOXYGEN_NEEDS_XML_DEDUP )
 
 	# --- Run doxygen in a separate target and make exhale depend on its output
 
