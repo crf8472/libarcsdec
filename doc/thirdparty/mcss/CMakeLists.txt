@@ -9,7 +9,7 @@
 if (WIN32 )
 
 	message (FATAL_ERROR
-		"M.CSS support is currently not available for Windows" )
+		"m.css support is currently not available for Windows" )
 endif()
 
 
@@ -57,7 +57,6 @@ if (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.11.0" )
 	FetchContent_Declare (m_css
 		GIT_REPOSITORY    "${MCSS_REPO_URL}"
 		#GIT_TAG          ... use always HEAD of default branch
-		#PATCH_COMMAND     ${GIT_EXECUTABLE} apply ${CMAKE_CURRENT_SOURCE_DIR}/mcss-doxygen19x.patch
 		UPDATE_COMMAND    ${GIT_EXECUTABLE} pull
 	)
 
@@ -74,6 +73,22 @@ if (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.11.0" )
 		endif (NOT m_css_POPULATED )
 	endif()
 
+	## Patch m.css for doxygen >= 1.9.0
+	if (DOXYGEN_VERSION VERSION_GREATER_EQUAL 1.9.0 )
+
+		execute_process (
+			COMMAND ${GIT_EXECUTABLE} apply ${CMAKE_CURRENT_SOURCE_DIR}/mcss-doxygen19x.patch
+			WORKING_DIRECTORY ${m_css_SOURCE_DIR}
+			RESULT_VARIABLE PATCH_EXIT_CODE
+		)
+
+		if (PATCH_EXIT_CODE EQUAL 0)
+			message (STATUS "Patching m.css for doxygen >= 1.9.0 was successful" )
+		else()
+			message (WARNING "Patching m.css for doxygen >= 1.9.0 failed." )
+		endif()
+	endif()
+
 	set (MCSS_CMD "${m_css_SOURCE_DIR}/${MCSS_SCRIPT_RELPATH}" )
 
 else() ## No FetchContent module available
@@ -82,7 +97,7 @@ else() ## No FetchContent module available
 
 	include (ExternalProject )
 
-	ExternalProject_Add (mcss_provide
+	ExternalProject_Add (mcss_download
 		GIT_REPOSITORY    ${MCSS_REPO_URL}
 		#GIT_TAG          ... use always HEAD of default branch
 		GIT_SHALLOW       true
@@ -98,11 +113,28 @@ else() ## No FetchContent module available
 		LOG_DOWNLOAD      ON
 	)
 
-	ExternalProject_Get_Property (mcss_provide SOURCE_DIR )
+	ExternalProject_Get_Property (mcss_download SOURCE_DIR )
 
-	set (MCSS_CMD "${SOURCE_DIR}/${MCSS_SCRIPT_RELPATH}" )
+	## Patch m.css for doxygen >= 1.9.0
+	if (DOXYGEN_VERSION VERSION_GREATER_EQUAL 1.9.0 )
+
+		add_custom_command (
+			OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/mcss.patched
+			PRE_BUILD
+			COMMAND ${GIT_EXECUTABLE} apply ${CMAKE_CURRENT_SOURCE_DIR}/mcss-doxygen19x.patch
+			COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_CURRENT_BINARY_DIR}/mcss.patched
+			WORKING_DIRECTORY ${SOURCE_DIR}
+		)
+
+		add_custom_target (mcss_provide
+			DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/mcss.patched )
+
+		add_dependencies (mcss_provide mcss_download )
+	endif()
 
 	add_dependencies (mcss_doc mcss_provide )
+
+	set (MCSS_CMD "${SOURCE_DIR}/${MCSS_SCRIPT_RELPATH}" )
 
 	unset(SOURCE_DIR )
 endif()
