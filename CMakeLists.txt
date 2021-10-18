@@ -20,19 +20,9 @@ set (PROJECT_BRIEF_DESC "Audio decoder and TOC parser adapters for libarcstk" )
 
 set (PROJECT_URL "https://codeberg.org/tristero/${PROJECT_NAME}/" )
 
-set (PROJECT_VERSION_SUFFIX "alpha.2" )
+set (PROJECT_VERSION_SUFFIX "alpha.3" )
 
 set (PROJECT_DEFAULT_BUILD_TYPE "Release" )
-
-
-## --- Global settings
-
-set (CMAKE_CXX_STANDARD 14 )
-set (CMAKE_CXX_STANDARD_REQUIRED ON )
-set (CMAKE_CXX_EXTENSIONS OFF ) ## use -std=c++14 instead of std=gnu++14
-
-
-## --- Setup Version Information
 
 set (PROJECT_VERSION_STRING_WITHOUT_SUFFIX
 	"${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}"
@@ -40,25 +30,44 @@ set (PROJECT_VERSION_STRING_WITHOUT_SUFFIX
 
 set (PROJECT_VERSION_STRING "${PROJECT_VERSION_STRING_WITHOUT_SUFFIX}" )
 
-if (PROJECT_VERSION_SUFFIX)
-	set(PROJECT_VERSION_STRING
-		"${PROJECT_VERSION_STRING}-${PROJECT_VERSION_SUFFIX}" )
-endif(PROJECT_VERSION_SUFFIX)
+if (PROJECT_VERSION_SUFFIX )
+	set (PROJECT_VERSION_STRING
+		"${PROJECT_VERSION_STRING_WITHOUT_SUFFIX}-${PROJECT_VERSION_SUFFIX}" )
+endif (PROJECT_VERSION_SUFFIX )
 
 message (STATUS "Building ${PROJECT_NAME} ${PROJECT_VERSION_STRING}" )
+
 
 
 ## --- Setup Default Build Type
 
 if (NOT CMAKE_BUILD_TYPE )
 
-	set (CMAKE_BUILD_TYPE "${PROJECT_DEFAULT_BUILD_TYPE}" )
+	set (CMAKE_BUILD_TYPE "${PROJECT_DEFAULT_BUILD_TYPE}"
+		CACHE STRING "Choose the type of build (e.g. Debug or Release)" FORCE )
 
-	message (STATUS "No build type specified, set to default" )
+	message (STATUS "No build type specified, set to ${CMAKE_BUILD_TYPE}" )
 
 endif (NOT CMAKE_BUILD_TYPE )
 
 message (STATUS "Build type: ${CMAKE_BUILD_TYPE}" )
+
+
+
+## --- Global settings
+
+## Trigger configuration phase whenever git index changes
+set_property (DIRECTORY APPEND
+	PROPERTY CMAKE_CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/.git/index )
+
+set (CMAKE_CXX_STANDARD 14 )
+set (CMAKE_CXX_STANDARD_REQUIRED ON )
+set (CMAKE_CXX_EXTENSIONS OFF ) ## use -std=c++14 instead of std=gnu++14
+
+## Search path for cmake modules
+set (CMAKE_MODULE_PATH     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules" )
+message (STATUS "Changed CMAKE_MODULE_PATH to: ${CMAKE_MODULE_PATH}" )
+
 
 
 ## --- Project Directory Layout
@@ -67,16 +76,10 @@ message (STATUS "Build type: ${CMAKE_BUILD_TYPE}" )
 set (PROJECT_BINARY_DIR       "${CMAKE_CURRENT_SOURCE_DIR}/build" )
 
 ## "Root directory for public/exported headers"
-set (PROJECT_INCLUDE_DIR       "${CMAKE_CURRENT_SOURCE_DIR}/include" )
+set (PROJECT_INCLUDE_DIR      "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 
 ## "Root directory for sources"
 set (PROJECT_SOURCE_DIR       "${CMAKE_CURRENT_SOURCE_DIR}/src" )
-
-## "Root directory for testcases and testdata"
-set (PROJECT_TEST_DIR         "${CMAKE_CURRENT_SOURCE_DIR}/test" )
-
-## "Root directory for documentation config and sources" )
-set (PROJECT_DOC_DIR          "${CMAKE_CURRENT_SOURCE_DIR}/doc" )
 
 ## "Target directory for non-cmake logs"
 set (PROJECT_LOG_DIR          "${PROJECT_BINARY_DIR}/log" )
@@ -84,25 +87,14 @@ set (PROJECT_LOG_DIR          "${PROJECT_BINARY_DIR}/log" )
 ## "Target directory for generated sources and configuration"
 set (PROJECT_BUILD_SOURCE_DIR "${PROJECT_BINARY_DIR}/generated-sources" )
 
-set (INSTALL_LIBRARY_DIR   "${CMAKE_INSTALL_PREFIX}/lib"
-	CACHE PATH "Installation directory for library (.so) files" )
+## Subdir for installing includes
+set (PROJECT_INSTALL_INCLUDES_SUBDIR "include/arcsdec" )
 
-set (INSTALL_INCLUDE_DIR   "${CMAKE_INSTALL_PREFIX}/include/arcsdec"
-	CACHE PATH "Installation directory for include (.hpp) files" )
 
-set (INSTALL_PKGCONFIG_DIR "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig"
-	CACHE PATH "Installation directory for pkgconfig (.pc) files" )
 
-set (INSTALL_CMAKECONFIG_DIR
-	"${CMAKE_INSTALL_PREFIX}/lib/cmake/${PROJECT_NAME}"
-	CACHE PATH "Installation directory for cmake package files" )
+## --- Create Log directory
 
-set (CMAKE_MODULE_PATH     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules" )
-message (STATUS "Changed CMAKE_MODULE_PATH to: ${CMAKE_MODULE_PATH}" )
-
-## Trigger configuration phase whenever git index changes
-set_property (DIRECTORY APPEND
-	PROPERTY CMAKE_CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/.git/index )
+file (MAKE_DIRECTORY ${PROJECT_LOG_DIR} )
 
 
 
@@ -132,10 +124,17 @@ configure_file (${PROJECT_SOURCE_DIR}/version.cpp.in
 	@ONLY )
 
 
+## --- Specify Exported Headers
+
+list (APPEND INTERFACE_HEADERS
+	${PROJECT_INCLUDE_DIR}/audioreader.hpp
+	${PROJECT_INCLUDE_DIR}/calculators.hpp
+	${PROJECT_INCLUDE_DIR}/descriptors.hpp
+	${PROJECT_INCLUDE_DIR}/metaparser.hpp
+	${PROJECT_INCLUDE_DIR}/sampleproc.hpp
+	${PROJECT_INCLUDE_DIR}/version.hpp )
 
 ## --- Add and configure project target
-
-## Build libarcsdec shared library as project target
 
 add_library (${PROJECT_NAME} SHARED
 	"${PROJECT_SOURCE_DIR}/audioreader.cpp"
@@ -148,34 +147,25 @@ add_library (${PROJECT_NAME} SHARED
 	"${PROJECT_SOURCE_DIR}/readerwav.cpp"
 	## readerwvpk.cpp    is optional and default ON,  depends on libwavpack
 	"${PROJECT_SOURCE_DIR}/sampleproc.cpp"
-	"${PROJECT_BUILD_SOURCE_DIR}/version.cpp"
-)
+	"${PROJECT_BUILD_SOURCE_DIR}/version.cpp" )
 
 target_include_directories (${PROJECT_NAME}
 	PUBLIC $<BUILD_INTERFACE:${PROJECT_INCLUDE_DIR}> )
 
 target_compile_options (${PROJECT_NAME} PRIVATE ${PROJECT_CXX_FLAGS} )
 
-list (APPEND INTERFACE_HEADERS
-	${PROJECT_INCLUDE_DIR}/audioreader.hpp
-	${PROJECT_INCLUDE_DIR}/calculators.hpp
-	${PROJECT_INCLUDE_DIR}/descriptors.hpp
-	${PROJECT_INCLUDE_DIR}/metaparser.hpp
-	${PROJECT_INCLUDE_DIR}/sampleproc.hpp
-	${PROJECT_INCLUDE_DIR}/version.hpp )
-
 set_target_properties (${PROJECT_NAME} PROPERTIES
-	## CXX_STANDARD  14 ## Commented out: already set globally
-	PUBLIC_HEADER "${INTERFACE_HEADERS}"
-	PREFIX        "" ## No 'lib' prefix in soname, PROJECT_NAME is prefixed
-	VERSION       "${PROJECT_VERSION_STRING_WITHOUT_SUFFIX}"
-	SOVERSION     "${PROJECT_VERSION_STRING_WITHOUT_SUFFIX}" )
+	## CXX_STANDARD is already set globally
+	PUBLIC_HEADER  "${INTERFACE_HEADERS}"
+	PREFIX         "" ## No 'lib' prefix in soname, PROJECT_NAME is prefixed
+	VERSION        "${PROJECT_VERSION_STRING_WITHOUT_SUFFIX}"
+	SOVERSION      "${PROJECT_VERSION_STRING_WITHOUT_SUFFIX}" )
 
 set (PKG_REQUIRE_ARRAY )
 
 
 
-## --- Required library: libarcstk
+## --- Required: libarcstk
 
 ## Commented out: coming with 3.14.5 ?
 # set (CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE )
@@ -194,8 +184,6 @@ option (WITH_FLAC    "Add FLAC reading capability"     ON )
 option (WITH_WAVPACK "Add WavPack reading capability"  ON )
 option (WITH_FFMPEG  "Add ffmpeg reading capabilities" ON )
 option (WITH_NATIVE  "Use platform specific optimization on compiling" ON )
-
-option (IWYU "Request use of include-what-you-use" OFF )
 
 
 ## --- Required: parsercue (requires libcue)
@@ -312,62 +300,60 @@ endif (WITH_FFMPEG)
 
 if (NOT SKIP_INSTALL_ALL )
 
-	set (EXPORT_MAIN_TARGET "${PROJECT_NAME}" )
+	set (INSTALL_CMAKECONFIG_DIR
+		"${CMAKE_INSTALL_PREFIX}/lib/cmake/${PROJECT_NAME}"
+		CACHE PATH "Installation directory for cmake package files" )
+
+	set (PROJECT_EXPORT_SET "${PROJECT_NAME}-targets" )
 
 	install (TARGETS ${PROJECT_NAME}
-		EXPORT "${EXPORT_MAIN_TARGET}-targets"
-		LIBRARY        DESTINATION  "${INSTALL_LIBRARY_DIR}"
-		PUBLIC_HEADER  DESTINATION  "${INSTALL_INCLUDE_DIR}" )
+		EXPORT "${PROJECT_EXPORT_SET}"
+		LIBRARY       DESTINATION "${CMAKE_INSTALL_PREFIX}/lib"
+		PUBLIC_HEADER DESTINATION
+				"${CMAKE_INSTALL_PREFIX}/${PROJECT_INSTALL_INCLUDES_SUBDIR}"
+		PRIVATE_HEADER DESTINATION
+				"${CMAKE_INSTALL_PREFIX}/${PROJECT_INSTALL_INCLUDES_SUBDIR}/details" )
 
-	install (EXPORT ${EXPORT_MAIN_TARGET}-targets
+	install (EXPORT ${PROJECT_EXPORT_SET}
 		NAMESPACE libarcsdec::
 		DESTINATION "${INSTALL_CMAKECONFIG_DIR}" )
 
 
 	if (NOT SKIP_INSTALL_FILES )
 
-		## support pkgconfig
+		## Support pkgconfig
 
 		string (REPLACE ";" ", " PKG_REQUIRE "${PKG_REQUIRE_ARRAY}" )
 
-		set (PROJECT_PKGCONFIG_FILE
-			"${PROJECT_BUILD_SOURCE_DIR}/libarcsdec.pc" )
-
 		configure_file (
 			"${CMAKE_CURRENT_SOURCE_DIR}/libarcsdec.pc.in"
-			"${PROJECT_PKGCONFIG_FILE}"
+			"${PROJECT_BUILD_SOURCE_DIR}/libarcsdec.pc"
 			@ONLY
 		)
 
-		install (FILES
-			"${PROJECT_PKGCONFIG_FILE}"
-			DESTINATION "${INSTALL_PKGCONFIG_DIR}" )
-
 		unset (PKG_REQUIRE )
 
-		## support cmake
+		install (FILES "${PROJECT_BUILD_SOURCE_DIR}/libarcsdec.pc"
+			DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig" )
+
+		## Support CMake Packaging
 
 		include (CMakePackageConfigHelpers )
 
-		set (PROJECT_CONFIG_FILE
-			"${EXPORT_MAIN_TARGET}-config.cmake"
-		)
+		set (PROJECT_CONFIG_FILE "${PROJECT_NAME}-config.cmake" )
 
-		set (PROJECT_CONFIG_VERSION_FILE
-			"${EXPORT_MAIN_TARGET}-config-version.cmake"
-		)
+		set (PROJECT_CONFIG_VERSION_FILE "${PROJECT_NAME}-config-version.cmake" )
 
 		configure_package_config_file (
 			"${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_CONFIG_FILE}.in"
 			"${PROJECT_BUILD_SOURCE_DIR}/${PROJECT_CONFIG_FILE}"
-			PATH_VARS INSTALL_INCLUDE_DIR
 			INSTALL_DESTINATION "${INSTALL_CMAKECONFIG_DIR}"
 		)
 
 		write_basic_package_version_file (
 			"${PROJECT_BUILD_SOURCE_DIR}/${PROJECT_CONFIG_VERSION_FILE}"
-			VERSION			${PROJECT_VERSION_STRING_WITHOUT_SUFFIX}
-			COMPATIBILITY	SameMajorVersion
+			VERSION        ${PROJECT_VERSION_STRING_WITHOUT_SUFFIX}
+			COMPATIBILITY  SameMajorVersion
 		)
 
 		install (FILES
@@ -376,7 +362,7 @@ if (NOT SKIP_INSTALL_ALL )
 			DESTINATION "${INSTALL_CMAKECONFIG_DIR}"
 		)
 
-	endif()
+	endif ()
 
 endif (NOT SKIP_INSTALL_ALL)
 
@@ -422,11 +408,15 @@ set (PROJECT_CXX_GNU_FLAGS_WARNINGS
 	-Wzero-as-null-pointer-constant
 	)
 
-## g++: Optimization
+## g++: Optimize flags
 set (PROJECT_CXX_GNU_FLAGS_OPTIMIZE  -march=native -mtune=generic )
 
 
 ## clang++: Warnings
+## Clang warnings are quite aggressive by default. Some of the g++ warnings are
+## either compatibility flags that do nothing or are activated by other meta
+## flags. Some are just on by default. The following list is intended to contain
+## only those flags that are off by default and no compatibility flags.
 set (PROJECT_CXX_CLANG_FLAGS_WARNINGS
 	-Wall -Wextra -Wpedantic -Weffc++
 	-Wold-style-cast
@@ -442,14 +432,11 @@ set (PROJECT_CXX_CLANG_FLAGS_WARNINGS
 	-Winconsistent-missing-destructor-override
 	)
 
-## clang++: Optimization
-set (PROJECT_CXX_CLANG_FLAGS_OPTIMIZE ${PROJECT_CXX_GNU_FLAGS_OPTIMIZE} )
+## clang++: Optimize flags
+set (PROJECT_CXX_CLANG_FLAGS_OPTIMIZE -march=native -mtune=generic )
 
 
-
-## --- Compiler Specific Settings
-
-## Select compiler specific settings
+## Compiler: apply specific flags
 
 if (CMAKE_COMPILER_IS_GNUCXX ) ## for g++
 
@@ -500,7 +487,7 @@ message (STATUS "Optimization Flags: ${PROJECT_CXX_FLAGS_OPTIMIZE}" )
 
 
 
-## --- Optional: Build tests, using Catch2 testing framework
+## --- Optional: Build tests, using Catch2 testing framework (default: OFF)
 
 option (WITH_TESTS "Build unit tests" OFF )
 
@@ -514,11 +501,8 @@ if (WITH_TESTS)
 	add_subdirectory (thirdparty/catch2 EXCLUDE_FROM_ALL )
 
 	## Add tests
-	add_subdirectory (${PROJECT_TEST_DIR} )
+	add_subdirectory (${CMAKE_CURRENT_SOURCE_DIR}/test )
 
-else ()
-
-	message (STATUS "Build without tests" )
 endif (WITH_TESTS)
 
 
@@ -526,51 +510,41 @@ endif (WITH_TESTS)
 
 option (WITH_DOCS          "Build documentation for public API"           OFF )
 option (WITH_INTERNAL_DOCS "Build documentation also for internal APIs"   OFF )
-option (WITH_IMPL_DOCS     "Build documentation also for implementations" OFF )
 option (USE_MCSS           "Build documentation using m.css"              OFF )
 
 ## Auto-activate WITH_DOCS if settings for documentation are present
-if (WITH_INTERNAL_DOCS OR WITH_IMPL_DOCS OR USE_MCSS )
+if (WITH_INTERNAL_DOCS OR USE_MCSS )
 
-	set(WITH_DOCS ON )
-
+	set (WITH_DOCS ON CACHE BOOL "Build documentation for public API" FORCE )
 endif()
 
 ## Process configuration for building the documentation
 if (WITH_DOCS )
 
-	add_subdirectory(${PROJECT_DOC_DIR} )
-
+	add_subdirectory (${CMAKE_CURRENT_SOURCE_DIR}/doc )
 endif (WITH_DOCS )
+
 
 
 ## --- Optional: Add include-what-you-use support (default: OFF)
 
+option (IWYU "Don't compile, check headers with include-what-you-use" OFF )
 if (IWYU )
 
 	message (STATUS "Program include-what-you-use requested" )
-	find_program (IWYU_PATH NAMES include-what-you-use iwyu )
+	find_program (IWYU_BINARY NAMES include-what-you-use iwyu )
 
-	if (IWYU_PATH )
+	if (IWYU_BINARY )
 
 		## Set for all subsequent targets
-		set (CMAKE_CXX_INCLUDE_WHAT_YOU_USE ${IWYU_PATH} )
+		set (CMAKE_CXX_INCLUDE_WHAT_YOU_USE ${IWYU_BINARY} )
 
-		## Commented out: Set for specific targets only
-		#set_property(TARGET ${TARGET_NAME}
-		#	PROPERTY CMAKE_CXX_INCLUDE_WHAT_YOU_USE ${IWYU_PATH})
+		message (STATUS "Program include-what-you-use found: ${IWYU_BINARY}" )
 
-		message (STATUS "Program include-what-you-use found: ${IWYU_PATH}" )
+	else (IWYU_BINARY )
 
-	else (IWYU_PATH )
+		message (FATAL_ERROR "Program include-what-you-use not found" )
 
-		message (WARNING "Program include-what-you-use not found" )
-
-	endif (IWYU_PATH )
+	endif (IWYU_BINARY )
 endif (IWYU )
-
-
-## --- Create Log directory
-
-file (MAKE_DIRECTORY ${PROJECT_LOG_DIR} )
 
