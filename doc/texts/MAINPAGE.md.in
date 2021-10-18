@@ -21,17 +21,18 @@ See the [project repository](@PROJECT_URL@/).
 
 
 
-\section nonfeatures What libarcsdec does not
+\section nonfeatures Non-features
 
-- Libarcsdec does not alter your files in any way and cannot be used for tagging
-  etc.
+- Libarcsdec does not rip CDs
+- Libarcsdec is read-only and does not tag, rename or alter your files in any
+  other way
 - Libarcsdec does not contribute to tasks like verifying/matching, computing of
   the AccurateRip identifier, parsing the AccurateRip response etc. The API for
   those things is already provided by [libarcstk][1]
-- Libarcsdec does not rip CDs
-- Libarcsdec offers no network facilities and is not supposed to do so. The
-  actual HTTP request for fetching the reference values from AccurateRip is
-  better performed by the HTTP networking client of your choice.
+- Libarcsdec will not send any requests to AccurateRip. Libarcsdec has no
+  network facilities and is not supposed to get any. The actual HTTP request for
+  fetching the reference values is better performed by the HTTP client of your
+  choice.
 
 
 
