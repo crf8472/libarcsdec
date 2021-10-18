@@ -18,7 +18,7 @@ project (libarcsdec VERSION 0.1.0 LANGUAGES CXX )
 
 set (PROJECT_BRIEF_DESC "Audio decoder and TOC parser adapters for libarcstk" )
 
-set (PROJECT_URL "https://codeberg.org/tristero/${PROJECT_NAME}/" )
+set (PROJECT_URL "https://codeberg.org/tristero/${PROJECT_NAME}" )
 
 set (PROJECT_VERSION_SUFFIX "alpha.3" )
 

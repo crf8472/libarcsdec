@@ -3,7 +3,7 @@
 
 \section Home
 
-See the [project repository](@PROJECT_URL@).
+See the [project repository](@PROJECT_URL@/).
 
 
 \section features Features
@@ -39,6 +39,7 @@ See the [project repository](@PROJECT_URL@).
 
 Build and install to just use the API:
 
+	$ git clone @PROJECT_URL@.git
 	$ cd libarcsdec     # your libarcsdec root directory where README.md resides
 	$ mkdir build && cd build
 	$ cmake -DCMAKE_BUILD_TYPE=Release ..
@@ -53,7 +54,7 @@ BUILD.md.
 \section Version
 
 This documentation was generated from commit
-[@GIT_VERSION_STRING@](@PROJECT_URL@commit/@GIT_COMMIT_ID@).
+[@GIT_VERSION_STRING@](@PROJECT_URL@/commit/@GIT_COMMIT_ID@).
 
 
 [1]: https://codeberg.org/tristero/libarcstk

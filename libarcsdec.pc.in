@@ -7,7 +7,7 @@ includedir=@INSTALL_INCLUDE_DIR@
 Name: libarcsdec
 Description: @PROJECT_BRIEF_DESC@
 Version: @PROJECT_VERSION_STRING_WITHOUT_SUFFIX@
-URL: @PROJECT_URL@
+URL: @PROJECT_URL@/
 
 Requires.private: @PKG_REQUIRE@
 Libs: -L${libdir} -L${sharedlibdir} -larcsdec
