@@ -3,7 +3,7 @@
 
 \section Home
 
-See the project home [on codeberg.org](https://codeberg.org/tristero/libarcsdec).
+See the [project repository](@PROJECT_URL@).
 
 
 \section features Features
@@ -53,8 +53,7 @@ BUILD.md.
 \section Version
 
 This documentation was generated from commit
-[@PROJECT_GIT_DESCRIBE@]
-(https://codeberg.org/tristero/libarcsdec/commit/@PROJECT_GIT_COMMIT@).
+[@GIT_VERSION_STRING@](@PROJECT_URL@commit/@GIT_COMMIT_ID@).
 
 
 [1]: https://codeberg.org/tristero/libarcstk
