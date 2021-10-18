@@ -1,4 +1,4 @@
-\mainpage libarcsdec - A library with audio decoder and TOC parser adapters for libarcstk
+\mainpage @PROJECT_NAME@ - @PROJECT_BRIEF_DESC@
 
 
 \section Home
