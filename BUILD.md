@@ -31,8 +31,8 @@ issues.
 - [libwavpack][8] >= 5 -- decode WavePack audio (in wv container files)
 - [ffmpeg][9] >= 3.1 -- decode virtually any codec in virtually any container
 - git - for testing: to clone test framework [Catch2][2] as an external project
-  when running the unit tests. You also need git if you want to build the
-  documentation with [m.css][3] (instead of stock doxygen).
+  when running the unit tests. For building the documentation with
+  [m.css][3] (instead of stock doxygen) to clone m.css.
 - Doxygen - for documentation: to build the API documentation in HTML
   (graphviz/dot is not required)
 - Python (with virtualenv) - for documentation: to build the documentation in
@@ -78,7 +78,7 @@ We describe the build configuration for the following profiles:
   for some target system).
 
 
-### Trying a different compiler
+### Using a different compiler
 
 Libarcsdec is tested to compile with clang++ as well as with g++.
 
@@ -96,7 +96,7 @@ If your actual compiler is not g++ and you want to use your installed g++:
 	$ export CC=$(which gcc)
 	$ export CXX=$(which g++)
 
-Then, delete all contents of directory ``build`` (which contains metadata from
+Then, delete your directory ``build`` (which contains metadata from
 the previous compiler) to start off cleanly.
 
 	$ cd ..
@@ -145,10 +145,11 @@ files to your system:
   ``libarcsdec-config-version.cmake``, ``libarcsdec-targets.cmake`` and
   ``libarcsdec-targets-release.cmake`` that allow other projects to simply import
   libarcsdec's exported cmake targets
-- the pkg-config configuration file libarcsdec.pc
+- the pkg-config configuration file ``libarcsdec.pc``
 
 You can change the install prefix by calling cmake with the
 ``-DCMAKE_INSTALL_PREFIX=/path/to/install/dir`` switch.
+
 
 
 ### Contributors
@@ -397,8 +398,8 @@ In fact, as a lack of requirement, libarcsdec has not yet even been tried to be
 built on Windows.
 
 To avoid any show-stoppers for porting libarcsdec to Windows or other platforms,
-libarcsdec tries to avoid POSIX or Linux-specific calls almost completely. (In
-[readerwav.cpp](./src/readerwav.cpp), POSIX' ``stat()`` is used to retrieve the
+libarcsdec tries to avoid Linux-specific calls almost completely. (In
+[readerwav.cpp](./src/readerwav.cpp), POSIX's ``stat()`` is used to retrieve the
 file size.)
 
 Of course it cannot be guaranteed that any dependency of libarcsdec is available
@@ -411,7 +412,7 @@ the dependencies to work (also including pkg-config)][4] on Windows using MinGW.
 [3]: https://mcss.mosra.cz/doxygen/
 [4]: http://phoenixcomm.net/~jturner/fauxdacious_buildnotes.htm
 [5]: https://github.com/libnitsk/libcue
-[6]: https://codeberg.org/tristero/libarcs
+[6]: https://codeberg.org/tristero/libarcstk
 [7]: https://xiph.org/flac/api/group__flacpp.html
 [8]: http://www.wavpack.com/
 [9]: http://ffmpeg.org/

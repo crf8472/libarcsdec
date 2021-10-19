@@ -5,15 +5,14 @@
 [![Latest](https://img.shields.io/badge/dynamic/json.svg?url=https://codeberg.org/api/v1/repos/tristero/libarcsdec/releases&label=latest&query=$.0.name&color=yellowgreen)](https://codeberg.org/tristero/libarcsdec/releases)
 
 
+## What libarcsdec does
 
-## What libarcsdec is
-
-- A high-level API for sample and metadata input for [libarcstk][1].
+- Provide a high-level API for sample and metadata input for [libarcstk][1].
 - A bunch of decoder and parser adapters to let you calculate ARCSs on your
   already archived lossless audio data.
 - Facility to read virtually any lossless codec from virtually any
   container file (by the use of external dependencies).
-- Lets you recalculate ARCSs of a CD image at any time after ripping.
+- Simplified API to recalculate ARCSs of a CD image at any time after ripping.
 - You define the task like "Take this audio and this TOC and just give me the
   checksums".
 - Hides completely the concrete decoding of audio data.
@@ -108,6 +107,7 @@ Proceed:
 
 See a [detailed HowTo](BUILD.md) explaining different build scenarios and all
 build switches.
+
 
 
 ## How to Use
