@@ -4,11 +4,11 @@ cmake_minimum_required (VERSION 3.9.6 )
 
 ## Set variables corresponding to unspecified versions to the empty string
 ## Required for specifying the project version along with the name in project()
-cmake_policy (SET CMP0048 NEW)
+cmake_policy (SET CMP0048 NEW )
 
 ## Support new IN_LIST if() operator
-## Required for FindDoxygen.cmake
-cmake_policy (SET CMP0057 NEW)
+## Required by FindDoxygen.cmake
+cmake_policy (SET CMP0057 NEW )
 
 
 project (libarcsdec VERSION 0.1.0 LANGUAGES CXX )
@@ -65,7 +65,7 @@ set (CMAKE_CXX_STANDARD_REQUIRED ON )
 set (CMAKE_CXX_EXTENSIONS OFF ) ## use -std=c++14 instead of std=gnu++14
 
 ## Search path for cmake modules
-set (CMAKE_MODULE_PATH     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules" )
+set (CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules" )
 message (STATUS "Changed CMAKE_MODULE_PATH to: ${CMAKE_MODULE_PATH}" )
 
 
@@ -166,9 +166,12 @@ add_library (${PROJECT_NAME} SHARED
 	"${PROJECT_BUILD_SOURCE_DIR}/version.cpp" )
 
 target_include_directories (${PROJECT_NAME}
-	PUBLIC $<BUILD_INTERFACE:${PROJECT_INCLUDE_DIR}> )
+	PUBLIC
+		$<BUILD_INTERFACE:${PROJECT_INCLUDE_DIR}>
+		$<INSTALL_INTERFACE:${PROJECT_INSTALL_INCLUDES_SUBDIR}>
+	PRIVATE
+		"${PROJECT_BUILD_SOURCE_DIR}" )
 
-target_compile_options (${PROJECT_NAME} PRIVATE ${PROJECT_CXX_FLAGS} )
 
 set_target_properties (${PROJECT_NAME} PROPERTIES
 	## CXX_STANDARD is already set globally
@@ -358,7 +361,7 @@ if (NOT SKIP_INSTALL_ALL )
 
 		set (PROJECT_CONFIG_FILE "${PROJECT_NAME}-config.cmake" )
 
-		set (PROJECT_CONFIG_VERSION_FILE "${PROJECT_NAME}-config-version.cmake" )
+		set (PROJECT_CONFIG_VERSION_FILE "${PROJECT_NAME}-config-version.cmake")
 
 		configure_package_config_file (
 			"${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_CONFIG_FILE}.in"
