@@ -13,6 +13,8 @@ cmake_policy (SET CMP0057 NEW )
 
 project (libarcsdec VERSION 0.1.0 LANGUAGES CXX )
 
+get_directory_property (HAS_PARENT PARENT_DIRECTORY )
+
 
 ## --- Setup Version Information
 
@@ -140,6 +142,7 @@ configure_file (${PROJECT_SOURCE_DIR}/version.cpp.in
 	@ONLY )
 
 
+
 ## --- Specify Exported Headers
 
 list (APPEND INTERFACE_HEADERS
@@ -172,7 +175,6 @@ target_include_directories (${PROJECT_NAME}
 	PRIVATE
 		"${PROJECT_BUILD_SOURCE_DIR}" )
 
-
 set_target_properties (${PROJECT_NAME} PROPERTIES
 	## CXX_STANDARD is already set globally
 	PUBLIC_HEADER  "${INTERFACE_HEADERS}"
@@ -180,9 +182,133 @@ set_target_properties (${PROJECT_NAME} PROPERTIES
 	VERSION        "${PROJECT_VERSION_STRING_WITHOUT_SUFFIX}"
 	SOVERSION      "${PROJECT_VERSION_STRING_WITHOUT_SUFFIX}" )
 
+
+## --- Compiler Specific Settings
+
+## g++: Warnings
+set (PROJECT_CXX_GNU_FLAGS_WARNINGS
+	-Wall -Wextra -Wpedantic -Weffc++
+	-Wold-style-cast
+	-Wsuggest-override
+	-Wcast-align
+	-Wcast-qual
+	-Wctor-dtor-privacy
+	-Wdisabled-optimization
+	-Wformat=2
+	-Wlogical-op
+	-Wmissing-declarations
+	-Wmissing-include-dirs
+	-Wnoexcept
+	-Woverloaded-virtual
+	-Wredundant-decls
+	-Wshadow
+	-Wsign-conversion
+	-Wsign-promo
+	-Wstrict-null-sentinel
+	-Wstrict-overflow=5
+	-Wswitch-default
+	-Wundef
+	-Wuseless-cast
+	-Wzero-as-null-pointer-constant
+	)
+
+## g++: Optimize flags
+set (PROJECT_CXX_GNU_FLAGS_OPTIMIZE  -march=native -mtune=generic )
+
+
+## clang++: Warnings
+## Clang warnings are quite aggressive by default. Some of the g++ warnings are
+## either compatibility flags that do nothing or are activated by other meta
+## flags. Some are just on by default. The following list is intended to contain
+## only those flags that are off by default and no compatibility flags.
+set (PROJECT_CXX_CLANG_FLAGS_WARNINGS
+	-Wall -Wextra -Wpedantic -Weffc++
+	-Wold-style-cast
+	-Wcast-align
+	-Wcast-qual
+	-Wformat=2
+	-Wshadow
+	-Wsign-conversion
+	-Wundef
+	-Wunused
+	-Wzero-as-null-pointer-constant
+	# -- clang specific --
+	-Winconsistent-missing-destructor-override
+	)
+
+## clang++: Optimize flags
+set (PROJECT_CXX_CLANG_FLAGS_OPTIMIZE -march=native -mtune=generic )
+
+
+## Compiler: apply specific flags
+
+if (CMAKE_COMPILER_IS_GNUCXX ) ## for g++
+
+	message (STATUS "Select compile flags for g++" )
+
+	set (PROJECT_CXX_FLAGS_WARNINGS ${PROJECT_CXX_GNU_FLAGS_WARNINGS} )
+	set (PROJECT_CXX_FLAGS_OPTIMIZE ${PROJECT_CXX_GNU_FLAGS_OPTIMIZE} )
+
+elseif (CMAKE_CXX_COMPILER MATCHES ".*clang"       ## for clang
+		OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+
+	message (STATUS "Select compile flags for clang++" )
+
+	set (PROJECT_CXX_FLAGS_WARNINGS ${PROJECT_CXX_CLANG_FLAGS_WARNINGS} )
+	set (PROJECT_CXX_FLAGS_OPTIMIZE ${PROJECT_CXX_CLANG_FLAGS_OPTIMIZE} )
+
+else()
+
+	message (WARNING "C++ Compiler seems to be neither g++ nor clang++" )
+	message (WARNING "No compile flags specified for the actual C++ compiler" )
+	message (WARNING "Try a generic compile without project specific flags" )
+
+endif()
+
+
+## Compiler: Activate Warnings
+
+target_compile_options (${PROJECT_NAME} PUBLIC ${PROJECT_CXX_FLAGS_WARNINGS} )
+
+
+## Compiler: Add optimization flags (always in the same way)
+
+macro (add_cxx_flags_optimize )
+
+	message (STATUS "Build with platform specific optimization")
+
+	target_compile_options (${PROJECT_NAME}
+			PUBLIC ${PROJECT_CXX_FLAGS_OPTIMIZE} )
+endmacro()
+
+
+## Compiler: Activate Optimizations (default ON for Release, otherwise OFF)
+
+option (WITH_NATIVE "Use platform specific optimization on compiling" OFF )
+
+if (CMAKE_BUILD_TYPE STREQUAL "Release")
+
+	set (WITH_NATIVE ON CACHE BOOL
+			"Release: Force platform specific optimization" FORCE )
+endif ()
+
+if (WITH_NATIVE )
+
+	add_cxx_flags_optimize()
+else()
+
+	message (STATUS "Build without platform specific optimization")
+
+endif (WITH_NATIVE )
+
+get_target_property (PROJECT_CXX_FLAGS ${PROJECT_NAME} COMPILE_OPTIONS )
+
+message (STATUS "Compile flags: ${PROJECT_CXX_FLAGS}" )
+
+
+## --- Setup Dependencies
+
 set (PKG_REQUIRE_ARRAY )
-
-
 
 ## --- Required: libarcstk
 
@@ -202,7 +328,6 @@ target_link_libraries (${PROJECT_NAME} PRIVATE libarcstk::libarcstk )
 option (WITH_FLAC    "Add FLAC reading capability"     ON )
 option (WITH_WAVPACK "Add WavPack reading capability"  ON )
 option (WITH_FFMPEG  "Add ffmpeg reading capabilities" ON )
-option (WITH_NATIVE  "Use platform specific optimization on compiling" ON )
 
 
 ## --- Required: parsercue (requires libcue)
@@ -315,6 +440,34 @@ endif (WITH_FFMPEG)
 
 
 
+## --- If sourced by a parent CMakeLists.txt skip all optional targets
+
+if (HAS_PARENT )
+
+	message (STATUS "Compiled by a parent project, skip tests and docs" )
+
+##  Commented out for now (needs testing)
+##
+#	## If sourced by a parent project, releases are always compiled with
+#	## optimization.
+#
+#	if (CMAKE_BUILD_TYPE STREQUAL "Release")
+#
+#		add_cxx_flags_optimize()
+#	endif()
+#
+#	get_target_property (PROJECT_CXX_FLAGS ${PROJECT_NAME} COMPILE_OPTIONS )
+#
+#	message (STATUS "Compile flags: ${PROJECT_CXX_FLAGS}" )
+#
+#	return()
+else()
+
+	message (STATUS "Compiled without parent project" )
+endif()
+
+
+
 ## --- Install binary and exported header files
 
 if (NOT SKIP_INSTALL_ALL )
@@ -336,7 +489,6 @@ if (NOT SKIP_INSTALL_ALL )
 	install (EXPORT ${PROJECT_EXPORT_SET}
 		NAMESPACE libarcsdec::
 		DESTINATION "${INSTALL_CMAKECONFIG_DIR}" )
-
 
 	if (NOT SKIP_INSTALL_FILES )
 
@@ -384,125 +536,6 @@ if (NOT SKIP_INSTALL_ALL )
 	endif ()
 
 endif (NOT SKIP_INSTALL_ALL)
-
-
-
-## --- BUILD_TYPE specific settings
-
-option (WITH_NATIVE "Use platform specific optimization on compiling" OFF )
-
-if (CMAKE_BUILD_TYPE STREQUAL "Release")
-
-	set (WITH_NATIVE ON CACHE BOOL
-			"Release: Force platform specific optimization" FORCE )
-endif ()
-
-
-## --- Compiler Specific Settings
-
-## g++: Warnings
-set (PROJECT_CXX_GNU_FLAGS_WARNINGS
-	-Wall -Wextra -Wpedantic -Weffc++
-	-Wold-style-cast
-	-Wsuggest-override
-	-Wcast-align
-	-Wcast-qual
-	-Wctor-dtor-privacy
-	-Wdisabled-optimization
-	-Wformat=2
-	-Wlogical-op
-	-Wmissing-declarations
-	-Wmissing-include-dirs
-	-Wnoexcept
-	-Woverloaded-virtual
-	-Wredundant-decls
-	-Wshadow
-	-Wsign-conversion
-	-Wsign-promo
-	-Wstrict-null-sentinel
-	-Wstrict-overflow=5
-	-Wswitch-default
-	-Wundef
-	-Wuseless-cast
-	-Wzero-as-null-pointer-constant
-	)
-
-## g++: Optimize flags
-set (PROJECT_CXX_GNU_FLAGS_OPTIMIZE  -march=native -mtune=generic )
-
-
-## clang++: Warnings
-## Clang warnings are quite aggressive by default. Some of the g++ warnings are
-## either compatibility flags that do nothing or are activated by other meta
-## flags. Some are just on by default. The following list is intended to contain
-## only those flags that are off by default and no compatibility flags.
-set (PROJECT_CXX_CLANG_FLAGS_WARNINGS
-	-Wall -Wextra -Wpedantic -Weffc++
-	-Wold-style-cast
-	-Wcast-align
-	-Wcast-qual
-	-Wformat=2
-	-Wshadow
-	-Wsign-conversion
-	-Wundef
-	-Wunused
-	-Wzero-as-null-pointer-constant
-	# -- clang specific --
-	-Winconsistent-missing-destructor-override
-	)
-
-## clang++: Optimize flags
-set (PROJECT_CXX_CLANG_FLAGS_OPTIMIZE -march=native -mtune=generic )
-
-
-## Compiler: apply specific flags
-
-if (CMAKE_COMPILER_IS_GNUCXX ) ## for g++
-
-	message (STATUS "Select compile flags for g++" )
-
-	set (PROJECT_CXX_FLAGS_WARNINGS ${PROJECT_CXX_GNU_FLAGS_WARNINGS} )
-	set (PROJECT_CXX_FLAGS_OPTIMIZE ${PROJECT_CXX_GNU_FLAGS_OPTIMIZE} )
-
-elseif (CMAKE_CXX_COMPILER MATCHES ".*clang"       ## for clang
-		OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-
-	message (STATUS "Select compile flags for clang++" )
-
-	set (PROJECT_CXX_FLAGS_WARNINGS ${PROJECT_CXX_CLANG_FLAGS_WARNINGS} )
-	set (PROJECT_CXX_FLAGS_OPTIMIZE ${PROJECT_CXX_CLANG_FLAGS_OPTIMIZE} )
-
-else()
-
-	message (WARNING "C++ Compiler seems to be neither g++ nor clang++" )
-	message (WARNING "No compile flags specified for the actual C++ compiler" )
-	message (WARNING "Try a generic compile without project specific flags" )
-
-endif()
-
-
-## Compiler: Activate Warnings
-
-target_compile_options (${PROJECT_NAME} PUBLIC ${PROJECT_CXX_FLAGS_WARNINGS} )
-
-message (STATUS "Warning Flags: ${PROJECT_CXX_FLAGS_WARNINGS}" )
-
-
-## Compiler: Activate Optimizations (default ON for Release, otherwise OFF)
-
-if (WITH_NATIVE )
-
-	message (STATUS "Build with platform specific optimization")
-
-	target_compile_options (${PROJECT_NAME}
-		PUBLIC ${PROJECT_CXX_FLAGS_OPTIMIZE} )
-else()
-
-	message (STATUS "Build without platform specific optimization")
-
-endif (WITH_NATIVE )
-
-message (STATUS "Optimization Flags: ${PROJECT_CXX_FLAGS_OPTIMIZE}" )
 
 
 
