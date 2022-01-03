@@ -314,7 +314,7 @@ well structured, using a more contemporary design than the stock doxygen HTML
 output. (Which, on the other hand, gives us this warm nostalgic memory of the
 Nineties... we loved the Nineties, didn't we?)
 
-The [public APIdoc of libarcsdec is build with m.css][4].
+The [public APIdoc of libarcsdec is build with m.css][10].
 
 This APIdoc can be built locally by the following steps:
 
@@ -416,3 +416,4 @@ the dependencies to work (also including pkg-config)][4] on Windows using MinGW.
 [7]: https://xiph.org/flac/api/group__flacpp.html
 [8]: http://www.wavpack.com/
 [9]: http://ffmpeg.org/
+[10]: https://crf8472.github.io/crf8472/libarcsdec
