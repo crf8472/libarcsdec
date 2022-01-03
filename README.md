@@ -2,7 +2,7 @@
 
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![C++14](https://img.shields.io/badge/C++-14-darkred.svg)](./API.md)
-[![Latest](https://img.shields.io/badge/dynamic/json.svg?url=https://codeberg.org/api/v1/repos/tristero/libarcsdec/releases&label=latest&query=$.0.name&color=yellowgreen)](https://codeberg.org/tristero/libarcsdec/releases)
+[![Release](https://img.shields.io/github/v/release/crf8472/libarcsdec?display_name=tag&include_prereleases)](https://github.com/crf8472/libarcsdec/releases)
 
 
 ## What libarcsdec does
@@ -145,5 +145,5 @@ build switches.
 - No sufficient unit tests yet
 
 
-[1]: https://codeberg.org/tristero/libarcstk
+[1]: https://github.com/crf8472/libarcstk
 

@@ -6,7 +6,7 @@ single audio file accompanied by a CUESheet.
 
 This example implements the exact same usecase as
 [the example of the same name in libarcstk](
-https://codeberg.org/tristero/libarcstk/src/branch/master/examples/albumcalc/),
+https://github.com/crf8472/libarcstk/tree/main/examples/albumcalc/),
 but using libarcsdec. If you compare the code of this example to the code of
 libarcstk's albumcalc example you get an illustration what libarcsdec adds to
 libarcstk.

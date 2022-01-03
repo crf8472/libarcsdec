@@ -412,7 +412,7 @@ the dependencies to work (also including pkg-config)][4] on Windows using MinGW.
 [3]: https://mcss.mosra.cz/doxygen/
 [4]: http://phoenixcomm.net/~jturner/fauxdacious_buildnotes.htm
 [5]: https://github.com/libnitsk/libcue
-[6]: https://codeberg.org/tristero/libarcstk
+[6]: https://github.com/crf8472/libarcstk
 [7]: https://xiph.org/flac/api/group__flacpp.html
 [8]: http://www.wavpack.com/
 [9]: http://ffmpeg.org/
