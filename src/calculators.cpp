@@ -58,6 +58,51 @@ using arcstk::make_empty_arid;
 
 
 /**
+ * \brief Provide a SampleProcessor that peforms no actual processing.
+ */
+class DefaultProcessor final : public SampleProcessor
+{
+public:
+
+	/**
+	 * \brief Default constructor.
+	 */
+	DefaultProcessor() = default;
+
+	/**
+	 * \brief Default destructor.
+	 */
+	~DefaultProcessor() noexcept final = default;
+
+	DefaultProcessor(const DefaultProcessor &rhs) noexcept = delete;
+	DefaultProcessor& operator = (const DefaultProcessor &rhs) noexcept = delete;
+
+private:
+
+	void do_start_input() final
+	{
+		ARCS_LOG(DEBUG1) << "DefaultProcessor received: START INPUT";
+	}
+
+	void do_append_samples(SampleInputIterator, SampleInputIterator)
+		final
+	{
+		ARCS_LOG(DEBUG1) << "DefaultProcessor received: APPEND SAMPLES";
+	}
+
+	void do_update_audiosize(const AudioSize &) final
+	{
+		ARCS_LOG(DEBUG1) << "DefaultProcessor received: UPDATE AUDIOSIZE";
+	}
+
+	void do_end_input() final
+	{
+		ARCS_LOG(DEBUG1) << "DefaultProcessor received: END INPUT";
+	}
+};
+
+
+/**
  * \brief Provide a SampleProcessor that updates a Calculation.
  */
 class CalculationProcessor final : public SampleProcessor
@@ -465,11 +510,12 @@ std::unique_ptr<ARId> ARIdCalculator::Impl::calculate(const TOC &toc,
 	// requested to start processing.
 
 	CreateAudioReader create_reader;
+	auto reader { create_reader(audio_selection(), audiofilename) };
 
-	const auto audiosize =
-		create_reader(audio_selection(), audiofilename)->acquire_size(
-				audiofilename);
+	DefaultProcessor proc; // does nothing, but required by SampleProvider
+	reader->set_processor(proc);
 
+	const auto audiosize { reader->acquire_size(audiofilename) };
 	return make_arid(toc, audiosize->leadout_frame());
 }
 
