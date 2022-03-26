@@ -28,6 +28,7 @@ extern "C"
 #include <libavformat/avformat.h>
 #include <libavformat/version.h>
 #include <libavutil/avutil.h>
+#include <libavutil/channel_layout.h>
 }
 
 
@@ -744,7 +745,7 @@ AVFormatContextPtr open_file(const std::string &filename);
  *
  * \throws FFmpegException If no stream could be identified
  */
-std::pair<int, AVCodec*> identify_stream(::AVFormatContext* fctx,
+std::pair<int, const AVCodec*> identify_stream(::AVFormatContext* fctx,
 		const ::AVMediaType media_type);
 
 

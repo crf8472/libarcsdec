@@ -516,10 +516,10 @@ AVFormatContextPtr open_file(const std::string &filename)
 // identify_stream()
 
 
-std::pair<int, AVCodec*> identify_stream(::AVFormatContext* fctx,
+std::pair<int, const AVCodec*> identify_stream(::AVFormatContext* fctx,
 		const ::AVMediaType media_type)
 {
-	::AVCodec* codec = nullptr;
+	const ::AVCodec* codec = nullptr;
 
 	const int stream_index = ::av_find_best_stream(fctx, media_type,
 			-1/*no wanted stream*/, -1/*no related stream*/,
@@ -608,7 +608,7 @@ AVCodecContextPtr create_audio_decoder(::AVFormatContext *fctx,
 		throw std::invalid_argument(msg.str());
 	}
 
-	::AVCodec *codec = nullptr;
+	const ::AVCodec *codec = nullptr;
 
 	if (fctx->audio_codec)
 	{

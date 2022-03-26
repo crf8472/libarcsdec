@@ -60,7 +60,7 @@ TEST_CASE ( "FrameQueue", "[framequeue]" )
 
 	AVFormatContextPtr fctx(ff_fctx);
 
-	::AVCodec* codec = nullptr;
+	const ::AVCodec* codec = nullptr;
 	int stream_idx = ::av_find_best_stream(fctx.get(), ::AVMEDIA_TYPE_AUDIO,
 			-1, -1, &codec, 0);
 
