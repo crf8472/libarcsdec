@@ -15,13 +15,10 @@ set (TEST_SETS )
 list (APPEND TEST_SETS audioreader  )
 #list (APPEND TEST_SETS calculators  ) ## TODO requires Mock for Calculation
 list (APPEND TEST_SETS descriptors  )
-#list (APPEND TEST_SETS metaparser   )
-list (APPEND TEST_SETS parsercue    )
 list (APPEND TEST_SETS readerffmpeg )
 list (APPEND TEST_SETS readerflac   )
 list (APPEND TEST_SETS readerwav    )
 list (APPEND TEST_SETS readerwvpk   )
-#list (APPEND TEST_SETS sampleproc   )
 
 
 ## Provide main object file
@@ -56,7 +53,7 @@ foreach (_testcase ${TEST_SETS} )
 		PRIVATE ${PROJECT_BUILD_SOURCE_DIR} ) ## generated sources
 
 	target_link_libraries (${_testcase}_test
-		Catch2::Catch2
+		Catch2::Catch2WithMain
 		libarcstk::libarcstk
 		${PROJECT_NAME} )        ## project binaries
 
