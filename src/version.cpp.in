@@ -4,7 +4,7 @@
 
 namespace arcsdec
 {
-namespace v_1_0_0
+inline namespace v_1_0_0
 {
 
 const std::string LIBARCSDEC_NAME = "@PROJECT_NAME@";
