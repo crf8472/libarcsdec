@@ -25,7 +25,10 @@ TEST_CASE ( "LittleEndianBytes", "[littleendianbytes]" )
 
 	SECTION ( "Convert 2 LE chars to uint16_t", "[littleendianbytes]" )
 	{
+		CHECK ( LE::to_uint16(0x00, 0x01) == 0x0100 );
+		CHECK ( LE::to_uint16(0x12, 0x34) == 0x3412 );
 		CHECK ( LE::to_uint16(0x69, 0x7F) == 0x7F69 );
+		CHECK ( LE::to_uint16(0x7F, 0x7F) == 0x7F7F );
 	}
 
 	SECTION ( "Convert 4 LE chars to int32_t", "[littleendianbytes]" )

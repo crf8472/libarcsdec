@@ -76,7 +76,7 @@ int16_t LittleEndianBytes::to_int16(const char &b1, const char &b2)
 
 uint16_t LittleEndianBytes::to_uint16(const char &b1, const char &b2)
 {
-	return to_int16(b1, b2) & 0xFFFF;
+	return static_cast<uint16_t>(((b2 & 0xFF) << 8) | (b1 & 0xFF)) & 0xFFFFU;
 }
 
 
