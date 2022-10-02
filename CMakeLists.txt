@@ -266,9 +266,20 @@ else()
 endif()
 
 
-## Compiler: Activate Warnings
+## Compiler: Activate Warnings on library sources
+## We do not use target_compile_options since those flags should not be
+## applied to Catch2 and tests.
 
-target_compile_options (${PROJECT_NAME} PUBLIC ${PROJECT_CXX_FLAGS_WARNINGS} )
+get_target_property (PROJECT_SOURCES ${PROJECT_NAME} SOURCES )
+
+foreach (_sourcefile ${PROJECT_SOURCES} )
+	set_property (
+		SOURCE ${_sourcefile}
+		APPEND
+		PROPERTY COMPILE_OPTIONS ${PROJECT_CXX_FLAGS_WARNINGS}
+	)
+	#message (STATUS "${_sourcefile}: ${PROJECT_CXX_FLAGS_WARNINGS}" )
+endforeach()
 
 
 ## Compiler: Add optimization flags (always in the same way)
