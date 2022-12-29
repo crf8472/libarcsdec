@@ -395,11 +395,10 @@ struct BytesPerPlane <S, false, ::AVFrame> // for interleaved frames
 {
 	static std::size_t get(const ::AVFrame* f)
 	{
-#if LIBAVUTIL_VERSION_INT < AV_VERSION_INT(57, 24, 100) //  < ffmpeg 5.1
+#if LIBAVUTIL_VERSION_INT < AV_VERSION_INT(57, 24, 100) //  ffmpeg < 5.1
 		return
 			static_cast<std::size_t>(f->nb_samples * f->channels) * sizeof(S);
-#else // >= ffmpeg 5.1
-		// TODO Test this with ffmpeg 5.1
+#else // ffmpeg >= 5.1
 		return static_cast<std::size_t>(
 					f->nb_samples * f->ch_layout.nb_channels) * sizeof(S);
 #endif
@@ -413,9 +412,9 @@ struct ChannelOrdering <S, is_planar, ::AVFrame>
 {
 	static bool is_leftright(const ::AVFrame* f)
 	{
-#if LIBAVUTIL_VERSION_INT < AV_VERSION_INT(57, 24, 100) //  < ffmpeg 5.1
+#if LIBAVUTIL_VERSION_INT < AV_VERSION_INT(57, 24, 100) //  ffmpeg < 5.1
 		return f->channel_layout == /*macro*/ AV_CH_LAYOUT_STEREO;
-#else // >= ffmpeg 5.1
+#else // ffmpeg >= 5.1
 		return (f->ch_layout.order  == ::AV_CHANNEL_ORDER_NATIVE
 			&&  f->ch_layout.u.mask == /*macro*/ AV_CH_LAYOUT_STEREO);
 		// Type of ch_layout is ::AVChannelLayout:
@@ -494,10 +493,9 @@ struct TotalSamples <S, false, details::ffmpeg::AVFramePtr>
 {
 	static std::size_t value(const details::ffmpeg::AVFramePtr &f)
 	{
-#if LIBAVUTIL_VERSION_INT < AV_VERSION_INT(57, 24, 100) //  < ffmpeg 5.1
+#if LIBAVUTIL_VERSION_INT < AV_VERSION_INT(57, 24, 100) //  ffmpeg < 5.1
 		return static_cast<std::size_t>(f->nb_samples * f->channels);
-#else // >= ffmpeg 5.1
-		// TODO Test this with ffmpeg 5.1
+#else // ffmpeg >= 5.1
 		return static_cast<std::size_t>(
 				f->nb_samples * f->ch_layout.nb_channels);
 #endif
