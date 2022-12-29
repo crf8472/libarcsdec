@@ -431,6 +431,16 @@ if (WITH_FFMPEG)
 	#at_least_version ("58.9.100"  ${avformat_VERSION} ) ## 2018-04-01
 	#at_least_version ("56.13.100" ${avutil_VERSION} )   ## 2018-04-03
 
+	## TODO
+	## ffmpeg x >= 5.1:
+	## AVFrame::channels, AVFrame::channel_layout is deprecated in favor of
+	## AVFrame::ch_layout (nb_channels and ch_layout).
+	## AVCodecContext::channels, AVCodecContext::channel_layout is deprecated
+	## in favor of AVCodecContext::ch_layout (nb_channels and ch_layout).
+	#at_least_version ("59.24.100" ${avcodec_VERSION} )  ## 2022-03-15
+	#at_least_version ("59.19.100" ${avformat_VERSION} ) ## 2022-03-15
+	#at_least_version ("57.24.100" ${avutil_VERSION} )   ## 2022-03-15
+
 	target_sources (${PROJECT_NAME}
 		PRIVATE ${PROJECT_SOURCE_DIR}/readerffmpeg.cpp )
 

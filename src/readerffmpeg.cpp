@@ -634,11 +634,18 @@ AVCodecContextPtr create_audio_decoder(::AVFormatContext *fctx,
 
 	auto context = AVCodecContextPtr(cctx);
 
-	if (context->channels > AV_NUM_DATA_POINTERS)
+	const auto nb_channels =
+#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(59, 24, 100) //  < ffmpeg 5.1
+		context->channels;
+#else // >= ffmpeg 5.1
+		context->ch_layout.nb_channels;
+#endif
+
+	if (nb_channels > AV_NUM_DATA_POINTERS)
 	{
 		// We have already ensured 2 channels by validating against CDDA.
 
-		ARCS_LOG_WARNING << "Codec specifies " << context->channels
+		ARCS_LOG_WARNING << "Codec specifies " << nb_channels
 			<< " but stream provides " << AV_NUM_DATA_POINTERS
 			<< " data pointers";
 
@@ -738,7 +745,14 @@ bool FFmpegValidator::validate_cdda(::AVCodecContext *cctx)
 		is_validated = false;
 	}
 
-	if (not CDDAValidator::num_channels(cctx->channels))
+	const auto nb_channels =
+#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(59, 24, 100) //  < ffmpeg 5.1
+		cctx->channels;
+#else
+		cctx->ch_layout.nb_channels;
+#endif
+
+	if (not CDDAValidator::num_channels(nb_channels))
 	{
 		ARCS_LOG_ERROR << "Not CDDA: not stereo";
 		is_validated = false;
@@ -827,10 +841,17 @@ std::unique_ptr<FFmpegAudioStream> FFmpegAudioStreamLoader::load(
 
 	stream->num_planes_ = ::av_sample_fmt_is_planar(cctx->sample_fmt) ? 2 : 1;
 
-	stream->channels_swapped_ = (cctx->channel_layout != 3);
-	// '3' == stereo left/right (== FL+FR).
-	// Since we already have tested for having 2 channels, anything except
-	// the standard layout must mean channels are swapped.
+	stream->channels_swapped_ =
+#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(59, 24, 100) //  < ffmpeg 5.1
+		(cctx->channel_layout != AV_CH_LAYOUT_STEREO);
+#else
+		(cctx->ch_layout.order     != AV_CHANNEL_ORDER_NATIVE)
+		|| (cctx->ch_layout.u.mask != AV_CH_LAYOUT_STEREO);
+		// AV_CH_LAYOUT_STEREO is front_left followed by front_right
+#endif
+	// Since we already have tested for having exactly 2 channels in
+	// validate_cdda, anything except the standard layout must mean that
+	// channels are swapped.
 
 	const auto estimated_samples = this->get_total_samples_declared(
 			cctx.get(), fctx->streams[stream_idx]);
@@ -1116,7 +1137,7 @@ void FFmpegAudioReaderImpl::do_process_file(const std::string &filename)
 
 	if (audiostream->channels_swapped())
 	{
-		ARCS_LOG_INFO << "FFmpeg says, channels are swapped.";
+		ARCS_LOG_INFO << "FFmpeg says channels are swapped.";
 	}
 
 	// Register this AudioReaderImpl instance as the stream's callback provider.
@@ -1310,8 +1331,15 @@ void print_codec_info(std::ostream &out, const ::AVCodecContext *cctx)
 	const auto bps = ::av_get_bytes_per_sample(cctx->sample_fmt);
 	out << "  Bytes/Sample:   " << bps << " (= " << (bps * CHAR_BIT) << " bit)"
 		<< std::endl;
+
+#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(59, 24, 100) //  < ffmpeg 5.1
 	out << "  Channels:       " << cctx->channels << std::endl;
 	out << "  Channel layout: " << cctx->channel_layout << std::endl;
+#else // >= ffmpeg 5.1
+	out << "  Channels:       " << cctx->ch_layout.nb_channels << std::endl;
+	out << "  Channel order:  " << cctx->ch_layout.order       << std::endl;
+	out << "  Channel layout: " << cctx->ch_layout.u.mask      << std::endl;
+#endif
 	out << "  Samplerate:     " << cctx->sample_rate << " Hz (samples/sec)"
 		<< std::endl;
 	out << "  skip_bottom:      " << cctx->skip_bottom << std::endl;

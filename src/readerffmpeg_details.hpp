@@ -395,8 +395,14 @@ struct BytesPerPlane <S, false, ::AVFrame> // for interleaved frames
 {
 	static std::size_t get(const ::AVFrame* f)
 	{
+#if LIBAVUTIL_VERSION_INT < AV_VERSION_INT(57, 24, 100) //  < ffmpeg 5.1
 		return
 			static_cast<std::size_t>(f->nb_samples * f->channels) * sizeof(S);
+#else // >= ffmpeg 5.1
+		// TODO Test this with ffmpeg 5.1
+		return static_cast<std::size_t>(
+					f->nb_samples * f->ch_layout.nb_channels) * sizeof(S);
+#endif
 	}
 };
 
@@ -407,9 +413,20 @@ struct ChannelOrdering <S, is_planar, ::AVFrame>
 {
 	static bool is_leftright(const ::AVFrame* f)
 	{
+#if LIBAVUTIL_VERSION_INT < AV_VERSION_INT(57, 24, 100) //  < ffmpeg 5.1
 		return f->channel_layout == AV_CH_LAYOUT_STEREO;
+#else // >= ffmpeg 5.1
+		return (f->ch_layout.order  == AV_CHANNEL_ORDER_NATIVE
+			&&  f->ch_layout.u.mask == AV_CH_LAYOUT_STEREO);
+		// Type of ch_layout is AVChannelLayout:
+		// https://ffmpeg.org/doxygen/5.1/structAVChannelLayout.html
+#endif
 	}
 };
+
+
+// Note:: libavcodec "normalizes" the channel ordering away, so we will ignore
+// it and process everything als left0/right1.
 
 
 // Specialization for byte-wrapping AVFrame (planar)
@@ -461,9 +478,6 @@ struct WrappingPolicy<false, S, details::ffmpeg::AVFramePtr, SequenceType>
 	}
 };
 
-// Note:: libavcodec "normalizes" the channel ordering away, so we will ignore
-// it and process anything als left0/right1
-
 
 template <typename S> // planar
 struct TotalSamples <S, true, details::ffmpeg::AVFramePtr>
@@ -480,7 +494,13 @@ struct TotalSamples <S, false, details::ffmpeg::AVFramePtr>
 {
 	static std::size_t value(const details::ffmpeg::AVFramePtr &f)
 	{
+#if LIBAVUTIL_VERSION_INT < AV_VERSION_INT(57, 24, 100) //  < ffmpeg 5.1
 		return static_cast<std::size_t>(f->nb_samples * f->channels);
+#else // >= ffmpeg 5.1
+		// TODO Test this with ffmpeg 5.1
+		return static_cast<std::size_t>(
+				f->nb_samples * f->ch_layout.nb_channels);
+#endif
 	}
 };
 
