@@ -309,7 +309,7 @@ template<> struct SampleType<4, false> { using type = uint32_t; };
 
 
 /**
- * \brief Size-in-bytes of a type denoted by AVSampleFormat.
+ * \brief Size-in-bytes of a type denoted by ::AVSampleFormat.
  */
 template <enum ::AVSampleFormat>
 struct SampleSize { /* empty */ };
@@ -326,7 +326,7 @@ template<> struct SampleSize<::AV_SAMPLE_FMT_S32P>
 
 
 /**
- * \brief Signedness of a type denoted by AVSampleFormat.
+ * \brief Signedness of a type denoted by ::AVSampleFormat.
  */
 template <enum ::AVSampleFormat>
 struct IsSigned { /* empty */ };
@@ -339,7 +339,7 @@ template<> struct IsSigned<::AV_SAMPLE_FMT_S32P> : std::true_type {/*empty*/};
 
 
 /**
- * \brief Planarity of a type denoted by AVSampleFormat.
+ * \brief Planarity of a type denoted by ::AVSampleFormat.
  */
 template <enum ::AVSampleFormat>
 struct IsPlanar { /* empty */ };
@@ -370,7 +370,7 @@ struct SequenceInstance
 } // namespace details
 
 
-// Specialization for AVFrame (planar + interleaved)
+// Specialization for ::AVFrame (planar + interleaved)
 template <>
 uint8_t* ByteBuffer(const ::AVFrame* f, const unsigned i)
 {
@@ -378,7 +378,7 @@ uint8_t* ByteBuffer(const ::AVFrame* f, const unsigned i)
 }
 
 
-// Specialization for AVFrame (planar)
+// Specialization for ::AVFrame (planar)
 template <typename S>
 struct BytesPerPlane <S, true, ::AVFrame> // for planar frames
 {
@@ -389,7 +389,7 @@ struct BytesPerPlane <S, true, ::AVFrame> // for planar frames
 };
 
 
-// Specialization for AVFrame (interleaved)
+// Specialization for ::AVFrame (interleaved)
 template <typename S>
 struct BytesPerPlane <S, false, ::AVFrame> // for interleaved frames
 {
@@ -407,18 +407,18 @@ struct BytesPerPlane <S, false, ::AVFrame> // for interleaved frames
 };
 
 
-// Specialization for AVFrame
+// Specialization for ::AVFrame
 template <typename S, bool is_planar>
 struct ChannelOrdering <S, is_planar, ::AVFrame>
 {
 	static bool is_leftright(const ::AVFrame* f)
 	{
 #if LIBAVUTIL_VERSION_INT < AV_VERSION_INT(57, 24, 100) //  < ffmpeg 5.1
-		return f->channel_layout == AV_CH_LAYOUT_STEREO;
+		return f->channel_layout == /*macro*/ AV_CH_LAYOUT_STEREO;
 #else // >= ffmpeg 5.1
-		return (f->ch_layout.order  == AV_CHANNEL_ORDER_NATIVE
-			&&  f->ch_layout.u.mask == AV_CH_LAYOUT_STEREO);
-		// Type of ch_layout is AVChannelLayout:
+		return (f->ch_layout.order  == ::AV_CHANNEL_ORDER_NATIVE
+			&&  f->ch_layout.u.mask == /*macro*/ AV_CH_LAYOUT_STEREO);
+		// Type of ch_layout is ::AVChannelLayout:
 		// https://ffmpeg.org/doxygen/5.1/structAVChannelLayout.html
 #endif
 	}
@@ -429,7 +429,7 @@ struct ChannelOrdering <S, is_planar, ::AVFrame>
 // it and process everything als left0/right1.
 
 
-// Specialization for byte-wrapping AVFrame (planar)
+// Specialization for byte-wrapping ::AVFrame (planar)
 template <typename S, typename SequenceType>
 struct WrappingPolicy<true, S, details::ffmpeg::AVFramePtr, SequenceType>
 {
@@ -454,7 +454,7 @@ struct WrappingPolicy<true, S, details::ffmpeg::AVFramePtr, SequenceType>
 };
 
 
-// Specialization for byte-wrapping AVFrame (interleaved)
+// Specialization for byte-wrapping ::AVFrame (interleaved)
 template <typename S, typename SequenceType>
 struct WrappingPolicy<false, S, details::ffmpeg::AVFramePtr, SequenceType>
 {
@@ -510,7 +510,7 @@ namespace ffmpeg {
 
 
 /**
- * \brief Wrap an AVFrame in a compatible SampleSequence.
+ * \brief Wrap an ::AVFrame in a compatible SampleSequence.
  *
  * \tparam F The sample format to handle
  *
@@ -533,7 +533,7 @@ auto sequence_for(const AVFramePtr &frame)
 
 
 /**
- * \brief A FIFO sequence of AVPacket instances.
+ * \brief A FIFO sequence of ::AVPacket instances.
  */
 class FrameQueue final
 {
@@ -552,7 +552,7 @@ public:
 	/**
 	 * \brief Constructor.
 	 *
-	 * \param[in] capacity Capacity in number of AVPacket instances to enqueue
+	 * \param[in] capacity Capacity in number of ::AVPacket instances to enqueue
 	 */
 	FrameQueue(const std::size_t capacity);
 
@@ -574,10 +574,10 @@ public:
 	~FrameQueue() noexcept = default;
 
 	/**
-	 * \brief Set the AVFormatContext to read from and the AVStream to read.
+	 * \brief Set the ::AVFormatContext to read from and the ::AVStream to read.
 	 *
-	 * \param[in] fctx         AVFormatContext to read from
-	 * \param[in] stream_index AVStream to read
+	 * \param[in] fctx         ::AVFormatContext to read from
+	 * \param[in] stream_index ::AVStream to read
 	 *
 	 * \throws std::invalid_argument If either \c context or \c stream is NULL
 	 */
@@ -586,21 +586,21 @@ public:
 	/**
 	 * \brief Return the frame source set for this instance.
 	 *
-	 * \return AVFormatContext and AVStream to read from
+	 * \return ::AVFormatContext and ::AVStream to read from
 	 */
 	std::pair<const ::AVFormatContext*, const int> source() const;
 
 	/**
 	 * \brief Set the decoder to use.
 	 *
-	 * \param[in] cctx The AVCodecContext to use for decoding
+	 * \param[in] cctx The ::AVCodecContext to use for decoding
 	 */
 	void set_decoder(::AVCodecContext* cctx);
 
 	/**
 	 * \brief Decoder used for decoding packets.
 	 *
-	 * \return Internal AVCodecContext used for decoding packets
+	 * \return Internal ::AVCodecContext used for decoding packets
 	 */
 	const ::AVCodecContext* decoder() const;
 
@@ -651,16 +651,16 @@ public:
 	std::size_t size() const;
 
 	/**
-	 * \brief Capacity as number of AVPacket instances to enqueue.
+	 * \brief Capacity as number of ::AVPacket instances to enqueue.
 	 *
-	 * \return Capacity as number of AVPacket instances to enqueue
+	 * \return Capacity as number of ::AVPacket instances to enqueue
 	 */
 	std::size_t capacity() const noexcept;
 
 	/**
 	 * \brief Set the capacity.
 	 *
-	 * \param[in] capacity Number of AVPacket instances to be enqueued.
+	 * \param[in] capacity Number of ::AVPacket instances to be enqueued.
 	 */
 	void set_capacity(const std::size_t capacity);
 
@@ -695,21 +695,21 @@ private:
 	::AVCodecContext* decoder();
 
 	/**
-	 * \brief Internal AVFormatContext.
+	 * \brief Internal ::AVFormatContext.
 	 */
 	::AVFormatContext* format_context();
 
 	/**
-	 * \brief Allocate a new AVPacket using Make_AVPacketPtr.
+	 * \brief Allocate a new ::AVPacket using Make_AVPacketPtr.
 	 *
-	 * \return Pointer to an allocated and initialized AVPacket.
+	 * \return Pointer to an allocated and initialized ::AVPacket.
 	 */
 	AVPacketPtr make_packet();
 
 	/**
-	 * \brief Allocate a new AVFrame using Make_AVFramePtr.
+	 * \brief Allocate a new ::AVFrame using Make_AVFramePtr.
 	 *
-	 * \return Pointer to an allocated and initialized AVFrame.
+	 * \return Pointer to an allocated and initialized ::AVFrame.
 	 */
 	AVFramePtr make_frame();
 
@@ -726,7 +726,7 @@ private:
 	/**
 	 * \brief Internal decoder.
 	 */
-	AVCodecContext *cctx_;
+	::AVCodecContext *cctx_;
 
 	/**
 	 * \brief Internal file format context.
@@ -734,7 +734,7 @@ private:
 	::AVFormatContext *fctx_;
 
 	/**
-	 * \brief Capacity in number of AVPacket instances.
+	 * \brief Capacity in number of ::AVPacket instances.
 	 */
 	std::size_t capacity_;
 };
@@ -755,7 +755,7 @@ AVFormatContextPtr open_file(const std::string &filename);
 /**
  * \brief Identify the best stream of the specified media type.
  *
- * AVCodec has to be tested for NULL by the caller. Any error in respect to
+ * ::AVCodec has to be tested for NULL by the caller. Any error in respect to
  * the stream index will indiciated by throwing.
  *
  * \param[in] fctx       The format context of the streams to inspect
@@ -765,7 +765,7 @@ AVFormatContextPtr open_file(const std::string &filename);
  *
  * \throws FFmpegException If no stream could be identified
  */
-std::pair<int, const AVCodec*> identify_stream(::AVFormatContext* fctx,
+std::pair<int, const ::AVCodec*> identify_stream(::AVFormatContext* fctx,
 		const ::AVMediaType media_type);
 
 
@@ -830,14 +830,14 @@ struct IsSupported final
 	 */
 	static bool codec(const ::AVCodecID id);
 	// Add support for more PCM formats, for example there could be
-	// AV_CODEC_ID_PCM_U16LE, AV_CODEC_ID_PCM_U16BE, AV_CODEC_ID_PCM_S32LE,
-	// AV_CODEC_ID_PCM_S32BE, AV_CODEC_ID_PCM_U32LE, AV_CODEC_ID_PCM_U32BE,
-	// WMALOSSLESS and maybe more if reasonable.
+	//::AV_CODEC_ID_PCM_U16LE, ::AV_CODEC_ID_PCM_U16BE, ::AV_CODEC_ID_PCM_S32LE,
+	//::AV_CODEC_ID_PCM_S32BE, ::AV_CODEC_ID_PCM_U32LE, ::AV_CODEC_ID_PCM_U32BE,
+	//::WMALOSSLESS and maybe more if reasonable.
 };
 
 
 /**
- * \brief Validator for AVCodecContext instances.
+ * \brief Validator for ::AVCodecContext instances.
  */
 class FFmpegValidator : public DefaultValidator
 {
@@ -846,7 +846,7 @@ public:
 	/**
 	 * \brief Validates stream for CDDA compliance.
 	 *
-	 * \param[in] cctx The AVCodecContext to analyze
+	 * \param[in] cctx The ::AVCodecContext to analyze
 	 */
 	bool validate_cdda(::AVCodecContext* cctx);
 
@@ -893,8 +893,8 @@ private:
 	 * samples BEFORE flushing the last block. For this, no estimation is
 	 * necessary.
 	 *
-	 * \param[in] cctx   The AVCodecContext to analyze
-	 * \param[in] stream The AVStream to analyze
+	 * \param[in] cctx   The ::AVCodecContext to analyze
+	 * \param[in] stream The ::AVStream to analyze
 	 * \return Estimated total number of 32 bit PCM samples
 	 */
 	int64_t get_total_samples_declared(::AVCodecContext* cctx,
@@ -934,7 +934,7 @@ public:
 	 *
 	 * \return The sample format of this file
 	 */
-	AVSampleFormat sample_format() const;
+	::AVSampleFormat sample_format() const;
 
 	/**
 	 * \brief Number of planes.
@@ -1034,7 +1034,7 @@ private:
 	AVCodecContextPtr codecContext_;
 
 	/**
-	 * \brief Index of the AVStream to be decoded.
+	 * \brief Index of the ::AVStream to be decoded.
 	 */
 	int stream_index_;
 

@@ -82,6 +82,7 @@ void arcs_av_log(void* /*v*/, int lvl, const char* msg, va_list /*l*/)
 	text.erase(std::remove(text.begin(), text.end(), '\n'), text.end());
 
 	// Log according to the loglevel
+	// (All AV_LOG_* names are macros and have therefore no leading '::'.)
 
 	if (AV_LOG_ERROR == lvl)
 	{
@@ -301,7 +302,7 @@ bool FrameQueue::enqueue_frame()
 
 		// On error, packet is blank, like if it came from av_packet_alloc()
 
-		if (AVERROR_EOF == error)
+		if (/*macro*/AVERROR_EOF == error)
 		{
 			return false;
 		}
@@ -516,7 +517,7 @@ AVFormatContextPtr open_file(const std::string &filename)
 // identify_stream()
 
 
-std::pair<int, const AVCodec*> identify_stream(::AVFormatContext* fctx,
+std::pair<int, const ::AVCodec*> identify_stream(::AVFormatContext* fctx,
 		const ::AVMediaType media_type)
 {
 	const ::AVCodec* codec = nullptr;
@@ -582,7 +583,7 @@ AVCodecContextPtr create_audio_decoder(::AVFormatContext *fctx,
 
 		const uint8_t *data =
 			::av_stream_get_side_data(
-					stream, AV_PKT_DATA_SKIP_SAMPLES, nullptr);
+					stream, ::AV_PKT_DATA_SKIP_SAMPLES, nullptr);
 
 		if (data)
 		{
@@ -598,7 +599,7 @@ AVCodecContextPtr create_audio_decoder(::AVFormatContext *fctx,
 		throw std::runtime_error("No stream parameters found");
 	}
 
-	if (stream_params->codec_type != AVMEDIA_TYPE_AUDIO)
+	if (stream_params->codec_type != ::AVMEDIA_TYPE_AUDIO)
 	{
 		std::ostringstream msg;
 		msg << "Stream with requested index ";
@@ -635,13 +636,13 @@ AVCodecContextPtr create_audio_decoder(::AVFormatContext *fctx,
 	auto context = AVCodecContextPtr(cctx);
 
 	const auto nb_channels =
-#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(59, 24, 100) //  < ffmpeg 5.1
+#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(59, 24, 100) //  ffmpeg < 5.1
 		context->channels;
-#else // >= ffmpeg 5.1
+#else // ffmpeg >= 5.1
 		context->ch_layout.nb_channels;
 #endif
 
-	if (nb_channels > AV_NUM_DATA_POINTERS)
+	if (nb_channels > AV_NUM_DATA_POINTERS)/*macro*/
 	{
 		// We have already ensured 2 channels by validating against CDDA.
 
@@ -746,7 +747,7 @@ bool FFmpegValidator::validate_cdda(::AVCodecContext *cctx)
 	}
 
 	const auto nb_channels =
-#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(59, 24, 100) //  < ffmpeg 5.1
+#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(59, 24, 100) //  ffmpeg < 5.1
 		cctx->channels;
 #else
 		cctx->ch_layout.nb_channels;
@@ -842,10 +843,10 @@ std::unique_ptr<FFmpegAudioStream> FFmpegAudioStreamLoader::load(
 	stream->num_planes_ = ::av_sample_fmt_is_planar(cctx->sample_fmt) ? 2 : 1;
 
 	stream->channels_swapped_ =
-#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(59, 24, 100) //  < ffmpeg 5.1
+#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(59, 24, 100) //  ffmpeg < 5.1
 		(cctx->channel_layout != AV_CH_LAYOUT_STEREO);
 #else
-		(cctx->ch_layout.order     != AV_CHANNEL_ORDER_NATIVE)
+		(cctx->ch_layout.order     != ::AV_CHANNEL_ORDER_NATIVE)
 		|| (cctx->ch_layout.u.mask != AV_CH_LAYOUT_STEREO);
 		// AV_CH_LAYOUT_STEREO is front_left followed by front_right
 #endif
@@ -1056,7 +1057,7 @@ int64_t FFmpegAudioStream::traverse_samples()
 
 	if (decoded_frames.size() > last_size) // Did flushing add samples?
 	{
-		if (AV_CODEC_CAP_DELAY & codecContext_->codec->capabilities)
+		if (/*macro*/AV_CODEC_CAP_DELAY & codecContext_->codec->capabilities)
 		{
 			ARCS_LOG_INFO  << "Codec declares to have delay capability";
 			ARCS_LOG_DEBUG << "Check for delayed frames";
@@ -1268,7 +1269,7 @@ void print_dictionary(std::ostream &out, const ::AVDictionary* dict)
 {
 	::AVDictionaryEntry *e = nullptr;
 
-	while ((e = ::av_dict_get(dict, "", e, AV_DICT_IGNORE_SUFFIX)))
+	while ((e = ::av_dict_get(dict, "", e, /*macro*/AV_DICT_IGNORE_SUFFIX)))
 	{
 		out << "  Name: " << e->key << "  Value: "    << e->value << std::endl;
 	}
@@ -1287,7 +1288,7 @@ void operator << (std::ostream &out, const ::AVDictionary *dict)
 /**
  * \brief Log some information about the codec.
  *
- * \param[in] cctx The AVCodecContext to analyze
+ * \param[in] cctx The ::AVCodecContext to analyze
  */
 void print_codec_info(std::ostream &out, const ::AVCodecContext* cctx);
 
@@ -1332,10 +1333,10 @@ void print_codec_info(std::ostream &out, const ::AVCodecContext *cctx)
 	out << "  Bytes/Sample:   " << bps << " (= " << (bps * CHAR_BIT) << " bit)"
 		<< std::endl;
 
-#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(59, 24, 100) //  < ffmpeg 5.1
+#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(59, 24, 100) //  ffmpeg < 5.1
 	out << "  Channels:       " << cctx->channels << std::endl;
 	out << "  Channel layout: " << cctx->channel_layout << std::endl;
-#else // >= ffmpeg 5.1
+#else // ffmpeg >= 5.1
 	out << "  Channels:       " << cctx->ch_layout.nb_channels << std::endl;
 	out << "  Channel order:  " << cctx->ch_layout.order       << std::endl;
 	out << "  Channel layout: " << cctx->ch_layout.u.mask      << std::endl;
@@ -1492,7 +1493,7 @@ void operator << (std::ostream &out, const ::AVCodecContext *cctx)
 /**
  * \brief Log some information about the format.
  *
- * \param[in] fctx The AVFormatContext to analyze
+ * \param[in] fctx The ::AVFormatContext to analyze
  */
 void print_format_info(std::ostream &out, const ::AVFormatContext* fctx);
 
@@ -1524,7 +1525,7 @@ void operator << (std::ostream &out, const ::AVFormatContext *fctx)
 /**
  * \brief Log some information about the stream.
  *
- * \param[in] stream The AVStream to analyze
+ * \param[in] stream The ::AVStream to analyze
  */
 void print_stream_info(std::ostream &out, const ::AVStream* stream);
 
