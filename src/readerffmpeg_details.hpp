@@ -625,9 +625,10 @@ public:
 	/**
 	 * \brief Enqueue a single frame from the specified source.
 	 *
-	 * EOF is signalled by returning FALSE, any error is indicated by throwing.
+	 * EOF is signalled by returning \c FALSE, any error is indicated by
+	 * throwing.
 	 *
-	 * \return TRUE if a frame was enqueued, FALSE on EOF.
+	 * \return \c TRUE if a frame was enqueued, \c FALSE on EOF.
 	 *
 	 * \throws FFmpegException With error code from \c av_read_frame
 	 */
@@ -645,8 +646,6 @@ public:
 	 * When the decoder has no more input to provide a frame, a nullptr is
 	 * returned. All other reasons to not provide a frame are indicated by
 	 * throwing.
-	 *
-	 * \param[in,out] frame The frame to provide
 	 *
 	 * \return Next frame from queue.
 	 *
@@ -676,9 +675,9 @@ public:
 	void set_capacity(const std::size_t capacity);
 
 	/**
-	 * \brief TRUE iff the queue is empty.
+	 * \brief \c TRUE iff the queue is empty.
 	 *
-	 * \return  TRUE iff the queue is empty, otherwise FALSE
+	 * \return  \c TRUE iff the queue is empty, otherwise \c FALSE
 	 */
 	bool empty() const;
 
@@ -689,7 +688,7 @@ private:
 	 *
 	 * \param[in] packet The packet to decode
 	 *
-	 * \return TRUE on succes, FALSE if decoder needs more input
+	 * \return \c TRUE on success, \c FALSE if decoder needs more input
 	 */
 	bool decode_packet(::AVPacket *packet);
 
@@ -797,32 +796,21 @@ AVCodecContextPtr create_audio_decoder(::AVFormatContext *fctx,
 
 
 /**
- * \brief Turn an amount of samples into the equivalent number of bytes.
- *
- * \param[in] total_samples The amount of 16-bit samples
- * \param[in] f             The sample format
- *
- * \return Number of bytes an amount of samples represents.
- */
-int32_t in_bytes(const int total_samples, const ::AVSampleFormat f);
-
-
-/**
  * \brief Informs about the support for a specified sample format or codec.
  */
 struct IsSupported final
 {
 	/**
-	 * \brief Returns TRUE iff the format is supported, otherwise FALSE.
+	 * \brief Returns \c TRUE iff the format is supported, otherwise \c FALSE.
 	 *
 	 * \param[in] id The sample format to test
 	 *
-	 * \return TRUE iff the format is supported, otherwise FALSE.
+	 * \return \c TRUE iff the format is supported, otherwise \c FALSE.
 	 */
 	static bool format(const ::AVSampleFormat id);
 
 	/**
-	 * \brief Returns TRUE iff the codec is supported, otherwise FALSE.
+	 * \brief Returns \c TRUE iff the codec is supported, otherwise \c FALSE.
 	 *
 	 * The list of supported codecs and sample formats contains FLAC, ALAC,
 	 * APE as well as the PCM formats PCM_S16BE, PCM_S16LE, PCM_S16BE_PLANAR and
@@ -837,7 +825,7 @@ struct IsSupported final
 	 *
 	 * \param[in] id The codec to test
 	 *
-	 * \return TRUE iff the codec is supported, otherwise FALSE.
+	 * \return \c TRUE iff the codec is supported, otherwise \c FALSE.
 	 */
 	static bool codec(const ::AVCodecID id);
 	// Add support for more PCM formats, for example there could be
@@ -959,7 +947,7 @@ public:
 	/**
 	 * \brief Return the channel layout of this file.
 	 *
-	 * \return TRUE for left0/right1, FALSE otherwise
+	 * \return \c TRUE for left0/right1, \c FALSE otherwise
 	 */
 	bool channels_swapped() const;
 
@@ -1055,7 +1043,7 @@ private:
 	int num_planes_;
 
 	/**
-	 * \brief TRUE indicates left0/right1, FALSE otherwise.
+	 * \brief \c TRUE indicates left0/right1, \c FALSE otherwise.
 	 */
 	bool channels_swapped_;
 

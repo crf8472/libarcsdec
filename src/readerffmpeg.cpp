@@ -666,28 +666,6 @@ AVCodecContextPtr create_audio_decoder(::AVFormatContext *fctx,
 }
 
 
-// in_bytes
-
-
-int32_t in_bytes(const int total_samples, const ::AVSampleFormat f)
-{
-	if (::AV_SAMPLE_FMT_S16 == f || f == ::AV_SAMPLE_FMT_S16P)
-	{
-		return total_samples * 2;
-	}
-
-	if (::AV_SAMPLE_FMT_S32 == f || f == ::AV_SAMPLE_FMT_S32P)
-	{
-		return total_samples * 4;
-	}
-
-	std::ostringstream msg;
-	msg << "Unknown sample format: " << ::av_get_sample_fmt_name(f);
-
-	throw std::invalid_argument(msg.str());
-}
-
-
 // IsSupported
 
 
