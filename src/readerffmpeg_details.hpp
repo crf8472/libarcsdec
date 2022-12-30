@@ -55,28 +55,38 @@ using arcstk::SampleSequence;
 
 
 /**
- * \brief Abstract Getter for the first byte buffer.
+ * \brief Abstract getter for the i-th byte buffer of an object.
  *
- * Specialize this for adapting sample objects.
+ * Specialize this for adapting sample objects. Type \c T must provide \c
+ * data[i] convertible to \c uint8_t*.
  *
- * \tparam T The sample object type to get the first byte buffer from
+ * Use-case is to get data[i] from ::AVFrame. A specialization for ::AVFrame is
+ * therefore provided.
+ *
+ * \tparam T The sample object type to get the i-th byte buffer from
  */
 template <typename T>
 uint8_t* ByteBuffer(const T* object, const unsigned i);
 
 
-// TODO Template for int_buffer()
+// TODO Provide template for int_buffer(const T* object, const unsigned i).
 
 
 /**
- * \brief Abstract Getter for total bytes per channel.
+ * \brief Abstract getter for total bytes per channel.
  *
- * Specialize this for adapting sample objects.
+ * Specialize this for adapting sample objects. Type \c T must provide
+ * \c nb_samples and \c channels both convertible to std::size_t for ffmpeg
+ * < 5.1. Alternatively for ffmpeg >= 5.1, \c T must provide
+ * \c ch_layout convertible to ::AVChannelLayout.
+ *
+ * Use-case is to estimate the number of bytes from ::AVFrame. A specialization
+ * for ::AVFrame is therefore provided.
  *
  * \tparam S         The integer type to represent a sample
  * \tparam is_planar \c TRUE indicates planar buffer, \c FALSE indicates
  *                   interleaved buffer
- * \tparam T         The sample object type to get the first byte buffer from
+ * \tparam T         The sample object type to get the bytes per plane from
  */
 template <typename S, bool is_planar, typename T>
 struct BytesPerPlane
@@ -379,11 +389,11 @@ struct BytesPerPlane <S, false, ::AVFrame> // for interleaved frames
 	static std::size_t get(const ::AVFrame* f)
 	{
 #if LIBAVUTIL_VERSION_INT < AV_VERSION_INT(57, 24, 100) //  ffmpeg < 5.1
-		return
-			static_cast<std::size_t>(f->nb_samples * f->channels) * sizeof(S);
+		return static_cast<std::size_t>(
+				f->nb_samples * f->channels) * sizeof(S);
 #else // ffmpeg >= 5.1
 		return static_cast<std::size_t>(
-					f->nb_samples * f->ch_layout.nb_channels) * sizeof(S);
+				f->nb_samples * f->ch_layout.nb_channels) * sizeof(S);
 #endif
 	}
 };
@@ -455,7 +465,8 @@ struct WrappingPolicy<true, S, details::ffmpeg::AVFramePtr, SequenceType>
 	static void wrap(const details::ffmpeg::AVFramePtr &f,
 			SequenceType &sequence)
 	{
-		sequence.wrap_byte_buffer(ByteBuffer(f.get(), 0), ByteBuffer(f.get(), 1),
+		sequence.wrap_ByteBuffer(ByteBuffer(f.get(), 0),
+				ByteBuffer(f.get(), 1),
 				BytesPerPlane<S, true, ::AVFrame>::get(f.get()));
 
 		// TODO Add ChannelOrdering::is_leftright(f)
@@ -480,7 +491,7 @@ struct WrappingPolicy<false, S, details::ffmpeg::AVFramePtr, SequenceType>
 	static void wrap(const details::ffmpeg::AVFramePtr &f,
 			SequenceType &sequence)
 	{
-		sequence.wrap_byte_buffer(ByteBuffer(f.get(), 0),
+		sequence.wrap_ByteBuffer(ByteBuffer(f.get(), 0),
 				BytesPerPlane<S, false, ::AVFrame>::get(f.get()));
 
 		// TODO Add ChannelOrdering::is_leftright(f)
