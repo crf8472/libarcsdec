@@ -86,23 +86,6 @@ struct BytesPerPlane
 
 
 /**
- * \brief Abstract Getter for channel ordering.
- *
- * Specialize this for adapting sample objects.
- *
- * \tparam S         The integer type to represent a sample
- * \tparam is_planar \c TRUE indicates planar buffer, \c FALSE indicates
- *                   interleaved buffer
- * \tparam T         The sample object type to get the first byte buffer from
- */
-template <typename S, bool is_planar, typename T>
-struct ChannelOrdering
-{
-	static bool is_leftright(const T* object);
-};
-
-
-/**
  * \brief A policy to define how to access the sample data in \c Container to be
  * wrapped in a SampleSequence.
  *
@@ -406,21 +389,48 @@ struct BytesPerPlane <S, false, ::AVFrame> // for interleaved frames
 };
 
 
-// Specialization for ::AVFrame
-template <typename S, bool is_planar>
-struct ChannelOrdering <S, is_planar, ::AVFrame>
+/**
+ * \brief Abstract getter for channel order info.
+ *
+ * Type \c T must have \c channel_layout (ffmpeg < 5.1) or \c ch_layout typed as
+ * ::AVChannelLayout (ffmpeg >= 5.1).
+ *
+ * Use this on ::AVFrame or ::AVCodecContext.
+ *
+ * \tparam T  The sample object type to get the first byte buffer from
+ */
+template <typename T>
+struct ChannelOrdering
 {
-	static bool is_leftright(const ::AVFrame* f)
-	{
 #if LIBAVUTIL_VERSION_INT < AV_VERSION_INT(57, 24, 100) //  ffmpeg < 5.1
-		return f->channel_layout == /*macro*/ AV_CH_LAYOUT_STEREO;
-#else // ffmpeg >= 5.1
-		return (f->ch_layout.order  == ::AV_CHANNEL_ORDER_NATIVE
-			&&  f->ch_layout.u.mask == /*macro*/ AV_CH_LAYOUT_STEREO);
-		// Type of ch_layout is ::AVChannelLayout:
-		// https://ffmpeg.org/doxygen/5.1/structAVChannelLayout.html
-#endif
+														//
+	static bool is_leftright(const T* p)
+	{
+		return p->channel_layout == AV_CH_LAYOUT_STEREO;
 	}
+
+	static bool is_unknown(const T* p)
+	{
+		return p->channel_layout == 0;
+	}
+
+#else // ffmpeg >= 5.1
+
+	static bool is_leftright(const T* p)
+	{
+		// Does object specify native ordering and is it FL+FR?
+		return (p->ch_layout.order == ::AV_CHANNEL_ORDER_NATIVE)
+			&& (p->ch_layout.u.mask & AV_CH_LAYOUT_STEREO);
+	}
+
+	static bool is_unknown(const T* p)
+	{
+		// Does object either not specify an ordering or has other than FL+FR?
+		return (p->ch_layout.order  == ::AV_CHANNEL_ORDER_UNSPEC)
+			|| (not (p->ch_layout.u.mask & AV_CH_LAYOUT_STEREO));
+	}
+
+#endif
 };
 
 
@@ -439,7 +449,7 @@ struct WrappingPolicy<true, S, details::ffmpeg::AVFramePtr, SequenceType>
 		return SequenceType { ByteBuffer(f.get(), 0), ByteBuffer(f.get(), 1),
 			BytesPerPlane<S, true, ::AVFrame>::get(f.get()) };
 
-		// FIXME Add ChannelOrdering::is_leftright(f)
+		// TODO Add ChannelOrdering::is_leftright(f)
 	}
 
 	static void wrap(const details::ffmpeg::AVFramePtr &f,
@@ -448,7 +458,7 @@ struct WrappingPolicy<true, S, details::ffmpeg::AVFramePtr, SequenceType>
 		sequence.wrap_byte_buffer(ByteBuffer(f.get(), 0), ByteBuffer(f.get(), 1),
 				BytesPerPlane<S, true, ::AVFrame>::get(f.get()));
 
-		// FIXME Add ChannelOrdering::is_leftright(f)
+		// TODO Add ChannelOrdering::is_leftright(f)
 	}
 };
 
@@ -464,7 +474,7 @@ struct WrappingPolicy<false, S, details::ffmpeg::AVFramePtr, SequenceType>
 		return SequenceType { ByteBuffer(f.get(), 0),
 			BytesPerPlane<S, false, ::AVFrame>::get(f.get()) };
 
-		// FIXME Add ChannelOrdering::is_leftright(f)
+		// TODO Add ChannelOrdering::is_leftright(f)
 	}
 
 	static void wrap(const details::ffmpeg::AVFramePtr &f,
@@ -473,7 +483,7 @@ struct WrappingPolicy<false, S, details::ffmpeg::AVFramePtr, SequenceType>
 		sequence.wrap_byte_buffer(ByteBuffer(f.get(), 0),
 				BytesPerPlane<S, false, ::AVFrame>::get(f.get()));
 
-		// FIXME Add ChannelOrdering::is_leftright(f)
+		// TODO Add ChannelOrdering::is_leftright(f)
 	}
 };
 

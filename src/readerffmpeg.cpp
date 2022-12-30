@@ -843,16 +843,10 @@ std::unique_ptr<FFmpegAudioStream> FFmpegAudioStreamLoader::load(
 	stream->num_planes_ = ::av_sample_fmt_is_planar(cctx->sample_fmt) ? 2 : 1;
 
 	stream->channels_swapped_ =
-#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(59, 24, 100) //  ffmpeg < 5.1
-		(cctx->channel_layout != AV_CH_LAYOUT_STEREO);
-#else
-		(cctx->ch_layout.order     != ::AV_CHANNEL_ORDER_NATIVE)
-		|| (cctx->ch_layout.u.mask != AV_CH_LAYOUT_STEREO);
-		// AV_CH_LAYOUT_STEREO is front_left followed by front_right
-#endif
-	// Since we already have tested for having exactly 2 channels in
-	// validate_cdda, anything except the standard layout must mean that
-	// channels are swapped.
+		!ChannelOrdering<AVCodecContext>::is_leftright(cctx.get())  &&
+		!ChannelOrdering<AVCodecContext>::is_unknown(cctx.get());
+	// We already have verified to have exactly 2 channels. If they are
+	// not FL+FR and not unknown, they are considered to be swapped.
 
 	const auto estimated_samples = this->get_total_samples_declared(
 			cctx.get(), fctx->streams[stream_idx]);
@@ -1341,6 +1335,12 @@ void print_codec_info(std::ostream &out, const ::AVCodecContext *cctx)
 	out << "  Channel order:  " << cctx->ch_layout.order       << std::endl;
 	out << "  Channel layout: " << cctx->ch_layout.u.mask      << std::endl;
 #endif
+	out << "  Channel order is_leftright:   " <<
+		(ChannelOrdering<AVCodecContext>::is_leftright(cctx) ? "yes" : "no") <<
+		'\n';
+	out << "  Channel order is_unknown:     " <<
+		(ChannelOrdering<AVCodecContext>::is_unknown(cctx) ? "yes" : "no") <<
+		'\n';
 	out << "  Samplerate:     " << cctx->sample_rate << " Hz (samples/sec)"
 		<< std::endl;
 	out << "  skip_bottom:      " << cctx->skip_bottom << std::endl;
