@@ -1204,26 +1204,22 @@ void FFmpegAudioReaderImpl::pass_frame(AVFramePtr frame)
 	{
 		case ::AV_SAMPLE_FMT_S16 :/* int16_t, interleaved - e.g. AIFF */
 			{
-				auto sequence = sequence_for<::AV_SAMPLE_FMT_S16>(frame);
-				this->signal_appendsamples(sequence.begin(), sequence.end());
+				this->pass_samples<::AV_SAMPLE_FMT_S16>(std::move(frame));
 				break;
 			}
 		case ::AV_SAMPLE_FMT_S16P:/* int16_t, planar - e.g. MONKEY, ALAC */
 			{
-				auto sequence = sequence_for<::AV_SAMPLE_FMT_S16P>(frame);
-				this->signal_appendsamples(sequence.begin(), sequence.end());
+				this->pass_samples<::AV_SAMPLE_FMT_S16P>(std::move(frame));
 				break;
 			}
 		case ::AV_SAMPLE_FMT_S32 :/* int32_t, interleaved - e.g. FLAC */
 			{
-				auto sequence = sequence_for<::AV_SAMPLE_FMT_S32>(frame);
-				this->signal_appendsamples(sequence.begin(), sequence.end());
+				this->pass_samples<::AV_SAMPLE_FMT_S32>(std::move(frame));
 				break;
 			}
 		case ::AV_SAMPLE_FMT_S32P:/* int32_t, planar - e.g. WAVPACK */
 			{
-				auto sequence = sequence_for<::AV_SAMPLE_FMT_S32P>(frame);
-				this->signal_appendsamples(sequence.begin(), sequence.end());
+				this->pass_samples<::AV_SAMPLE_FMT_S32P>(std::move(frame));
 				break;
 			}
 		default:
@@ -1235,6 +1231,14 @@ void FFmpegAudioReaderImpl::pass_frame(AVFramePtr frame)
 				throw std::invalid_argument(msg.str());
 			}
 	}// switch
+}
+
+
+template<enum ::AVSampleFormat F>
+void FFmpegAudioReaderImpl::pass_samples(AVFramePtr frame)
+{
+	auto sequence = sequence_for<F>(frame);
+	this->signal_appendsamples(sequence.begin(), sequence.end());
 }
 
 

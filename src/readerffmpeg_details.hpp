@@ -1135,11 +1135,19 @@ private:
 	/**
 	 * \brief Pass single frame to next processor.
 	 *
-	 * \deprecated This function is legacy and will be removed at some point.
-	 *
 	 * \param[in] frame Next decoded frame to update Calculation with
 	 */
 	void pass_frame(AVFramePtr frame);
+
+	/**
+	 * \brief Pass samples of a single frame to next processor.
+	 *
+	 * Part of implementation of pass_frame.
+	 *
+	 * \param[in] frame Next decoded frame to update Calculation with
+	 */
+	template<enum ::AVSampleFormat>
+	void pass_samples(AVFramePtr frame);
 };
 
 /// @}
