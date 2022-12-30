@@ -54,83 +54,6 @@ inline namespace v_1_0_0
 using arcstk::SampleSequence;
 
 
-/**
- * \brief Abstract getter for the i-th byte buffer of an object.
- *
- * Specialize this for adapting sample objects. Type \c T must provide \c
- * data[i] convertible to \c uint8_t*.
- *
- * Use-case is to get data[i] from ::AVFrame. A specialization for ::AVFrame is
- * therefore provided.
- *
- * \tparam T The sample object type to get the i-th byte buffer from
- */
-template <typename T>
-uint8_t* ByteBuffer(const T* object, const unsigned i);
-
-
-// TODO Provide template for int_buffer(const T* object, const unsigned i).
-
-
-/**
- * \brief Abstract getter for total bytes per channel.
- *
- * Specialize this for adapting sample objects. Type \c T must provide
- * \c nb_samples and \c channels both convertible to std::size_t for ffmpeg
- * < 5.1. Alternatively for ffmpeg >= 5.1, \c T must provide
- * \c ch_layout convertible to ::AVChannelLayout.
- *
- * Use-case is to estimate the number of bytes from ::AVFrame. A specialization
- * for ::AVFrame is therefore provided.
- *
- * \tparam S         The integer type to represent a sample
- * \tparam is_planar \c TRUE indicates planar buffer, \c FALSE indicates
- *                   interleaved buffer
- * \tparam T         The sample object type to get the bytes per plane from
- */
-template <typename S, bool is_planar, typename T>
-struct BytesPerPlane
-{
-	static std::size_t get(const T* object);
-};
-
-
-/**
- * \brief A policy to define how to access the sample data in \c Container to be
- * wrapped in a SampleSequence.
- *
- * \tparam is_planar \c TRUE indicates planar buffer, \c FALSE indicates
- *                   interleaved buffer
- * \tparam S         The integer type to represent a sample
- * \tparam Container The sample object container to wrap
- */
-template <bool is_planar, typename S, typename Container,
-		typename SequenceType = SampleSequence<S, is_planar>>
-		//typename = details::IsSampleType<S>, // TODO SFINAE stuff
-struct WrappingPolicy
-{
-	/* empty */
-};
-
-
-/**
- * \brief Get the total samples of type \c S in an instance of type \c T.
- *
- * If you intend to provide a specialization of FrameBuffer<> for type T,
- * you also have to provide a specialization of TotalSamples<S, is_planar, T>.
- *
- * \tparam S         The integer type to represent a sample
- * \tparam is_planar \c TRUE indicates planar buffer, \c FALSE indicates
- *                   interleaved buffer
- * \tparam T         The sample object type
- */
-template <typename S, bool is_planar, typename T>
-struct TotalSamples
-{
-	/* empty */
-};
-
-
 namespace details
 {
 namespace ffmpeg
@@ -289,78 +212,18 @@ struct Make_AVFramePtr final
 
 
 /**
- * \brief Determine a base type for samples of specified size and signedness.
- */
-template <int S, bool is_signed>
-struct SampleType { /* empty */ };
-
-// legal specializations
-template<> struct SampleType<2, true>  { using type =  int16_t; };
-template<> struct SampleType<2, false> { using type = uint16_t; };
-template<> struct SampleType<4, true>  { using type =  int32_t; };
-template<> struct SampleType<4, false> { using type = uint32_t; };
-
-
-/**
- * \brief Size-in-bytes of a type denoted by ::AVSampleFormat.
- */
-template <enum ::AVSampleFormat>
-struct SampleSize { /* empty */ };
-
-// legal specializations
-template<> struct SampleSize<::AV_SAMPLE_FMT_S16>
-{ constexpr static std::size_t value = 2; };
-template<> struct SampleSize<::AV_SAMPLE_FMT_S16P>
-{ constexpr static std::size_t value = 2; };
-template<> struct SampleSize<::AV_SAMPLE_FMT_S32>
-{ constexpr static std::size_t value = 4; };
-template<> struct SampleSize<::AV_SAMPLE_FMT_S32P>
-{ constexpr static std::size_t value = 4; };
-
-
-/**
- * \brief Signedness of a type denoted by ::AVSampleFormat.
- */
-template <enum ::AVSampleFormat>
-struct IsSigned { /* empty */ };
-
-// specializations
-template<> struct IsSigned<::AV_SAMPLE_FMT_S16>  : std::true_type {/*empty*/};
-template<> struct IsSigned<::AV_SAMPLE_FMT_S16P> : std::true_type {/*empty*/};
-template<> struct IsSigned<::AV_SAMPLE_FMT_S32>  : std::true_type {/*empty*/};
-template<> struct IsSigned<::AV_SAMPLE_FMT_S32P> : std::true_type {/*empty*/};
-
-
-/**
- * \brief Planarity of a type denoted by ::AVSampleFormat.
- */
-template <enum ::AVSampleFormat>
-struct IsPlanar { /* empty */ };
-
-// specializations
-template<> struct IsPlanar<::AV_SAMPLE_FMT_S16>  : std::false_type {/*empty*/};
-template<> struct IsPlanar<::AV_SAMPLE_FMT_S16P> : std::true_type  {/*empty*/};
-template<> struct IsPlanar<::AV_SAMPLE_FMT_S32>  : std::false_type {/*empty*/};
-template<> struct IsPlanar<::AV_SAMPLE_FMT_S32P> : std::true_type  {/*empty*/};
-
-
-/**
- * \brief Create a SampleSequence.
+ * \brief Abstract getter for the i-th byte buffer of an object.
  *
- * \tparam S         Integer type that represents a 16 bit stereo sample
- * \tparam is_planar The planarity status to use
+ * Specialize this for adapting sample objects. Type \c T must provide \c
+ * data[i] convertible to \c uint8_t*.
+ *
+ * Use-case is to get data[i] from ::AVFrame. A specialization for ::AVFrame is
+ * therefore provided.
+ *
+ * \tparam T The sample object type to get the i-th byte buffer from
  */
-template <typename S, bool is_planar>
-struct SequenceInstance
-{
-	static auto get() -> SampleSequence<S, is_planar>
-	{
-		return SampleSequence<S, is_planar> {};
-	}
-};
-
-} // namespace ffmpeg
-} // namespace details
+template <typename T>
+uint8_t* ByteBuffer(const T* object, const unsigned i);
 
 
 // Specialization for ::AVFrame (planar + interleaved)
@@ -369,6 +232,31 @@ uint8_t* ByteBuffer(const ::AVFrame* f, const unsigned i)
 {
 	return f->data[i];
 }
+
+// TODO Provide template for int_buffer(const T* object, const unsigned i).
+
+
+/**
+ * \brief Abstract getter for total bytes per channel.
+ *
+ * Specialize this for adapting sample objects. Type \c T must provide
+ * \c nb_samples and \c channels both convertible to std::size_t for ffmpeg
+ * < 5.1. Alternatively for ffmpeg >= 5.1, \c T must provide
+ * \c ch_layout convertible to ::AVChannelLayout.
+ *
+ * Use-case is to estimate the number of bytes from ::AVFrame. A specialization
+ * for ::AVFrame is therefore provided.
+ *
+ * \tparam S         The integer type to represent a sample
+ * \tparam is_planar \c TRUE indicates planar buffer, \c FALSE indicates
+ *                   interleaved buffer
+ * \tparam T         The sample object type to get the bytes per plane from
+ */
+template <typename S, bool is_planar, typename T>
+struct BytesPerPlane
+{
+	static std::size_t get(const T* object);
+};
 
 
 // Specialization for ::AVFrame (planar)
@@ -402,55 +290,118 @@ struct BytesPerPlane <S, false, ::AVFrame> // for interleaved frames
 /**
  * \brief Abstract getter for channel order info.
  *
- * Type \c T must have \c channel_layout (ffmpeg < 5.1) or \c ch_layout typed as
+ * Type \c T must have \c channels (ffmpeg < 5.1) or \c ch_layout typed as
  * ::AVChannelLayout (ffmpeg >= 5.1).
  *
- * Use this on ::AVFrame or ::AVCodecContext.
+ * Use-case is to get the number of channels from ::AVCodecContext.
  *
  * \tparam T  The sample object type to get the first byte buffer from
  */
 template <typename T>
-struct ChannelOrdering
+int NumberOfChannels(const T* p)
 {
 #if LIBAVUTIL_VERSION_INT < AV_VERSION_INT(57, 24, 100) //  ffmpeg < 5.1
-														//
-	static bool is_leftright(const T* p)
-	{
-		return p->channel_layout == AV_CH_LAYOUT_STEREO;
-	}
-
-	static bool is_unknown(const T* p)
-	{
-		return p->channel_layout == 0;
-	}
-
+		return p->channels;
 #else // ffmpeg >= 5.1
-
-	static bool is_leftright(const T* p)
-	{
-		// Does object specify native ordering and is it FL+FR?
-		return (p->ch_layout.order == ::AV_CHANNEL_ORDER_NATIVE)
-			&& (p->ch_layout.u.mask & AV_CH_LAYOUT_STEREO);
-	}
-
-	static bool is_unknown(const T* p)
-	{
-		// Does object either not specify an ordering or has other than FL+FR?
-		return (p->ch_layout.order  == ::AV_CHANNEL_ORDER_UNSPEC)
-			|| (not (p->ch_layout.u.mask & AV_CH_LAYOUT_STEREO));
-	}
-
+		return p->ch_layout.nb_channels;
 #endif
 };
 
 
+/**
+ * \brief Abstract getter for channel order info.
+ *
+ * \tparam T  The sample object type to get the first byte buffer from
+ */
+struct ChannelOrder
+{
+	/**
+	 * Returns \c TRUE iff the channel order is front left + front right,
+	 * otherwise \c FALSE.
+	 *
+	 * Type \c T must have \c channel_layout (ffmpeg < 5.1) or \c ch_layout
+	 * typed as ::AVChannelLayout (ffmpeg >= 5.1).
+	 *
+	 * Use-case is to get the channel order from ::AVFrame or ::AVCodecContext.
+	 *
+	 * \tparam T  The sample object type to get the first byte buffer from
+	 *
+	 * \param[in] p Pointer to object of type \c T
+	 */
+	template <typename T>
+	static bool is_leftright(const T* p)
+	{
+#if LIBAVUTIL_VERSION_INT < AV_VERSION_INT(57, 24, 100) //  ffmpeg < 5.1
+		return p->channel_layout == AV_CH_LAYOUT_STEREO;
+#else // ffmpeg >= 5.1
+		// Does object specify native ordering and is it FL+FR?
+		return (p->ch_layout.order == ::AV_CHANNEL_ORDER_NATIVE)
+			&& (p->ch_layout.u.mask & AV_CH_LAYOUT_STEREO);
+#endif
+	}
+
+	/**
+	 * Returns \c TRUE iff the channel order is explicitly unspecified
+	 * or the specified channel layout does not match FL+FR.
+	 *
+	 * Type \c T must have \c channel_layout (ffmpeg < 5.1) or \c ch_layout
+	 * typed as ::AVChannelLayout (ffmpeg >= 5.1).
+	 *
+	 * Use-case is to get the channel order from ::AVFrame or ::AVCodecContext.
+	 *
+	 * \tparam T  The sample object type to get the first byte buffer from
+	 *
+	 * \param[in] p Pointer to object of type \c T
+	 */
+	template <typename T>
+	static bool is_unspecified(const T* p)
+	{
+#if LIBAVUTIL_VERSION_INT < AV_VERSION_INT(57, 24, 100) //  ffmpeg < 5.1
+		return p->channel_layout == 0;
+#else // ffmpeg >= 5.1
+		// Does object either not specify an ordering or has other than FL+FR?
+		return p->ch_layout.order  == ::AV_CHANNEL_ORDER_UNSPEC
+			|| (p->ch_layout.u.mask == 0);
+#endif
+	}
+};
+
+
 // Note:: libavcodec "normalizes" the channel ordering away, so we will ignore
-// it and process everything als left0/right1.
+// it and process everything als FL=0+FR=1.
 
 
-// Specialization for byte-wrapping ::AVFrame (planar)
+/**
+ * \brief A policy to define how to access the sample data in \c Container to be
+ * wrapped in a SampleSequence.
+ *
+ * Basically, the WrappingPolicy implements the wrapping of planar and
+ * interleaved byte buffers for a given pair of a sample type and frame type.
+ *
+ * A WrappingPolicy can create a sequence instance of a specified SequenceType
+ * from its input or, alternatively, use an existing sequence instance to wrap
+ * a sample sequence.
+ *
+ * \tparam S         The integer type to represent a sample
+ * \tparam is_planar \c TRUE indicates planar buffer, \c FALSE indicates
+ *                   interleaved buffer
+ * \tparam Container The sample object container to wrap
+ */
+template <typename S, bool is_planar, typename Container,
+		typename SequenceType = SampleSequence<S, is_planar>>
+		//typename = details::IsSampleType<S>, // TODO SFINAE stuff
+struct WrappingPolicy
+{
+	/* empty */
+};
+
+
+// TODO Functions of WrappingPolicy may make use of ChannelOrder::isleftright
+
+
+// Specialization for wrapping an ::AVFrame into a byte buffer (planar)
 template <typename S, typename SequenceType>
-struct WrappingPolicy<true, S, details::ffmpeg::AVFramePtr, SequenceType>
+struct WrappingPolicy<S, true, AVFramePtr, SequenceType>
 {
 	static SequenceType create(const details::ffmpeg::AVFramePtr &f)
 	{
@@ -458,25 +409,21 @@ struct WrappingPolicy<true, S, details::ffmpeg::AVFramePtr, SequenceType>
 
 		return SequenceType { ByteBuffer(f.get(), 0), ByteBuffer(f.get(), 1),
 			BytesPerPlane<S, true, ::AVFrame>::get(f.get()) };
-
-		// TODO Add ChannelOrdering::is_leftright(f)
 	}
 
 	static void wrap(const details::ffmpeg::AVFramePtr &f,
 			SequenceType &sequence)
 	{
-		sequence.wrap_ByteBuffer(ByteBuffer(f.get(), 0),
+		sequence.wrap_byte_buffer(ByteBuffer(f.get(), 0),
 				ByteBuffer(f.get(), 1),
 				BytesPerPlane<S, true, ::AVFrame>::get(f.get()));
-
-		// TODO Add ChannelOrdering::is_leftright(f)
 	}
 };
 
 
-// Specialization for byte-wrapping ::AVFrame (interleaved)
+// Specialization for wrapping an ::AVFrame into a byte buffer (interleaved)
 template <typename S, typename SequenceType>
-struct WrappingPolicy<false, S, details::ffmpeg::AVFramePtr, SequenceType>
+struct WrappingPolicy<S, false, details::ffmpeg::AVFramePtr, SequenceType>
 {
 	static SequenceType create(const details::ffmpeg::AVFramePtr &f)
 	{
@@ -484,48 +431,93 @@ struct WrappingPolicy<false, S, details::ffmpeg::AVFramePtr, SequenceType>
 
 		return SequenceType { ByteBuffer(f.get(), 0),
 			BytesPerPlane<S, false, ::AVFrame>::get(f.get()) };
-
-		// TODO Add ChannelOrdering::is_leftright(f)
 	}
 
 	static void wrap(const details::ffmpeg::AVFramePtr &f,
 			SequenceType &sequence)
 	{
-		sequence.wrap_ByteBuffer(ByteBuffer(f.get(), 0),
+		sequence.wrap_byte_buffer(ByteBuffer(f.get(), 0),
 				BytesPerPlane<S, false, ::AVFrame>::get(f.get()));
-
-		// TODO Add ChannelOrdering::is_leftright(f)
 	}
 };
 
 
-template <typename S> // planar
-struct TotalSamples <S, true, details::ffmpeg::AVFramePtr>
+/**
+ * \brief Get size-in-bytes of a type denoted by ::AVSampleFormat.
+ */
+template <enum ::AVSampleFormat>
+struct SampleSize { /* empty */ };
+
+// legal specializations
+template<> struct SampleSize<::AV_SAMPLE_FMT_S16>
+{ constexpr static std::size_t value = 2; };
+template<> struct SampleSize<::AV_SAMPLE_FMT_S16P>
+{ constexpr static std::size_t value = 2; };
+template<> struct SampleSize<::AV_SAMPLE_FMT_S32>
+{ constexpr static std::size_t value = 4; };
+template<> struct SampleSize<::AV_SAMPLE_FMT_S32P>
+{ constexpr static std::size_t value = 4; };
+
+
+/**
+ * \brief Get signedness of a type denoted by ::AVSampleFormat.
+ */
+template <enum ::AVSampleFormat>
+struct IsSigned { /* empty */ };
+
+// specializations
+template<> struct IsSigned<::AV_SAMPLE_FMT_S16>  : std::true_type {/*empty*/};
+template<> struct IsSigned<::AV_SAMPLE_FMT_S16P> : std::true_type {/*empty*/};
+template<> struct IsSigned<::AV_SAMPLE_FMT_S32>  : std::true_type {/*empty*/};
+template<> struct IsSigned<::AV_SAMPLE_FMT_S32P> : std::true_type {/*empty*/};
+
+
+/**
+ * \brief Get planarity status of a type denoted by ::AVSampleFormat.
+ */
+template <enum ::AVSampleFormat>
+struct IsPlanar { /* empty */ };
+
+// specializations
+template<> struct IsPlanar<::AV_SAMPLE_FMT_S16>  : std::false_type {/*empty*/};
+template<> struct IsPlanar<::AV_SAMPLE_FMT_S16P> : std::true_type  {/*empty*/};
+template<> struct IsPlanar<::AV_SAMPLE_FMT_S32>  : std::false_type {/*empty*/};
+template<> struct IsPlanar<::AV_SAMPLE_FMT_S32P> : std::true_type  {/*empty*/};
+
+
+/**
+ * \brief Determine a base type for samples of specified size and signedness.
+ *
+ * \tparam S           Size-in-bytes of the underlying ::type
+ * \tparam is_signed   \c TRUE indicates a signed type, \c FALSE indicates an
+ *                     unsigned type
+ */
+template <int S, bool is_signed>
+struct SampleType { /* empty */ };
+
+// legal specializations
+template<> struct SampleType<2, true>  { using type =  int16_t; };
+template<> struct SampleType<2, false> { using type = uint16_t; };
+template<> struct SampleType<4, true>  { using type =  int32_t; };
+template<> struct SampleType<4, false> { using type = uint32_t; };
+
+
+/**
+ * \brief Create an empty SampleSequence for a planar or interleaved
+ * sample sequence of sample type \c S.
+ *
+ * \tparam S         Integer type that represents a 16 bit stereo sample
+ * \tparam is_planar \c TRUE indicates to use a planar sequence, \c FALSE
+ *                   indicates to use an interleaved sequence
+ */
+template <typename S, bool is_planar>
+struct SequenceInstance
 {
-	static std::size_t value(const details::ffmpeg::AVFramePtr &f)
+	static auto get() -> SampleSequence<S, is_planar>
 	{
-		return static_cast<std::size_t>(f->nb_samples);
+		return SampleSequence<S, is_planar> {};
 	}
 };
-
-
-template <typename S> // interleaved
-struct TotalSamples <S, false, details::ffmpeg::AVFramePtr>
-{
-	static std::size_t value(const details::ffmpeg::AVFramePtr &f)
-	{
-#if LIBAVUTIL_VERSION_INT < AV_VERSION_INT(57, 24, 100) //  ffmpeg < 5.1
-		return static_cast<std::size_t>(f->nb_samples * f->channels);
-#else // ffmpeg >= 5.1
-		return static_cast<std::size_t>(
-				f->nb_samples * f->ch_layout.nb_channels);
-#endif
-	}
-};
-
-
-namespace details {
-namespace ffmpeg {
 
 
 /**
@@ -543,7 +535,7 @@ auto sequence_for(const AVFramePtr &frame)
 {
 	auto sequence = SequenceInstance<S, IsPlanar<F>::value>::get();
 
-	using Policy  = WrappingPolicy<IsPlanar<F>::value, S, AVFramePtr>;
+	using Policy  = WrappingPolicy<S, IsPlanar<F>::value, AVFramePtr>;
 	Policy::wrap(frame, sequence);
 
 	return sequence;
@@ -578,7 +570,7 @@ public:
 	/**
 	 * \brief Constructor.
 	 *
-	 * Constructs a FrameQueue with a default capacity of 12.
+	 * Constructs a FrameQueue with a default capacity of 12 frames.
 	 */
 	FrameQueue()
 		: FrameQueue (12)

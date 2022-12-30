@@ -484,7 +484,7 @@ AVFramePtr FrameQueue::make_frame()
 
 AVFormatContextPtr open_file(const std::string &filename)
 {
-	// Open input stream of the file and read the header
+	// Open input stream and read header
 
 	::AVFormatContext* fctx = nullptr;
 	::AVInputFormat* detect = nullptr; // TODO Currently unused
@@ -633,20 +633,14 @@ AVCodecContextPtr create_audio_decoder(::AVFormatContext *fctx,
 		throw std::bad_alloc();
 	}
 
-	auto context = AVCodecContextPtr(cctx);
+	auto ccontext = AVCodecContextPtr(cctx);
 
-	const auto nb_channels =
-#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(59, 24, 100) //  ffmpeg < 5.1
-		context->channels;
-#else // ffmpeg >= 5.1
-		context->ch_layout.nb_channels;
-#endif
-
-	if (nb_channels > AV_NUM_DATA_POINTERS)/*macro*/
+	if (NumberOfChannels(ccontext.get()) > AV_NUM_DATA_POINTERS)/*macro*/
 	{
 		// We have already ensured 2 channels by validating against CDDA.
 
-		ARCS_LOG_WARNING << "Codec specifies " << nb_channels
+		ARCS_LOG_WARNING << "Codec specifies "
+			<< NumberOfChannels(ccontext.get())
 			<< " but stream provides " << AV_NUM_DATA_POINTERS
 			<< " data pointers";
 
@@ -668,7 +662,7 @@ AVCodecContextPtr create_audio_decoder(::AVFormatContext *fctx,
 		throw FFmpegException(error_open, "avcodec_open2");
 	}
 
-	return context;
+	return ccontext;
 }
 
 
@@ -746,14 +740,7 @@ bool FFmpegValidator::validate_cdda(::AVCodecContext *cctx)
 		is_validated = false;
 	}
 
-	const auto nb_channels =
-#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(59, 24, 100) //  ffmpeg < 5.1
-		cctx->channels;
-#else
-		cctx->ch_layout.nb_channels;
-#endif
-
-	if (not CDDAValidator::num_channels(nb_channels))
+	if (not CDDAValidator::num_channels(NumberOfChannels(cctx)))
 	{
 		ARCS_LOG_ERROR << "Not CDDA: not stereo";
 		is_validated = false;
@@ -791,43 +778,43 @@ std::unique_ptr<FFmpegAudioStream> FFmpegAudioStreamLoader::load(
 	::av_register_all();
 #endif
 
-	auto fctx = open_file(filename);
+	auto fcontext = open_file(filename);
 
-	ARCS_LOG(DEBUG1) << fctx.get();
+	ARCS_LOG(DEBUG1) << fcontext.get();
 
-	auto stream_and_codec = identify_stream(fctx.get(),
+	auto stream_and_codec = identify_stream(fcontext.get(),
 			::AVMEDIA_TYPE_AUDIO);
 
 	const auto stream_idx = int { stream_and_codec.first };
 
-	ARCS_LOG(DEBUG1) << fctx->streams[stream_idx];
+	ARCS_LOG(DEBUG1) << fcontext->streams[stream_idx];
 
-	auto cctx = create_audio_decoder(fctx.get(), stream_idx);
+	auto ccontext = create_audio_decoder(fcontext.get(), stream_idx);
 
-	ARCS_LOG_DEBUG << cctx.get();
+	ARCS_LOG_DEBUG << ccontext.get();
 
 
-	if (not IsSupported::format(cctx->sample_fmt))
+	if (not IsSupported::format(ccontext->sample_fmt))
 	{
 		std::ostringstream message;
 		message << "Sample format not supported: "
-			<< ::av_get_sample_fmt_name(cctx->sample_fmt);
+			<< ::av_get_sample_fmt_name(ccontext->sample_fmt);
 
 		throw InvalidAudioException(message.str());
 	}
 
 
-	if (not IsSupported::codec(cctx->codec->id))
+	if (not IsSupported::codec(ccontext->codec->id))
 	{
 		std::ostringstream message;
-		message << "Codec not supported: " << cctx->codec->long_name;
+		message << "Codec not supported: " << ccontext->codec->long_name;
 
 		throw InvalidAudioException(message.str());
 	}
 
 
 	FFmpegValidator validator;
-	validator.validate_cdda(cctx.get());
+	validator.validate_cdda(ccontext.get());
 
 
 	// Configure file object with ffmpeg properties
@@ -840,16 +827,17 @@ std::unique_ptr<FFmpegAudioStream> FFmpegAudioStreamLoader::load(
 		stream.reset(f);
 	}
 
-	stream->num_planes_ = ::av_sample_fmt_is_planar(cctx->sample_fmt) ? 2 : 1;
+	stream->num_planes_ =
+		::av_sample_fmt_is_planar(ccontext->sample_fmt) ? 2 : 1;
 
 	stream->channels_swapped_ =
-		!ChannelOrdering<AVCodecContext>::is_leftright(cctx.get())  &&
-		!ChannelOrdering<AVCodecContext>::is_unknown(cctx.get());
+			!ChannelOrder::is_leftright(ccontext.get())  &&
+			!ChannelOrder::is_unspecified(ccontext.get());
 	// We already have verified to have exactly 2 channels. If they are
-	// not FL+FR and not unknown, they are considered to be swapped.
+	// not FL+FR and not unspecified, they are considered to be swapped.
 
 	const auto estimated_samples = this->get_total_samples_declared(
-			cctx.get(), fctx->streams[stream_idx]);
+			ccontext.get(), fcontext->streams[stream_idx]);
 	ARCS_LOG_DEBUG << "Stream duration suggests a total amount of "
 		<< estimated_samples << " samples";
 	// We have to update the expected AudioSize before the last block of samples
@@ -872,8 +860,8 @@ std::unique_ptr<FFmpegAudioStream> FFmpegAudioStreamLoader::load(
 
 	stream->stream_index_ = stream_idx;
 
-	stream->codecContext_  = std::move(cctx);
-	stream->formatContext_ = std::move(fctx);
+	stream->codecContext_  = std::move(ccontext);
+	stream->formatContext_ = std::move(fcontext);
 
 	ARCS_LOG_DEBUG << "Input stream ready";
 
@@ -1154,20 +1142,20 @@ void FFmpegAudioReaderImpl::do_process_file(const std::string &filename)
 	audiostream->register_end_input(
 		std::bind(&FFmpegAudioReaderImpl::signal_endinput, this));
 
-	this->signal_startinput();
-
-
-	// Provide estimation
-
-	AudioSize size;
-	size.set_total_samples(audiostream->total_samples_declared());
-	this->signal_updateaudiosize(size);
-
 
 	// Process file
 
-	auto total_samples_expected { size.total_samples() };
-	auto total_samples          { audiostream->traverse_samples() };
+	this->signal_startinput();
+
+	const auto total_samples_expected { audiostream->total_samples_declared() };
+
+	{
+		AudioSize size;
+		size.set_total_samples(total_samples_expected);
+		this->signal_updateaudiosize(size);
+	}
+
+	const auto total_samples          { audiostream->traverse_samples() };
 
 	this->signal_endinput();
 
@@ -1179,7 +1167,7 @@ void FFmpegAudioReaderImpl::do_process_file(const std::string &filename)
 	if (total_samples != total_samples_expected)
 	{
 		ARCS_LOG_INFO << "Expected " << total_samples_expected
-					<< " samples, but encountered " << total_samples
+					<< " samples but encountered " << total_samples
 					<< " ("
 					<< std::abs(total_samples_expected - total_samples)
 					<< ((total_samples_expected < total_samples)
@@ -1214,7 +1202,7 @@ void FFmpegAudioReaderImpl::pass_frame(AVFramePtr frame)
 
 	switch (format)
 	{
-		case ::AV_SAMPLE_FMT_S16 :/* int16_t, interleaved - e.g. Format::AIFF */
+		case ::AV_SAMPLE_FMT_S16 :/* int16_t, interleaved - e.g. AIFF */
 			{
 				auto sequence = sequence_for<::AV_SAMPLE_FMT_S16>(frame);
 				this->signal_appendsamples(sequence.begin(), sequence.end());
@@ -1327,20 +1315,14 @@ void print_codec_info(std::ostream &out, const ::AVCodecContext *cctx)
 	out << "  Bytes/Sample:   " << bps << " (= " << (bps * CHAR_BIT) << " bit)"
 		<< std::endl;
 
-#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(59, 24, 100) //  ffmpeg < 5.1
-	out << "  Channels:       " << cctx->channels << std::endl;
-	out << "  Channel layout: " << cctx->channel_layout << std::endl;
-#else // ffmpeg >= 5.1
-	out << "  Channels:       " << cctx->ch_layout.nb_channels << std::endl;
-	out << "  Channel order:  " << cctx->ch_layout.order       << std::endl;
-	out << "  Channel layout: " << cctx->ch_layout.u.mask      << std::endl;
-#endif
+	out << "  Number of channels:           " <<
+		NumberOfChannels(cctx) << std::endl;
 	out << "  Channel order is_leftright:   " <<
-		(ChannelOrdering<AVCodecContext>::is_leftright(cctx) ? "yes" : "no") <<
-		'\n';
-	out << "  Channel order is_unknown:     " <<
-		(ChannelOrdering<AVCodecContext>::is_unknown(cctx) ? "yes" : "no") <<
-		'\n';
+		(ChannelOrder::is_leftright(cctx) ? "yes" : "no") <<
+		std::endl;
+	out << "  Channel order is_unspecified: " <<
+		(ChannelOrder::is_unspecified(cctx) ? "yes" : "no") <<
+		std::endl;
 	out << "  Samplerate:     " << cctx->sample_rate << " Hz (samples/sec)"
 		<< std::endl;
 	out << "  skip_bottom:      " << cctx->skip_bottom << std::endl;
@@ -1493,6 +1475,7 @@ void operator << (std::ostream &out, const ::AVCodecContext *cctx)
 /**
  * \brief Log some information about the format.
  *
+ * \param[in] out  The ostream to log to
  * \param[in] fctx The ::AVFormatContext to analyze
  */
 void print_format_info(std::ostream &out, const ::AVFormatContext* fctx);
