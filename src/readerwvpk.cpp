@@ -49,7 +49,6 @@ namespace details
 namespace wavpack
 {
 
-using arcstk::SampleInputIterator;
 using arcstk::AudioSize;
 using arcstk::CDDA;
 using arcstk::InterleavedSamples;

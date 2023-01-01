@@ -48,8 +48,6 @@ namespace ffmpeg
 {
 
 using arcstk::AudioSize;
-using arcstk::Logging;
-using arcstk::LOGLEVEL;
 
 extern "C"
 {

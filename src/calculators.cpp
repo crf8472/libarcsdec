@@ -54,7 +54,6 @@ using arcstk::ChecksumSet;
 using arcstk::SampleInputIterator;
 using arcstk::make_arid;
 using arcstk::make_context;
-using arcstk::make_empty_arid;
 
 
 /**
