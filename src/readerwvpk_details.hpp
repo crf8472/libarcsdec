@@ -1,3 +1,7 @@
+#ifndef __LIBARCSDEC_READERWVPK_HPP__
+#error "Do not include readerwvpk_details.hpp, include readerwvpk.hpp instead"
+#endif
+
 /**
  * \file
  *
@@ -8,10 +12,6 @@
  * format. Float samples are not supported. Original file formats other than
  * WAV are not supported.
  */
-
-#ifndef __LIBARCSDEC_READERWVPK_HPP__
-#error "Do not include readerwvpk_details.hpp, include readerwvpk.hpp instead"
-#endif
 
 #ifndef __LIBARCSDEC_READERWVPK_DETAILS_HPP__
 #define __LIBARCSDEC_READERWVPK_DETAILS_HPP__

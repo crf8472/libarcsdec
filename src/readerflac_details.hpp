@@ -1,12 +1,12 @@
+#ifndef __LIBARCSDEC_READERFLAC_HPP__
+#error "Do not include readerflac_details.hpp, include readerflac.hpp instead"
+#endif
+
 /**
  * \file
  *
  * \brief Testable implementation classes for readerflac.
  */
-
-#ifndef __LIBARCSDEC_READERFLAC_HPP__
-#error "Do not include readerflac_details.hpp, include readerflac.hpp instead"
-#endif
 
 #ifndef __LIBARCSDEC_READERFLAC_DETAILS_HPP__
 #define __LIBARCSDEC_READERFLAC_DETAILS_HPP__
