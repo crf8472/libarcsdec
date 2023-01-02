@@ -239,9 +239,8 @@ uint8_t* ByteBuffer(const ::AVFrame* f, const unsigned i)
 /**
  * \brief Abstract getter for total bytes per channel.
  *
- * Specialize this for adapting sample objects. Type \c T must provide
- * \c nb_samples and \c channels both convertible to std::size_t for ffmpeg
- * < 5.1. Alternatively for ffmpeg >= 5.1, \c T must provide
+ * Type \c T must provide \c nb_samples and \c channels both convertible to
+ * std::size_t for ffmpeg < 5.1. Starting on ffmpeg >= 5.1, \c T must provide
  * \c ch_layout convertible to ::AVChannelLayout.
  *
  * Use-case is to estimate the number of bytes from ::AVFrame. A specialization
@@ -255,6 +254,13 @@ uint8_t* ByteBuffer(const ::AVFrame* f, const unsigned i)
 template <typename S, bool is_planar, typename T>
 struct BytesPerPlane
 {
+	/**
+	 * \brief Get number of bytes per plane.
+	 *
+	 * \param[in] object The object to get bytes per plane from.
+	 *
+	 * \return Number of bytes per plane.
+	 */
 	static std::size_t get(const T* object);
 };
 
@@ -310,8 +316,6 @@ int NumberOfChannels(const T* p)
 
 /**
  * \brief Abstract getter for channel order info.
- *
- * \tparam T  The sample object type to get the first byte buffer from
  */
 struct ChannelOrder
 {
@@ -372,8 +376,8 @@ struct ChannelOrder
 
 
 /**
- * \brief A policy to define how to access the sample data in \c Container to be
- * wrapped in a SampleSequence.
+ * \brief A policy to define how to wrap the sample data in \c Container in a
+ * SampleSequence.
  *
  * Basically, the WrappingPolicy implements the wrapping of planar and
  * interleaved byte buffers for a given pair of a sample type and frame type.
@@ -390,7 +394,7 @@ struct ChannelOrder
 template <typename S, bool is_planar, typename Container,
 		typename SequenceType = SampleSequence<S, is_planar>>
 		//typename = details::IsSampleType<S>, // TODO SFINAE stuff
-struct WrappingPolicy
+class WrappingPolicy
 {
 	/* empty */
 };
@@ -401,14 +405,18 @@ struct WrappingPolicy
 
 // Specialization for wrapping an ::AVFrame into a byte buffer (planar)
 template <typename S, typename SequenceType>
-struct WrappingPolicy<S, true, AVFramePtr, SequenceType>
+class WrappingPolicy<S, true, AVFramePtr, SequenceType>
 {
+	using TotalBytesPerPlane = BytesPerPlane<S, true, ::AVFrame>;
+
+public:
+
 	static SequenceType create(const details::ffmpeg::AVFramePtr &f)
 	{
 		if (!f) { return SequenceType {}; }
 
 		return SequenceType { ByteBuffer(f.get(), 0), ByteBuffer(f.get(), 1),
-			BytesPerPlane<S, true, ::AVFrame>::get(f.get()) };
+			TotalBytesPerPlane::get(f.get()) };
 	}
 
 	static void wrap(const details::ffmpeg::AVFramePtr &f,
@@ -416,28 +424,32 @@ struct WrappingPolicy<S, true, AVFramePtr, SequenceType>
 	{
 		sequence.wrap_byte_buffer(ByteBuffer(f.get(), 0),
 				ByteBuffer(f.get(), 1),
-				BytesPerPlane<S, true, ::AVFrame>::get(f.get()));
+				TotalBytesPerPlane::get(f.get()));
 	}
 };
 
 
 // Specialization for wrapping an ::AVFrame into a byte buffer (interleaved)
 template <typename S, typename SequenceType>
-struct WrappingPolicy<S, false, details::ffmpeg::AVFramePtr, SequenceType>
+class WrappingPolicy<S, false, details::ffmpeg::AVFramePtr, SequenceType>
 {
+	using TotalBytesPerPlane = BytesPerPlane<S, false, ::AVFrame>;
+
+public:
+
 	static SequenceType create(const details::ffmpeg::AVFramePtr &f)
 	{
 		if (!f) { return SequenceType {}; }
 
 		return SequenceType { ByteBuffer(f.get(), 0),
-			BytesPerPlane<S, false, ::AVFrame>::get(f.get()) };
+			TotalBytesPerPlane::get(f.get()) };
 	}
 
 	static void wrap(const details::ffmpeg::AVFramePtr &f,
 			SequenceType &sequence)
 	{
 		sequence.wrap_byte_buffer(ByteBuffer(f.get(), 0),
-				BytesPerPlane<S, false, ::AVFrame>::get(f.get()));
+				TotalBytesPerPlane::get(f.get()));
 	}
 };
 
@@ -513,7 +525,7 @@ template<> struct SampleType<4, false> { using type = uint32_t; };
 template <typename S, bool is_planar>
 struct SequenceInstance
 {
-	static auto get() -> SampleSequence<S, is_planar>
+	static auto create() -> SampleSequence<S, is_planar>
 	{
 		return SampleSequence<S, is_planar> {};
 	}
@@ -533,7 +545,7 @@ template <::AVSampleFormat F,
 auto sequence_for(const AVFramePtr &frame)
 	-> SampleSequence<S, IsPlanar<F>::value>
 {
-	auto sequence = SequenceInstance<S, IsPlanar<F>::value>::get();
+	auto sequence = SequenceInstance<S, IsPlanar<F>::value>::create();
 
 	using Policy  = WrappingPolicy<S, IsPlanar<F>::value, AVFramePtr>;
 	Policy::wrap(frame, sequence);
@@ -557,8 +569,8 @@ class FrameQueue final
 
 public:
 
-	using size_type      = typename Impl::size_type;
-	using value_type     = typename Impl::value_type;
+	using size_type  = typename Impl::size_type;
+	using value_type = typename Impl::value_type;
 
 	/**
 	 * \brief Constructor.
@@ -619,6 +631,10 @@ public:
 	 * \brief Fill queue from assigned decoder.
 	 *
 	 * Fill queue as long as size() < capacity() and decoder provides packets.
+	 *
+	 * \return Size of the queue after filling
+	 *
+	 * \throws FFmpegException In case enqueuing fails
 	 */
 	std::size_t fill();
 
