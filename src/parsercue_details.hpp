@@ -21,6 +21,17 @@ extern "C" {
 #include <libcue/libcue.h>  // for Cd
 }
 
+#ifndef __LIBARCSDEC_DESCRIPTORS_HPP__
+#include "descriptors.hpp"       // for FileReaderDescriptor
+#endif
+#ifndef __LIBARCSDEC_METAPARSER_HPP__
+#include "metaparser.hpp"        // for MetaparserImpl
+#endif
+
+#ifndef __LIBARCSTK_IDENTIFIER_HPP__
+#include <arcstk/identifier.hpp> // for TOC
+#endif
+
 namespace arcsdec
 {
 inline namespace v_1_0_0
@@ -29,6 +40,8 @@ namespace details
 {
 namespace libcue
 {
+
+using arcstk::TOC;
 
 
 /**
