@@ -285,10 +285,10 @@ std::size_t FrameQueue::fill()
 
 bool FrameQueue::enqueue_frame()
 {
-	auto error  = int { -1 };
+	auto error  = int { 0 };
 	auto packet = make_packet();
 
-	while (error < 0)
+	while (true)
 	{
 		error = ::av_read_frame(format_context(), packet.get());
 
@@ -310,15 +310,15 @@ bool FrameQueue::enqueue_frame()
 			throw FFmpegException(error, "av_read_frame");
 		}
 
-		// Respect only packets from the specified stream
-
-		if (packet->stream_index != stream_index())
+		if (packet->stream_index == stream_index())
 		{
-			::av_packet_unref(packet.get());
-			error = -1;
-
-			continue;
+			break; // Packet was successfully read, we are done
 		}
+
+		// Respect only packets from the specified stream.
+		// Discard other packets and redo.
+
+		::av_packet_unref(packet.get());
 	}
 
 	frames_.push(std::move(packet));
