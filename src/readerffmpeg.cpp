@@ -333,11 +333,11 @@ AVFramePtr FrameQueue::dequeue_frame()
 	auto frame          = make_frame();
 	auto decode_success = bool { false };
 
-	while (error >= 0)
+	while (true)
 	{
 		error = ::avcodec_receive_frame(decoder(), frame.get());
 
-		if (AVERROR(EAGAIN) == error)
+		if (AVERROR(EAGAIN) == error) // repeating required
 		{
 			// Decoder requires more input packets before it can provide
 			// any frames, so just finish the processing of this packet
@@ -365,30 +365,30 @@ AVFramePtr FrameQueue::dequeue_frame()
 				throw;
 			}
 
-			if (decode_success)
-			{
-				error = 0;
-				continue;
-			} else
+			if (!decode_success)
 			{
 				return nullptr; // enqueue_frame() needs to be called
 			}
-		}
 
-		if (AVERROR_EOF == error)
+			// ...on success repeat until EAGAIN vanishes
+
+		} else // no repeating required
 		{
-			return nullptr; // Do not throw, just signal '... and nothing more'
+			if (AVERROR_EOF == error)
+			{
+				return nullptr;
+			}
+
+			if (error < 0) // some error occurred, catchall
+			{
+				throw FFmpegException(error, "avcodec_receive_frame");
+
+				// Possible errors (other then EAGAIN and EOF) are:
+				// AVERROR(EINVAL) : Codec not opened.
+			}
+
+			break; // Packet was successfully decoded, we are done
 		}
-
-		if (error < 0) // some error occurred, catchall
-		{
-			throw FFmpegException(error, "avcodec_receive_frame");
-
-			// Possible errors (other then EAGAIN and EOF) are:
-			// AVERROR(EINVAL) : Codec not opened.
-		}
-
-		break;
 	}
 
 	return frame;
