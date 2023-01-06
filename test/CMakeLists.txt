@@ -48,23 +48,23 @@ endif()
 
 ## Provide main object file
 
-add_library (catch2_main OBJECT "${MAIN_TEST_CPP}" )
-set_property (TARGET catch2_main PROPERTY CXX_STANDARD 14 )
+add_library (libarcsdec_catch2_main OBJECT "${MAIN_TEST_CPP}" )
+set_property (TARGET libarcsdec_catch2_main PROPERTY CXX_STANDARD 14 )
 
 if (${CMAKE_VERSION} VERSION_LESS "3.13.0" )
 
-	target_include_directories (catch2_main PUBLIC
+	target_include_directories (libarcsdec_catch2_main PUBLIC
 	"${CMAKE_BINARY_DIR}/thirdparty/catch2/catch2-prefix/src/catch2/single_include/" )
 else ()
 
-	target_link_libraries (catch2_main PRIVATE Catch2::Catch2 )
+	target_link_libraries (libarcsdec_catch2_main PRIVATE Catch2::Catch2 )
 endif ()
 
-target_compile_options (catch2_main PUBLIC ${TEST_CXX_FLAGS_WARNINGS} )
-target_compile_options (catch2_main PUBLIC ${PROJECT_CXX_FLAGS_OPTIMIZE} )
+target_compile_options (libarcsdec_catch2_main
+	PUBLIC ${TEST_CXX_FLAGS_WARNINGS} )
 
-#get_target_property(COMP_FLAGS_MAIN catch2_main COMPILE_OPTIONS)
-#message (STATUS "COMPILE_OPTIONS for catch2_main: ${COMP_FLAGS_MAIN}")
+target_compile_options (libarcsdec_catch2_main
+	PUBLIC ${PROJECT_CXX_FLAGS_OPTIMIZE} )
 
 
 ## Add common configuration for all testsuites (catch2 + project dependencies)
@@ -83,7 +83,7 @@ foreach (_testcase ${TEST_SETS} )
 
 	## Define an executable for each single testfile
 	add_executable (${_testcase}_test
-		$<TARGET_OBJECTS:catch2_main>
+		$<TARGET_OBJECTS:libarcsdec_catch2_main>
 		"${TEST_SOURCE_DIR}/${_testcase}.cpp" )
 
 	set_property (TARGET ${_testcase}_test PROPERTY CXX_STANDARD 14 )
@@ -93,11 +93,19 @@ foreach (_testcase ${TEST_SETS} )
 		PRIVATE ${PROJECT_SOURCE_DIR}         ## private headers (*_details.hpp)
 		PRIVATE ${PROJECT_BUILD_SOURCE_DIR} ) ## generated sources
 
-	target_link_libraries (${_testcase}_test
-		PRIVATE
-		Catch2::Catch2WithMain ## Catch2
-		libarcstk::libarcstk
-		${PROJECT_NAME} ) ## compiled libarcsdec lib
+	if (WITH_SUBMODULES )
+		target_link_libraries (${_testcase}_test
+			PRIVATE
+			Catch2::Catch2WithMain ## Catch2
+			libarcstk
+			${PROJECT_NAME} ) ## compiled libarcsdec lib
+	else()
+		target_link_libraries (${_testcase}_test
+			PRIVATE
+			Catch2::Catch2WithMain ## Catch2
+			libarcstk::libarcstk
+			${PROJECT_NAME} ) ## compiled libarcsdec lib
+	endif(WITH_SUBMODULES )
 
 	target_compile_options (${_testcase}_test
 		PUBLIC ${PROJECT_CXX_FLAGS_OPTIMIZE} )

@@ -58,7 +58,7 @@ configure_file ("docroot/source/index.rst.in"
 
 ## --- Set up python environment
 
-add_requirements_target (rtd_requirements
+add_requirements_target (libarcsdec_rtd_requirements
 	"${CMAKE_CURRENT_SOURCE_DIR}/requirements.txt"
 )
 
@@ -66,10 +66,10 @@ add_requirements_target (rtd_requirements
 
 ## --- Set up targets
 
-add_custom_target (rtd_doc DEPENDS "${OUTPUT_MAINPAGE}" )
-add_dependencies  (rtd_doc rtd_requirements )
+add_custom_target (libarcsdec_rtd_doc DEPENDS "${OUTPUT_MAINPAGE}" )
+add_dependencies  (libarcsdec_rtd_doc rtd_requirements )
 
-add_dependencies  (doc rtd_doc )
+add_dependencies  (libarcsdec_doc libarcsdec_rtd_doc )
 
 
 
@@ -86,9 +86,9 @@ if (DOXYGEN_NEEDS_XML_DEDUP )
 	set (EXHALE_EXECUTES_DOXYGEN "False" )
 	set (DOXYFILE "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile" )
 
-	add_doxygen_target (rtd_doxygen ${DOXYFILE} ${OUTPUT_INDEX} )
+	add_doxygen_target (libarcsdec_rtd_doxygen ${DOXYFILE} ${OUTPUT_INDEX} )
 
-	add_dependencies (rtd_doc rtd_doxygen )
+	add_dependencies (libarcsdec_rtd_doc libarcsdec_rtd_doxygen )
 
 	add_custom_command (
 		OUTPUT  "${OUTPUT_MAINPAGE}" "${SPHINX_LIBRARY_ROOT_PAGE}"

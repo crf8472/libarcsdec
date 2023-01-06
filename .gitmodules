@@ -1,0 +1,3 @@
+[submodule "libs/libarcstk"]
+	path = libs/libarcstk
+	url = https://github.com/crf8472/libarcstk.git

@@ -323,13 +323,36 @@ set (PKG_REQUIRE_ARRAY )
 
 ## --- Required: libarcstk
 
-## Commented out: coming with 3.14.5 ?
-# set (CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE )
+if (WITH_SUBMODULES )
 
-find_package (libarcstk 0.1.0 REQUIRED )
-list (APPEND PKG_REQUIRE_ARRAY "libarcstk >= 0.1.0" )
+	if (NOT HAS_PARENT )
+		message (STATUS "Link to local submodule libarcstk" )
 
-target_link_libraries (${PROJECT_NAME} PRIVATE libarcstk::libarcstk )
+		## If not set by some PARENT, just use local subdir
+		if (NOT SUBMODULES_DIR )
+			set (SUBMODULES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libs" )
+		endif()
+
+		add_subdirectory (${SUBMODULES_DIR}/libarcstk )
+
+		target_include_directories (${PROJECT_NAME}
+			PRIVATE $<BUILD_INTERFACE:${SUBMODULES_DIR}/libarcstk/include> )
+
+		target_link_libraries (${PROJECT_NAME} PRIVATE libarcstk )
+
+		add_dependencies (${PROJECT_NAME} libarcstk )
+	endif()
+else()
+
+	## Tell find_package to first try locating libarcstk via system-installed
+	## .config file instead of project's FindLibarcstk.cmake module
+	set (CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE ) ## since CMake 3.15
+
+	find_package (libarcstk 0.1.0 REQUIRED )
+	list (APPEND PKG_REQUIRE_ARRAY "libarcstk >= 0.1.0" )
+
+	target_link_libraries (${PROJECT_NAME} PRIVATE libarcstk::libarcstk )
+endif (WITH_SUBMODULES )
 
 
 ## --- Configure optional features
@@ -461,30 +484,17 @@ endif (WITH_FFMPEG)
 
 
 
-## --- If sourced by a parent CMakeLists.txt skip all optional targets
+## --- If sourced by a parent CMakeLists.txt do some extra settings
 
 if (HAS_PARENT )
 
-	message (STATUS "Compiled by a parent project, skip tests and docs" )
+	message (STATUS "libarcsdec is compiled by a parent project" )
 
-##  Commented out for now (needs testing)
-##
-#	## If sourced by a parent project, releases are always compiled with
-#	## optimization.
-#
-#	if (CMAKE_BUILD_TYPE STREQUAL "Release")
-#
-#		add_cxx_flags_optimize()
-#	endif()
-#
-#	get_target_property (PROJECT_CXX_FLAGS ${PROJECT_NAME} COMPILE_OPTIONS )
-#
-#	message (STATUS "Compile flags: ${PROJECT_CXX_FLAGS}" )
-#
-#	return()
+	## Use this in the PARENT to check whether add_subdirectory was executed
+	set (LIBARCSDEC_ADDED  TRUE  PARENT_SCOPE )
 else()
 
-	message (STATUS "Compiled without parent project" )
+	message (STATUS "libarcsdec is compiled without parent project" )
 endif()
 
 
