@@ -321,6 +321,10 @@ message (STATUS "Compile flags: ${PROJECT_CXX_FLAGS}" )
 
 set (PKG_REQUIRE_ARRAY )
 
+## Tell find_package to first try locating libarcstk via system-installed
+## .config file instead of project's FindLibarcstk.cmake module
+#set (CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE ) ## since CMake 3.15
+
 ## --- Required: libarcstk
 
 if (WITH_SUBMODULES )
@@ -346,10 +350,6 @@ if (WITH_SUBMODULES )
 
 	## If compiled by a PARENT, the PARENT has to care about the depencies!
 else()
-
-	## Tell find_package to first try locating libarcstk via system-installed
-	## .config file instead of project's FindLibarcstk.cmake module
-	set (CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE ) ## since CMake 3.15
 
 	find_package (libarcstk 0.1.0 REQUIRED )
 	list (APPEND PKG_REQUIRE_ARRAY "libarcstk >= 0.1.0" )
