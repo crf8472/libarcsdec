@@ -22,7 +22,6 @@ The following features are planned, but not yet implemented:
 
 - Metadata parser for compact discs (based on libcdio).
 - Metadata parser for cdrdao's TOC format.
-- Generic audio reader based on libsndfile (just as an alternative to ffmpeg).
 - Add OGG support to the audio reader for FLAC/FLAC.
 - Add support for embedded CUE sheets to the audio reader for FLAC/FLAC.
 

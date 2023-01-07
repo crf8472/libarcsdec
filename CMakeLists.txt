@@ -163,6 +163,7 @@ add_library (${PROJECT_NAME} SHARED
 	## parsercue.cpp     is required, depends on libcue
 	## readerffmpeg.cpp  is optional and default ON,  depends on parts of ffmpeg
 	## readerflac.cpp    is optional and default ON,  depends on FLAC
+	## readersndfile.cpp is optional and default OFF, depends on libsndfile
 	"${PROJECT_SOURCE_DIR}/readerwav.cpp"
 	## readerwvpk.cpp    is optional and default ON,  depends on libwavpack
 	"${PROJECT_SOURCE_DIR}/sampleproc.cpp"
@@ -365,6 +366,7 @@ endif (WITH_SUBMODULES )
 option (WITH_FLAC    "Add FLAC reading capability"     ON )
 option (WITH_WAVPACK "Add WavPack reading capability"  ON )
 option (WITH_FFMPEG  "Add ffmpeg reading capabilities" ON )
+option (WITH_LIBSNDFILE "Add libsndfile reading capabilities" OFF )
 
 
 ## --- Required: parsercue (requires libcue)
@@ -484,6 +486,30 @@ else (WITH_FFMPEG)
 
 	message (STATUS "Build without ffmpeg support" )
 endif (WITH_FFMPEG)
+
+
+## --- Optional: Add libsndfile (default: ON)
+
+if (WITH_LIBSNDFILE )
+
+	message (STATUS "Build with libsndfile support" )
+
+	find_package (libsndfile 1.0.17 REQUIRED )
+	list (APPEND PKG_REQUIRE_ARRAY "libsndfile >= 1.0.17" )
+
+	target_sources (${PROJECT_NAME}
+		PRIVATE ${PROJECT_SOURCE_DIR}/readersndfile.cpp )
+
+	target_include_directories (${PROJECT_NAME}
+		PRIVATE ${libsndfile_INCLUDE_DIRS} )
+
+	target_link_libraries (${PROJECT_NAME}
+		PUBLIC ${libsndfile_LIBRARIES} )
+
+else (WITH_LIBSNDFILE )
+
+	message (STATUS "Build without libsndfile support" )
+endif (WITH_LIBSNDFILE )
 
 
 
