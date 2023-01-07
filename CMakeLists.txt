@@ -326,6 +326,7 @@ set (PKG_REQUIRE_ARRAY )
 if (WITH_SUBMODULES )
 
 	if (NOT HAS_PARENT )
+
 		message (STATUS "Link to local submodule libarcstk" )
 
 		## If not set by some PARENT, just use local subdir
@@ -342,6 +343,8 @@ if (WITH_SUBMODULES )
 
 		add_dependencies (${PROJECT_NAME} libarcstk )
 	endif()
+
+	## If compiled by a PARENT, the PARENT has to care about the depencies!
 else()
 
 	## Tell find_package to first try locating libarcstk via system-installed
