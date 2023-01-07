@@ -61,10 +61,10 @@ else ()
 endif ()
 
 target_compile_options (libarcsdec_catch2_main
-	PUBLIC ${TEST_CXX_FLAGS_WARNINGS} )
+	PRIVATE ${TEST_CXX_FLAGS_WARNINGS} )
 
 target_compile_options (libarcsdec_catch2_main
-	PUBLIC ${PROJECT_CXX_FLAGS_OPTIMIZE} )
+	PRIVATE ${PROJECT_CXX_FLAGS_OPTIMIZE} )
 
 
 ## Add common configuration for all testsuites (catch2 + project dependencies)
