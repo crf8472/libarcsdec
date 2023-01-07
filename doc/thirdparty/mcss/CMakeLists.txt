@@ -3,12 +3,12 @@
 ## Use HTML5/CSS3 from m.css for generating HTML from Doxygen XML output
 ##
 ## Prerequisites from parent:
-## - Targets: 'doc'
+## - Targets: 'libarcsdec_doc'
 ## - Variables: DOC_GEN_DIR, DOC_COMMENT, DOXYGEN_NEEDS_XML_DEDUP,
 ##              DOXYGEN_VERSION (from find_package)
 ##
 ## Provides:
-## - Targets: 'mcss_doc'
+## - Targets: 'libarcsdec_mcss_doc'
 
 if (WIN32 )
 
@@ -45,7 +45,7 @@ set (MCSS_SCRIPT_RELPATH "documentation/doxygen.py" )
 ## set (MCSS_SCRIPT_RELPATH "doxygen/dox2html5.py" )
 
 
-add_custom_target (mcss_doc DEPENDS ${OUTPUT_MAINPAGE} )
+add_custom_target (libarcsdec_mcss_doc DEPENDS ${OUTPUT_MAINPAGE} )
 
 
 ## --- Define m.css to be checked out/updated while configuring
@@ -86,7 +86,7 @@ else() ## No FetchContent module available
 
 	include (ExternalProject )
 
-	ExternalProject_Add (mcss_download
+	ExternalProject_Add (libarcsdec_mcss_download
 		GIT_REPOSITORY    ${MCSS_REPO_URL}
 		#GIT_TAG          ... use always HEAD of default branch
 		GIT_SHALLOW       true
@@ -109,7 +109,7 @@ else() ## No FetchContent module available
 
 	unset(SOURCE_DIR )
 
-	add_dependencies (mcss_doc mcss_download )
+	add_dependencies (libarcsdec_mcss_doc libarcsdec_mcss_download )
 endif()
 
 
@@ -125,11 +125,11 @@ configure_file ("${CMAKE_CURRENT_SOURCE_DIR}/conf.py.in"  "${CONFPY}"  @ONLY )
 
 ## --- Set up python environment
 
-add_requirements_target (mcss_requirements
+add_requirements_target (libarcsdec_mcss_requirements
 	"${CMAKE_CURRENT_SOURCE_DIR}/requirements.txt"
 )
 
-add_dependencies (mcss_doc mcss_requirements )
+add_dependencies (libarcsdec_mcss_doc libarcsdec_mcss_requirements )
 
 
 
@@ -140,9 +140,9 @@ if (DOXYGEN_NEEDS_XML_DEDUP )
 	## Doxygen needs to run separately from m.css since we want to post-process
 	## its XML output.
 
-	add_doxygen_target (mcss_doxygen ${DOXYFILE} ${OUTPUT_INDEX} )
+	add_doxygen_target (libarcsdec_mcss_doxygen ${DOXYFILE} ${OUTPUT_INDEX} )
 
-	add_dependencies (mcss_doc mcss_doxygen )
+	add_dependencies (libarcsdec_mcss_doc libarcsdec_mcss_doxygen )
 
 	add_custom_command (
 		OUTPUT  "${OUTPUT_MAINPAGE}"
@@ -170,5 +170,5 @@ else()
 	)
 endif()
 
-add_dependencies (doc mcss_doc )
+add_dependencies (libarcsdec_doc libarcsdec_mcss_doc )
 
