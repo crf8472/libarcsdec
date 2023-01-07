@@ -16,22 +16,22 @@
 #ifndef __LIBARCSDEC_READERWVPK_DETAILS_HPP__
 #define __LIBARCSDEC_READERWVPK_DETAILS_HPP__
 
-#include <cstdint>
-#include <exception>
-#include <memory>
-#include <string>
-#include <vector>
+#include <cstdint>   // for uint8_t, int32_t, int64_t
+#include <exception> // for exception
+#include <memory>    // for unique_ptr
+#include <string>    // for string
+#include <vector>    // for vector
 
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__
-#include "audioreader.hpp"
+#include "audioreader.hpp"  // for AudioReaderImpl
 #endif
 
 
 namespace arcsdec
 {
-
 inline namespace v_1_0_0
 {
+
 namespace details
 {
 namespace wavpack

@@ -11,25 +11,28 @@
 #include "readersndfile_details.hpp"
 #endif
 
-#include <cstdint>
-#include <memory>
-#include <string>
-#include <vector>
+#include <cstdint>  // for int16_t, unit32_t, uint64_t
+#include <memory>   // for unique_ptr
+#include <set>      // for set
+#include <sstream>  // for stringstream
+#include <string>   // for string, to_string
+#include <utility>  // for make_unique, move
+#include <vector>   // for vector
 
 #include <sndfile.hh>
 
 #ifndef __LIBARCSTK_CALCULATE_HPP__
-#include <arcstk/calculate.hpp>
+#include <arcstk/calculate.hpp>  // for AudioSize
 #endif
 #ifndef __LIBARCSTK_SAMPLES_HPP__
-#include <arcstk/samples.hpp>
+#include <arcstk/samples.hpp>    // for SampleSequence
 #endif
 #ifndef __LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp>
+#include <arcstk/logging.hpp>    // for ARCS_LOG, _ERROR, _INFO, _DEBUG
 #endif
 
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__
-#include "audioreader.hpp"
+#include "audioreader.hpp"       // for AudioReaderImpl
 #endif
 
 

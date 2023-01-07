@@ -13,30 +13,32 @@
 
 extern "C" {
 #include <assert.h>   // for assert
-#include <sys/stat.h> // for stat
+#include <sys/stat.h> // for ::stat
 }
 
-#include <cstdint>
-#include <fstream>
-#include <functional>
-#include <iomanip>    // for debug
-#include <memory>
+#include <algorithm>  // for mismatch
+#include <array>      // for array
+#include <cstdint>    // for uint8_t, uint16_t, uint32_t, int32_t, int64_t
+#include <fstream>    // for ifstream
+#include <functional> // for function, bind, placeholders
+#include <ios>        // for streamsize
+#include <limits>     // for numeric_limits
+#include <memory>     // for unique_ptr
+#include <set>        // for set
 #include <sstream>    // for ostringstream
-#include <string>
-#include <vector>
+#include <string>     // for string, to_string
+#include <utility>    // for make_unique, move
+#include <vector>     // for vector
 
-#ifndef __LIBARCSTK_CALCULATE_HPP__
-#include <arcstk/calculate.hpp>
-#endif
 #ifndef __LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp>
+#include <arcstk/logging.hpp> // for ARCS_LOG, _ERROR, _WARNING, _INFO, _DEBUG
 #endif
 
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__
-#include "audioreader.hpp"
+#include "audioreader.hpp"  // for AudioReaderImpl
 #endif
 #ifndef __LIBARCSDEC_VERSION_HPP__
-#include "version.hpp"
+#include "version.hpp"  // for LIBARCSDEC_NAME
 #endif
 
 
@@ -758,10 +760,10 @@ int64_t WavAudioReaderImpl::retrieve_file_size_bytes(
 		const std::string &filename) const
 {
 	// TODO C-style stuff: Use C++17's std::filesystem in the future
-	struct stat stat_buf; // needs include <sys/stat.h>
+	struct ::stat stat_buf;
 	{
-		int rc = stat(filename.c_str(), &stat_buf);
-		assert (rc != -1); // needs include <assert.h>
+		int rc = ::stat(filename.c_str(), &stat_buf);
+		assert (rc != -1);
 
 		// Avoid Warning about Unused Variable rc (ugly, but, well...)
 		static_cast<void>(rc);

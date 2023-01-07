@@ -11,9 +11,11 @@
 #ifndef __LIBARCSDEC_READERSNDFILE_DETAILS_HPP__
 #define __LIBARCSDEC_READERSNDFILE_DETAILS_HPP__
 
+#include <memory>   // for unique_ptr
+#include <string>   // for string
 
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__
-#include "audioreader.hpp"      // for AudioReaderImpl
+#include "audioreader.hpp"  // for AudioReaderImpl
 #endif
 
 namespace arcsdec

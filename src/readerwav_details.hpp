@@ -11,16 +11,17 @@
 #ifndef __LIBARCSDEC_READERWAV_DETAILS_HPP__
 #define __LIBARCSDEC_READERWAV_DETAILS_HPP__
 
-#include <cstdint>
-#include <string>
-#include <vector>
-
-#ifndef __LIBARCSTK_CALCULATE_HPP__
-#include <arcstk/calculate.hpp>
-#endif
+#include <array>      // for array
+#include <cstddef>    // for size_t
+#include <cstdint>    // for uint8_t, uint32_t, int64_t
+#include <fstream>    // for ifstream
+#include <functional> // for function
+#include <memory>     // for unique_ptr
+#include <string>     // for string
+#include <vector>     // for vector
 
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__
-#include "audioreader.hpp"
+#include "audioreader.hpp"  // for AudioReaderImpl
 #endif
 
 namespace arcsdec

@@ -11,21 +11,23 @@
 #ifndef __LIBARCSDEC_READERFLAC_DETAILS_HPP__
 #define __LIBARCSDEC_READERFLAC_DETAILS_HPP__
 
-#include <FLAC++/decoder.h>
-#include <FLAC++/metadata.h>
+#include <FLAC++/decoder.h>   // for FLAC::Decoder::File,
+							  // FLAC__StreamDecoderWriteStatus,
+							  // FLAC__StreamDecoderErrorStatus
+#include <FLAC++/metadata.h>  // for FLAC::Metadata::StreamInfo,
+							  // FLAC__StreamMetadata
+							  // for FLAC__int32
+							  // for FLAC__Frame
 
-#include <cstdint>
-#include <exception>
-#include <memory>
-#include <string>
-#include <vector>
+#include <memory>   // for unique_ptr
+#include <string>   // for string
 
 #ifndef __LIBARCSTK_SAMPLES_HPP__
-#include <arcstk/samples.hpp>     // for SampleSequence
+#include <arcstk/samples.hpp> // for SampleSequence
 #endif
 
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__
-#include "audioreader.hpp"
+#include "audioreader.hpp"    // for AudioReaderImpl
 #endif
 
 

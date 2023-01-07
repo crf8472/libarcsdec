@@ -33,11 +33,11 @@ extern "C"
 #include <libavutil/avutil.h>
 }
 
-#ifndef __LIBARCSTK_SAMPLES_HPP__
-#include <arcstk/samples.hpp>
+#ifndef __LIBARCSTK_CALCULATE_HPP__
+#include <arcstk/calculate.hpp> // for AudioSize
 #endif
 #ifndef __LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp>
+#include <arcstk/logging.hpp>   // for ARCS_LOG, _ERROR, _WARNING, _INFO, _DEBUG
 #endif
 
 

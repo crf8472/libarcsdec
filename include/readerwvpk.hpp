@@ -1,25 +1,26 @@
 /**
  * \file
  *
- * \brief Audio reader for Wavpack audio files
+ * \brief Audio reader for Wavpack audio files.
  */
 
 
 #ifndef __LIBARCSDEC_READERWVPK_HPP__
 #define __LIBARCSDEC_READERWVPK_HPP__
 
-#include <memory>
-#include <string>
-#include <vector>
+#include <cstdint>  // for uint64_t
+#include <memory>   // for unique_ptr
+#include <set>      // for set
+#include <string>   // for string
+#include <vector>   // for vector
 
 #ifndef __LIBARCSDEC_DESCRIPTORS_HPP__
-#include "descriptors.hpp"
+#include "descriptors.hpp"  // for FileReaderDescriptor
 #endif
 
 
 namespace arcsdec
 {
-
 inline namespace v_1_0_0
 {
 

@@ -15,28 +15,31 @@ extern "C" {
 #include <wavpack/wavpack.h>
 }
 
-#include <cstdint>
-#include <memory>
+#include <cstddef>   // for size_t
+#include <cstdint>   // for uint8_t, uint64_t, int32_t, int64_t
+#include <memory>    // for unique_ptr
+#include <set>       // for set
 #include <stdexcept> // for invalid_argument
 #include <sstream>   // for ostringstream
-#include <string>
-#include <vector>
+#include <string>    // for string, to_string
+#include <utility>   // for make_unique, move
+#include <vector>    // for vector
 
 #ifndef __LIBARCSTK_IDENTIFIER_HPP__
 #include <arcstk/identifier.hpp>     // for CDDA
 #endif
 #ifndef __LIBARCSTK_CALCULATE_HPP__
-#include <arcstk/calculate.hpp>
+#include <arcstk/calculate.hpp>      // for AudioSize
 #endif
 #ifndef __LIBARCSTK_SAMPLES_HPP__
-#include <arcstk/samples.hpp>        // for SampleSequence
+#include <arcstk/samples.hpp>        // for InterleavedSamples
 #endif
 #ifndef __LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp>
+#include <arcstk/logging.hpp> // for ARCS_LOG_ERROR, _WARNING, _INFO, _DEBUG
 #endif
 
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__
-#include "audioreader.hpp"
+#include "audioreader.hpp"  // for AudioReaderImpl
 #endif
 
 

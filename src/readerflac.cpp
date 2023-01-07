@@ -14,24 +14,20 @@
 #include <FLAC++/decoder.h>
 #include <FLAC++/metadata.h>
 
-#include <cstdint>
+#include <cstdint>     // for uint64_t
 #include <limits>      // for numeric_limits
-#include <memory>
+#include <memory>      // for unique_ptr
+#include <set>         // for set
 #include <sstream>     // for ostringstream
-#include <string>
+#include <string>      // for string
+#include <utility>     // for make_unique, move
 
-#ifndef __LIBARCSTK_CALCULATE_HPP__
-#include <arcstk/calculate.hpp>
-#endif
-#ifndef __LIBARCSTK_SAMPLES_HPP__
-#include <arcstk/samples.hpp>
-#endif
 #ifndef __LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp>
+#include <arcstk/logging.hpp> // for ARCS_LOG_ERROR, _WARNING, _INFO, _DEBUG
 #endif
 
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__
-#include "audioreader.hpp"
+#include "audioreader.hpp"    // for AudioReaderImpl
 #endif
 
 
