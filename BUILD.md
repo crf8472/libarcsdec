@@ -211,6 +211,42 @@ warnings can be ignored. To avoid them
 [switch to clang++](#trying-a-different-compiler), then configure the project
 with ``-DIWYU=ON`` and run the build again.
 
+#### Build with libarcstk as a submodule
+
+Having installed the dependencies system-wide is considered the standard setup.
+For some development tasks, this may nonetheless not be convenient. If
+installing libarcstk is for any reason not applicable, libarcstk can
+alternatively be build as a submodule of libarcsdec. For setting up a fresh
+local libarcsdec repo with libarcstk as a submodule of libarcsdec, do the
+following:
+
+	$ git clone --recurse-submodules https://github.com/crf8472/libarcsdec
+	$ cd libarcsdec      # your libarcsdec root folder where README.md resides
+	$ mkdir build && cd build  # create build folder for out-of-source-build
+	$ cmake -DWITH_SUBMODULES=ON ..
+	$ cmake --build .    # perform the actual build (including libarcstk)
+
+Alternatively, if you already have cloned libarcsdec without using the
+``--recurse-submodules`` switch, you can alternatively setup the submodule
+thereafter by applying:
+
+	$ cd libarcsdec      # your libarcsdec root folder where README.md resides
+	$ git submodule init
+	$ git submodule update # clones libarcstk as a submodule
+	$ mkdir build && cd build  # create build folder for out-of-source-build
+	$ cmake -DWITH_SUBMODULES=ON ..
+
+Note that if libarcsdec was configured with ``-DWITH_SUBMODULES=ON`` switches
+will be applied to libarcstk as well! If you use ``-DWITH_TESTS`` or
+``WITH_DOCS`` when configuring libarcsdec those options will be applied
+recursively to libarcstk. Equivalently, using ``make install`` will install
+libarcsdec as well as libarcstk!
+
+*Note* that this setup is only intended to make handling synchronous development
+tasks (such as debugging) on both libraries libarcsdec and libarcstk easier. It
+is not intended to support packaging or installation in productional
+environments.
+
 
 ### Package maintainers
 
