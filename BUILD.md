@@ -297,6 +297,7 @@ settings to your requirements.
 |WITH_FLAC           |Build with FLAC support by libflac              |ON     |
 |WITH_WAVPACK        |Build with Wavpack support by libwavpack        |ON     |
 |WITH_FFMPEG         |Build with ffmpeg support                       |ON     |
+|WITH_SUBMODULES     |Build with libarcstk as a submodule             |OFF    |
 |USE_MCSS            |[Use m.css](#doxygen-by-m-css-with-html5-and-css3-tested-but-still-experimental) when building the documentation. Implies WITH_DOCS=ON  |OFF    |
 
 Note that there is no option to deactivate libcue since libcue is currently the
