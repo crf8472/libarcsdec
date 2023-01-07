@@ -11,7 +11,7 @@
 ## FLAC_INCLUDE_DIRS
 ## FLAC_VERSION
 
-# Earlier Result Already in CMake Cache?
+# Earlier Result for FLAC++ Already in CMake Cache?
 if (LIBFLACPP_INCLUDE_DIR AND LIBFLACPP_LIBRARY )
 
 	set(FLAC_FIND_QUIETLY TRUE )
