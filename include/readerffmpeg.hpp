@@ -1,20 +1,21 @@
 /**
  * \file
  *
- * \brief FFmpeg-based generic audio reader
+ * \brief FFmpeg-based generic audio reader.
  */
 
 
 #ifndef __LIBARCSDEC_READERFFMPEG_HPP__
 #define __LIBARCSDEC_READERFFMPEG_HPP__
 
-#include <cstdint>
-#include <memory>
-#include <string>
-#include <vector>
+#include <cstdint>  // for uint64_t
+#include <memory>   // for unique_ptr
+#include <set>      // for set
+#include <string>   // for string
+#include <vector>   // for vector
 
 #ifndef __LIBARCSDEC_DESCRIPTORS_HPP__
-#include "descriptors.hpp"
+#include "descriptors.hpp"  // for FileReaderDescriptor
 #endif
 
 

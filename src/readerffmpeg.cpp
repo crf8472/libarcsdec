@@ -1,7 +1,7 @@
 /**
  * \file
  *
- * \brief Implements ffmpeg-based generic audio reader.
+ * \brief Implements FFmpeg-based generic audio reader.
  */
 
 #ifndef __LIBARCSDEC_READERFFMPEG_HPP__
@@ -13,14 +13,17 @@
 
 #include <algorithm>  // for remove
 #include <climits>    // for CHAR_BIT
-#include <cstdlib>    // for abs
-#include <exception>  // for exception
-#include <functional> // for function
+#include <cstdlib>    // for abs, size_t
+#include <functional> // for function, bind, placeholders
+#include <memory>     // for unique_ptr, make_unique
 #include <new>        // for bad_alloc
-#include <numeric>    // for accumulate
-#include <queue>      // for queue
-#include <stdexcept>  // for invalid_argument
-#include <string>
+#include <ostream>    // for ostream, endl
+#include <set>        // for set
+#include <sstream>    // for ostringstream
+#include <stdexcept>  // for invalid_argument, runtime_error
+#include <string>     // for string
+#include <utility>    // for make_pair, move
+#include <vector>     // for vector
 
 extern "C"
 {

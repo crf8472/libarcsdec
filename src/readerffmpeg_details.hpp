@@ -5,21 +5,21 @@
 /**
  * \file
  *
- * \brief Internal APIs for FFmpeg-based generic audio reader
+ * \brief Internal APIs for FFmpeg-based generic audio reader.
  */
 
 #ifndef __LIBARCSDEC_READERFFMPEG_DETAILS_HPP__
 #define __LIBARCSDEC_READERFFMPEG_DETAILS_HPP__
 
 
+#include <cstddef>   // for size_t
 #include <exception> // for exception
-#include <limits>    // for numeric_limits
+#include <functional>// for function
 #include <memory>    // for unique_ptr
 #include <queue>     // for queue
-#include <sstream>   // for ostringstream
-#include <string>
+#include <string>    // for string
+#include <type_traits> // for true_type, false_type
 #include <utility>   // for pair
-#include <vector>
 
 
 extern "C"
