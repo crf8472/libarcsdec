@@ -7,23 +7,20 @@
  * \brief A high-level API for calculating ARCSs and IDs.
  */
 
-#include "metaparser.hpp"
-#include <memory>
-#include <set>
-#include <string>
+#include <memory>   // for unique_ptr
+#include <string>   // for string
+#include <utility>  // for pair
+#include <vector>   // for vector
 
 #ifndef __LIBARCSTK_IDENTIFIER_HPP__
-#include <arcstk/identifier.hpp>
+#include <arcstk/identifier.hpp>   // for ARId, TOC
 #endif
 #ifndef __LIBARCSTK_CALCULATE_HPP__
-#include <arcstk/calculate.hpp>
+#include <arcstk/calculate.hpp>    // for Checksums, ChecksumSet
 #endif
 
 #ifndef __LIBARCSDEC_DESCRIPTORS_HPP__
-#include "descriptors.hpp"
-#endif
-#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
-#include "audioreader.hpp"
+#include "descriptors.hpp"         // for FileReaderSelection
 #endif
 
 
@@ -54,7 +51,6 @@ inline namespace v_1_0_0
 
 using arcstk::TOC;
 using arcstk::ARId;
-using arcstk::checksum::type;
 using arcstk::Checksums;
 using arcstk::ChecksumSet;
 

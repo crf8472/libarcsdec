@@ -7,22 +7,21 @@
  * \brief Toolkit for selecting file readers
  */
 
-#include <cctype>
-#include <cstdint>
-#include <functional>  // for std::function
-#include <limits>
-#include <memory>
-#include <regex>
-#include <set>
-#include <stdexcept>
-#include <string>
-#include <vector>
+#include <cctype>      // for toupper
+#include <cstddef>     // for size_t
+#include <cstdint>     // for uint32_t, uint64_t, int64_t
+#include <functional>  // for function
+#include <memory>      // for unique_ptr, make_unique
+#include <regex>       // for regex
+#include <set>         // for set
+#include <stdexcept>   // for runtime_error
+#include <string>      // for string, char_traits
+#include <type_traits> // for is_convertible
+#include <utility>     // for pair, move, make_pair, forward
+#include <vector>      // for vector
 
-#ifndef __LIBARCSTK_CALCULATE_HPP__
-#include <arcstk/calculate.hpp> // for SampleInputIterator
-#endif
 #ifndef __LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp>
+#include <arcstk/logging.hpp>   // for ARCS_LOG_WARNING, ARCS_LOG_DEBUG
 #endif
 
 
@@ -522,9 +521,6 @@ private:
  */
 using LibInfo = std::vector<std::pair<std::string, std::string>>;
 
-
-// forward declaration for operator ==
-class FileReaderDescriptor;
 
 bool operator == (const FileReaderDescriptor &lhs,
 			const FileReaderDescriptor &rhs);

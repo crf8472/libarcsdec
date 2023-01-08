@@ -9,14 +9,18 @@
 #include "audioreader.hpp"
 #endif
 
-#include <cstdint>
-#include <memory>
+#include <cstdint>       // for uint16_t, uint32_t, int16_t, int32_t
+#include <memory>        // for unique_ptr, make_unique
 #include <sstream>       // for ostringstream
 #include <stdexcept>     // for logic_error
-#include <string>
+#include <string>        // for string, to_string
+#include <utility>       // for move
 
+#ifndef __LIBARCSTK_IDENTIFIER_HPP__
+#include <arcstk/identifier.hpp> // for CDDA
+#endif
 #ifndef __LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp>
+#include <arcstk/logging.hpp> // for ARCS_LOG, _ERROR, _WARNING, _DEBUG
 #endif
 
 

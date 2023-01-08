@@ -7,21 +7,23 @@
  * \brief API for implementing AudioReaders
  */
 
-#include <functional>
-#include <memory>
-#include <set>
-#include <string>
-#include <vector>
+#include <cstddef>    // for size_t
+#include <cstdint>    // for uint16_t, uint32_t, int16_t, int32_t
+#include <memory>     // for unique_ptr
+#include <set>        // for set
+#include <stdexcept>  // for logic_error
+#include <string>     // for string
+#include <vector>     // for vector
 
 #ifndef __LIBARCSTK_CALCULATE_HPP__
-#include <arcstk/calculate.hpp>
+#include <arcstk/calculate.hpp>  // for AudioSize, SampleInputIterator
 #endif
 
 #ifndef __LIBARCSDEC_DESCRIPTORS_HPP__
-#include "descriptors.hpp"
+#include "descriptors.hpp" // for Codec, FileReaderDescriptor, ...
 #endif
 #ifndef __LIBARCSDEC_SAMPLEPROC_HPP__
-#include "sampleproc.hpp"
+#include "sampleproc.hpp"  // for SampleProcessor, SampleProvider
 #endif
 
 namespace arcsdec

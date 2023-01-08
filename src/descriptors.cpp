@@ -10,28 +10,30 @@
 
 extern "C"
 {
-#include <dlfcn.h>     // [glibc, Linux] for dlopen,dlclose
+#include <dlfcn.h>     // [glibc, Linux] for dlopen, dlclose, dlerror, RTLD_LAZY
 #include <link.h>      // [glibc, Linux] for link_map
 }
 
-#include <algorithm>
-#include <cstdint>
-#include <fstream>
-#include <list>
-#include <memory>
-#include <regex>
-#include <string>
-#include <vector>
+#include <algorithm>    // for find_if
+#include <array>        // for array
+#include <cstddef>      // for size_t
+#include <cstdint>      // for uint32_t, uint64_t, int64_t
+#include <fstream>      // for ifstream
+#include <functional>   // for function
+#include <map>          // for map
+#include <memory>       // for unique_ptr, make_unique
+#include <regex>        // for regex, regex_match
+#include <string>       // for string, to_string
+#include <type_traits>  // for underlying_type_t
+#include <utility>      // for move
+#include <vector>       // for vector
 
-#ifndef __LIBARCSTK_CALCULATE_HPP__
-#include <arcstk/calculate.hpp>
-#endif
 #ifndef __LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp>
+#include <arcstk/logging.hpp> // for ARCS_LOG, _WARNING, _DEBUG
 #endif
 
 #ifndef __LIBARCSDEC_VERSION_HPP__
-#include "version.hpp"
+#include "version.hpp"  // for LIBARCSDEC_NAME
 #endif
 
 

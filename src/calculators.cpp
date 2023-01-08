@@ -8,36 +8,37 @@
 #include "calculators.hpp"
 #endif
 
-#include <functional>
-#include <memory>
-#include <set>
-#include <stdexcept>  // for logic_error
-#include <string>
-#include <tuple>
-#include <utility>
-#include <vector>
+#include <cstddef>       // for size_t
+#include <cstdint>       // for uint16_t, int64_t
+#include <iterator>      // for distance
+#include <memory>        // for unique_ptr, make_unique
+#include <stdexcept>     // for logic_error, runtime_error
+#include <string>        // for string, to_string
+#include <unordered_set> // for unordered_set
+#include <utility>       // for pair, move, make_pair
+#include <vector>        // for vector
 
 #ifndef __LIBARCSTK_IDENTIFIER_HPP__
-#include <arcstk/identifier.hpp>
+#include <arcstk/identifier.hpp>     // for ARId, TOC, make_arid
 #endif
 #ifndef __LIBARCSTK_CALCULATE_HPP__
 #include <arcstk/calculate.hpp>      // for Checksums, SampleInputIterator, ...
 #endif
 #ifndef __LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp>
+#include <arcstk/logging.hpp>   // for ARCS_LOG, _ERROR, _WARNING, _INFO, _DEBUG
 #endif
 
 #ifndef __LIBARCSDEC_DESCRIPTORS_HPP__
 #include "descriptors.hpp"
 #endif
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__
-#include "audioreader.hpp"
+#include "audioreader.hpp"      // CreateAudioReader
 #endif
 #ifndef __LIBARCSDEC_METAPARSER_HPP__
-#include "metaparser.hpp"
+#include "metaparser.hpp"       // CreateMetadataParser
 #endif
 #ifndef __LIBARCSDEC_SAMPLEPROC_HPP__
-#include "sampleproc.hpp"
+#include "sampleproc.hpp"       // for BLOCKSIZE
 #endif
 
 

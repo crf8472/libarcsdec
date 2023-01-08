@@ -8,18 +8,21 @@
 #include "parsercue.hpp"
 #endif
 #ifndef __LIBARCSDEC_PARSERCUE_DETAILS_HPP__
-#include "parsercue_details.hpp"
+#include "parsercue_details.hpp"  // for CueParserImpl, CueOpenFile
 #endif
 
 extern "C" {
 #include <libcue/libcue.h>
 }
 
+#include <cstdint>   // for uint64_t
 #include <cstdio>    // for fopen, fclose, FILE
+#include <memory>    // for unique_ptr
+#include <set>       // for set
 #include <sstream>   // for ostringstream
 #include <stdexcept> // for invalid_argument
-#include <string>    // from .hpp
-#include <vector>    // from .hpp
+#include <string>    // for string
+#include <vector>    // for vector
 
 #ifndef __LIBARCSTK_IDENTIFIER_HPP__
 #include <arcstk/identifier.hpp>  // for TOC, make_toc, InvalidMetadataException
@@ -29,7 +32,7 @@ extern "C" {
 #endif
 
 #ifndef __LIBARCSDEC_METAPARSER_HPP__
-#include "metaparser.hpp"
+#include "metaparser.hpp" // for MetadataParseException
 #endif
 
 

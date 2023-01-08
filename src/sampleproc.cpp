@@ -9,11 +9,6 @@
 #include "sampleproc.hpp"
 #endif
 
-#ifndef __LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp>
-#endif
-
-
 
 namespace arcsdec
 {

@@ -8,22 +8,19 @@
 #ifndef __LIBARCSDEC_PARSERCUE_HPP__
 #define __LIBARCSDEC_PARSERCUE_HPP__
 
-#include <cstdint>
-#include <memory>
-#include <string>
-#include <vector>
+#include <cstdint>  // for uint64_t
+#include <memory>   // for unique_ptr
+#include <set>      // for set
+#include <string>   // for string
+#include <vector>   // for vector
 
 #ifndef __LIBARCSDEC_DESCRIPTORS_HPP__
-#include "descriptors.hpp"
-#endif
-#ifndef __LIBARCSDEC_METAPARSER_HPP__
-#include "metaparser.hpp"
+#include "descriptors.hpp"// for Codec, Format, FileReaderDescriptor, FileReader
 #endif
 
 
 namespace arcsdec
 {
-
 inline namespace v_1_0_0
 {
 
@@ -93,7 +90,6 @@ public:
 /// @}
 
 } // namespace v_1_0_0
-
 } // namespace arcsdec
 
 #endif

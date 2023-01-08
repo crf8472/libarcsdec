@@ -7,16 +7,19 @@
  * \brief API for implementing MetadataParsers
  */
 
-#include <memory>     // for unique_ptr
-#include <stdexcept>  // for runtime_error
-#include <string>     // for string
+#include <limits>       // for numeric_limits
+#include <memory>       // for unique_ptr
+#include <ostream>      // for ostringstream
+#include <stdexcept>    // for out_of_range, runtime_error
+#include <string>       // for string
+#include <type_traits>  // for is_signed, is_unsigned
 
 #ifndef __LIBARCSTK_IDENTIFIER_HPP__
-#include <arcstk/identifier.hpp>
+#include <arcstk/identifier.hpp>  // for TOC
 #endif
 
 #ifndef __LIBARCSDEC_DESCRIPTORS_HPP__
-#include "descriptors.hpp"
+#include "descriptors.hpp"  // for FileReaderDescriptor, CreateReader, ...
 #endif
 
 namespace arcsdec
