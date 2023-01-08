@@ -648,10 +648,10 @@ if (IWYU )
 
 	if (IWYU_BINARY )
 
+		message (STATUS "Program include-what-you-use found: ${IWYU_BINARY}" )
+
 		## Set for all subsequent targets
 		set (CMAKE_CXX_INCLUDE_WHAT_YOU_USE ${IWYU_BINARY} )
-
-		message (STATUS "Program include-what-you-use found: ${IWYU_BINARY}" )
 
 	else (IWYU_BINARY )
 
