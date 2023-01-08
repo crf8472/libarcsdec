@@ -11,11 +11,11 @@
 #ifndef __LIBARCSDEC_PARSERCUE_DETAILS_HPP__
 #define __LIBARCSDEC_PARSERCUE_DETAILS_HPP__
 
-#include <cstdint>
-#include <memory>
-#include <string>
-#include <vector>
-#include <utility>  // for tuple
+#include <cstdint>  // for uint16_t, int32_t
+#include <memory>   // for unique_ptr
+#include <string>   // for string
+#include <tuple>    // for tuple
+#include <vector>   // for vector
 
 extern "C" {
 #include <libcue/libcue.h>  // for Cd

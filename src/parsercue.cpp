@@ -17,6 +17,7 @@ extern "C" {
 
 #include <cstdint>   // for uint64_t
 #include <cstdio>    // for fopen, fclose, FILE
+#include <iomanip>   // for setw
 #include <memory>    // for unique_ptr
 #include <set>       // for set
 #include <sstream>   // for ostringstream
