@@ -22,12 +22,15 @@
 #include <string>      // for string
 #include <utility>     // for make_unique, move
 
+#ifndef __LIBARCSTK_CALCULATE_HPP__
+#include <arcstk/calculate.hpp> // for AudioSize
+#endif
 #ifndef __LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp> // for ARCS_LOG_ERROR, _WARNING, _INFO, _DEBUG
+#include <arcstk/logging.hpp>   // for ARCS_LOG_ERROR, _WARNING, _INFO, _DEBUG
 #endif
 
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__
-#include "audioreader.hpp"    // for AudioReaderImpl
+#include "audioreader.hpp"      // for AudioReaderImpl, InvalidAudioException
 #endif
 
 

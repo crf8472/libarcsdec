@@ -15,12 +15,12 @@ extern "C" {
 #include <wavpack/wavpack.h>
 }
 
-#include <cstddef>   // for size_t
 #include <cstdint>   // for uint8_t, uint64_t, int32_t, int64_t
+#include <cstdlib>   // for size_t, free
 #include <memory>    // for unique_ptr
 #include <set>       // for set
-#include <stdexcept> // for invalid_argument
 #include <sstream>   // for ostringstream
+#include <stdexcept> // for invalid_argument
 #include <string>    // for string, to_string
 #include <utility>   // for make_unique, move
 #include <vector>    // for vector
@@ -39,7 +39,7 @@ extern "C" {
 #endif
 
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__
-#include "audioreader.hpp"  // for AudioReaderImpl
+#include "audioreader.hpp"  // for AudioReaderImpl, InvalidAudioException
 #endif
 
 
@@ -282,7 +282,7 @@ WavpackOpenFile::Impl::Impl(const std::string &filename)
 		if (error)
 		{
 			error_msg = std::string(error);
-			free(error);
+			::free(error);
 			error = nullptr;
 		}
 
@@ -375,14 +375,15 @@ bool WavpackOpenFile::Impl::channel_order() const
 {
 	const int num_channels = WavpackGetNumChannels(context_);
 
-	if (num_channels != 2)
-	{
-		std::ostringstream msg;
-		msg << "Expected 2 channels but got " << num_channels
-			<< ", input does not seem to be CDDA compliant (stereo)";
-
-		throw InvalidAudioException(msg.str());
-	}
+	// This is ensured by validate_cdda
+//	if (num_channels != 2)
+//	{
+//		std::ostringstream msg;
+//		msg << "Expected 2 channels but got " << num_channels
+//			<< ", input does not seem to be CDDA compliant (stereo)";
+//
+//		throw InvalidAudioException(msg.str());
+//	}
 
 	std::vector<unsigned char> identities(
 			static_cast<unsigned int>(num_channels + 1)); // +1 for \0

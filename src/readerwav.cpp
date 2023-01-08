@@ -8,7 +8,7 @@
 #include "readerwav.hpp"
 #endif
 #ifndef __LIBARCSDEC_READERWAV_DETAILS_HPP__
-#include "readerwav_details.hpp"
+#include "readerwav_details.hpp" // for WavAudioHandler, RIFFWAV_PCM_CDDA_t
 #endif
 
 extern "C" {
@@ -30,15 +30,25 @@ extern "C" {
 #include <utility>    // for make_unique, move
 #include <vector>     // for vector
 
+#ifndef __LIBARCSTK_CALCULATE_HPP__
+#include <arcstk/calculate.hpp> // for AudioSize, SampleInputIterator
+#endif
+#ifndef __LIBARCSTK_IDENTIFIER_HPP__
+#include <arcstk/identifier.hpp> // for CDDA
+#endif
 #ifndef __LIBARCSTK_LOGGING_HPP__
 #include <arcstk/logging.hpp> // for ARCS_LOG, _ERROR, _WARNING, _INFO, _DEBUG
 #endif
 
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__
-#include "audioreader.hpp"  // for AudioReaderImpl
+#include "audioreader.hpp"  // for AudioReaderImpl, LittleEndianBytes,
+							// BigEndianBytes
+#endif
+#ifndef __LIBARCSDEC_SAMPLEPROC_HPP__
+#include "sampleproc.hpp"   // for BLOCKSIZE
 #endif
 #ifndef __LIBARCSDEC_VERSION_HPP__
-#include "version.hpp"  // for LIBARCSDEC_NAME
+#include "version.hpp"      // for LIBARCSDEC_NAME
 #endif
 
 

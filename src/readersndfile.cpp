@@ -8,7 +8,7 @@
 #include "readersndfile.hpp"
 #endif
 #ifndef __LIBARCSDEC_READERSNDFILE_DETAILS_HPP__
-#include "readersndfile_details.hpp"
+#include "readersndfile_details.hpp" // for LibsndfileAudioReaderImpl
 #endif
 
 #include <cstdint>  // for int16_t, unit32_t, uint64_t
@@ -19,7 +19,7 @@
 #include <utility>  // for make_unique, move
 #include <vector>   // for vector
 
-#include <sndfile.hh>
+#include <sndfile.hh>  // for SndfileHandle, SFM_READ, SF_FORMAT_PCM_16
 
 #ifndef __LIBARCSTK_CALCULATE_HPP__
 #include <arcstk/calculate.hpp>  // for AudioSize
@@ -32,7 +32,7 @@
 #endif
 
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__
-#include "audioreader.hpp"       // for AudioReaderImpl
+#include "audioreader.hpp"       // for AudioReaderImpl, InvalidAudioException
 #endif
 
 

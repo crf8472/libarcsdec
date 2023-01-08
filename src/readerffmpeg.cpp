@@ -12,8 +12,10 @@
 #endif
 
 #include <algorithm>  // for remove
+#include <cerrno>     // for EAGAIN
 #include <climits>    // for CHAR_BIT
-#include <cstdlib>    // for abs, size_t
+#include <cstdarg>    // for va_list
+#include <cstdlib>    // for size_t, abs
 #include <functional> // for function, bind, placeholders
 #include <memory>     // for unique_ptr, make_unique
 #include <new>        // for bad_alloc
@@ -29,7 +31,7 @@ extern "C"
 {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
-#include <libavformat/version.h>
+#include <libavformat/version.h>   // for LIBAVFORMAT_VERSION_INT
 #include <libavutil/avutil.h>
 }
 
@@ -38,6 +40,10 @@ extern "C"
 #endif
 #ifndef __LIBARCSTK_LOGGING_HPP__
 #include <arcstk/logging.hpp>   // for ARCS_LOG, _ERROR, _WARNING, _INFO, _DEBUG
+#endif
+
+#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
+#include "audioreader.hpp"      // for AudioReaderImpl, InvalidAudioException
 #endif
 
 
