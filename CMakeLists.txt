@@ -382,7 +382,7 @@ if (TARGET libarcstk::libarcstk ) ## from PARENT, submodule or system
 	target_link_libraries (${PROJECT_NAME} PRIVATE libarcstk::libarcstk )
 else()
 
-	message (FATAL
+	message (FATAL_ERROR
 		"libarcstk is not present, neither system-wide nor as a submodule" )
 endif()
 
@@ -404,22 +404,7 @@ list (APPEND PKG_REQUIRE_ARRAY "libcue >= 2.0.0" )
 
 target_sources (${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/parsercue.cpp )
 target_include_directories (${PROJECT_NAME} PRIVATE ${libcue_INCLUDE_DIRS} )
-target_link_libraries (${PROJECT_NAME} PUBLIC ${libcue_LIBRARIES} )
-
-
-## --- Optional: Add CDRDAO/TOC (requires libcdio, default: OFF)
-
-if (WITH_LIBCDIO )
-
-	message (STATUS "Build with cdrdao/toc reading capability" )
-
-	find_package (libcdio 2.0.0 REQUIRED )
-	list (APPEND PKG_REQUIRE_ARRAY "libcdio >= 2.0.0" )
-
-	target_sources (${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/parsertoc.cpp )
-	target_include_directories (${PROJECT_NAME} PRIVATE ${libcdio_INCLUDE_DIRS} )
-	target_link_libraries (${PROJECT_NAME} PUBLIC ${libcdio_LIBRARIES} )
-endif()
+target_link_libraries (${PROJECT_NAME} PRIVATE ${libcue_LIBRARIES} )
 
 
 ## --- Optional: Add FLAC (requires FLAC++, default: ON)
@@ -431,9 +416,19 @@ if (WITH_FLAC )
 	find_package (FLAC 1.3.1 REQUIRED ) ## checks libFLAC as well as libFLAC++
 	list (APPEND PKG_REQUIRE_ARRAY "flac++ >= 1.3.1" )
 
-	target_sources (${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/readerflac.cpp )
-	target_include_directories (${PROJECT_NAME} PRIVATE ${FLAC_INCLUDE_DIRS} )
-	target_link_libraries (${PROJECT_NAME} PUBLIC ${FLAC_LIBRARIES} )
+	target_sources (${PROJECT_NAME}
+		PRIVATE ${PROJECT_SOURCE_DIR}/readerflac.cpp )
+
+	if (TARGET FLAC::FLAC++ )
+		## found by flac's cmake config
+		target_link_libraries (${PROJECT_NAME} PRIVATE FLAC::FLAC++ )
+	else()
+		## found by cmake/Modules/FindFLAC
+		target_include_directories (${PROJECT_NAME}
+			PRIVATE ${LIBFLACPP_INCLUDE_DIRS} )
+		target_link_libraries (${PROJECT_NAME}
+			PRIVATE ${LIBFLACPP_LIBRARIES} )
+	endif()
 
 else (WITH_FLAC)
 
@@ -450,8 +445,10 @@ if (WITH_WAVPACK)
 	find_package (libwavpack 5.0.0 REQUIRED )
 	list (APPEND PKG_REQUIRE_ARRAY "wavpack >= 5.0.0" )
 
-	target_sources (${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/readerwvpk.cpp )
-	target_include_directories (${PROJECT_NAME} PRIVATE ${libwavpack_INCLUDE_DIRS} )
+	target_sources (${PROJECT_NAME}
+		PRIVATE ${PROJECT_SOURCE_DIR}/readerwvpk.cpp )
+	target_include_directories (${PROJECT_NAME}
+		PRIVATE ${libwavpack_INCLUDE_DIRS} )
 	target_link_libraries (${PROJECT_NAME} PUBLIC ${libwavpack_LIBRARIES} )
 
 else (WITH_WAVPACK)
@@ -553,6 +550,23 @@ else (WITH_LIBSNDFILE )
 
 	message (STATUS "Build without libsndfile support" )
 endif (WITH_LIBSNDFILE )
+
+
+## --- Optional: Add CDRDAO/TOC (requires libcdio, default: OFF)
+
+if (WITH_LIBCDIO )
+
+	message (STATUS "Build with cdrdao/toc reading capability" )
+
+	find_package (libcdio 2.0.0 REQUIRED )
+	list (APPEND PKG_REQUIRE_ARRAY "libcdio >= 2.0.0" )
+
+	target_sources (${PROJECT_NAME}
+		PRIVATE ${PROJECT_SOURCE_DIR}/parsertoc.cpp )
+	target_include_directories (${PROJECT_NAME}
+		PRIVATE ${libcdio_INCLUDE_DIRS} )
+	target_link_libraries (${PROJECT_NAME} PUBLIC ${libcdio_LIBRARIES} )
+endif()
 
 
 
