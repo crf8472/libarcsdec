@@ -57,8 +57,9 @@ message (STATUS "Build type: ${CMAKE_BUILD_TYPE}" )
 set_property (DIRECTORY APPEND
 	PROPERTY CMAKE_CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/.git/index )
 
-
-set (CMAKE_CXX_EXTENSIONS OFF ) ## use -std=c++14 instead of std=gnu++14
+## Tell find_package to first try locating libarcstk via system-installed
+## .config file instead of project's FindLibarcstk.cmake module
+set (CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE ) ## since CMake 3.15
 
 ## Search path for cmake modules
 set (CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules" )
@@ -369,10 +370,6 @@ if (WITH_SUBMODULES )
 	## and target_link_libraries().
 
 else()
-
-	## Tell find_package to first try locating libarcstk via system-installed
-	## .config file instead of project's FindLibarcstk.cmake module
-	set (CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE ) ## since CMake 3.15
 
 	find_package (libarcstk 0.1.0 REQUIRED )
 
