@@ -57,6 +57,7 @@ message (STATUS "Build type: ${CMAKE_BUILD_TYPE}" )
 set_property (DIRECTORY APPEND
 	PROPERTY CMAKE_CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/.git/index )
 
+
 set (CMAKE_CXX_EXTENSIONS OFF ) ## use -std=c++14 instead of std=gnu++14
 
 ## Search path for cmake modules
@@ -180,7 +181,7 @@ add_library (${PROJECT_NAME} SHARED
 	"${PROJECT_BUILD_SOURCE_DIR}/version.cpp" )
 
 if (HAS_PARENT )
-	## Make projects includes available to PARENT
+	## Make project's includes available to PARENT
 	target_include_directories (${PROJECT_NAME}
 		INTERFACE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
 	)
@@ -207,6 +208,8 @@ set_target_properties (${PROJECT_NAME} PROPERTIES
 	SOVERSION      "${PROJECT_VERSION_STRING_WITHOUT_SUFFIX}" )
 
 add_dependencies (${PROJECT_NAME} libarcsdec_link_to_headers )
+
+
 
 ## --- Compiler Specific Settings
 
