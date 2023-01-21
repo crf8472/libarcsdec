@@ -6,10 +6,6 @@ cmake_minimum_required (VERSION 3.9.6 )
 ## Required for specifying the project version along with the name in project()
 cmake_policy (SET CMP0048 NEW )
 
-## Support new IN_LIST if() operator
-## Required by FindDoxygen.cmake
-cmake_policy (SET CMP0057 NEW )
-
 
 project (libarcsdec VERSION 0.1.0 LANGUAGES CXX )
 
@@ -49,7 +45,6 @@ if (NOT CMAKE_BUILD_TYPE )
 		CACHE STRING "Choose the type of build (e.g. Debug or Release)" FORCE )
 
 	message (STATUS "No build type specified, set to ${CMAKE_BUILD_TYPE}" )
-
 endif (NOT CMAKE_BUILD_TYPE )
 
 message (STATUS "Build type: ${CMAKE_BUILD_TYPE}" )
@@ -62,8 +57,6 @@ message (STATUS "Build type: ${CMAKE_BUILD_TYPE}" )
 set_property (DIRECTORY APPEND
 	PROPERTY CMAKE_CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/.git/index )
 
-set (CMAKE_CXX_STANDARD 14 )
-set (CMAKE_CXX_STANDARD_REQUIRED ON )
 set (CMAKE_CXX_EXTENSIONS OFF ) ## use -std=c++14 instead of std=gnu++14
 
 ## Search path for cmake modules
@@ -75,13 +68,13 @@ message (STATUS "Changed CMAKE_MODULE_PATH to: ${CMAKE_MODULE_PATH}" )
 ## --- Project Directory Layout
 
 ## "Root directory for out-of-source build"
-set (PROJECT_BINARY_DIR       "${CMAKE_CURRENT_SOURCE_DIR}/build" )
-
-## "Root directory for public/exported headers"
-set (PROJECT_INCLUDE_DIR      "${CMAKE_CURRENT_SOURCE_DIR}/include" )
+set (PROJECT_BINARY_DIR       "${CMAKE_CURRENT_BINARY_DIR}" )
 
 ## "Root directory for sources"
 set (PROJECT_SOURCE_DIR       "${CMAKE_CURRENT_SOURCE_DIR}/src" )
+
+## "Root directory for public/exported headers"
+set (PROJECT_INCLUDE_DIR      "${PROJECT_BINARY_DIR}/include/arcsdec" )
 
 ## "Target directory for non-cmake logs"
 set (PROJECT_LOG_DIR          "${PROJECT_BINARY_DIR}/log" )
@@ -94,9 +87,25 @@ set (PROJECT_INSTALL_INCLUDES_SUBDIR "include/arcsdec" )
 
 
 
-## --- Create Log directory
+## --- Create build-tree directories
 
-file (MAKE_DIRECTORY ${PROJECT_LOG_DIR} )
+## Log directory
+
+add_custom_target (libarcsdec_create_log_dir ALL
+	COMMAND ${CMAKE_COMMAND} -E make_directory ${PROJECT_LOG_DIR} )
+
+add_custom_target (libarcsdec_create_include_dir
+	COMMAND ${CMAKE_COMMAND} -E make_directory ${PROJECT_BINARY_DIR}/include )
+
+## include directory + link
+
+## Create build-tree include directory (symlink)
+## This is useful for finding the includes when used as a subproject.
+add_custom_target (libarcsdec_link_to_headers ALL
+	COMMAND ${CMAKE_COMMAND} -E create_symlink
+	${CMAKE_CURRENT_SOURCE_DIR}/include ${PROJECT_INCLUDE_DIR} )
+
+add_dependencies (libarcsdec_link_to_headers libarcsdec_create_include_dir )
 
 
 
@@ -161,6 +170,7 @@ add_library (${PROJECT_NAME} SHARED
 	"${PROJECT_SOURCE_DIR}/descriptors.cpp"
 	"${PROJECT_SOURCE_DIR}/metaparser.cpp"
 	## parsercue.cpp     is required, depends on libcue
+	## parsertoc.cpp     is optional and default OFF, depends on libcdio
 	## readerffmpeg.cpp  is optional and default ON,  depends on parts of ffmpeg
 	## readerflac.cpp    is optional and default ON,  depends on FLAC
 	## readersndfile.cpp is optional and default OFF, depends on libsndfile
@@ -168,6 +178,11 @@ add_library (${PROJECT_NAME} SHARED
 	## readerwvpk.cpp    is optional and default ON,  depends on libwavpack
 	"${PROJECT_SOURCE_DIR}/sampleproc.cpp"
 	"${PROJECT_BUILD_SOURCE_DIR}/version.cpp" )
+
+if (HAS_PARENT )
+	## Provide a namespaced target also when added by add_subdirectory
+	add_library (${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME} )
+endif()
 
 target_include_directories (${PROJECT_NAME}
 	PUBLIC
@@ -177,7 +192,9 @@ target_include_directories (${PROJECT_NAME}
 		"${PROJECT_BUILD_SOURCE_DIR}" )
 
 set_target_properties (${PROJECT_NAME} PROPERTIES
-	## CXX_STANDARD is already set globally
+	CXX_STANDARD   14
+	CXX_STANDARD_REQUIRED ON
+	CXX_EXTENSIONS OFF ## use -std=c++14 instead of std=gnu++14
 	PUBLIC_HEADER  "${INTERFACE_HEADERS}"
 	PREFIX         "" ## No 'lib' prefix in soname, PROJECT_NAME is prefixed
 	VERSION        "${PROJECT_VERSION_STRING_WITHOUT_SUFFIX}"
@@ -290,7 +307,7 @@ macro (add_cxx_flags_optimize )
 	message (STATUS "Build with platform specific optimization")
 
 	target_compile_options (${PROJECT_NAME}
-			PUBLIC ${PROJECT_CXX_FLAGS_OPTIMIZE} )
+			PRIVATE ${PROJECT_CXX_FLAGS_OPTIMIZE} )
 endmacro()
 
 
@@ -340,13 +357,6 @@ if (WITH_SUBMODULES )
 		endif()
 
 		add_subdirectory (${SUBMODULES_DIR}/libarcstk )
-
-		target_include_directories (${PROJECT_NAME}
-			PRIVATE $<BUILD_INTERFACE:${SUBMODULES_DIR}/libarcstk/include> )
-
-		target_link_libraries (${PROJECT_NAME} PRIVATE libarcstk )
-
-		add_dependencies (${PROJECT_NAME} libarcstk )
 	endif()
 
 	## If compiled by a PARENT, the PARENT has to care about the depencies!
@@ -354,9 +364,17 @@ else()
 
 	find_package (libarcstk 0.1.0 REQUIRED )
 	list (APPEND PKG_REQUIRE_ARRAY "libarcstk >= 0.1.0" )
-
-	target_link_libraries (${PROJECT_NAME} PRIVATE libarcstk::libarcstk )
 endif (WITH_SUBMODULES )
+
+
+if (TARGET libarcstk::libarcstk ) ## from PARENT, submodule or system
+
+	target_link_libraries (${PROJECT_NAME} INTERFACE libarcstk::libarcstk )
+else()
+
+	message (FATAL
+		"libarcstk is not present, neither system-wide nor as a submodule" )
+endif()
 
 
 ## --- Configure optional features
@@ -377,6 +395,21 @@ list (APPEND PKG_REQUIRE_ARRAY "libcue >= 2.0.0" )
 target_sources (${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/parsercue.cpp )
 target_include_directories (${PROJECT_NAME} PRIVATE ${libcue_INCLUDE_DIRS} )
 target_link_libraries (${PROJECT_NAME} PUBLIC ${libcue_LIBRARIES} )
+
+
+## --- Optional: Add CDRDAO/TOC (requires libcdio, default: OFF)
+
+if (WITH_LIBCDIO )
+
+	message (STATUS "Build with cdrdao/toc reading capability" )
+
+	find_package (libcdio 2.0.0 REQUIRED )
+	list (APPEND PKG_REQUIRE_ARRAY "libcdio >= 2.0.0" )
+
+	target_sources (${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/parsertoc.cpp )
+	target_include_directories (${PROJECT_NAME} PRIVATE ${libcdio_INCLUDE_DIRS} )
+	target_link_libraries (${PROJECT_NAME} PUBLIC ${libcdio_LIBRARIES} )
+endif()
 
 
 ## --- Optional: Add FLAC (requires FLAC++, default: ON)
@@ -513,21 +546,6 @@ endif (WITH_LIBSNDFILE )
 
 
 
-## --- If sourced by a parent CMakeLists.txt do some extra settings
-
-if (HAS_PARENT )
-
-	message (STATUS "libarcsdec is compiled by a parent project" )
-
-	## Use this in the PARENT to check whether add_subdirectory was executed
-	set (LIBARCSDEC_ADDED  TRUE  PARENT_SCOPE )
-else()
-
-	message (STATUS "libarcsdec is compiled without parent project" )
-endif()
-
-
-
 ## --- Install binary and exported header files
 
 if (NOT SKIP_INSTALL_ALL )
@@ -648,10 +666,10 @@ if (IWYU )
 
 	if (IWYU_BINARY )
 
-		message (STATUS "Program include-what-you-use found: ${IWYU_BINARY}" )
-
 		## Set for all subsequent targets
 		set (CMAKE_CXX_INCLUDE_WHAT_YOU_USE ${IWYU_BINARY} )
+
+		message (STATUS "Program include-what-you-use found: ${IWYU_BINARY}" )
 
 	else (IWYU_BINARY )
 
