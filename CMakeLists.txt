@@ -101,7 +101,7 @@ add_custom_target (libarcsdec_create_include_dir
 
 ## Create build-tree include directory (symlink)
 ## This is useful for finding the includes when used as a subproject.
-add_custom_target (libarcsdec_link_to_headers ALL
+add_custom_target (libarcsdec_link_to_headers
 	COMMAND ${CMAKE_COMMAND} -E create_symlink
 	${CMAKE_CURRENT_SOURCE_DIR}/include ${PROJECT_INCLUDE_DIR} )
 
@@ -180,6 +180,11 @@ add_library (${PROJECT_NAME} SHARED
 	"${PROJECT_BUILD_SOURCE_DIR}/version.cpp" )
 
 if (HAS_PARENT )
+	## Make projects includes available to PARENT
+	target_include_directories (${PROJECT_NAME}
+		INTERFACE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
+	)
+
 	## Provide a namespaced target also when added by add_subdirectory
 	add_library (${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME} )
 endif()
@@ -189,7 +194,8 @@ target_include_directories (${PROJECT_NAME}
 		$<BUILD_INTERFACE:${PROJECT_INCLUDE_DIR}>
 		$<INSTALL_INTERFACE:${PROJECT_INSTALL_INCLUDES_SUBDIR}>
 	PRIVATE
-		"${PROJECT_BUILD_SOURCE_DIR}" )
+		"${PROJECT_BUILD_SOURCE_DIR}" ## for generated headers
+	)
 
 set_target_properties (${PROJECT_NAME} PROPERTIES
 	CXX_STANDARD   14
@@ -200,6 +206,7 @@ set_target_properties (${PROJECT_NAME} PROPERTIES
 	VERSION        "${PROJECT_VERSION_STRING_WITHOUT_SUFFIX}"
 	SOVERSION      "${PROJECT_VERSION_STRING_WITHOUT_SUFFIX}" )
 
+add_dependencies (${PROJECT_NAME} libarcsdec_link_to_headers )
 
 ## --- Compiler Specific Settings
 
@@ -339,10 +346,6 @@ message (STATUS "Compile flags: ${PROJECT_CXX_FLAGS}" )
 
 set (PKG_REQUIRE_ARRAY )
 
-## Tell find_package to first try locating libarcstk via system-installed
-## .config file instead of project's FindLibarcstk.cmake module
-#set (CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE ) ## since CMake 3.15
-
 ## --- Required: libarcstk
 
 if (WITH_SUBMODULES )
@@ -359,17 +362,24 @@ if (WITH_SUBMODULES )
 		add_subdirectory (${SUBMODULES_DIR}/libarcstk )
 	endif()
 
-	## If compiled by a PARENT, the PARENT has to care about the depencies!
+	## If PARENT is present, do nothing. PARENT has just to add_subdirectory()
+	## and target_link_libraries().
+
 else()
 
+	## Tell find_package to first try locating libarcstk via system-installed
+	## .config file instead of project's FindLibarcstk.cmake module
+	set (CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE ) ## since CMake 3.15
+
 	find_package (libarcstk 0.1.0 REQUIRED )
+
 	list (APPEND PKG_REQUIRE_ARRAY "libarcstk >= 0.1.0" )
 endif (WITH_SUBMODULES )
 
 
 if (TARGET libarcstk::libarcstk ) ## from PARENT, submodule or system
 
-	target_link_libraries (${PROJECT_NAME} INTERFACE libarcstk::libarcstk )
+	target_link_libraries (${PROJECT_NAME} PRIVATE libarcstk::libarcstk )
 else()
 
 	message (FATAL
