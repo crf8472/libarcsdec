@@ -80,7 +80,7 @@ struct Free_Cd final
 
 
 /**
- * \brief A unique_ptr for Cd using FreeCd as a custom deleter.
+ * \brief A unique_ptr for Cd using Free_Cd as a custom deleter.
  */
 using CdPtr = std::unique_ptr<::Cd, Free_Cd>;
 
