@@ -5,7 +5,7 @@
 /**
  * \file
  *
- * \brief Internal APIs for libcue-based CUESheet reader
+ * \brief Internal APIs for libcue-based CueSheet reader
  */
 
 #ifndef __LIBARCSDEC_PARSERCUE_DETAILS_HPP__
@@ -45,7 +45,7 @@ using arcstk::TOC;
 
 
 /**
- * \internal \defgroup parserCueImpl Implementation details of CUESheet parsing
+ * \internal \defgroup parserCueImpl Implementation details of CueSheet parsing
  *
  * \ingroup parsercue
  *
@@ -62,7 +62,7 @@ using lba_type = int32_t;
 
 
 /**
- * \brief Type for raw CUE data.
+ * \brief Type for raw Cue data.
  */
 using CueInfo = std::tuple<uint16_t, // track count
 	std::vector<lba_type>,           // offsets
@@ -73,7 +73,7 @@ using CueInfo = std::tuple<uint16_t, // track count
 /**
  * \brief Functor for freeing Cd* instances.
  */
-struct FreeCd final
+struct Free_Cd final
 {
 	void operator()(::Cd* cd) const;
 };
@@ -82,11 +82,20 @@ struct FreeCd final
 /**
  * \brief A unique_ptr for Cd using FreeCd as a custom deleter.
  */
-using CdPtr = std::unique_ptr<::Cd, FreeCd>;
+using CdPtr = std::unique_ptr<::Cd, Free_Cd>;
 
 
 /**
- * \brief Represents an opened CUEsheet file.
+ * \brief Construction functor for CdPtr instances.
+ */
+struct Make_CdPtr final
+{
+	CdPtr operator()(const std::string &filename) const;
+};
+
+
+/**
+ * \brief Represents an opened Cuesheet file.
  *
  * Instances of this class are non-copyable but movable.
  */
@@ -95,12 +104,12 @@ class CueOpenFile final
 public:
 
 	/**
-	 * \brief Open CUEsheet with the given name.
+	 * \brief Open Cuesheet with the given name.
 	 *
-	 * \param[in] filename The CUEsheet file to read
+	 * \param[in] filename The Cuesheet file to read
 	 *
-	 * \throw FileReadException      If the CUESheet file could not be read
-	 * \throw MetadataParseException If the CUE data could not be parsed
+	 * \throw FileReadException      If the CueSheet file could not be read
+	 * \throw MetadataParseException If the Cue data could not be parsed
 	 */
 	explicit CueOpenFile(const std::string &filename);
 
@@ -112,7 +121,7 @@ public:
 	 *
 	 * \return CueInfo representing the TOC information
 	 */
-	CueInfo parse_info();
+	CueInfo info() const;
 
 private:
 
@@ -124,24 +133,22 @@ private:
 
 
 /**
- * \brief Implementation for libcue-based reading of CUESheets.
+ * \brief Implementation for libcue-based reading of CueSheets.
  */
 class CueParserImpl final : public MetadataParserImpl
 {
-public:
+private:
 
 	/**
-	 * \brief Return CUE data.
+	 * \brief Return Cue data.
 	 *
 	 * \param[in] filename Name of the file to read.
 	 *
-	 * \return The CueInfo of the parsed CUEsheet
+	 * \return The CueInfo of the parsed Cuesheet
 	 *
 	 * \throw FileReadException If the file could not be read
 	 */
-	CueInfo parse_worker(const std::string &filename);
-
-private:
+	CueInfo parse_worker(const std::string &filename) const;
 
 	std::unique_ptr<TOC> do_parse(const std::string &filename) override;
 

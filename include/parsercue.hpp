@@ -1,7 +1,7 @@
 /**
  * \file
  *
- * \brief Parser for CUE sheets
+ * \brief Parser for Cue sheets
  */
 
 
@@ -25,18 +25,18 @@ inline namespace v_1_0_0
 {
 
 /**
- * \internal \defgroup parsercue Metadata: CUESheet
+ * \internal \defgroup parsercue Metadata: CueSheet
  *
- * \brief A MetadataParser for CUESheet files
+ * \brief A MetadataParser for CueSheet files
  *
  * @{
  */
 
 
 /**
- * \brief Libcue-based parser for CUEsheets.
+ * \brief Libcue-based parser for Cuesheets.
  */
-class DescriptorCUE : public FileReaderDescriptor
+class DescriptorCue : public FileReaderDescriptor
 {
 
 public:
@@ -44,26 +44,26 @@ public:
 	/**
 	 * \brief Constructor.
 	 */
-	DescriptorCUE()
+	DescriptorCue()
 		: FileReaderDescriptor { { "cue" } }
 	{ /* empty */ }
 
 	/**
 	 * \brief Virtual default destructor.
 	 */
-	virtual ~DescriptorCUE() noexcept override;
+	virtual ~DescriptorCue() noexcept override;
 
 	/**
-	 * \brief Returns "CUESheet".
+	 * \brief Returns "CueSheet".
 	 *
-	 * \return "CUESheet"
+	 * \return "CueSheet"
 	 */
 	std::string do_name() const override;
 
 	LibInfo do_libraries() const override;
 
 	/**
-	 * \brief Always returns TRUE since CUESheets cannot be recognized by a
+	 * \brief Always returns TRUE since CueSheets cannot be recognized by a
 	 * certain byte sequence in a certain offset.
 	 *
 	 * \param[in] bytes  (ignored)
