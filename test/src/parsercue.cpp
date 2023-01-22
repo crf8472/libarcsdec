@@ -123,6 +123,25 @@ TEST_CASE ("CueParserImpl", "[parsercue]" )
 		CHECK ( dynamic_cast<const DescriptorCue*>(p) != nullptr );
 	}
 
-	// Parse some files
+	SECTION ("Parses a syntactically intact input correctly")
+	{
+		using arcsdec::details::libcue::CueParserImpl;
+		auto parser = CueParserImpl{};
+		const auto cue = parser.parse("test01_ok.cue");
+
+		CHECK ( cue->total_tracks() == 2 );
+
+		CHECK ( cue->filename(1) == "john_doe_album.wav" );
+		CHECK ( cue->filename(2) == "john_doe_album.wav" );
+
+		CHECK ( cue->offset(1) == 150 );
+		CHECK ( cue->offset(2) == 25072 );
+
+		CHECK ( cue->parsed_length(1) == 24922 );
+		CHECK ( cue->parsed_length(2) == 0 ); // OK since AudioSize is unknown
+
+		CHECK ( cue->leadout() == 0 ); // since last track (2) has unkown length
+		CHECK ( !cue->complete() ); // since leadout is 0
+	}
 }
 
