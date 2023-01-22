@@ -10,10 +10,7 @@ cmake_policy (SET CMP0003 NEW )
 cmake_policy (SET CMP0060 NEW )
 
 
-## Global settings
-
 set (TEST_SOURCE_DIR "src" )
-set (MAIN_TEST_CPP   "${TEST_SOURCE_DIR}/main.test.cpp" )
 
 
 ## Define testsuites
@@ -22,10 +19,12 @@ set (TEST_SETS )
 list (APPEND TEST_SETS audioreader  )
 #list (APPEND TEST_SETS calculators  ) ## TODO requires Mock for Calculation
 list (APPEND TEST_SETS descriptors  )
+list (APPEND TEST_SETS parsercue    )
 list (APPEND TEST_SETS readerffmpeg )
 list (APPEND TEST_SETS readerflac   )
 list (APPEND TEST_SETS readerwav    )
 list (APPEND TEST_SETS readerwvpk   )
+#list (APPEND TEST_SETS readersndfile   ) ## TODO
 
 
 ## Adjust compile options for tests.
