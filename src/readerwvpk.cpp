@@ -57,6 +57,53 @@ using arcstk::CDDA;
 using arcstk::InterleavedSamples;
 
 
+void Free_WavpackContext::operator()(::WavpackContext* ctx) const
+{
+	if (ctx)
+	{
+		ctx = ::WavpackCloseFile(ctx);
+
+		if (!ctx)
+		{
+			ARCS_LOG_DEBUG << "Audio file closed.";
+		} else
+		{
+			ARCS_LOG_ERROR <<
+				"WavpackCloseFile could not close audio file. Possible leak!";
+		}
+	}
+}
+
+
+ContextPtr Make_ContextPtr::operator()(const std::string &filename) const
+{
+	int   flags = OPEN_WVC | OPEN_NO_CHECKSUM ;
+	char *error = nullptr;
+
+	ContextPtr ctxp {::WavpackOpenFileInput(filename.c_str(), error, flags, 0)};
+
+	if (!ctxp)
+	{
+		ARCS_LOG_ERROR << "Wavpack file could not be opened";
+
+		std::string error_msg;
+		if (error)
+		{
+			error_msg = std::string(error);
+			::free(error);
+			error = nullptr;
+		}
+
+		throw LibwavpackException("NULL", "WavpackOpenFileInput", error_msg);
+	}
+
+	return ctxp;
+}
+
+
+// LibwavpackException
+
+
 LibwavpackException::LibwavpackException(const std::string &value,
 		const std::string &name, const std::string &error_msg)
 	: msg_ {}
@@ -153,14 +200,6 @@ public:
 	int64_t samples_per_second() const;
 
 	/**
-	 * \brief Returns the bytes per sample (and channel, hence it is 2 for
-	 * CDDA).
-	 *
-	 * \return Number of bytes per sample
-	 */
-	int bytes_per_sample() const;
-
-	/**
 	 * \brief Returns the total number of 32bit PCM samples this file contains.
 	 *
 	 * \return Total number of 32bit PCM samples in this file
@@ -217,7 +256,7 @@ private:
 	/**
 	 * \brief Internal WavpackContext.
 	 */
-	WavpackContext *context_;
+	ContextPtr context_;
 };
 
 
@@ -230,12 +269,6 @@ WAVPACK_CDDA_t::~WAVPACK_CDDA_t() noexcept = default;
 bool WAVPACK_CDDA_t::lossless() const
 {
 	return true; // Always require losless compression
-}
-
-
-int WAVPACK_CDDA_t::bytes_per_sample() const
-{
-	return 2; // Always require 16bit per sample and channel
 }
 
 
@@ -267,99 +300,65 @@ int WAVPACK_CDDA_t::at_most_version() const
 
 
 WavpackOpenFile::Impl::Impl(const std::string &filename)
-	: context_()
+	: context_ { nullptr }
 {
-	int   flags = OPEN_WVC | OPEN_NO_CHECKSUM ;
+	static const Make_ContextPtr make_context;
 
-	char *error = nullptr;
-	context_ = WavpackOpenFileInput(filename.c_str(), error, flags, 0);
-
-	if (!context_)
-	{
-		ARCS_LOG_ERROR << "Wavpack file could not be opened";
-
-		std::string error_msg;
-		if (error)
-		{
-			error_msg = std::string(error);
-			::free(error);
-			error = nullptr;
-		}
-
-		throw LibwavpackException("NULL", "WavpackOpenFileInput", error_msg);
-	}
+	context_ = std::move(make_context(filename));
 }
 
 
 WavpackOpenFile::Impl::~Impl() noexcept
 {
-	if (context_)
-	{
-		context_ = WavpackCloseFile(context_);
-
-		if (!context_)
-		{
-			ARCS_LOG_DEBUG << "Audio file closed.";
-		} else
-		{
-			ARCS_LOG_ERROR <<
-				"WavpackCloseFile could not close audio file. Possible leak!";
-		}
-	}
+	// empty
 }
 
 
 bool WavpackOpenFile::Impl::is_lossless() const
 {
-	return MODE_LOSSLESS & WavpackGetMode(context_);
+	return MODE_LOSSLESS & ::WavpackGetMode(context_.get());
 }
 
 
 bool WavpackOpenFile::Impl::has_wav_format() const
 {
-	return WP_FORMAT_WAV == WavpackGetFileFormat(context_);
+	return WP_FORMAT_WAV == ::WavpackGetFileFormat(context_.get());
 }
 
 
 bool WavpackOpenFile::Impl::has_float_samples() const
 {
-	return MODE_FLOAT & WavpackGetMode(context_);
+	return MODE_FLOAT & ::WavpackGetMode(context_.get());
 }
 
 
 uint8_t WavpackOpenFile::Impl::version() const
 {
-	return WavpackGetVersion(context_);
+	return ::WavpackGetVersion(context_.get());
 }
 
 
 int WavpackOpenFile::Impl::bits_per_sample() const
 {
-	return WavpackGetBitsPerSample(context_);
+	return ::WavpackGetBitsPerSample(context_.get());
 }
 
 
 int WavpackOpenFile::Impl::num_channels() const
 {
-	return WavpackGetNumChannels(context_);
+	return ::WavpackGetNumChannels(context_.get());
 }
 
 
 int64_t WavpackOpenFile::Impl::samples_per_second() const
 {
-	return WavpackGetSampleRate(context_);
-}
-
-
-int WavpackOpenFile::Impl::bytes_per_sample() const
-{
-	return WavpackGetBytesPerSample(context_);
+	return ::WavpackGetSampleRate(context_.get());
 }
 
 
 int64_t WavpackOpenFile::Impl::total_pcm_samples() const
 {
-	int64_t total_pcm_samples = WavpackGetNumSamples64(context_);
+	int64_t total_pcm_samples = ::WavpackGetNumSamples64(context_.get());
 
 	if (total_pcm_samples == -1)
 	{
@@ -373,22 +372,15 @@ int64_t WavpackOpenFile::Impl::total_pcm_samples() const
 
 bool WavpackOpenFile::Impl::channel_order() const
 {
-	const int num_channels = WavpackGetNumChannels(context_);
+	const int num_channels = ::WavpackGetNumChannels(context_.get());
 
-	// This is ensured by validate_cdda
-//	if (num_channels != 2)
-//	{
-//		std::ostringstream msg;
-//		msg << "Expected 2 channels but got " << num_channels
-//			<< ", input does not seem to be CDDA compliant (stereo)";
-//
-//		throw InvalidAudioException(msg.str());
-//	}
+	// It is already ensured by validate_cdda that num_channels == 2.
+	// No retest required.
 
 	std::vector<unsigned char> identities(
 			static_cast<unsigned int>(num_channels + 1)); // +1 for \0
 
-	WavpackGetChannelIdentities(context_, identities.data());
+	::WavpackGetChannelIdentities(context_.get(), identities.data());
 
 	if (identities.empty() or identities.size() < 2)
 	{
@@ -416,7 +408,7 @@ bool WavpackOpenFile::Impl::channel_order() const
 int WavpackOpenFile::Impl::channel_mask() const
 {
 	// stereo == 3
-	return WavpackGetChannelMask(context_);
+	return ::WavpackGetChannelMask(context_.get());
 }
 
 
@@ -424,10 +416,10 @@ bool WavpackOpenFile::Impl::needs_channel_reorder() const
 {
 	// Channel layout of the core audio file
 
-	unsigned char* reorder_str = nullptr;
-	auto channel_layout = WavpackGetChannelLayout(context_, reorder_str);
+	unsigned char* reorder = nullptr;
+	auto channel_layout = ::WavpackGetChannelLayout(context_.get(), reorder);
 
-	if (!reorder_str)
+	if (!reorder)
 	{
 		return false;
 	}
@@ -444,7 +436,7 @@ bool WavpackOpenFile::Impl::needs_channel_reorder() const
 		<< channel_count;
 	ARCS_LOG_DEBUG << "Channel layout:  " << channel_layout
 		<< " (uint32_t))";
-	ARCS_LOG_DEBUG << "Channel reorder: " << reorder_str;
+	ARCS_LOG_DEBUG << "Channel reorder: " << reorder;
 
 	return true;
 }
@@ -470,8 +462,8 @@ int64_t WavpackOpenFile::Impl::read_pcm_samples(
 		throw std::invalid_argument(msg.str());
 	}
 
-	const auto samples_read = WavpackUnpackSamples(context_, &(buffer[0]),
-			pcm_samples_to_read);
+	const auto samples_read = ::WavpackUnpackSamples(context_.get(),
+			&(buffer[0]), pcm_samples_to_read);
 
 	ARCS_LOG_DEBUG << "    Read " << samples_read << " PCM samples (32 bit)";
 
@@ -483,7 +475,7 @@ int64_t WavpackOpenFile::Impl::read_pcm_samples(
 
 
 WavpackOpenFile::WavpackOpenFile(const std::string &filename)
-	: impl_(std::make_unique<WavpackOpenFile::Impl>(filename))
+	: impl_ { std::make_unique<WavpackOpenFile::Impl>(filename) }
 {
 	// empty
 }
@@ -534,12 +526,6 @@ int64_t WavpackOpenFile::samples_per_second() const
 }
 
 
-int WavpackOpenFile::bytes_per_sample() const
-{
-	return impl_->bytes_per_sample();
-}
-
-
 int64_t WavpackOpenFile::total_pcm_samples() const
 {
 	return impl_->total_pcm_samples();
@@ -577,8 +563,8 @@ int64_t WavpackOpenFile::read_pcm_samples(const int64_t pcm_samples_to_read,
 
 WavpackValidatingHandler::WavpackValidatingHandler(
 		std::unique_ptr<WAVPACK_CDDA_t> valid_values)
-	: DefaultValidator()
-	, valid_(std::move(valid_values))
+	: DefaultValidator {}
+	, valid_ { std::move(valid_values) }
 {
 	// empty
 }
@@ -665,14 +651,6 @@ bool WavpackValidatingHandler::validate_cdda(const WavpackOpenFile &file)
 		return false;
 	}
 
-	if (not this->assert_equals("Test: Bytes per sample",
-		file.bytes_per_sample(), valid_->bytes_per_sample(),
-		"Number of samples per second does not conform to CDDA"))
-	{
-		ARCS_LOG_ERROR << this->last_error();
-		return false;
-	}
-
 	return true;
 }
 
@@ -706,16 +684,6 @@ AudioValidator::codec_set_type WavpackValidatingHandler::do_codecs() const
 
 
 // WavpackAudioReaderImpl
-
-
-WavpackAudioReaderImpl::WavpackAudioReaderImpl()
-	: validate_handler_()
-{
-	// empty
-}
-
-
-WavpackAudioReaderImpl::~WavpackAudioReaderImpl() noexcept = default;
 
 
 std::unique_ptr<AudioSize> WavpackAudioReaderImpl::do_acquire_size(
@@ -773,9 +741,7 @@ void WavpackAudioReaderImpl::do_process_file(const std::string &filename)
 		using sample_t = int32_t;
 
 		InterleavedSamples<sample_t> sequence(file.channel_order());
-
-		std::vector<sample_t> buffer;
-
+		std::vector<sample_t>        buffer;
 		buffer.resize(this->samples_per_read());
 
 		// Request Half the Number of Samples in a Block in one Read.

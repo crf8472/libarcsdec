@@ -16,6 +16,10 @@
 #ifndef __LIBARCSDEC_READERWVPK_DETAILS_HPP__
 #define __LIBARCSDEC_READERWVPK_DETAILS_HPP__
 
+extern "C" {
+#include <wavpack/wavpack.h>
+}
+
 #include <cstdint>   // for uint8_t, int32_t, int64_t
 #include <exception> // for exception
 #include <memory>    // for unique_ptr
@@ -44,6 +48,31 @@ namespace wavpack
  *
  * @{
  */
+
+
+/**
+ * \brief Functor for freeing WavpackContext* instances.
+ */
+struct Free_WavpackContext final
+{
+	void operator()(::WavpackContext* ctx) const;
+};
+
+
+/**
+ * \brief A unique_ptr for WavpackContext using Free_WavpackContext as a
+ * custom deleter.
+ */
+using ContextPtr = std::unique_ptr<::WavpackContext, Free_WavpackContext>;
+
+
+/**
+ * \brief Construction functor for ContextPtr instances.
+ */
+struct Make_ContextPtr final
+{
+	ContextPtr operator()(const std::string &filename) const;
+};
 
 
 /**
@@ -92,15 +121,6 @@ public:
 	 * \return TRUE, since ARCS cannot be computed on lossly compressed files
 	 */
 	bool lossless() const;
-
-	/**
-	 * \brief Declare the required number of bytes per sample and channel.
-	 *
-	 * (For CDDA, this is 2 for 16 bit.)
-	 *
-	 * \return Require 2 bytes (for 16 bit).
-	 */
-	virtual int bytes_per_sample() const;
 
 	/**
 	 * \brief Declare whether WAV format is required.
@@ -215,14 +235,6 @@ public:
 	 * \return Number of samples per second
 	 */
 	int64_t samples_per_second() const;
-
-	/**
-	 * \brief Returns the bytes per sample (and channel, hence it is 2 for
-	 * CDDA).
-	 *
-	 * \return Number of bytes per sample
-	 */
-	int bytes_per_sample() const;
 
 	/**
 	 * \brief Returns the total number of 32bit PCM samples this file contains.
@@ -382,16 +394,6 @@ class WavpackAudioReaderImpl final : public AudioReaderImpl
 public:
 
 	/**
-	 * \brief Default constructor.
-	 */
-	WavpackAudioReaderImpl();
-
-	/**
-	 * \brief Default destructor.
-	 */
-	~WavpackAudioReaderImpl() noexcept final;
-
-	/**
 	 * \brief Register a validating handler.
 	 *
 	 * \param[in] v The validating handler to register
@@ -427,9 +429,7 @@ private:
 
 } // namespace wavpack
 } // namespace details
-
 } // namespace v_1_0_0
-
 } // namespace arcsdec
 
 #endif
