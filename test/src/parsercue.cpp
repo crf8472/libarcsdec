@@ -19,7 +19,6 @@ TEST_CASE ("DescriptorCue", "[parsercue]" )
 	using arcsdec::DescriptorCue;
 	using arcsdec::Format;
 	using arcsdec::Codec;
-	using arcsdec::details::libcue::CueParserImpl;
 
 	auto d = DescriptorCue{};
 
@@ -28,7 +27,7 @@ TEST_CASE ("DescriptorCue", "[parsercue]" )
 		CHECK ( "CueSheet" == d.name() );
 	}
 
-	SECTION ("Returns linked library correctly")
+	SECTION ("Returns linked libraries correctly")
 	{
 		const auto libs = d.libraries();
 
@@ -45,7 +44,7 @@ TEST_CASE ("DescriptorCue", "[parsercue]" )
 		// TODO Check for always true
 	}
 
-	SECTION ("Does not match any codec")
+	SECTION ("Does not match any codecs not accepted by this descriptor")
 	{
 		CHECK ( !d.accepts(Codec::UNKNOWN) );
 		CHECK ( !d.accepts(Codec::PCM_S16BE) );
@@ -62,9 +61,14 @@ TEST_CASE ("DescriptorCue", "[parsercue]" )
 		CHECK ( !d.accepts(Codec::ALAC) );
 	}
 
-	SECTION ("Returns no accepted codecs")
+	SECTION ("Returns accepted codecs correctly")
 	{
 		CHECK ( d.codecs() == std::set<Codec>{ } );
+	}
+
+	SECTION ("Returns no codecs that are not accepted")
+	{
+		CHECK ( d.codecs().size() == 0 );
 	}
 
 	SECTION ("Matches accepted formats correctly")
