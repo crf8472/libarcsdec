@@ -534,17 +534,25 @@ if (WITH_LIBSNDFILE )
 
 	message (STATUS "Build with libsndfile support" )
 
-	find_package (libsndfile 1.0.17 REQUIRED )
-	list (APPEND PKG_REQUIRE_ARRAY "libsndfile >= 1.0.17" )
-
 	target_sources (${PROJECT_NAME}
 		PRIVATE ${PROJECT_SOURCE_DIR}/readersndfile.cpp )
 
-	target_include_directories (${PROJECT_NAME}
-		PRIVATE ${libsndfile_INCLUDE_DIRS} )
+	find_package (SndFile 1.0.17 REQUIRED )
+	list (APPEND PKG_REQUIRE_ARRAY "libsndfile >= 1.0.17" )
 
-	target_link_libraries (${PROJECT_NAME}
-		PUBLIC ${libsndfile_LIBRARIES} )
+	if (TARGET SndFile::sndfile )
+		## found by libsndfile's cmake config
+		target_link_libraries (${PROJECT_NAME} PRIVATE SndFile::sndfile )
+	else()
+		## try to find by libarcsdec's find module
+		find_package (libsndfile 1.0.17 REQUIRED )
+
+		target_include_directories (${PROJECT_NAME}
+			PRIVATE ${libsndfile_INCLUDE_DIRS} )
+
+		target_link_libraries (${PROJECT_NAME}
+			PUBLIC ${libsndfile_LIBRARIES} )
+	endif()
 
 else (WITH_LIBSNDFILE )
 
