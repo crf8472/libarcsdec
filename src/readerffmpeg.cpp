@@ -486,10 +486,10 @@ AVFramePtr FrameQueue::make_frame()
 }
 
 
-// open_file()
+// FFmpegFile
 
 
-AVFormatContextPtr open_file(const std::string &filename)
+AVFormatContextPtr FFmpegFile::format_context(const std::string &filename)
 {
 	// Open input stream and read header
 
@@ -521,52 +521,14 @@ AVFormatContextPtr open_file(const std::string &filename)
 }
 
 
-// identify_stream()
-
-
-std::pair<int, const ::AVCodec*> identify_stream(::AVFormatContext* fctx,
-		const ::AVMediaType media_type)
+int FFmpegFile::audio_stream(::AVFormatContext *fctx)
 {
-#if LIBAVFORMAT_VERSION_INT < AV_VERSION_INT(59, 16, 100) //  < ffmpeg 5.0
-	::AVCodec* codec = nullptr;
-#else
-	const ::AVCodec* codec = nullptr;
-#endif
-
-	const int stream_index = ::av_find_best_stream(fctx, media_type,
-			-1/*no wanted stream*/, -1/*no related stream*/,
-			&codec/*request codec*/, 0/*no flags*/);
-
-	if (stream_index < 0)
-	{
-		throw FFmpegException(stream_index, "av_find_best_stream");
-
-		// Possible Errors:
-		// AVERROR_STREAM_NOT_FOUND if no stream with the requested type could
-		//			be found
-		// AVERROR_DECODER_NOT_FOUND if streams were found but no decoder
-	}
-
-	if (!codec)
-	{
-		std::ostringstream message;
-		message << "No codec found for audio stream " << stream_index;
-
-		ARCS_LOG_ERROR << message.str();
-
-		// This is not a problem since we will try to identify the codec
-		// with create_audio_decoder() and throw a proper exception there.
-		// Caller must check codec.
-	}
-
-	return std::make_pair(stream_index, codec);
+	auto stream_and_codec = identify_stream(fctx, ::AVMEDIA_TYPE_AUDIO);
+	return stream_and_codec.first;
 }
 
 
-// create_audio_decoder()
-
-
-AVCodecContextPtr create_audio_decoder(::AVFormatContext *fctx,
+AVCodecContextPtr FFmpegFile::audio_decoder(::AVFormatContext *fctx,
 		const int stream_idx)
 {
 	if (!fctx)
@@ -677,6 +639,63 @@ AVCodecContextPtr create_audio_decoder(::AVFormatContext *fctx,
 }
 
 
+std::pair<int, const ::AVCodec*> FFmpegFile::identify_stream(
+		::AVFormatContext* fctx, const ::AVMediaType media_type)
+{
+#if LIBAVFORMAT_VERSION_INT < AV_VERSION_INT(59, 16, 100) //  < ffmpeg 5.0
+	::AVCodec* codec = nullptr;
+#else
+	const ::AVCodec* codec = nullptr;
+#endif
+
+	const int stream_index = ::av_find_best_stream(fctx, media_type,
+			-1/*no wanted stream*/, -1/*no related stream*/,
+			&codec/*request codec*/, 0/*no flags*/);
+
+	if (stream_index < 0)
+	{
+		throw FFmpegException(stream_index, "av_find_best_stream");
+
+		// Possible Errors:
+		// AVERROR_STREAM_NOT_FOUND if no stream with the requested type could
+		//			be found
+		// AVERROR_DECODER_NOT_FOUND if streams were found but no decoder
+	}
+
+	if (!codec)
+	{
+		std::ostringstream message;
+		message << "No codec found for audio stream " << stream_index;
+
+		ARCS_LOG_ERROR << message.str();
+
+		// This is not a problem since we will try to identify the codec
+		// with create_audio_decoder() and throw a proper exception there.
+		// Caller must check codec.
+	}
+
+	return std::make_pair(stream_index, codec);
+}
+
+
+int64_t FFmpegFile::total_samples(::AVCodecContext* cctx, ::AVStream* stream)
+{
+	// Calculate number of samples from duration, which should be accurate
+	// if stream metadata is intact
+
+	const double time_base =
+		static_cast<double>(stream->time_base.num) /
+		static_cast<double>(stream->time_base.den);
+
+	const double duration_secs =
+		static_cast<double>(stream->duration) * time_base;
+
+	ARCS_LOG_DEBUG << "Estimate duration:       " << duration_secs << " secs";
+
+	return duration_secs * cctx->sample_rate;
+}
+
+
 // IsSupported
 
 
@@ -716,7 +735,7 @@ bool IsSupported::codec(const ::AVCodecID id)
 // FFmpegValidator
 
 
-bool FFmpegValidator::validate_cdda(::AVCodecContext *cctx)
+bool FFmpegValidator::cdda(::AVCodecContext *cctx)
 {
 	bool is_validated = true;
 
@@ -760,26 +779,16 @@ std::unique_ptr<FFmpegAudioStream> FFmpegAudioStreamLoader::load(
 	ARCS_LOG_DEBUG << "Start to analyze audio file with ffmpeg";
 
 #if LIBAVFORMAT_VERSION_INT < AV_VERSION_INT(58, 9, 100) //  < ffmpeg 4.0
-
-	// Initialize all formats, decoders, muxers etc...
-	// This is useful for getting more information about the file, but we will
-	// support only a few codecs.
-	::av_register_all();
+	static const bool registered = [](){ ::av_register_all(); return true; }();
 #endif
 
-	auto fcontext = open_file(filename);
-
+	auto fcontext { FFmpegFile::format_context(filename) };
 	ARCS_LOG(DEBUG1) << fcontext.get();
 
-	auto stream_and_codec = identify_stream(fcontext.get(),
-			::AVMEDIA_TYPE_AUDIO);
-
-	const auto stream_idx = int { stream_and_codec.first };
-
+	const auto stream_idx { FFmpegFile::audio_stream(fcontext.get()) };
 	ARCS_LOG(DEBUG1) << fcontext->streams[stream_idx];
 
-	auto ccontext = create_audio_decoder(fcontext.get(), stream_idx);
-
+	auto ccontext { FFmpegFile::audio_decoder(fcontext.get(), stream_idx) };
 	ARCS_LOG_DEBUG << ccontext.get();
 
 
@@ -788,33 +797,49 @@ std::unique_ptr<FFmpegAudioStream> FFmpegAudioStreamLoader::load(
 		std::ostringstream message;
 		message << "Sample format not supported: "
 			<< ::av_get_sample_fmt_name(ccontext->sample_fmt);
-
 		throw InvalidAudioException(message.str());
 	}
-
 
 	if (not IsSupported::codec(ccontext->codec->id))
 	{
 		std::ostringstream message;
 		message << "Codec not supported: " << ccontext->codec->long_name;
+		throw InvalidAudioException(message.str());
+	}
 
+	if (not FFmpegValidator::cdda(ccontext.get()))
+	{
+		std::ostringstream message;
+		message << "CDDA validation failed";
 		throw InvalidAudioException(message.str());
 	}
 
 
-	FFmpegValidator validator;
-	validator.validate_cdda(ccontext.get());
+	const auto total_samples = FFmpegFile::total_samples(ccontext.get(),
+			fcontext->streams[stream_idx]);
+	ARCS_LOG_DEBUG << "Expect " << total_samples << " total samples";
+
+	// We have to update the expected AudioSize before the last block of samples
+	// is passed.
+	//
+	// We estimate the number of samples by the duration of the stream. We use
+	// this estimation to decide at which point we start to buffer frames till
+	// EOF is seen. We assume that the declaration does not yield an estimation
+	// smaller than 6 frames less of the physical total samples. So, as soon as
+	// the declared total sample amount is only 6 frames ahead, we just start to
+	// read until EOF.
+	//
+	// In most cases, the estimation is correct if the file is intact and the
+	// codec does not use padding (priming or remainder frames). The guess is
+	// reliable for PCM*, FLAC, WAVPACK, APE. It fails for ALAC. However, we
+	// count the samples and correct the estimation before flushing the last
+	// relevant block.
 
 
 	// Configure file object with ffmpeg properties
 
-	std::unique_ptr<FFmpegAudioStream> stream = nullptr;
-	{
-		// Cannot use std::make_unique due to private constructor
-
-		FFmpegAudioStream* f = new FFmpegAudioStream();
-		stream.reset(f);
-	}
+	std::unique_ptr<FFmpegAudioStream> stream(new FFmpegAudioStream());
+	// Cannot use std::make_unique due to private constructor
 
 	stream->num_planes_ =
 		::av_sample_fmt_is_planar(ccontext->sample_fmt) ? 2 : 1;
@@ -825,55 +850,14 @@ std::unique_ptr<FFmpegAudioStream> FFmpegAudioStreamLoader::load(
 	// We already have verified to have exactly 2 channels. If they are
 	// not FL+FR and not unspecified, they are considered to be swapped.
 
-	const auto estimated_samples = this->get_total_samples_declared(
-			ccontext.get(), fcontext->streams[stream_idx]);
-	ARCS_LOG_DEBUG << "Stream duration suggests a total amount of "
-		<< estimated_samples << " samples";
-	// We have to update the expected AudioSize before the last block of samples
-	// is passed.
-	//
-	// We estimate the number of samples by the duration of the stream. We use
-	// this estimation to decide at which point we start to buffer frames till
-	// EOF is seen. We assume that the declaration does not yield an estimation
-	// smaller than 6 frames less of the physical total samples. So, if the the
-	// declared total sample amount is 6 frames away, we just start to read
-	// until EOF.
-	//
-	// In most cases, the estimation is correct if the file is intact and the
-	// codec does not use padding (priming or remainder frames). The guess is
-	// reliable for PCM*, FLAC, WAVPACK, APE. It fails for ALAC. However, we
-	// count the samples and correct the estimation before flushing the last
-	// relevant block.
-
-	stream->total_samples_declared_ = estimated_samples;
-
-	stream->stream_index_ = stream_idx;
-
+	stream->total_samples_declared_ = total_samples;
+	stream->stream_index_  = stream_idx;
 	stream->codecContext_  = std::move(ccontext);
 	stream->formatContext_ = std::move(fcontext);
 
 	ARCS_LOG_DEBUG << "Input stream ready";
 
 	return stream;
-}
-
-
-int64_t FFmpegAudioStreamLoader::get_total_samples_declared(
-		::AVCodecContext* cctx, ::AVStream* stream) const
-{
-	// Deduce number of samples from duration, which should be accurate
-	// if stream metadata is intact
-
-	const double time_base =
-		static_cast<double>(stream->time_base.num) /
-		static_cast<double>(stream->time_base.den);
-
-	const double duration_secs =
-		static_cast<double>(stream->duration) * time_base;
-
-	ARCS_LOG_DEBUG << "Estimate duration:       " << duration_secs << " secs";
-
-	return duration_secs * cctx->sample_rate;
 }
 
 
