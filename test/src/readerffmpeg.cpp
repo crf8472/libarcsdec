@@ -46,6 +46,10 @@ TEST_CASE ( "FrameQueue", "[framequeue]" )
 	using arcsdec::details::ffmpeg::FrameQueue;
 	using arcsdec::details::ffmpeg::av_err2str;
 
+#if LIBAVFORMAT_VERSION_INT < AV_VERSION_INT(58, 9, 100) //  < ffmpeg 4.0
+	::av_register_all();
+#endif
+
 	::AVFormatContext* ff_fctx = nullptr;
 
 	auto error_open_input =
