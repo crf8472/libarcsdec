@@ -198,7 +198,7 @@ DescriptorSndfile::~DescriptorSndfile() noexcept = default;
 
 std::string DescriptorSndfile::do_name() const
 {
-	return "unknown (handled by sndfile)";
+	return "Libsndfile";
 }
 
 
@@ -228,7 +228,8 @@ bool DescriptorSndfile::do_accepts_name(const std::string & /* suffix */)
 
 bool DescriptorSndfile::do_accepts(Codec codec) const
 {
-	return codecs().find(codec) != codecs().end();
+	const auto codec_set = codecs();
+	return codec_set.find(codec) != codec_set.end();
 }
 
 

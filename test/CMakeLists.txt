@@ -34,9 +34,9 @@ if (WITH_FFMPEG )
 list (APPEND TEST_SETS readerffmpeg )
 endif()
 
-#if (WITH_LIBSNDFILE )
-#list (APPEND TEST_SETS readersndfile   ) ## TODO
-#endif()
+if (WITH_LIBSNDFILE )
+list (APPEND TEST_SETS readersndfile )
+endif()
 
 
 ## Adjust compile options for tests.
