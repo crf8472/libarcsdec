@@ -62,59 +62,61 @@ TEST_CASE ("DescriptorSndfile", "[readersndfile]" )
 	SECTION ("Does not match codecs not accepted by this descriptor")
 	{
 		CHECK ( !d.accepts(Codec::UNKNOWN) );
-		//CHECK ( d.accepts(Codec::WAVPACK) );
+		CHECK ( !d.accepts(Codec::WAVPACK) );
+		CHECK ( !d.accepts(Codec::MONKEY)  );
 	}
 
 	SECTION ("Returns accepted codecs correctly")
 	{
-		//CHECK ( d.codecs() == std::set<Codec>{ Codec::WAVPACK } );
+		CHECK ( d.codecs() == std::set<Codec>{
+			Codec::PCM_S16BE,
+			Codec::PCM_S16BE_PLANAR,
+			Codec::PCM_S16LE,
+			Codec::PCM_S16LE_PLANAR,
+			Codec::PCM_S32BE,
+			Codec::PCM_S32BE_PLANAR,
+			Codec::PCM_S32LE,
+			Codec::PCM_S32LE_PLANAR,
+			Codec::FLAC,
+			Codec::ALAC
+		} );
 	}
 
 	SECTION ("Returns no codecs that are not accepted")
 	{
-		//CHECK ( d.codecs().size() == 1 );
+		CHECK ( d.codecs().size() == 10 );
 	}
 
 	SECTION ("Matches accepted formats correctly")
 	{
-		//CHECK ( d.accepts(Format::WV) );
+		CHECK ( d.accepts(Format::WAV)  );
+		CHECK ( d.accepts(Format::FLAC) );
+		CHECK ( d.accepts(Format::AIFF) );
+		CHECK ( d.accepts(Format::CAF)  );
 	}
 
 	SECTION ("Does not match any formats not accepted by this descriptor")
 	{
-		/*
 		CHECK ( !d.accepts(Format::UNKNOWN) );
+		CHECK ( !d.accepts(Format::CUE)     );
 		CHECK ( !d.accepts(Format::CDRDAO)  );
-		CHECK ( !d.accepts(Format::WAV)     );
-		CHECK ( !d.accepts(Format::FLAC)    );
 		CHECK ( !d.accepts(Format::APE)     );
-		CHECK ( !d.accepts(Format::CAF)     );
 		CHECK ( !d.accepts(Format::M4A)     );
 		CHECK ( !d.accepts(Format::OGG)     );
-		CHECK ( !d.accepts(Format::AIFF)    );
-		*/
 	}
 
 	SECTION ("Returns accepted formats correctly")
 	{
-		//CHECK ( d.formats() == std::set<Format>{ Format::WV } );
+		CHECK ( d.formats() == std::set<Format>{
+			Format::WAV,
+			Format::FLAC,
+			Format::AIFF,
+			Format::CAF
+		} );
 	}
 
-	SECTION ("Matches accepted filenames correctly")
-	{
-		/*
-		CHECK ( d.accepts_name("foo.wv") );
-		CHECK ( d.accepts_name("bar.WV") );
-
-		CHECK ( !d.accepts_name("bar.WAV") );
-		CHECK ( !d.accepts_name("bar.wav") );
-
-		CHECK ( !d.accepts_name("bar.rwv") );
-		CHECK ( !d.accepts_name("bar.RWV") );
-
-		CHECK ( !d.accepts_name("bar.wvx") );
-		CHECK ( !d.accepts_name("bar.WVX") );
-		*/
-	}
+	//SECTION ("Matches accepted filenames correctly")
+	//{
+	//}
 }
 

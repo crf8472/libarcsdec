@@ -252,7 +252,8 @@ std::set<Codec> DescriptorSndfile::do_codecs() const
 
 bool DescriptorSndfile::do_accepts(Format format) const
 {
-	return formats().find(format) != formats().end();
+	const auto format_set = formats();
+	return format_set.find(format) != format_set.end();
 }
 
 
@@ -261,9 +262,9 @@ std::set<Format> DescriptorSndfile::do_formats() const
 	return {
 		Format::WAV,
 		Format::FLAC,
-		Format::CAF,
+		Format::AIFF,
+		Format::CAF
 		//Format::RAW,
-		Format::OGG
 	};
 }
 
