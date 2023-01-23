@@ -527,7 +527,11 @@ AVFormatContextPtr open_file(const std::string &filename)
 std::pair<int, const ::AVCodec*> identify_stream(::AVFormatContext* fctx,
 		const ::AVMediaType media_type)
 {
+#if LIBAVFORMAT_VERSION_INT < AV_VERSION_INT(59, 16, 100) //  < ffmpeg 5.0
+	::AVCodec* codec = nullptr;
+#else
 	const ::AVCodec* codec = nullptr;
+#endif
 
 	const int stream_index = ::av_find_best_stream(fctx, media_type,
 			-1/*no wanted stream*/, -1/*no related stream*/,

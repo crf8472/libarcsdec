@@ -64,7 +64,12 @@ TEST_CASE ( "FrameQueue", "[framequeue]" )
 
 	AVFormatContextPtr fctx(ff_fctx);
 
+#if LIBAVFORMAT_VERSION_INT < AV_VERSION_INT(59, 16, 100) //  < ffmpeg 5.0
+	::AVCodec* codec = nullptr;
+#else
 	const ::AVCodec* codec = nullptr;
+#endif
+
 	int stream_idx = ::av_find_best_stream(fctx.get(), ::AVMEDIA_TYPE_AUDIO,
 			-1, -1, &codec, 0);
 
