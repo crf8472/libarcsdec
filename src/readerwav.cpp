@@ -1197,7 +1197,8 @@ std::unique_ptr<FileReader> DescriptorWavPCM::do_create_reader() const
 
 bool DescriptorWavPCM::do_accepts(Codec codec) const
 {
-	return codecs().find(codec) != codecs().end();
+	const auto codec_set = codecs();
+	return codec_set.find(codec) != codec_set.end();
 }
 
 
