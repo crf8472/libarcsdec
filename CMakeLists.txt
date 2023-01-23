@@ -395,6 +395,7 @@ option (WITH_FLAC    "Add FLAC reading capability"     ON )
 option (WITH_WAVPACK "Add WavPack reading capability"  ON )
 option (WITH_FFMPEG  "Add ffmpeg reading capabilities" ON )
 option (WITH_LIBSNDFILE "Add libsndfile reading capabilities" OFF )
+option (WITH_LIBCDIO "Add libcdio reading capabilities" OFF )
 
 
 ## --- Required: parsercue (requires libcue)
@@ -565,6 +566,7 @@ endif (WITH_LIBSNDFILE )
 if (WITH_LIBCDIO )
 
 	message (STATUS "Build with cdrdao/toc reading capability" )
+	message (WARNING "There is currently no functional libcio support" )
 
 	find_package (libcdio 2.0.0 REQUIRED )
 	list (APPEND PKG_REQUIRE_ARRAY "libcdio >= 2.0.0" )
