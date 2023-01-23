@@ -1573,7 +1573,8 @@ bool DescriptorFFmpeg::do_accepts_name(const std::string &/* filename */) const
 
 bool DescriptorFFmpeg::do_accepts(Codec codec) const
 {
-	return codecs().find(codec) != codecs().end();
+	const auto codec_set = codecs();
+	return codec_set.find(codec) != codec_set.end();
 }
 
 
