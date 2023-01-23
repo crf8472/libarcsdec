@@ -20,11 +20,23 @@ list (APPEND TEST_SETS audioreader  )
 #list (APPEND TEST_SETS calculators  ) ## TODO requires Mock for Calculation
 list (APPEND TEST_SETS descriptors  )
 list (APPEND TEST_SETS parsercue    )
-list (APPEND TEST_SETS readerffmpeg )
-list (APPEND TEST_SETS readerflac   )
 list (APPEND TEST_SETS readerwav    )
+
+if (WITH_FLAC )
+list (APPEND TEST_SETS readerflac   )
+endif()
+
+if (WITH_WAVPACK )
 list (APPEND TEST_SETS readerwvpk   )
+endif()
+
+if (WITH_FFMPEG )
+list (APPEND TEST_SETS readerffmpeg )
+endif()
+
+#if (WITH_LIBSNDFILE )
 #list (APPEND TEST_SETS readersndfile   ) ## TODO
+#endif()
 
 
 ## Adjust compile options for tests.
@@ -97,4 +109,18 @@ foreach (_testcase ${TEST_SETS} )
 	)
 
 endforeach()
+
+
+## Add FLAC dependencies to testcase
+if (WITH_FLAC )
+
+	if (TARGET FLAC::FLAC++ )
+		target_link_libraries (readerflac_test PRIVATE FLAC::FLAC++ )
+	else()
+		target_include_directories (readerflac_test
+			PRIVATE ${LIBFLACPP_INCLUDE_DIRS} )
+		target_link_libraries (readerflac_test
+			PRIVATE ${LIBFLACPP_LIBRARIES} )
+	endif()
+endif()
 
