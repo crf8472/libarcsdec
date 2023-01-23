@@ -27,7 +27,7 @@
 #endif
 
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__
-#include "audioreader.hpp"    // for AudioReaderImpl
+#include "audioreader.hpp"    // for AudioReaderImpl, DefaultValidator
 #endif
 
 
