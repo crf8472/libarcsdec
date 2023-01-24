@@ -14,12 +14,14 @@
 #include <cstdint>  // for int16_t, unit32_t, uint64_t
 #include <memory>   // for unique_ptr
 #include <set>      // for set
-#include <sstream>  // for stringstream
+#include <sstream>  // for ostringstream
 #include <string>   // for string, to_string
 #include <utility>  // for make_unique, move
 #include <vector>   // for vector
 
+#ifndef SNDFILE_HH
 #include <sndfile.hh>  // for SndfileHandle, SFM_READ, SF_FORMAT_PCM_16
+#endif
 
 #ifndef __LIBARCSTK_CALCULATE_HPP__
 #include <arcstk/calculate.hpp>  // for AudioSize
@@ -94,7 +96,7 @@ void LibsndfileAudioReaderImpl::do_process_file(const std::string &filename)
 
 	if (not (audiofile.format() | SF_FORMAT_PCM_16))
 	{
-		ARCS_LOG_DEBUG << "Format: " + std::to_string(audiofile.format());
+		ARCS_LOG_DEBUG << "Format: " << std::to_string(audiofile.format());
 		return;
 	}
 
@@ -141,7 +143,7 @@ void LibsndfileAudioReaderImpl::do_process_file(const std::string &filename)
 
 			if (expected_total != ints_in_block / CDDA::NUMBER_OF_CHANNELS)
 			{
-				std::stringstream ss;
+				std::ostringstream ss;
 				ss << "  Block contains "
 					<< ints_in_block
 					<< " integers, expected were "
@@ -264,7 +266,6 @@ std::set<Format> DescriptorSndfile::do_formats() const
 		Format::FLAC,
 		Format::AIFF,
 		Format::CAF
-		//Format::RAW,
 	};
 }
 
