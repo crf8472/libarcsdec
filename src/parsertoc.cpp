@@ -82,10 +82,10 @@ std::string DescriptorToc::do_name() const
 
 LibInfo DescriptorToc::do_libraries() const
 {
-	using details::find_lib;
-	using details::libarcsdec_libs;
+	using details::first_libname_match;
+	using details::libarcsdec_deps;
 
-	return { { "libcdio", find_lib(libarcsdec_libs(), "libcdio") } };
+	return { { "libcdio", first_libname_match(libarcsdec_deps(), "libcdio") } };
 }
 
 

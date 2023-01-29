@@ -41,6 +41,9 @@ extern "C" {
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__
 #include "audioreader.hpp"  // for AudioReaderImpl, InvalidAudioException
 #endif
+#ifndef __LIBARCSDEC_LIBINSPECT_HPP__
+#include "libinspect.hpp"   // for first_libname_match
+#endif
 
 
 namespace arcsdec
@@ -835,10 +838,7 @@ std::string DescriptorWavpack::do_name() const
 
 LibInfo  DescriptorWavpack::do_libraries() const
 {
-	using details::find_lib;
-	using details::libarcsdec_libs;
-
-	return { { "libwavpack", find_lib(libarcsdec_libs(), "libwavpack") } };
+	return { libinfo_entry("libwavpack") };
 }
 
 

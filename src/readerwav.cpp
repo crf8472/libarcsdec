@@ -44,6 +44,9 @@ extern "C" {
 #include "audioreader.hpp"  // for AudioReaderImpl, LittleEndianBytes,
 							// BigEndianBytes
 #endif
+#ifndef __LIBARCSDEC_LIBINSPECT_HPP__
+#include "libinspect.hpp"   // for first_libname_match
+#endif
 #ifndef __LIBARCSDEC_SAMPLEPROC_HPP__
 #include "sampleproc.hpp"   // for BLOCKSIZE
 #endif
@@ -1099,7 +1102,7 @@ std::string DescriptorWavPCM::do_name() const
 LibInfo DescriptorWavPCM::do_libraries() const
 {
 	return { { "-genuine-",
-		details::find_lib(details::runtime_deps(""), LIBARCSDEC_NAME) } };
+		details::first_libname_match(details::runtime_deps(""), LIBARCSDEC_NAME) } };
 }
 
 

@@ -170,6 +170,7 @@ add_library (${PROJECT_NAME} SHARED
 	"${PROJECT_SOURCE_DIR}/audioreader.cpp"
 	"${PROJECT_SOURCE_DIR}/calculators.cpp"
 	"${PROJECT_SOURCE_DIR}/descriptors.cpp"
+	"${PROJECT_SOURCE_DIR}/libinspect.cpp"
 	"${PROJECT_SOURCE_DIR}/metaparser.cpp"
 	## parsercue.cpp     is required, depends on libcue
 	## parsertoc.cpp     is optional and default OFF, depends on libcdio

@@ -36,6 +36,9 @@
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__
 #include "audioreader.hpp"       // for AudioReaderImpl, InvalidAudioException
 #endif
+#ifndef __LIBARCSDEC_LIBINSPECT_HPP__
+#include "libinspect.hpp"   // for first_libname_match
+#endif
 
 
 namespace arcsdec
@@ -206,10 +209,7 @@ std::string DescriptorSndfile::do_name() const
 
 LibInfo DescriptorSndfile::do_libraries() const
 {
-	using details::find_lib;
-	using details::libarcsdec_libs;
-
-	return { { "libsndfile", find_lib(libarcsdec_libs(), "libsndfile") } };
+	return { libinfo_entry("libsndfile") };
 }
 
 

@@ -11,8 +11,8 @@
 #include <cstddef>     // for size_t
 #include <cstdint>     // for uint32_t, uint64_t, int64_t
 #include <functional>  // for function
+#include <list>        // for list
 #include <memory>      // for unique_ptr, make_unique
-#include <regex>       // for regex
 #include <set>         // for set
 #include <stdexcept>   // for runtime_error
 #include <string>      // for string, char_traits
@@ -77,89 +77,6 @@ struct ci_char_traits : public std::char_traits<char>
  * \brief Case insensitive comparable string.
  */
 using ci_string = std::basic_string<char, ci_char_traits>;
-
-
-/**
- * \internal
- * \defgroup libinfoImpl API for implementing info functions about descriptors
- *
- * \ingroup descriptors
- *
- * \brief API for implementing info functions about descriptors.
- *
- * \warning
- * This API is currently *nix-only. It uses only dlopen and operates only on
- * sonames.
- *
- * @{
- */
-
-/**
- * \brief Escape every occurrence of a character with a string.
- *
- * \param[in,out] input Input string to modify
- * \param[in]     c     Character to escape
- * \param[in]     seq   Escape string
- */
-void escape(std::string &input, const char c, const std::string &seq);
-
-
-/**
- * \brief Service: construct soname search pattern from library name.
- *
- * The library name should be the first part of the soname without any
- * suffices, e.g. 'libfoo', 'libFLAC++' but not 'libwavpack.so.4' or 'quux.dll'.
- *
- * \warning
- * This function is *nix-specific. It constructs a search pattern for shared
- * objects.
- *
- * \param[in] libname The library name to turn into a pattern
- *
- * \return A regex matching concrete sonames for this library
- */
-std::regex libname_pattern(const std::string &libname);
-
-
-/**
- * \brief Service: load runtime dependencies of an object.
- *
- * If \c object_name is empty, the runtime dependencies of the main executable
- * are loaded.
- *
- * \warning
- * This function is *nix-specific. It inspects binaries with dlopen.
- *
- * \param[in] object_name Name of the object to get dependencies for.
- *
- * \return List of runtime dependencies of an object
- */
-std::vector<std::string> runtime_deps(const std::string &object_name);
-
-
-/**
- * \brief Find shared object in the list of libarcsdec runtime dependencies.
- *
- * List \c list is a list of sonames, it can be created by using runtime_deps.
- * The \c name is the same format as the input for libname_pattern.
- *
- * \param[in] list List of library so filepaths
- * \param[in] name Name of the lib (e.g. libFLAC++, libavformat etc.)
- *
- * \return Filepath for the object or empty string.
- */
-const std::string& find_lib(const std::vector<std::string> &list,
-		const std::string &name);
-
-
-/**
- * \brief Comprehensive list of libarcsdec runtime dependency libraries.
- *
- * \return Comprehensive list of libarcsdec runtime dependency libraries.
- */
-const std::vector<std::string>& libarcsdec_libs();
-
-/// @}
 
 } // namespace details
 
@@ -517,9 +434,24 @@ private:
 
 
 /**
+ * \brief Entry of a \c LibInfo.
+ */
+using LibInfoEntry = std::pair<std::string, std::string>;
+
+
+/**
+ * \brief Create an entry for a LibInfo.
+ *
+ * \param[in] libname Name of a library.
+ */
+LibInfoEntry libinfo_entry(const std::string &libname);
+
+
+/**
  * \brief Represents a list of pairs of a library name and an additional string.
  */
-using LibInfo = std::vector<std::pair<std::string, std::string>>;
+using LibInfo = std::list<LibInfoEntry>;
+
 
 
 bool operator == (const FileReaderDescriptor &lhs,

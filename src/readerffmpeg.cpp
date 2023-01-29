@@ -42,6 +42,9 @@ extern "C"
 #include <arcstk/logging.hpp>   // for ARCS_LOG, _ERROR, _WARNING, _INFO, _DEBUG
 #endif
 
+#ifndef __LIBARCSDEC_LIBINSPECT_HPP__
+#include "libinspect.hpp"   // for first_libname_match
+#endif
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__
 #include "audioreader.hpp"      // for AudioReaderImpl, InvalidAudioException
 #endif
@@ -1531,12 +1534,10 @@ std::string DescriptorFFmpeg::do_name() const
 
 LibInfo DescriptorFFmpeg::do_libraries() const
 {
-	using details::find_lib;
-	using details::libarcsdec_libs;
-
-	return { { "libavformat", find_lib(libarcsdec_libs(), "libavformat") },
-			 { "libavcodec" , find_lib(libarcsdec_libs(), "libavcodec")  },
-			 { "libavutil"  , find_lib(libarcsdec_libs(), "libavutil")   }
+	return {
+		libinfo_entry("libavformat"),
+		libinfo_entry("libavcodec"),
+		libinfo_entry("libavutil"),
 	};
 }
 

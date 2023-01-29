@@ -32,6 +32,9 @@ extern "C" {
 #include <arcstk/logging.hpp>
 #endif
 
+#ifndef __LIBARCSDEC_LIBINSPECT_HPP__
+#include "libinspect.hpp"   // for first_libname_match
+#endif
 #ifndef __LIBARCSDEC_METAPARSER_HPP__
 #include "metaparser.hpp" // for MetadataParseException
 #endif
@@ -308,10 +311,7 @@ std::string DescriptorCue::do_name() const
 
 LibInfo DescriptorCue::do_libraries() const
 {
-	using details::find_lib;
-	using details::libarcsdec_libs;
-
-	return { { "libcue", find_lib(libarcsdec_libs(), "libcue") } };
+	return { libinfo_entry("libcue") };
 }
 
 
