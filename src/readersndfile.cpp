@@ -207,12 +207,6 @@ std::string DescriptorSndfile::do_name() const
 }
 
 
-LibInfo DescriptorSndfile::do_libraries() const
-{
-	return { libinfo_entry("libsndfile") };
-}
-
-
 bool DescriptorSndfile::do_accepts_bytes(
 		const std::vector<unsigned char> & /* bytes */,
 		const uint64_t & /* offset */) const
@@ -228,14 +222,18 @@ bool DescriptorSndfile::do_accepts_name(const std::string & /* suffix */)
 }
 
 
-bool DescriptorSndfile::do_accepts(Codec codec) const
+std::set<Format> DescriptorSndfile::define_formats() const
 {
-	const auto codec_set = codecs();
-	return codec_set.find(codec) != codec_set.end();
+	return {
+		Format::WAV,
+		Format::FLAC,
+		Format::AIFF,
+		Format::CAF
+	};
 }
 
 
-std::set<Codec> DescriptorSndfile::do_codecs() const
+std::set<Codec> DescriptorSndfile::define_codecs() const
 {
 	return {
 		Codec::PCM_S16BE,
@@ -252,21 +250,9 @@ std::set<Codec> DescriptorSndfile::do_codecs() const
 }
 
 
-bool DescriptorSndfile::do_accepts(Format format) const
+LibInfo DescriptorSndfile::do_libraries() const
 {
-	const auto format_set = formats();
-	return format_set.find(format) != format_set.end();
-}
-
-
-std::set<Format> DescriptorSndfile::do_formats() const
-{
-	return {
-		Format::WAV,
-		Format::FLAC,
-		Format::AIFF,
-		Format::CAF
-	};
+	return { libinfo_entry("libsndfile") };
 }
 
 
@@ -275,7 +261,6 @@ std::unique_ptr<FileReader> DescriptorSndfile::do_create_reader() const
 	using details::sndfile::LibsndfileAudioReaderImpl;
 
 	auto impl = std::make_unique<LibsndfileAudioReaderImpl>();
-
 	return std::make_unique<AudioReader>(std::move(impl));
 }
 

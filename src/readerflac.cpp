@@ -331,12 +331,6 @@ std::string DescriptorFlac::do_name() const
 }
 
 
-LibInfo DescriptorFlac::do_libraries() const
-{
-	return { libinfo_entry("libFLAC++"), libinfo_entry("libFLAC") };
-}
-
-
 bool DescriptorFlac::do_accepts_bytes(const std::vector<unsigned char> &bytes,
 		const uint64_t &offset) const
 {
@@ -350,6 +344,24 @@ bool DescriptorFlac::do_accepts_bytes(const std::vector<unsigned char> &bytes,
 }
 
 
+std::set<Format> DescriptorFlac::define_formats() const
+{
+	return { Format::FLAC }; // TODO OGG ?
+}
+
+
+std::set<Codec> DescriptorFlac::define_codecs() const
+{
+	return { Codec::FLAC };
+}
+
+
+LibInfo DescriptorFlac::do_libraries() const
+{
+	return { libinfo_entry("libFLAC++"), libinfo_entry("libFLAC") };
+}
+
+
 std::unique_ptr<FileReader> DescriptorFlac::do_create_reader() const
 {
 	using details::flac::FlacAudioReaderImpl;
@@ -358,30 +370,6 @@ std::unique_ptr<FileReader> DescriptorFlac::do_create_reader() const
 	auto impl = std::make_unique<FlacAudioReaderImpl>();
 	impl->register_validate_handler(std::make_unique<FlacMetadataHandler>());
 	return std::make_unique<AudioReader>(std::move(impl));
-}
-
-
-bool DescriptorFlac::do_accepts(Codec codec) const
-{
-	return codec == Codec::FLAC;
-}
-
-
-std::set<Codec> DescriptorFlac::do_codecs() const
-{
-	return { Codec::FLAC };
-}
-
-
-bool DescriptorFlac::do_accepts(Format format) const
-{
-	return format == Format::FLAC; // TODO OGG ?
-}
-
-
-std::set<Format> DescriptorFlac::do_formats() const
-{
-	return { Format::FLAC }; // TODO OGG ?
 }
 
 

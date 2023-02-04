@@ -1532,16 +1532,6 @@ std::string DescriptorFFmpeg::do_name() const
 }
 
 
-LibInfo DescriptorFFmpeg::do_libraries() const
-{
-	return {
-		libinfo_entry("libavformat"),
-		libinfo_entry("libavcodec"),
-		libinfo_entry("libavutil"),
-	};
-}
-
-
 bool DescriptorFFmpeg::do_accepts_bytes(
 		const std::vector<unsigned char> & /* bytes */,
 		const uint64_t & /* offset */) const
@@ -1556,14 +1546,24 @@ bool DescriptorFFmpeg::do_accepts_name(const std::string &/* filename */) const
 }
 
 
-bool DescriptorFFmpeg::do_accepts(Codec codec) const
+std::set<Format> DescriptorFFmpeg::define_formats() const
 {
-	const auto codec_set = codecs();
-	return codec_set.find(codec) != codec_set.end();
+	return
+	{
+		Format::WAV,
+		Format::FLAC,
+		Format::APE,
+		Format::CAF,
+		Format::M4A,
+		Format::OGG,
+		// not WV,
+		Format::AIFF
+		//TODO Format::WMA
+	};
 }
 
 
-std::set<Codec> DescriptorFFmpeg::do_codecs() const
+std::set<Codec> DescriptorFFmpeg::define_codecs() const
 {
 	return {
 		Codec::PCM_S16BE,
@@ -1583,25 +1583,12 @@ std::set<Codec> DescriptorFFmpeg::do_codecs() const
 }
 
 
-bool DescriptorFFmpeg::do_accepts(Format format) const
+LibInfo DescriptorFFmpeg::do_libraries() const
 {
-	return is_audio_format(format) and format != Format::WV;
-}
-
-
-std::set<Format> DescriptorFFmpeg::do_formats() const
-{
-	return
-	{
-		Format::WAV,
-		Format::FLAC,
-		Format::APE,
-		Format::CAF,
-		Format::M4A,
-		Format::OGG,
-		// not WV,
-		Format::AIFF
-		//TODO Format::WMA
+	return {
+		libinfo_entry("libavformat"),
+		libinfo_entry("libavcodec"),
+		libinfo_entry("libavutil"),
 	};
 }
 
@@ -1609,7 +1596,6 @@ std::set<Format> DescriptorFFmpeg::do_formats() const
 std::unique_ptr<FileReader> DescriptorFFmpeg::do_create_reader() const
 {
 	auto impl = std::make_unique<details::ffmpeg::FFmpegAudioReaderImpl>();
-
 	return std::make_unique<AudioReader>(std::move(impl));
 }
 

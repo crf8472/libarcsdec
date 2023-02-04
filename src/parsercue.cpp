@@ -309,12 +309,6 @@ std::string DescriptorCue::do_name() const
 }
 
 
-LibInfo DescriptorCue::do_libraries() const
-{
-	return { libinfo_entry("libcue") };
-}
-
-
 bool DescriptorCue::do_accepts_bytes(
 		const std::vector<unsigned char> & /* bytes */,
 		const uint64_t & /* offset */) const
@@ -323,22 +317,22 @@ bool DescriptorCue::do_accepts_bytes(
 }
 
 
+std::set<Format> DescriptorCue::define_formats() const
+{
+	return { Format::CUE };
+}
+
+
+LibInfo DescriptorCue::do_libraries() const
+{
+	return { libinfo_entry("libcue") };
+}
+
+
 std::unique_ptr<FileReader> DescriptorCue::do_create_reader() const
 {
 	auto impl = std::make_unique<details::libcue::CueParserImpl>();
 	return std::make_unique<MetadataParser>(std::move(impl));
-}
-
-
-bool DescriptorCue::do_accepts(Format format) const
-{
-	return format == Format::CUE;
-}
-
-
-std::set<Format> DescriptorCue::do_formats() const
-{
-	return { Format::CUE };
 }
 
 

@@ -261,19 +261,19 @@ bool FileReaderDescriptor::accepts_name(const std::string &filename) const
 
 bool FileReaderDescriptor::accepts(Format format) const
 {
-	return this->do_accepts(format);
-}
-
-
-bool FileReaderDescriptor::accepts(Codec codec) const
-{
-	return this->do_accepts(codec);
+	return this->do_accepts_format(format);
 }
 
 
 std::set<Format> FileReaderDescriptor::formats() const
 {
 	return this->do_formats();
+}
+
+
+bool FileReaderDescriptor::accepts(Codec codec) const
+{
+	return this->do_accepts_codec(codec);
 }
 
 
@@ -318,6 +318,46 @@ bool FileReaderDescriptor::do_accepts_name(const std::string &filename) const
 			});
 
 	return rc != suffices_.end();
+}
+
+
+bool FileReaderDescriptor::do_accepts_format(Format format) const
+{
+	const auto format_set = formats();
+	return format_set.find(format) != format_set.end();
+}
+
+
+std::set<Format> FileReaderDescriptor::do_formats() const
+{
+	static const auto formats = define_formats();
+	return formats;
+}
+
+
+std::set<Format> FileReaderDescriptor::define_formats() const
+{
+	return { /* empty */ };
+}
+
+
+bool FileReaderDescriptor::do_accepts_codec(Codec codec) const
+{
+	const auto codec_set = codecs();
+	return codec_set.find(codec) != codec_set.end();
+}
+
+
+std::set<Codec> FileReaderDescriptor::do_codecs() const
+{
+	static const auto codecs = define_codecs();
+	return codecs;
+}
+
+
+std::set<Codec> FileReaderDescriptor::define_codecs() const
+{
+	return { /* empty */ };
 }
 
 

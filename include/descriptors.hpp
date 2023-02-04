@@ -531,6 +531,13 @@ public:
 	bool accepts(Format format) const;
 
 	/**
+	 * \brief \link Format Formats\endlink accepted by the FileReader.
+	 *
+	 * \return \link Format Formats\endlink accepted by the FileReader
+	 */
+	std::set<Format> formats() const;
+
+	/**
 	 * \brief Check for acceptance of the specified format.
 	 *
 	 * \param[in] codec The Codec to check for
@@ -538,13 +545,6 @@ public:
 	 * \return TRUE if \c codec is accepted, otherwise FALSE
 	 */
 	bool accepts(Codec codec) const;
-
-	/**
-	 * \brief \link Format Formats\endlink accepted by the FileReader.
-	 *
-	 * \return \link Format Formats\endlink accepted by the FileReader
-	 */
-	std::set<Format> formats() const;
 
 	/**
 	 * \brief \link Codec Codecs\endlink accepted by the FileReader.
@@ -638,8 +638,24 @@ private:
 	 *
 	 * \return TRUE if \c format is accepted, otherwise FALSE
 	 */
-	virtual bool do_accepts(Format format) const
-	= 0;
+	virtual bool do_accepts_format(Format format) const;
+
+	/**
+	 * \brief \link Format Formats\endlink accepted by the FileReader.
+	 *
+	 * \return \link Format Formats\endlink accepted by the FileReader
+	 */
+	virtual std::set<Format> do_formats() const;
+
+	/**
+	 * \brief Create the list of \c Format s accepted by the FileReader.
+	 *
+	 * While the default implementation of do_formats() buffers the list,
+	 * define_formats() actually creates it.
+	 *
+	 * \return The list of \c Codec s accepted by the FileReader.
+	 */
+	virtual std::set<Format> define_formats() const;
 
 	/**
 	 * \brief Implements FileReaderDescriptor::accepts().
@@ -648,24 +664,24 @@ private:
 	 *
 	 * \return TRUE if \c codec is accepted, otherwise FALSE
 	 */
-	virtual bool do_accepts(Codec codec) const
-	= 0;
-
-	/**
-	 * \brief \link Format Formats\endlink accepted by the FileReader.
-	 *
-	 * \return \link Format Formats\endlink accepted by the FileReader
-	 */
-	virtual std::set<Format> do_formats() const
-	= 0;
+	virtual bool do_accepts_codec(Codec codec) const;
 
 	/**
 	 * \brief \link Codec Codecs\endlink accepted by the FileReader.
 	 *
 	 * \return \link Codec Codecs\endlink accepted by the FileReader
 	 */
-	virtual std::set<Codec> do_codecs() const
-	= 0;
+	virtual std::set<Codec> do_codecs() const;
+
+	/**
+	 * \brief Create the list of \c Codec s accepted by the FileReader.
+	 *
+	 * While the default implementation of do_codecs() buffers the list,
+	 * define_codecs() actually creates it.
+	 *
+	 * \return The list of \c Codec s accepted by the FileReader.
+	 */
+	virtual std::set<Codec> define_codecs() const;
 
 	/**
 	 * \brief Implements FileReaderDescriptor::libraries().

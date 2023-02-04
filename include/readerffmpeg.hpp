@@ -83,8 +83,6 @@ private:
 	 */
 	std::string do_name() const override;
 
-	LibInfo do_libraries() const override;
-
 	/**
 	 * \brief Returns TRUE for every input implying this format matches all
 	 * files.
@@ -102,13 +100,11 @@ private:
 	 */
 	bool do_accepts_name(const std::string &) const override;
 
-	bool do_accepts(Codec codec) const override;
+	std::set<Format> define_formats() const override;
 
-	std::set<Codec> do_codecs() const override;
+	std::set<Codec> define_codecs() const override;
 
-	bool do_accepts(Format format) const override;
-
-	std::set<Format> do_formats() const override;
+	LibInfo do_libraries() const override;
 
 	std::unique_ptr<FileReader> do_create_reader() const override;
 

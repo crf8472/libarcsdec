@@ -80,15 +80,6 @@ std::string DescriptorToc::do_name() const
 }
 
 
-LibInfo DescriptorToc::do_libraries() const
-{
-	using details::first_libname_match;
-	using details::libarcsdec_deps;
-
-	return { { "libcdio", first_libname_match(libarcsdec_deps(), "libcdio") } };
-}
-
-
 bool DescriptorToc::do_accepts_bytes(
 		const std::vector<unsigned char> & /* bytes */,
 		const uint64_t & /* offset */) const
@@ -98,15 +89,15 @@ bool DescriptorToc::do_accepts_bytes(
 }
 
 
-bool DescriptorToc::do_accepts(Format format) const
+std::set<Format> DescriptorToc::define_formats() const
 {
-	return format == Format::CDRDAO;
+	return { Format::CDRDAO };
 }
 
 
-std::set<Format> DescriptorToc::do_formats() const
+LibInfo DescriptorToc::do_libraries() const
 {
-	return { Format::CDRDAO };
+	return { libinfo_entry("libcdio") };
 }
 
 

@@ -836,12 +836,6 @@ std::string DescriptorWavpack::do_name() const
 }
 
 
-LibInfo  DescriptorWavpack::do_libraries() const
-{
-	return { libinfo_entry("libwavpack") };
-}
-
-
 bool DescriptorWavpack::do_accepts_bytes(
 		const std::vector<unsigned char> &bytes, const uint64_t &offset) const
 {
@@ -855,27 +849,21 @@ bool DescriptorWavpack::do_accepts_bytes(
 }
 
 
-bool DescriptorWavpack::do_accepts(Codec codec) const
+std::set<Format> DescriptorWavpack::define_formats() const
 {
-	return codec == Codec::WAVPACK;
+	return { Format::WV };
 }
 
 
-std::set<Codec> DescriptorWavpack::do_codecs() const
+std::set<Codec> DescriptorWavpack::define_codecs() const
 {
 	return { Codec::WAVPACK };
 }
 
 
-bool DescriptorWavpack::do_accepts(Format format) const
+LibInfo  DescriptorWavpack::do_libraries() const
 {
-	return format == Format::WV;
-}
-
-
-std::set<Format> DescriptorWavpack::do_formats() const
-{
-	return { Format::WV };
+	return { libinfo_entry("libwavpack") };
 }
 
 

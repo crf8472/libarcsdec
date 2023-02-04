@@ -60,8 +60,6 @@ public:
 	 */
 	std::string do_name() const override;
 
-	LibInfo do_libraries() const override;
-
 	/**
 	 * \brief Always returns TRUE since CueSheets cannot be recognized by a
 	 * certain byte sequence in a certain offset.
@@ -74,13 +72,13 @@ public:
 	bool do_accepts_bytes(const std::vector<unsigned char> &bytes,
 			const uint64_t &offset) const override;
 
-	bool do_accepts(Codec /* codec */) const override { return false; };
+	std::set<Format> define_formats() const override;
+
+	bool do_accepts_codec(Codec /* codec */) const override { return false; };
 
 	std::set<Codec> do_codecs() const override { return {}; };
 
-	bool do_accepts(Format format) const override;
-
-	std::set<Format> do_formats() const override;
+	LibInfo do_libraries() const override;
 
 	std::unique_ptr<FileReader> do_create_reader() const override;
 

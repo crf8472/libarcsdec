@@ -1099,13 +1099,6 @@ std::string DescriptorWavPCM::do_name() const
 }
 
 
-LibInfo DescriptorWavPCM::do_libraries() const
-{
-	return { { "-genuine-",
-		details::first_libname_match(details::runtime_deps(""), LIBARCSDEC_NAME) } };
-}
-
-
 bool DescriptorWavPCM::do_accepts_bytes(const std::vector<unsigned char> &bytes,
 		const uint64_t &offset) const
 {
@@ -1181,31 +1174,13 @@ bool DescriptorWavPCM::do_accepts_bytes(const std::vector<unsigned char> &bytes,
 }
 
 
-std::unique_ptr<FileReader> DescriptorWavPCM::do_create_reader() const
+std::set<Format> DescriptorWavPCM::define_formats() const
 {
-	using details::wave::WAV_CDDA_t;
-	using details::wave::RIFFWAV_PCM_CDDA_t;
-	using details::wave::WavAudioReaderImpl;
-	using details::wave::WavAudioHandler;
-
-	std::unique_ptr<WAV_CDDA_t> valid = std::make_unique<RIFFWAV_PCM_CDDA_t>();
-	auto handler = std::make_unique<WavAudioHandler>(std::move(valid));
-
-	auto impl = std::make_unique<WavAudioReaderImpl>();
-	impl->register_audio_handler(std::move(handler));
-
-	return std::make_unique<AudioReader>(std::move(impl));
+	return { Format::WAV };
 }
 
 
-bool DescriptorWavPCM::do_accepts(Codec codec) const
-{
-	const auto codec_set = codecs();
-	return codec_set.find(codec) != codec_set.end();
-}
-
-
-std::set<Codec> DescriptorWavPCM::do_codecs() const
+std::set<Codec> DescriptorWavPCM::define_codecs() const
 {
 	return {
 		Codec::PCM_S16BE,
@@ -1220,15 +1195,28 @@ std::set<Codec> DescriptorWavPCM::do_codecs() const
 }
 
 
-bool DescriptorWavPCM::do_accepts(Format format) const
+LibInfo DescriptorWavPCM::do_libraries() const
 {
-	return format == Format::WAV;
+	return { { "-genuine-",
+		details::first_libname_match(details::runtime_deps(""), LIBARCSDEC_NAME)
+	} };
 }
 
 
-std::set<Format> DescriptorWavPCM::do_formats() const
+std::unique_ptr<FileReader> DescriptorWavPCM::do_create_reader() const
 {
-	return { Format::WAV };
+	using details::wave::WAV_CDDA_t;
+	using details::wave::RIFFWAV_PCM_CDDA_t;
+	using details::wave::WavAudioReaderImpl;
+	using details::wave::WavAudioHandler;
+
+	std::unique_ptr<WAV_CDDA_t> valid = std::make_unique<RIFFWAV_PCM_CDDA_t>();
+	auto handler = std::make_unique<WavAudioHandler>(std::move(valid));
+
+	auto impl = std::make_unique<WavAudioReaderImpl>();
+	impl->register_audio_handler(std::move(handler));
+
+	return std::make_unique<AudioReader>(std::move(impl));
 }
 
 
