@@ -1526,6 +1526,12 @@ void operator << (std::ostream &out, const ::AVStream *stream)
 DescriptorFFmpeg::~DescriptorFFmpeg() noexcept = default;
 
 
+std::string DescriptorFFmpeg::do_id() const
+{
+	return "ffmpeg";
+}
+
+
 std::string DescriptorFFmpeg::do_name() const
 {
 	return "FFmpeg";

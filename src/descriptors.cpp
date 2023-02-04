@@ -240,6 +240,12 @@ FileReaderDescriptor::FileReaderDescriptor()
 FileReaderDescriptor::~FileReaderDescriptor() noexcept = default;
 
 
+std::string FileReaderDescriptor::id() const
+{
+	return this->do_id();
+}
+
+
 std::string FileReaderDescriptor::name() const
 {
 	return this->do_name();
@@ -488,6 +494,44 @@ bool FileTestName::do_passes(const FileReaderDescriptor &desc,
 
 
 bool FileTestName::equals(const FileTest &rhs) const
+{
+	return typeid(*this) == typeid(rhs);
+}
+
+
+// FileTestDescriptorId
+
+
+FileTestDescriptorId::FileTestDescriptorId(const std::string &id)
+		: id_ { id }
+{
+	// empty
+}
+
+
+std::string FileTestDescriptorId::id() const
+{
+	return id_;
+}
+
+
+std::string FileTestDescriptorId::do_description() const
+{
+	return "Descriptor Id";
+}
+
+
+bool FileTestDescriptorId::do_passes(const FileReaderDescriptor &desc,
+		const std::string &/* filename */) const
+{
+	ARCS_LOG(DEBUG1) << "Does descriptor " << desc.name()
+		<< " have id '" << id() << "'?";
+
+	return desc.id() == id();
+}
+
+
+bool FileTestDescriptorId::equals(const FileTest &rhs) const
 {
 	return typeid(*this) == typeid(rhs);
 }

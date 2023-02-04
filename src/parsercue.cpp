@@ -303,6 +303,12 @@ std::unique_ptr<FileReaderDescriptor> CueParserImpl::do_descriptor() const
 DescriptorCue::~DescriptorCue() noexcept = default;
 
 
+std::string DescriptorCue::do_id() const
+{
+	return "cuesheet";
+}
+
+
 std::string DescriptorCue::do_name() const
 {
 	return "CueSheet";

@@ -325,6 +325,12 @@ void FlacAudioReaderImpl::register_validate_handler(
 DescriptorFlac::~DescriptorFlac() noexcept = default;
 
 
+std::string DescriptorFlac::do_id() const
+{
+	return "flac";
+}
+
+
 std::string DescriptorFlac::do_name() const
 {
 	return "Flac";

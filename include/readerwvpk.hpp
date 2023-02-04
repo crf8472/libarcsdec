@@ -64,14 +64,14 @@ public:
 
 private:
 
+	std::string do_id() const override;
+
 	/**
 	 * \brief Returns "Wavpack".
 	 *
 	 * \return "Wavpack"
 	 */
 	std::string do_name() const override;
-
-	LibInfo do_libraries() const override;
 
 	/**
 	 * \brief Test if this format is recognized on the given input bytes.
@@ -91,6 +91,8 @@ private:
 	std::set<Format> define_formats() const override;
 
 	std::set<Codec> define_codecs() const override;
+
+	LibInfo do_libraries() const override;
 
 	std::unique_ptr<FileReader> do_create_reader() const override;
 

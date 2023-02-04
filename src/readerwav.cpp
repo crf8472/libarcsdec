@@ -1093,6 +1093,12 @@ void WavAudioReaderImpl::register_audio_handler(
 DescriptorWavPCM::~DescriptorWavPCM() noexcept = default;
 
 
+std::string DescriptorWavPCM::do_id() const
+{
+	return "wavpcm";
+}
+
+
 std::string DescriptorWavPCM::do_name() const
 {
 	return "RIFF/WAV(PCM)";

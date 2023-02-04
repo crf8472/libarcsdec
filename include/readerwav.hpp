@@ -63,6 +63,8 @@ public:
 
 private:
 
+	std::string do_id() const override;
+
 	/**
 	 * \brief Returns "RIFF/WAVE (PCM)".
 	 *

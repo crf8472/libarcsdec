@@ -495,6 +495,15 @@ public:
 	virtual ~FileReaderDescriptor() noexcept;
 
 	/**
+	 * \brief Id of this FileReaderDescriptor type.
+	 *
+	 * The id can be used as key in a FileReaderRegistry.
+	 *
+	 * \return A human-readable id of this FileReaderDescriptor
+	 */
+	std::string id() const;
+
+	/**
 	 * \brief Name of this FileReaderDescriptor type.
 	 *
 	 * \return A human-readable name of this FileReaderDescriptor
@@ -598,6 +607,13 @@ protected:
 		= default;
 
 private:
+	/**
+	 * \brief Implements FileReaderDescriptor::id().
+	 *
+	 * \return A human-readable id of this FileReaderDescriptor
+	 */
+	virtual std::string do_id() const
+	= 0;
 
 	/**
 	 * \brief Implements FileReaderDescriptor::name().
@@ -858,6 +874,44 @@ private:
 protected:
 
 	bool equals(const FileTest &) const override;
+};
+
+
+/**
+ * \brief Test for matching an actual descriptor id.
+ *
+ * The test also ensures that the requested format or codec is accepted.
+ */
+class FileTestDescriptorId final : public FileTest
+{
+public:
+
+	/**
+	 * \brief Constructor.
+	 *
+	 * \param[in] id Descriptor id to lookup.
+	 */
+	FileTestDescriptorId(const std::string &id);
+
+	/**
+	 * \brief Return the descriptor id to lookup.
+	 *
+	 * \return The descriptor id to lookup.
+	 */
+	std::string id() const;
+
+protected:
+
+	bool equals(const FileTest &) const override;
+
+private:
+
+	std::string do_description() const override;
+
+	bool do_passes(const FileReaderDescriptor &desc,
+			const std::string &filename) const override;
+
+	const std::string id_;
 };
 
 

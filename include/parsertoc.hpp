@@ -53,6 +53,11 @@ public:
 	 */
 	virtual ~DescriptorToc() noexcept override;
 
+
+private:
+
+	std::string do_id() const override;
+
 	/**
 	 * \brief Returns "CDRDAO/TOC".
 	 *

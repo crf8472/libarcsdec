@@ -74,6 +74,12 @@ std::unique_ptr<FileReaderDescriptor> TocParserImpl::do_descriptor() const
 DescriptorToc::~DescriptorToc() noexcept = default;
 
 
+std::string DescriptorToc::do_id() const
+{
+	return "cdrdaotoc";
+}
+
+
 std::string DescriptorToc::do_name() const
 {
 	return "CDRDAO";
