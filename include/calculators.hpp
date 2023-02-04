@@ -146,30 +146,30 @@ public:
 			const std::string &metafilename);
 
 	/**
-	 * \brief Set the MetadataParserSelection for this instance.
+	 * \brief Set the metadata parser selection for this instance.
 	 *
-	 * \param[in] selection The MetadataParserSelection to use
+	 * \param[in] selection The metadata parser selection to use
 	 */
 	void set_toc_selection(const FileReaderSelection *selection);
 
 	/**
-	 * \brief Get the MetadataParserSelection used by this instance.
+	 * \brief Get the metadata parser selection used by this instance.
 	 *
-	 * \return The MetadataParserSelection used by this instance
+	 * \return The metadata parser selection used by this instance
 	 */
 	const FileReaderSelection& toc_selection() const;
 
 	/**
-	 * \brief Set the MetadataParserSelection for this instance.
+	 * \brief Set the audioreader selection for this instance.
 	 *
-	 * \param[in] selection The MetadataParserSelection to use
+	 * \param[in] selection The audioreader selection to use
 	 */
 	void set_audio_selection(const FileReaderSelection *selection);
 
 	/**
-	 * \brief Get the MetadataParserSelection used by this instance.
+	 * \brief Get the audioreader selection used by this instance.
 	 *
-	 * \return The MetadataParserSelection used by this instance
+	 * \return The audioreader selection used by this instance
 	 */
 	const FileReaderSelection& audio_selection() const;
 
