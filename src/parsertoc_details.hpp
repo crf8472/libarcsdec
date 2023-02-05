@@ -21,8 +21,8 @@
 #include <cdio++/cdio.hpp>  // for
 //}
 
-#ifndef __LIBARCSDEC_DESCRIPTORS_HPP__
-#include "descriptors.hpp"       // for FileReaderDescriptor
+#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
+#include "descriptor.hpp"        // for FileReaderDescriptor
 #endif
 #ifndef __LIBARCSDEC_METAPARSER_HPP__
 #include "metaparser.hpp"        // for MetaparserImpl

@@ -28,14 +28,17 @@
 #include <arcstk/logging.hpp>   // for ARCS_LOG, _ERROR, _WARNING, _INFO, _DEBUG
 #endif
 
-#ifndef __LIBARCSDEC_DESCRIPTORS_HPP__
-#include "descriptors.hpp"
+#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
+#include "descriptor.hpp"
+#endif
+#ifndef __LIBARCSDEC_SELECTION_HPP__
+#include "selection.hpp"         // for DescriptorSet, FileReaderSelection
 #endif
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__
-#include "audioreader.hpp"      // CreateAudioReader
+#include "audioreader.hpp"      // for AudioReader
 #endif
 #ifndef __LIBARCSDEC_METAPARSER_HPP__
-#include "metaparser.hpp"       // CreateMetadataParser
+#include "metaparser.hpp"       // for MetadataParser
 #endif
 #ifndef __LIBARCSDEC_SAMPLEPROC_HPP__
 #include "sampleproc.hpp"       // for BLOCKSIZE
@@ -55,6 +58,24 @@ using arcstk::ChecksumSet;
 using arcstk::SampleInputIterator;
 using arcstk::make_arid;
 using arcstk::make_context;
+
+
+/**
+ * \brief Functor for safe creation of a MetadataParser.
+ */
+struct CreateMetadataParser final : public details::CreateReader<MetadataParser>
+{
+	// empty
+};
+
+
+/**
+ * \brief Functor for safe creation of an AudioReader.
+ */
+struct CreateAudioReader final : public details::CreateReader<AudioReader>
+{
+	// empty
+};
 
 
 /**

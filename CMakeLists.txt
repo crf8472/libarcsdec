@@ -159,9 +159,10 @@ configure_file (${PROJECT_SOURCE_DIR}/version.cpp.in
 list (APPEND INTERFACE_HEADERS
 	${PROJECT_INCLUDE_DIR}/audioreader.hpp
 	${PROJECT_INCLUDE_DIR}/calculators.hpp
-	${PROJECT_INCLUDE_DIR}/descriptors.hpp
+	${PROJECT_INCLUDE_DIR}/descriptor.hpp
 	${PROJECT_INCLUDE_DIR}/metaparser.hpp
 	${PROJECT_INCLUDE_DIR}/sampleproc.hpp
+	${PROJECT_INCLUDE_DIR}/selection.hpp
 	${PROJECT_INCLUDE_DIR}/version.hpp )
 
 ## --- Add and configure project target
@@ -169,7 +170,7 @@ list (APPEND INTERFACE_HEADERS
 add_library (${PROJECT_NAME} SHARED
 	"${PROJECT_SOURCE_DIR}/audioreader.cpp"
 	"${PROJECT_SOURCE_DIR}/calculators.cpp"
-	"${PROJECT_SOURCE_DIR}/descriptors.cpp"
+	"${PROJECT_SOURCE_DIR}/descriptor.cpp"
 	"${PROJECT_SOURCE_DIR}/libinspect.cpp"
 	"${PROJECT_SOURCE_DIR}/metaparser.cpp"
 	## parsercue.cpp     is required, depends on libcue
@@ -180,6 +181,7 @@ add_library (${PROJECT_NAME} SHARED
 	"${PROJECT_SOURCE_DIR}/readerwav.cpp"
 	## readerwvpk.cpp    is optional and default ON,  depends on libwavpack
 	"${PROJECT_SOURCE_DIR}/sampleproc.cpp"
+	"${PROJECT_SOURCE_DIR}/selection.cpp"
 	"${PROJECT_BUILD_SOURCE_DIR}/version.cpp" )
 
 if (HAS_PARENT )

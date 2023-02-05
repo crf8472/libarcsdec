@@ -14,8 +14,8 @@
 #include <string>   // for string
 #include <vector>   // for vector
 
-#ifndef __LIBARCSDEC_DESCRIPTORS_HPP__
-#include "descriptors.hpp"// for Codec, Format, FileReaderDescriptor, FileReader
+#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
+#include "descriptor.hpp"// for Codec, Format, FileReaderDescriptor, FileReader
 #endif
 
 

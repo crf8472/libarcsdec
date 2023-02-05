@@ -1,16 +1,19 @@
 #include "catch2/catch_test_macros.hpp"
 
-//#include <algorithm>
-#include <regex>
-//#include <iostream>
-//#include <type_traits>
+#include <regex> // for regex, regex_match
 
 #ifndef __LIBARCSDEC_LIBINSPECT_HPP__
 #include "libinspect.hpp"   // for to_libname_pattern, libarcsdec_deps
 #endif
 #ifndef __LIBARCSDEC_VERSION_HPP__
-#include "version.hpp" // for LIBARCSDEC_NAME
+#include "version.hpp"      // for LIBARCSDEC_NAME
 #endif
+
+/**
+ * \file
+ *
+ * Tests for classes in libinspect.cpp
+ */
 
 
 TEST_CASE ( "Load runtime dependencies", "" )

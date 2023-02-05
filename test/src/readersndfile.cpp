@@ -7,10 +7,6 @@
 #include "readersndfile_details.hpp"
 #endif
 
-//#ifndef __LIBARCSDEC_READERMOCKS_HPP__
-//#include "readermocks.hpp"
-//#endif
-
 /**
  * \file
  *

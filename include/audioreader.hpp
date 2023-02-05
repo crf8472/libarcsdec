@@ -19,8 +19,11 @@
 #include <arcstk/calculate.hpp>  // for AudioSize, SampleInputIterator
 #endif
 
-#ifndef __LIBARCSDEC_DESCRIPTORS_HPP__
-#include "descriptors.hpp" // for Codec, FileReaderDescriptor, ...
+#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
+#include "descriptor.hpp" // for Codec, FileReaderDescriptor, ...
+#endif
+#ifndef __LIBARCSDEC_SELECTION_HPP__
+#include "selection.hpp"   // for CreateReader
 #endif
 #ifndef __LIBARCSDEC_SAMPLEPROC_HPP__
 #include "sampleproc.hpp"  // for SampleProcessor, SampleProvider
@@ -326,15 +329,6 @@ private:
 	std::unique_ptr<AudioReader::Impl> impl_;
 
 	std::unique_ptr<FileReaderDescriptor> do_descriptor() const override;
-};
-
-
-/**
- * \brief Functor for safe creation of an AudioReader.
- */
-struct CreateAudioReader final : public details::CreateReader<AudioReader>
-{
-	// empty
 };
 
 

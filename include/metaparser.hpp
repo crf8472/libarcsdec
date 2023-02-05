@@ -18,8 +18,11 @@
 #include <arcstk/identifier.hpp>  // for TOC
 #endif
 
-#ifndef __LIBARCSDEC_DESCRIPTORS_HPP__
-#include "descriptors.hpp"  // for FileReaderDescriptor, CreateReader, ...
+#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
+#include "descriptor.hpp"  // for FileReader, FileReaderDescriptor
+#endif
+#ifndef __LIBARCSDEC_SELECTION_HPP__
+#include "selection.hpp"   // for CreateReader
 #endif
 
 namespace arcsdec
@@ -167,15 +170,6 @@ private:
 	std::unique_ptr<MetadataParserImpl> impl_;
 
 	std::unique_ptr<FileReaderDescriptor> do_descriptor() const override;
-};
-
-
-/**
- * \brief Functor for safe creation of a MetadataParser.
- */
-struct CreateMetadataParser final : public details::CreateReader<MetadataParser>
-{
-	// empty
 };
 
 

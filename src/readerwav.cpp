@@ -50,6 +50,9 @@ extern "C" {
 #ifndef __LIBARCSDEC_SAMPLEPROC_HPP__
 #include "sampleproc.hpp"   // for BLOCKSIZE
 #endif
+#ifndef __LIBARCSDEC_SELECTION_HPP__
+#include "selection.hpp"    // for RegisterDescriptor
+#endif
 #ifndef __LIBARCSDEC_VERSION_HPP__
 #include "version.hpp"      // for LIBARCSDEC_NAME
 #endif

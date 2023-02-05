@@ -1,17 +1,17 @@
 #include "catch2/catch_test_macros.hpp"
 
-/**
- * \file
- *
- * Tests for classes in parsercue.cpp
- */
-
 #ifndef __LIBARCSDEC_PARSERCUE_HPP__
 #include "parsercue.hpp"
 #endif
 #ifndef __LIBARCSDEC_PARSERCUE_DETAILS_HPP__
 #include "parsercue_details.hpp"
 #endif
+
+/**
+ * \file
+ *
+ * Tests for classes in parsercue.cpp
+ */
 
 
 TEST_CASE ("DescriptorCue", "[parsercue]" )

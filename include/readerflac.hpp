@@ -13,8 +13,8 @@
 #include <string>   // for string
 #include <vector>   // for vector
 
-#ifndef __LIBARCSDEC_DESCRIPTORS_HPP__
-#include "descriptors.hpp"  // for FileReaderDescriptor
+#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
+#include "descriptor.hpp"  // for FileReaderDescriptor
 #endif
 
 namespace arcsdec

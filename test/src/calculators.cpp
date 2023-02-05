@@ -10,6 +10,41 @@
  * Tests for all API classes exported by calculators.hpp
  */
 
+
+//TEST_CASE ( "CreateAudioReader Functor", "")
+//{
+//	using arcsdec::CreateAudioReader;
+//	using arcsdec::FileReaderRegistry;
+//
+//	const CreateAudioReader create;
+//
+//	SECTION ( "Create reader for RIFFWAV/PCM correctly" )
+//	{
+//		auto reader = create(*FileReaderRegistry::default_audio_selection(),
+//			*FileReaderRegistry::descriptors(), "test01.wav");
+//
+//		CHECK ( reader != nullptr );
+//	}
+//}
+//
+//
+//TEST_CASE ( "CreateMetadataParser Functor", "")
+//{
+//	using arcsdec::CreateMetadataParser;
+//	using arcsdec::FileReaderRegistry;
+//
+//	const CreateMetadataParser create;
+//
+//	SECTION ( "Create reader for CueSheet correctly" )
+//	{
+//		auto reader = create(*FileReaderRegistry::default_toc_selection(),
+//			*FileReaderRegistry::descriptors(), "test01.cue");
+//
+//		CHECK ( reader != nullptr );
+//	}
+//}
+
+
 TEST_CASE ( "TOCParser", "[calculators]" )
 {
 	using arcsdec::TOCParser;

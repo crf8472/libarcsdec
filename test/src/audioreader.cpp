@@ -1,7 +1,5 @@
 #include "catch2/catch_test_macros.hpp"
 
-#include "limits.h"
-
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__
 #include "audioreader.hpp"
 #endif

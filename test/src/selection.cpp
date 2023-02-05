@@ -1,12 +1,11 @@
 #include "catch2/catch_test_macros.hpp"
 
-#include <algorithm>
-#include <regex>
-#include <iostream>
-#include <type_traits>
+#ifndef __LIBARCSDEC_SELECTION_HPP__
+#include "selection.hpp"
+#endif
 
-#ifndef __LIBARCSDEC_DESCRIPTORS_HPP__
-#include "descriptors.hpp"
+#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
+#include "descriptor.hpp"
 #endif
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__
 #include "audioreader.hpp"
@@ -27,93 +26,38 @@
 #include "version.hpp"
 #endif
 
-
 /**
  * \file
  *
- * Tests for all API classes exported by descriptors.hpp
+ * Tests for all API classes exported by selection.hpp
  */
 
-
-// TODO is_audio_format
-
-
-TEST_CASE ( "read_bytes", "[read_bytes]" )
+TEST_CASE ( "DescriptorSet", "[descriptorset]" )
 {
-	using arcsdec::FileReadException;
+	using arcsdec::DescriptorSet;
+	using arcsdec::DescriptorWavPCM;
 
-	SECTION ( "Reading existing bytes from valid file works" )
+	DescriptorSet s;
+
+
+	SECTION ( "Initialization is ok" )
 	{
-		auto bytes = arcsdec::details::read_bytes("test01.wav", 0, 44);
-		// ARCS1: E35EF68A, ARCS2: E3631C44
-
-		CHECK ( bytes.size() == 44 );
-
-		CHECK ( bytes [0] == 'R' );
-		CHECK ( bytes [1] == 'I' );
-		CHECK ( bytes [2] == 'F' );
-		CHECK ( bytes [3] == 'F' );
-
-		CHECK ( bytes [8] == 'W' );
-		CHECK ( bytes [9] == 'A' );
-		CHECK ( bytes[10] == 'V' );
-		CHECK ( bytes[11] == 'E' );
-
-		CHECK ( bytes[12] == 'f' );
-		CHECK ( bytes[13] == 'm' );
-		CHECK ( bytes[14] == 't' );
-		CHECK ( bytes[15] == ' ' );
-
-		CHECK ( bytes[36] == 'd' );
-		CHECK ( bytes[37] == 'a' );
-		CHECK ( bytes[38] == 't' );
-		CHECK ( bytes[39] == 'a' );
-	}
-
-	SECTION ( "Opening non-existing file causes exception" )
-	{
-		try
-		{
-			arcsdec::details::read_bytes("does_not_exist.wav", 0, 12);
-			FAIL ( "Expected FileReadException was not thrown" );
-		} catch (const FileReadException &e)
-		{
-			CHECK ( e.byte_pos() == 0 );
-		}
-	}
-
-	SECTION ( "Trying to read beyond EOF causes exception" )
-	{
-		try
-		{
-			arcsdec::details::read_bytes("test01.wav", 0, 4146);
-			FAIL ( "Expected FileReadException was not thrown" );
-		} catch (const FileReadException &e)
-		{
-			CHECK ( e.byte_pos() == 4145 );
-		}
-	}
-}
-
-
-TEST_CASE ( "FileReader", "[filereader]")
-{
-	using arcsdec::FileReader;
-
-	SECTION ( "Copy constructor and assignment operator are not declared" )
-	{
-		CHECK ( not std::is_copy_constructible<FileReader>::value );
-		CHECK ( not std::is_copy_assignable<FileReader>::value );
+		CHECK ( s.size() == 0 );
+		CHECK ( s.empty() );
+		CHECK ( s.begin() == s.end() );
 	}
 
 
-	SECTION ( "Move constructor and assignment operator are not accessible" )
+	SECTION ( "Adding is ok on initial state" )
 	{
-		CHECK ( not std::is_nothrow_move_constructible<FileReader>::value );
-		CHECK ( not std::is_nothrow_move_assignable<FileReader>::value );
-	}
+		s.insert(std::make_unique<DescriptorWavPCM>());
 
-	// TODO Test for move
+		CHECK ( s.size() == 1 );
+		CHECK ( not s.empty() );
+		CHECK ( s.begin() != s.end() );
+		CHECK ( "RIFF/WAV(PCM)" == s.begin()->second->name() );
+		CHECK ( s.get("wavpcm") != nullptr );
+	}
 }
 
 
@@ -346,40 +290,6 @@ TEST_CASE ( "FileReaderRegistry", "[filereaderregistry]")
 		CHECK ( std::is_nothrow_move_assignable<AudioDescriptorTestType>::value );
 		CHECK ( std::is_nothrow_move_constructible<MetadataDescriptorTestType>::value );
 		CHECK ( std::is_nothrow_move_assignable<MetadataDescriptorTestType>::value );
-	}
-}
-
-
-TEST_CASE ( "CreateAudioReader Functor", "")
-{
-	using arcsdec::CreateAudioReader;
-	using arcsdec::FileReaderRegistry;
-
-	const CreateAudioReader create;
-
-	SECTION ( "Create reader for RIFFWAV/PCM correctly" )
-	{
-		auto reader = create(*FileReaderRegistry::default_audio_selection(),
-			*FileReaderRegistry::descriptors(), "test01.wav");
-
-		CHECK ( reader != nullptr );
-	}
-}
-
-
-TEST_CASE ( "CreateMetadataParser Functor", "")
-{
-	using arcsdec::CreateMetadataParser;
-	using arcsdec::FileReaderRegistry;
-
-	const CreateMetadataParser create;
-
-	SECTION ( "Create reader for CueSheet correctly" )
-	{
-		auto reader = create(*FileReaderRegistry::default_toc_selection(),
-			*FileReaderRegistry::descriptors(), "test01.cue");
-
-		CHECK ( reader != nullptr );
 	}
 }
 

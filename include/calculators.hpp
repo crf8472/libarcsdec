@@ -19,8 +19,11 @@
 #include <arcstk/calculate.hpp>    // for Checksums, ChecksumSet
 #endif
 
-#ifndef __LIBARCSDEC_DESCRIPTORS_HPP__
-#include "descriptors.hpp"         // for FileReaderSelection
+#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
+#include "descriptor.hpp"          // for FileReaderSelection
+#endif
+#ifndef __LIBARCSDEC_SELECTION_HPP__
+#include "selection.hpp"           // for DescriptorSet, FileReaderSelection
 #endif
 
 

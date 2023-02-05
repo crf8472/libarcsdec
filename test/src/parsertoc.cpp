@@ -1,17 +1,17 @@
 #include "catch2/catch_test_macros.hpp"
 
-/**
- * \file
- *
- * Tests for classes in parsertoc.cpp
- */
-
 #ifndef __LIBARCSDEC_PARSERTOC_HPP__
 #include "parsertoc.hpp"
 #endif
 #ifndef __LIBARCSDEC_PARSERTOC_DETAILS_HPP__
 #include "parsertoc_details.hpp"
 #endif
+
+/**
+ * \file
+ *
+ * Tests for classes in parsertoc.cpp
+ */
 
 
 TEST_CASE ("DescriptorToc", "[parsertoc]" )
