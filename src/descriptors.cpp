@@ -35,6 +35,18 @@ inline namespace v_1_0_0
 namespace details
 {
 
+// Amount of bytes to read from the beginning of a file. This amount is
+// sufficient to determine the file format and codec.
+constexpr uint32_t TOTAL_BYTES_TO_READ = 44;
+// Why 44? => Enough for WAVE and every other metadata format.
+// We want to recognize container format, codec and CDDA format.
+// Consider RIFFWAVE/PCM: the first 12 bytes identify the container
+// format ('RIFF' + size + 'WAVE'), PCM format is encoded in bytes
+// 20+21, but validating CDDA requires to read the entire format
+// chunk (up to and including byte 36). Bytes 37-40 are the data
+// subchunk id and 41-44 the data subchunk size. This length is also
+// sufficient to identify all other formats currently supported.
+
 
 std::vector<unsigned char> read_bytes(const std::string &filename,
 	const uint32_t &offset, const uint32_t &length)
@@ -140,7 +152,7 @@ std::string name(Format format)
 		"CUE",
 		"cdrdao",
 		// ... add more metadata formats here
-		"wav", // Audio formats from here on (is_audio_format relies on that)
+		"wav", // Audio formats from here on
 		"fLaC",
 		"APE",
 		"CAF",
@@ -320,7 +332,13 @@ bool FileReaderDescriptor::do_accepts_name(const std::string &filename) const
 			[fname_suffix](const decltype( suffices_ )::value_type &suffix)
 			{
 				// Perform case insensitive comparison
-				return suffix == details::ci_string { fname_suffix.c_str() };
+				if (suffix == details::ci_string { fname_suffix.c_str() })
+				{
+					ARCS_LOG(DEBUG1) << "Suffix '" << fname_suffix
+						<< "' accepted" ;
+					return true;
+				}
+				return false;
 			});
 
 	return rc != suffices_.end();
@@ -499,44 +517,6 @@ bool FileTestName::equals(const FileTest &rhs) const
 }
 
 
-// FileTestDescriptorId
-
-
-FileTestDescriptorId::FileTestDescriptorId(const std::string &id)
-		: id_ { id }
-{
-	// empty
-}
-
-
-std::string FileTestDescriptorId::id() const
-{
-	return id_;
-}
-
-
-std::string FileTestDescriptorId::do_description() const
-{
-	return "Descriptor Id";
-}
-
-
-bool FileTestDescriptorId::do_passes(const FileReaderDescriptor &desc,
-		const std::string &/* filename */) const
-{
-	ARCS_LOG(DEBUG1) << "Does descriptor " << desc.name()
-		<< " have id '" << id() << "'?";
-
-	return desc.id() == id();
-}
-
-
-bool FileTestDescriptorId::equals(const FileTest &rhs) const
-{
-	return typeid(*this) == typeid(rhs);
-}
-
-
 // FileReaderSelector
 
 
@@ -559,7 +539,8 @@ bool FileReaderSelector::matches(
 		return true;
 	}
 
-	ARCS_LOG_DEBUG << "Descriptor '" << desc->name() << "' does not match";
+	ARCS_LOG_DEBUG << "Descriptor '" << desc->name()
+		<< "' does not match and is discarded";
 	return false;
 }
 
@@ -567,7 +548,7 @@ bool FileReaderSelector::matches(
 std::unique_ptr<FileReaderDescriptor> FileReaderSelector::select(
 		const std::string &filename,
 		const std::set<std::unique_ptr<FileTest>> &tests,
-		const std::set<std::unique_ptr<FileReaderDescriptor>> &descs) const
+		const DescriptorSet &descs) const
 {
 	auto descriptor = do_select(filename, tests, descs);
 
@@ -577,7 +558,8 @@ std::unique_ptr<FileReaderDescriptor> FileReaderSelector::select(
 		return nullptr;
 	}
 
-	ARCS_LOG_DEBUG << "Descriptor '" << descriptor->name() << "' selected";
+	ARCS_LOG_INFO << "Reader descriptor '" << descriptor->name()
+		<< "' selected for file '" << filename << "'";
 
 	return descriptor;
 }
@@ -626,16 +608,17 @@ bool DefaultSelector::do_matches(
 std::unique_ptr<FileReaderDescriptor> DefaultSelector::do_select(
 		const std::string &filename,
 		const std::set<std::unique_ptr<FileTest>> &tests,
-		const std::set<std::unique_ptr<FileReaderDescriptor>> &descs) const
+		const DescriptorSet &descs) const
 {
 	for (auto& desc : descs)
 	{
-		if (this->matches(filename, tests, desc))
+		if (this->matches(filename, tests, desc.second))
 		{
-			ARCS_LOG(DEBUG1) << "First matching descriptor: '" << desc->name()
+			ARCS_LOG(DEBUG1) << "First matching descriptor: '"
+				<< desc.second->name()
 				<< "'";
 
-			return desc->clone();
+			return desc.second->clone();
 		}
 	}
 
@@ -660,46 +643,32 @@ class FileReaderSelection::Impl final
 public:
 
 	Impl(std::unique_ptr<FileReaderSelector> selector)
-		: selector_ { std::move(selector) }
-		, tests_{}
-		, descriptors_{}
-	{ /* empty */ }
+		: selector_    { std::move(selector) }
+		, tests_       { /* empty */ }
+	{
+		/* empty */
+	}
 
-	void add_descriptor(std::unique_ptr<FileReaderDescriptor> desc);
+	void set_selector(std::unique_ptr<FileReaderSelector> selector);
 
-	std::unique_ptr<FileReaderDescriptor> remove_descriptor(
-			const std::unique_ptr<FileReaderDescriptor> &desc);
-
-	void remove_all_descriptors();
+	const FileReaderSelector& selector() const;
 
 	void register_test(std::unique_ptr<FileTest> testobj);
 
 	std::unique_ptr<FileTest> unregister_test(
 			const std::unique_ptr<FileTest> &test);
 
-	void remove_all_tests();
-
-	void reset();
-
-	void set_selector(std::unique_ptr<FileReaderSelector> selector);
-
-	const FileReaderSelector& selector() const;
-
-	std::unique_ptr<FileReaderDescriptor> select_descriptor(
-			const std::string &filename) const;
-
-	std::unique_ptr<FileReader> for_file(const std::string &filename) const;
-
-	void traverse_descriptors(
-			std::function<void(const FileReaderDescriptor &)> func) const;
-
-	std::size_t size() const;
-
-	bool empty() const;
-
 	std::size_t total_tests() const;
 
 	bool no_tests() const;
+
+	void remove_all_tests();
+
+	std::unique_ptr<FileReaderDescriptor> get_descriptor(
+			const std::string &filename, const DescriptorSet &set) const;
+
+	std::unique_ptr<FileReader> get_reader(
+			const std::string &filename, const DescriptorSet &set) const;
 
 private:
 
@@ -709,52 +678,22 @@ private:
 	std::unique_ptr<FileReaderSelector> selector_;
 
 	/**
-	 * \brief Internal set of FileTests to performed by the selector_
+	 * \brief Internal set of FileTests to be performed by the selector_
 	 */
 	std::set<std::unique_ptr<FileTest>> tests_;
-
-	/**
-	 * \brief Internal list of FileReaderDescriptors to match by the selector_
-	 */
-	std::set<std::unique_ptr<FileReaderDescriptor>> descriptors_;
 };
 
 
-void FileReaderSelection::Impl::add_descriptor(
-		std::unique_ptr<FileReaderDescriptor> desc)
+void FileReaderSelection::Impl::set_selector(
+		std::unique_ptr<FileReaderSelector> selector)
 {
-	descriptors_.insert(std::move(desc));
+	selector_ = std::move(selector);
 }
 
 
-std::unique_ptr<FileReaderDescriptor>
-	FileReaderSelection::Impl::remove_descriptor(
-		const std::unique_ptr<FileReaderDescriptor> &desc)
+const FileReaderSelector& FileReaderSelection::Impl::selector() const
 {
-	auto desc_ptr = desc.get();
-	auto pos = std::find_if(descriptors_.begin(), descriptors_.end(),
-			[desc_ptr](const std::unique_ptr<FileReaderDescriptor> &d)
-			{
-				return desc_ptr && *d == *desc_ptr;
-			});
-
-	if (pos != descriptors_.end())
-	{
-		pos = descriptors_.erase(pos);
-	}
-
-	if (pos == descriptors_.end())
-	{
-		return nullptr;
-	}
-
-	return std::move(const_cast<std::unique_ptr<FileReaderDescriptor>&>(*pos));
-}
-
-
-void FileReaderSelection::Impl::remove_all_descriptors()
-{
-	descriptors_.clear();
+	return *selector_;
 }
 
 
@@ -790,34 +729,27 @@ std::unique_ptr<FileTest>
 }
 
 
+std::size_t FileReaderSelection::Impl::total_tests() const
+{
+	return tests_.size();
+}
+
+
+bool FileReaderSelection::Impl::no_tests() const
+{
+	return tests_.empty();
+}
+
+
 void FileReaderSelection::Impl::remove_all_tests()
 {
 	tests_.clear();
 }
 
 
-void FileReaderSelection::Impl::reset()
-{
-	tests_.clear();
-	descriptors_.clear();
-}
-
-
-void FileReaderSelection::Impl::set_selector(
-		std::unique_ptr<FileReaderSelector> selector)
-{
-	selector_ = std::move(selector);
-}
-
-
-const FileReaderSelector& FileReaderSelection::Impl::selector() const
-{
-	return *selector_;
-}
-
-
 std::unique_ptr<FileReaderDescriptor>
-FileReaderSelection::Impl::select_descriptor(const std::string &filename) const
+FileReaderSelection::Impl::get_descriptor(const std::string &filename,
+		const DescriptorSet &set) const
 {
 	if (filename.empty())
 	{
@@ -825,7 +757,7 @@ FileReaderSelection::Impl::select_descriptor(const std::string &filename) const
 	}
 
 	std::unique_ptr<FileReaderDescriptor> desc =
-		selector_->select(filename, tests_, descriptors_);
+		selector_->select(filename, tests_, set);
 
 	if (!desc)
 	{
@@ -838,49 +770,101 @@ FileReaderSelection::Impl::select_descriptor(const std::string &filename) const
 }
 
 
-std::unique_ptr<FileReader> FileReaderSelection::Impl::for_file(
-		const std::string &filename) const
+std::unique_ptr<FileReader> FileReaderSelection::Impl::get_reader(
+		const std::string &filename, const DescriptorSet &set) const
 {
-	auto desc = this->select_descriptor(filename);
+	auto d = this->get_descriptor(filename, set);
+	return d ? d->create_reader() : nullptr;
+}
 
-	return desc ? desc->create_reader() : nullptr;
+/// @}
+
+
+// DescriptorSet
+
+
+DescriptorSet::DescriptorSet()
+	: descriptors_ { /* empty */ }
+{
+	// empty
 }
 
 
-void FileReaderSelection::Impl::traverse_descriptors(
+void DescriptorSet::add(std::unique_ptr<FileReaderDescriptor> d)
+{
+	descriptors_.insert(std::make_pair(d->id(), std::move(d)));
+}
+
+
+std::unique_ptr<FileReaderDescriptor> DescriptorSet::get(const std::string &id)
+	const
+{
+	auto p = descriptors_.find(id);
+	if (p != descriptors_.end())
+	{
+		return p->second->clone();
+	}
+
+	return nullptr;
+}
+
+
+void DescriptorSet::traverse(
 			std::function<void(const FileReaderDescriptor &)> func) const
 {
-	for (const auto& desc : descriptors_)
+	for (const auto& p : descriptors_)
 	{
-		func(*desc);
+		func(*p.second);
 	}
 }
 
 
-std::size_t FileReaderSelection::Impl::size() const
+DescriptorSet::iterator DescriptorSet::begin()
+{
+	return descriptors_.begin();
+}
+
+
+DescriptorSet::iterator DescriptorSet::end()
+{
+	return descriptors_.end();
+}
+
+
+DescriptorSet::const_iterator DescriptorSet::begin() const
+{
+	return descriptors_.begin();
+}
+
+
+DescriptorSet::const_iterator DescriptorSet::end() const
+{
+	return descriptors_.end();
+}
+
+
+DescriptorSet::const_iterator DescriptorSet::cbegin() const
+{
+	return descriptors_.cbegin();
+}
+
+
+DescriptorSet::const_iterator DescriptorSet::cend() const
+{
+	return descriptors_.cend();
+}
+
+
+std::size_t DescriptorSet::size() const
 {
 	return descriptors_.size();
 }
 
 
-bool FileReaderSelection::Impl::empty() const
+bool DescriptorSet::empty() const
 {
 	return descriptors_.empty();
 }
-
-
-std::size_t FileReaderSelection::Impl::total_tests() const
-{
-	return tests_.size();
-}
-
-
-bool FileReaderSelection::Impl::no_tests() const
-{
-	return tests_.empty();
-}
-
-/// @}
 
 
 // FileReaderSelection
@@ -897,39 +881,6 @@ FileReaderSelection::FileReaderSelection()
 FileReaderSelection::~FileReaderSelection() noexcept = default;
 
 
-void FileReaderSelection::add_descriptor(
-		std::unique_ptr<FileReaderDescriptor> desc)
-{
-	impl_->add_descriptor(std::move(desc));
-}
-
-
-std::unique_ptr<FileReaderDescriptor> FileReaderSelection::remove_descriptor(
-		const std::unique_ptr<FileReaderDescriptor> &desc)
-{
-	return impl_->remove_descriptor(desc);
-}
-
-
-void FileReaderSelection::register_test(std::unique_ptr<FileTest> testobj)
-{
-	impl_->register_test(std::move(testobj));
-}
-
-
-std::unique_ptr<FileTest>  FileReaderSelection::unregister_test(
-		const std::unique_ptr<FileTest> &test)
-{
-	return impl_->unregister_test(test);
-}
-
-
-void FileReaderSelection::remove_all_tests()
-{
-	return impl_->remove_all_tests();
-}
-
-
 void FileReaderSelection::set_selector(
 		std::unique_ptr<FileReaderSelector> selector)
 {
@@ -943,42 +894,22 @@ const FileReaderSelector& FileReaderSelection::selector() const
 }
 
 
-std::unique_ptr<FileReaderDescriptor> FileReaderSelection::select_descriptor(
-		const std::string &filename) const
+void FileReaderSelection::register_test(std::unique_ptr<FileTest> testobj)
 {
-	return impl_->select_descriptor(filename);
+	impl_->register_test(std::move(testobj));
 }
 
 
-std::unique_ptr<FileReader> FileReaderSelection::for_file(
-		const std::string &filename) const
+std::unique_ptr<FileTest> FileReaderSelection::unregister_test(
+		const std::unique_ptr<FileTest> &test)
 {
-	return impl_->for_file(filename);
+	return impl_->unregister_test(test);
 }
 
 
-void FileReaderSelection::traverse_descriptors(
-			std::function<void(const FileReaderDescriptor &)> func) const
+void FileReaderSelection::remove_all_tests()
 {
-	impl_->traverse_descriptors(func);
-}
-
-
-void FileReaderSelection::reset()
-{
-	impl_->reset();
-}
-
-
-std::size_t FileReaderSelection::size() const
-{
-	return impl_->size();
-}
-
-
-bool FileReaderSelection::empty() const
-{
-	return impl_->empty();
+	return impl_->remove_all_tests();
 }
 
 
@@ -994,16 +925,97 @@ bool FileReaderSelection::no_tests() const
 }
 
 
+std::unique_ptr<FileReaderDescriptor> FileReaderSelection::get_descriptor(
+		const std::string &filename, const DescriptorSet &set) const
+{
+	return impl_->get_descriptor(filename, set);
+}
+
+
+std::unique_ptr<FileReader> FileReaderSelection::get_reader(
+		const std::string &filename, const DescriptorSet &set) const
+{
+	return impl_->get_reader(filename, set);
+}
+
+
+// DefaultAudioSelection
+
+
+struct DefaultAudioSelection final
+{
+	std::unique_ptr<FileReaderSelection> operator()() const;
+};
+
+
+std::unique_ptr<FileReaderSelection> DefaultAudioSelection::operator()()
+	const
+{
+	auto selection = std::make_unique<FileReaderSelection>();
+	selection->register_test(std::make_unique<FileTestName>());
+	selection->register_test(std::make_unique<FileTestBytes>(0,
+			details::TOTAL_BYTES_TO_READ));
+	return selection;
+}
+
+
+// DefaultMetadataSelection
+
+
+struct DefaultMetadataSelection final
+{
+	std::unique_ptr<FileReaderSelection> operator()() const;
+};
+
+
+std::unique_ptr<FileReaderSelection> DefaultMetadataSelection::operator()()
+	const
+{
+	auto selection = std::make_unique<FileReaderSelection>();
+	selection->register_test(std::make_unique<FileTestName>());
+	return selection;
+}
+
+
 // FileReaderRegistry
 
 
 FileReaderRegistry::FileReaderRegistry() = default;
 
 
-std::unique_ptr<FileReaderSelection> FileReaderRegistry::audio_selection_;
+const FileReaderSelection* FileReaderRegistry::default_audio_selection()
+{
+	if (!default_audio_selection_)
+	{
+		DefaultAudioSelection create;
+		default_audio_selection_ = create();
+	}
+
+	return default_audio_selection_.get();
+}
 
 
-std::unique_ptr<FileReaderSelection> FileReaderRegistry::toc_selection_;
+const FileReaderSelection* FileReaderRegistry::default_toc_selection()
+{
+	if (!default_toc_selection_)
+	{
+		DefaultMetadataSelection create;
+		default_toc_selection_ = create();
+	}
+
+	return default_toc_selection_.get();
+}
+
+
+DescriptorSet FileReaderRegistry::descriptors_;
+
+
+std::unique_ptr<FileReaderSelection>
+	FileReaderRegistry::default_audio_selection_;
+
+
+std::unique_ptr<FileReaderSelection>
+	FileReaderRegistry::default_toc_selection_;
 
 
 } // namespace v_1_0_0

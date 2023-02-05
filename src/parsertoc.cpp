@@ -124,7 +124,7 @@ std::unique_ptr<FileReaderDescriptor> DescriptorToc::do_clone() const
 
 namespace {
 
-const auto d = RegisterMetadataDescriptor<DescriptorToc>{};
+const auto d = RegisterDescriptor<DescriptorToc>{};
 
 } // namespace
 

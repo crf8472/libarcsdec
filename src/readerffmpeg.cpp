@@ -1542,14 +1542,14 @@ bool DescriptorFFmpeg::do_accepts_bytes(
 		const std::vector<unsigned char> & /* bytes */,
 		const uint64_t & /* offset */) const
 {
-	return true;
+	return true; // TODO Be more specific!
 }
 
 
-bool DescriptorFFmpeg::do_accepts_name(const std::string &/* filename */) const
-{
-	return true;
-}
+//bool DescriptorFFmpeg::do_accepts_name(const std::string &/* filename */) const
+//{
+//	return true;
+//}
 
 
 std::set<Format> DescriptorFFmpeg::define_formats() const
@@ -1616,7 +1616,7 @@ std::unique_ptr<FileReaderDescriptor> DescriptorFFmpeg::do_clone() const
 
 namespace {
 
-const auto d = RegisterAudioDescriptor<DescriptorFFmpeg>();
+const auto d = RegisterDescriptor<DescriptorFFmpeg>();
 
 } // namespace
 

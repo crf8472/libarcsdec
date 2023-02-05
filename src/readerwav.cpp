@@ -1236,7 +1236,7 @@ std::unique_ptr<FileReaderDescriptor> DescriptorWavPCM::do_clone() const
 
 namespace {
 
-const auto d = RegisterAudioDescriptor<DescriptorWavPCM>();
+const auto d = RegisterDescriptor<DescriptorWavPCM>();
 
 } // namespace
 

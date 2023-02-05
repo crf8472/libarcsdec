@@ -389,7 +389,7 @@ std::unique_ptr<FileReaderDescriptor> DescriptorFlac::do_clone() const
 
 namespace {
 
-const auto d = RegisterAudioDescriptor<DescriptorFlac>();
+const auto d = RegisterDescriptor<DescriptorFlac>();
 
 } // namespace
 

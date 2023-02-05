@@ -899,7 +899,7 @@ std::unique_ptr<FileReaderDescriptor> DescriptorWavpack::do_clone() const
 
 namespace {
 
-const auto d = RegisterAudioDescriptor<DescriptorWavpack>();
+const auto d = RegisterDescriptor<DescriptorWavpack>();
 
 } // namespace
 

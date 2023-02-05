@@ -17,7 +17,7 @@ set (TEST_SOURCE_DIR "src" )
 
 set (TEST_SETS )
 list (APPEND TEST_SETS audioreader  )
-#list (APPEND TEST_SETS calculators  ) ## TODO requires Mock for Calculation
+list (APPEND TEST_SETS calculators  )
 list (APPEND TEST_SETS descriptors  )
 list (APPEND TEST_SETS libinspect   )
 list (APPEND TEST_SETS parsercue    )

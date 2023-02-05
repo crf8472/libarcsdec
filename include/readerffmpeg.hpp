@@ -66,7 +66,8 @@ public:
 	 * \brief Constructor.
 	 */
 	DescriptorFFmpeg()
-		: FileReaderDescriptor { { "*" } }
+		: FileReaderDescriptor { {
+			"wav", "flac", "ape", "caf", "m4a", /* "ogg", */ "aiff" } }
 	{ /* empty */ }
 
 	/**
@@ -100,7 +101,7 @@ private:
 	 *
 	 * \return TRUE
 	 */
-	bool do_accepts_name(const std::string &) const override;
+	//bool do_accepts_name(const std::string &) const override;
 
 	std::set<Format> define_formats() const override;
 

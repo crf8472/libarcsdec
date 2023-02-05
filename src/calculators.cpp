@@ -225,11 +225,17 @@ public:
 
 	std::unique_ptr<TOC> parse(const std::string &metafilename) const;
 
+	void set_descriptorset(const DescriptorSet *descriptors);
+
+	const DescriptorSet& descriptorset() const;
+
 	void set_selection(const FileReaderSelection *selection);
 
 	const FileReaderSelection& selection() const;
 
 private:
+
+	const DescriptorSet *descriptors_;
 
 	const FileReaderSelection *selection_;
 };
@@ -248,6 +254,10 @@ public:
 
 	std::unique_ptr<ARId> calculate(const std::string &audiofilename,
 			const std::string &metafilename) const;
+
+	void set_descriptorset(const DescriptorSet *descriptors);
+
+	const DescriptorSet& descriptorset() const;
 
 	void set_toc_selection(const FileReaderSelection *selection);
 
@@ -270,6 +280,8 @@ private:
 	 */
 	std::unique_ptr<ARId> calculate(const TOC &toc,
 			const std::string &audiofilename) const;
+
+	const DescriptorSet *descriptors_;
 
 	const FileReaderSelection* toc_selection_;
 
@@ -297,6 +309,10 @@ public:
 
 	ChecksumSet calculate(const std::string &audiofilename,
 		const bool &skip_front, const bool &skip_back);
+
+	void set_descriptorset(const DescriptorSet *descriptors);
+
+	const DescriptorSet& descriptorset() const;
 
 	void set_selection(const FileReaderSelection *selection);
 
@@ -339,7 +355,12 @@ private:
 		const bool &skip_front, const bool &skip_back);
 
 	/**
-	 * \brief Internal AudioReaderSelection.
+	 * \brief Internal descriptors for audio filetypes
+	 */
+	const DescriptorSet *descriptors_;
+
+	/**
+	 * \brief Internal selection
 	 */
 	const FileReaderSelection *selection_;
 
@@ -354,7 +375,8 @@ private:
 
 
 TOCParser::Impl::Impl()
-	: selection_ { nullptr }
+	: descriptors_ { FileReaderRegistry::descriptors() }
+	, selection_   { FileReaderRegistry::default_toc_selection() }
 {
 	// empty
 }
@@ -372,9 +394,22 @@ std::unique_ptr<TOC> TOCParser::Impl::parse(const std::string &metafilename)
 				"Requested metadata file parser for empty filename.");
 	}
 
-	CreateMetadataParser get_parser;
+	CreateMetadataParser parser;
 
-	return get_parser(selection(), metafilename)->parse(metafilename);
+	return parser(selection(), descriptorset(), metafilename)->parse(
+			metafilename);
+}
+
+
+void TOCParser::Impl::set_descriptorset(const DescriptorSet *descriptors)
+{
+	descriptors_ = descriptors;
+}
+
+
+const DescriptorSet& TOCParser::Impl::descriptorset() const
+{
+	return *descriptors_;
 }
 
 
@@ -394,8 +429,9 @@ const FileReaderSelection& TOCParser::Impl::selection() const
 
 
 ARIdCalculator::Impl::Impl()
-	: toc_selection_   { nullptr }
-	, audio_selection_ { nullptr }
+	: descriptors_     { FileReaderRegistry::descriptors() }
+	, toc_selection_   { FileReaderRegistry::default_toc_selection() }
+	, audio_selection_ { FileReaderRegistry::default_audio_selection() }
 {
 	// empty
 }
@@ -462,10 +498,11 @@ std::unique_ptr<ARId> ARIdCalculator::Impl::calculate(
 		return this->calculate(metafilename);
 	}
 
-	CreateMetadataParser get_parser;
+	CreateMetadataParser parser;
 
-	const auto toc = get_parser(toc_selection(), metafilename)->parse(
-			metafilename);
+	const auto toc =
+		parser(toc_selection(), descriptorset(), metafilename)->parse(
+				metafilename);
 
 	if (toc->complete())
 	{
@@ -510,13 +547,26 @@ std::unique_ptr<ARId> ARIdCalculator::Impl::calculate(const TOC &toc,
 	// requested to start processing.
 
 	CreateAudioReader create_reader;
-	auto reader { create_reader(audio_selection(), audiofilename) };
+	auto reader { create_reader(
+			audio_selection(), descriptorset(), audiofilename) };
 
 	DefaultProcessor proc; // does nothing, but required by SampleProvider
 	reader->set_processor(proc);
 
 	const auto audiosize { reader->acquire_size(audiofilename) };
 	return make_arid(toc, audiosize->leadout_frame());
+}
+
+
+void ARIdCalculator::Impl::set_descriptorset(const DescriptorSet *descriptors)
+{
+	descriptors_ = descriptors;
+}
+
+
+const DescriptorSet& ARIdCalculator::Impl::descriptorset() const
+{
+	return *descriptors_;
 }
 
 
@@ -550,8 +600,9 @@ const FileReaderSelection& ARIdCalculator::Impl::audio_selection() const
 
 
 ARCSCalculator::Impl::Impl(const arcstk::checksum::type type)
-	: selection_ {}
-	, type_ { type }
+	: descriptors_ { FileReaderRegistry::descriptors() }
+	, selection_   { FileReaderRegistry::default_audio_selection() }
+	, type_        { type }
 {
 	// empty
 }
@@ -648,7 +699,7 @@ void ARCSCalculator::Impl::process_file(const std::string &audiofilename,
 		Calculation& calc, const std::size_t buffer_size) const
 {
 	CreateAudioReader create_reader;
-	auto reader = create_reader(selection(), audiofilename);
+	auto reader = create_reader(selection(), descriptorset(), audiofilename);
 
 	// Configure AudioReader and process file
 
@@ -713,6 +764,18 @@ ChecksumSet ARCSCalculator::Impl::calculate_track(
 }
 
 
+void ARCSCalculator::Impl::set_descriptorset(const DescriptorSet *descriptors)
+{
+	descriptors_ = descriptors;
+}
+
+
+const DescriptorSet& ARCSCalculator::Impl::descriptorset() const
+{
+	return *descriptors_;
+}
+
+
 void ARCSCalculator::Impl::set_selection(const FileReaderSelection *selection)
 {
 	selection_ = std::move(selection);
@@ -763,7 +826,7 @@ void ARCSCalculator::Impl::log_completeness_check(const Calculation &calc) const
 TOCParser::TOCParser()
 	: impl_ { std::make_unique<TOCParser::Impl>() }
 {
-	impl_->set_selection(FileReaderRegistry::toc_selection());
+	// empty
 }
 
 
@@ -773,6 +836,18 @@ TOCParser::~TOCParser() noexcept = default;
 std::unique_ptr<TOC> TOCParser::parse(const std::string &metafilename) const
 {
 	return impl_->parse(metafilename);
+}
+
+
+void TOCParser::set_descriptorset(const DescriptorSet *descriptors)
+{
+	impl_->set_descriptorset(descriptors);
+}
+
+
+const DescriptorSet& TOCParser::descriptorset() const
+{
+	return impl_->descriptorset();
 }
 
 
@@ -794,8 +869,7 @@ const FileReaderSelection& TOCParser::selection() const
 ARIdCalculator::ARIdCalculator()
 	: impl_(std::make_unique<ARIdCalculator::Impl>())
 {
-	impl_->set_toc_selection(FileReaderRegistry::toc_selection());
-	impl_->set_audio_selection(FileReaderRegistry::audio_selection());
+	// empty
 }
 
 
@@ -813,6 +887,18 @@ std::unique_ptr<ARId> ARIdCalculator::calculate(
 		const std::string &metafilename)
 {
 	return impl_->calculate(audiofilename, metafilename);
+}
+
+
+void ARIdCalculator::set_descriptorset(const DescriptorSet *descriptors)
+{
+	impl_->set_descriptorset(descriptors);
+}
+
+
+const DescriptorSet& ARIdCalculator::descriptorset() const
+{
+	return impl_->descriptorset();
 }
 
 
@@ -848,7 +934,7 @@ const FileReaderSelection& ARIdCalculator::audio_selection() const
 ARCSCalculator::ARCSCalculator()
 	: impl_(std::make_unique<ARCSCalculator::Impl>())
 {
-	impl_->set_selection(FileReaderRegistry::audio_selection());
+	// empty
 }
 
 
@@ -858,7 +944,7 @@ ARCSCalculator::~ARCSCalculator() noexcept = default;
 ARCSCalculator::ARCSCalculator(const arcstk::checksum::type type)
 	: impl_(std::make_unique<ARCSCalculator::Impl>(type))
 {
-	impl_->set_selection(FileReaderRegistry::audio_selection());
+	// empty
 }
 
 
@@ -885,6 +971,18 @@ Checksums ARCSCalculator::calculate(
 {
 	return impl_->calculate(audiofilenames,
 			first_track_with_skip, last_track_with_skip);
+}
+
+
+void ARCSCalculator::set_descriptorset(const DescriptorSet *descriptors)
+{
+	impl_->set_descriptorset(descriptors);
+}
+
+
+const DescriptorSet& ARCSCalculator::descriptorset() const
+{
+	return impl_->descriptorset();
 }
 
 

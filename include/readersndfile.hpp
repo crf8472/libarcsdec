@@ -56,7 +56,7 @@ class DescriptorSndfile : public FileReaderDescriptor
 public:
 
 	DescriptorSndfile()
-		: FileReaderDescriptor { { "*" } }
+		: FileReaderDescriptor { { "wav", "flac", /* "ogg", */ "aiff" } }
 	{ /* empty */ }
 
 	/**
@@ -94,7 +94,7 @@ private:
 	 *
 	 * \return TRUE
 	 */
-	bool do_accepts_name(const std::string &) const override;
+	//bool do_accepts_name(const std::string &) const override;
 
 	std::set<Format> define_formats() const override;
 

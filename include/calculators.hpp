@@ -82,16 +82,30 @@ public:
 	std::unique_ptr<TOC> parse(const std::string &metafilename) const;
 
 	/**
-	 * \brief Set the MetadataParserSelection for this instance.
+	 * \brief Set the DescriptorSet for this instance.
 	 *
-	 * \param[in] selection The MetadataParserSelection to use
+	 * \param[in] descriptors The Descriptors to use
 	 */
-	void set_selection(const FileReaderSelection *selection);
+	void set_descriptorset(const DescriptorSet *descriptors);
 
 	/**
 	 * \brief Get the MetadataParserSelection used by this instance.
 	 *
 	 * \return The MetadataParserSelection used by this instance
+	 */
+	const DescriptorSet& descriptorset() const;
+
+	/**
+	 * \brief Set the selection for this instance.
+	 *
+	 * \param[in] selection The selection to use
+	 */
+	void set_selection(const FileReaderSelection *selection);
+
+	/**
+	 * \brief Get the selection used by this instance.
+	 *
+	 * \return The selection used by this instance
 	 */
 	const FileReaderSelection& selection() const;
 
@@ -144,6 +158,20 @@ public:
 	 */
 	std::unique_ptr<ARId> calculate(const std::string &audiofilename,
 			const std::string &metafilename);
+
+	/**
+	 * \brief Set the \c FileReaderDescriptor s for this instance.
+	 *
+	 * \param[in] descriptors The \c FileReaderDescriptor s of this instance.
+	 */
+	void set_descriptorset(const DescriptorSet *descriptors);
+
+	/**
+	 * \brief The \c FileReaderDescriptor s of this instance.
+	 *
+	 * \return The \c FileReaderDescriptor s of this instance.
+	 */
+	const DescriptorSet& descriptorset() const;
 
 	/**
 	 * \brief Set the metadata parser selection for this instance.
@@ -276,6 +304,10 @@ public:
 	 */
 	ChecksumSet calculate(const std::string &audiofilename,
 		const bool &skip_front, const bool &skip_back);
+
+	void set_descriptorset(const DescriptorSet *descriptors);
+
+	const DescriptorSet& descriptorset() const;
 
 	/**
 	 * \brief Set the AudioReaderSelection for this instance.

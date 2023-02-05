@@ -14,6 +14,9 @@
 #ifndef __LIBARCSDEC_METAPARSER_HPP__
 #include "metaparser.hpp"
 #endif
+#ifndef __LIBARCSDEC_PARSERCUE_HPP__
+#include "parsercue.hpp"
+#endif
 #ifndef __LIBARCSDEC_READERWAV_HPP__
 #include "readerwav.hpp"
 #endif
@@ -255,8 +258,6 @@ TEST_CASE ( "FileReaderSelection", "[filereaderselection]" )
 
 	FileReaderSelection selection;
 
-	REQUIRE ( selection.size() == 0 );
-	REQUIRE ( selection.empty() );
 	REQUIRE ( selection.total_tests() == 0 );
 	REQUIRE ( selection.no_tests() );
 
@@ -278,40 +279,10 @@ TEST_CASE ( "FileReaderSelection", "[filereaderselection]" )
 		CHECK ( std::is_nothrow_move_assignable<FileReaderSelection>::value );
 	}
 
-	SECTION ( "Adding descriptors works correctly" )
-	{
-		selection.add_descriptor(std::make_unique<arcsdec::DescriptorWavPCM>());
-
-		CHECK ( selection.size() == 1 );
-		CHECK ( not selection.empty() );
-		CHECK ( selection.total_tests() == 0 );
-		CHECK ( selection.no_tests() );
-
-		selection.add_descriptor(std::make_unique<arcsdec::DescriptorFlac>());
-
-		CHECK ( selection.size() == 2 );
-	}
-
-	SECTION ( "Removing descriptors works correctly" )
-	{
-		selection.add_descriptor(std::make_unique<arcsdec::DescriptorWavPCM>());
-		selection.add_descriptor(std::make_unique<arcsdec::DescriptorFlac>());
-		REQUIRE ( selection.size() == 2 );
-
-		const std::unique_ptr<FileReaderDescriptor> & flac_desc =
-			std::make_unique<arcsdec::DescriptorFlac>();
-
-		auto d = selection.remove_descriptor(flac_desc);
-
-		CHECK ( selection.size() == 1 );
-	}
-
 	SECTION ( "Adding tests works correctly" )
 	{
 		selection.register_test(std::make_unique<arcsdec::FileTestBytes>(0, 7));
 
-		CHECK ( selection.size() == 0 );
-		CHECK ( selection.empty() );
 		CHECK ( selection.total_tests() == 1 );
 		CHECK ( not selection.no_tests() );
 
@@ -325,7 +296,6 @@ TEST_CASE ( "FileReaderSelection", "[filereaderselection]" )
 	{
 		selection.register_test(std::make_unique<arcsdec::FileTestBytes>(0, 6));
 		selection.register_test(std::make_unique<arcsdec::FileTestName>());
-		REQUIRE ( selection.size() == 0 );
 
 		CHECK ( selection.total_tests() == 2 );
 		CHECK ( not selection.no_tests() );
@@ -344,13 +314,12 @@ TEST_CASE ( "FileReaderSelection", "[filereaderselection]" )
 TEST_CASE ( "FileReaderRegistry", "[filereaderregistry]")
 {
 	using arcsdec::FileReaderRegistry;
-	using arcsdec::RegisterAudioDescriptor;
-	using arcsdec::RegisterMetadataDescriptor;
+	using arcsdec::RegisterDescriptor;
 	using arcsdec::DescriptorWavPCM;
 
-	using AudioDescriptorTestType = RegisterAudioDescriptor<DescriptorWavPCM>;
+	using AudioDescriptorTestType = RegisterDescriptor<DescriptorWavPCM>;
 	using MetadataDescriptorTestType =
-		RegisterMetadataDescriptor<DescriptorWavPCM>;
+		RegisterDescriptor<DescriptorWavPCM>;
 
 
 	SECTION ( "Copy constructor and assignment operator are declared protected" )
@@ -381,29 +350,63 @@ TEST_CASE ( "FileReaderRegistry", "[filereaderregistry]")
 }
 
 
-// TODO CreateReader
+TEST_CASE ( "CreateAudioReader Functor", "")
+{
+	using arcsdec::CreateAudioReader;
+	using arcsdec::FileReaderRegistry;
+
+	const CreateAudioReader create;
+
+	SECTION ( "Create reader for RIFFWAV/PCM correctly" )
+	{
+		auto reader = create(*FileReaderRegistry::default_audio_selection(),
+			*FileReaderRegistry::descriptors(), "test01.wav");
+
+		CHECK ( reader != nullptr );
+	}
+}
+
+
+TEST_CASE ( "CreateMetadataParser Functor", "")
+{
+	using arcsdec::CreateMetadataParser;
+	using arcsdec::FileReaderRegistry;
+
+	const CreateMetadataParser create;
+
+	SECTION ( "Create reader for CueSheet correctly" )
+	{
+		auto reader = create(*FileReaderRegistry::default_toc_selection(),
+			*FileReaderRegistry::descriptors(), "test01.cue");
+
+		CHECK ( reader != nullptr );
+	}
+}
 
 
 TEST_CASE ( "Register Descriptor Functors",
 		"[registeraudiodescriptor, registermetadatadescriptor]")
 {
-	using arcsdec::RegisterAudioDescriptor;
-	using arcsdec::RegisterMetadataDescriptor;
+	using arcsdec::RegisterDescriptor;
 	using arcsdec::DescriptorWavPCM;
+	using arcsdec::DescriptorCue;
 
-	using AudioDescriptorTestType = RegisterAudioDescriptor<DescriptorWavPCM>;
-	using MetadataDescriptorTestType =
-		RegisterMetadataDescriptor<DescriptorWavPCM>;
-
+	REQUIRE ( 7 == arcsdec::FileReaderRegistry::descriptors()->size() );
 
 	SECTION ( "RegisterAudioDescriptor<> is final" )
 	{
-		CHECK ( std::is_final<AudioDescriptorTestType>::value );
+		using WavPCMRegisterType = RegisterDescriptor<DescriptorWavPCM>;
+
+		CHECK ( std::is_final<WavPCMRegisterType>::value );
+		CHECK ( 7 == arcsdec::FileReaderRegistry::descriptors()->size() );
 	}
 
 	SECTION ( "RegisterMetadataDescriptor<> is final" )
 	{
-		CHECK ( std::is_final<MetadataDescriptorTestType>::value );
+		using CueRegisterType = RegisterDescriptor<DescriptorCue>;
+
+		CHECK ( std::is_final<CueRegisterType>::value );
+		CHECK ( 7 == arcsdec::FileReaderRegistry::descriptors()->size() );
 	}
 }
 

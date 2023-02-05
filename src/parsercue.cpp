@@ -352,7 +352,7 @@ std::unique_ptr<FileReaderDescriptor> DescriptorCue::do_clone() const
 
 namespace {
 
-const auto d = RegisterMetadataDescriptor<DescriptorCue>{};
+const auto d = RegisterDescriptor<DescriptorCue>{};
 
 } // namespace
 

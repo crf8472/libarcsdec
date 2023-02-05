@@ -221,11 +221,11 @@ bool DescriptorSndfile::do_accepts_bytes(
 }
 
 
-bool DescriptorSndfile::do_accepts_name(const std::string & /* suffix */)
-	const
-{
-	return true;
-}
+//bool DescriptorSndfile::do_accepts_name(const std::string & /* suffix */)
+//	const
+//{
+//	return true;
+//}
 
 
 std::set<Format> DescriptorSndfile::define_formats() const
@@ -275,6 +275,15 @@ std::unique_ptr<FileReaderDescriptor> DescriptorSndfile::do_clone() const
 {
 	return std::make_unique<DescriptorSndfile>();
 }
+
+
+// Add this descriptor to the audio descriptor registry
+
+namespace {
+
+const auto d = RegisterDescriptor<DescriptorSndfile>();
+
+} // namespace
 
 } // namespace v_1_0_0
 } // namespace arcsdec
