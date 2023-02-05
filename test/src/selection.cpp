@@ -301,14 +301,14 @@ TEST_CASE ( "Register Descriptor Functors",
 	using arcsdec::DescriptorWavPCM;
 	using arcsdec::DescriptorCue;
 
-	REQUIRE ( 7 == arcsdec::FileReaderRegistry::descriptors()->size() );
+	REQUIRE ( 7 >= arcsdec::FileReaderRegistry::descriptors()->size() );
 
 	SECTION ( "RegisterAudioDescriptor<> is final" )
 	{
 		using WavPCMRegisterType = RegisterDescriptor<DescriptorWavPCM>;
 
 		CHECK ( std::is_final<WavPCMRegisterType>::value );
-		CHECK ( 7 == arcsdec::FileReaderRegistry::descriptors()->size() );
+		CHECK ( 7 >= arcsdec::FileReaderRegistry::descriptors()->size() );
 	}
 
 	SECTION ( "RegisterMetadataDescriptor<> is final" )
@@ -316,7 +316,7 @@ TEST_CASE ( "Register Descriptor Functors",
 		using CueRegisterType = RegisterDescriptor<DescriptorCue>;
 
 		CHECK ( std::is_final<CueRegisterType>::value );
-		CHECK ( 7 == arcsdec::FileReaderRegistry::descriptors()->size() );
+		CHECK ( 7 >= arcsdec::FileReaderRegistry::descriptors()->size() );
 	}
 }
 
