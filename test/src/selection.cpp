@@ -47,7 +47,6 @@ TEST_CASE ( "DescriptorSet", "[descriptorset]" )
 		CHECK ( s.begin() == s.end() );
 	}
 
-
 	SECTION ( "Adding is ok on initial state" )
 	{
 		s.insert(std::make_unique<DescriptorWavPCM>());
@@ -74,13 +73,11 @@ TEST_CASE ( "FileTest", "[filetest]" )
 		CHECK ( not std::is_copy_assignable<FileTest>::value );
 	}
 
-
 	SECTION ( "Move constructor and assignment operator are not declared" )
 	{
 		CHECK ( not std::is_nothrow_move_constructible<FileTest>::value );
 		CHECK ( not std::is_nothrow_move_assignable<FileTest>::value );
 	}
-
 
 	SECTION ( "Equality comparison is correct" )
 	{
@@ -160,6 +157,7 @@ TEST_CASE ( "FileReaderSelector", "[filereaderselector]")
 {
 	using arcsdec::FileReaderSelector;
 
+
 	SECTION ( "Copy constructor and assignment operator are not declared" )
 	{
 		CHECK ( not std::is_copy_constructible<FileReaderSelector>::value );
@@ -177,6 +175,7 @@ TEST_CASE ( "FileReaderSelector", "[filereaderselector]")
 TEST_CASE ( "DefaultSelector", "[defaultselector]")
 {
 	using arcsdec::DefaultSelector;
+
 
 	SECTION ( "Copy constructor and assignment operator are declared" )
 	{
@@ -258,12 +257,8 @@ TEST_CASE ( "FileReaderSelection", "[filereaderselection]" )
 TEST_CASE ( "FileReaderRegistry", "[filereaderregistry]")
 {
 	using arcsdec::FileReaderRegistry;
-	using arcsdec::RegisterDescriptor;
 	using arcsdec::DescriptorWavPCM;
-
-	using AudioDescriptorTestType = RegisterDescriptor<DescriptorWavPCM>;
-	using MetadataDescriptorTestType =
-		RegisterDescriptor<DescriptorWavPCM>;
+	using DescriptorTestType = arcsdec::RegisterDescriptor<DescriptorWavPCM>;
 
 
 	SECTION ( "Copy constructor and assignment operator are declared protected" )
@@ -273,10 +268,8 @@ TEST_CASE ( "FileReaderRegistry", "[filereaderregistry]")
 		CHECK ( not std::is_copy_assignable<FileReaderRegistry>::value );
 
 		// available in subclass
-		CHECK ( std::is_copy_constructible<AudioDescriptorTestType>::value );
-		CHECK ( std::is_copy_assignable<AudioDescriptorTestType>::value );
-		CHECK ( std::is_copy_constructible<MetadataDescriptorTestType>::value );
-		CHECK ( std::is_copy_assignable<MetadataDescriptorTestType>::value );
+		CHECK ( std::is_copy_constructible<DescriptorTestType>::value );
+		CHECK ( std::is_copy_assignable<DescriptorTestType>::value );
 	}
 
 	SECTION ( "Move constructor and assignment operator are declared protected" )
@@ -286,22 +279,21 @@ TEST_CASE ( "FileReaderRegistry", "[filereaderregistry]")
 		CHECK ( not std::is_nothrow_move_assignable<FileReaderRegistry>::value );
 
 		// available in subclass
-		CHECK ( std::is_nothrow_move_constructible<AudioDescriptorTestType>::value );
-		CHECK ( std::is_nothrow_move_assignable<AudioDescriptorTestType>::value );
-		CHECK ( std::is_nothrow_move_constructible<MetadataDescriptorTestType>::value );
-		CHECK ( std::is_nothrow_move_assignable<MetadataDescriptorTestType>::value );
+		CHECK ( std::is_nothrow_move_constructible<DescriptorTestType>::value );
+		CHECK ( std::is_nothrow_move_assignable<DescriptorTestType>::value );
 	}
 }
 
 
-TEST_CASE ( "Register Descriptor Functors",
-		"[registeraudiodescriptor, registermetadatadescriptor]")
+TEST_CASE ( "RegisterDescriptor", "[registerdescriptor]")
 {
 	using arcsdec::RegisterDescriptor;
 	using arcsdec::DescriptorWavPCM;
 	using arcsdec::DescriptorCue;
 
 	REQUIRE ( 7 >= arcsdec::FileReaderRegistry::descriptors()->size() );
+	REQUIRE ( 0  < arcsdec::FileReaderRegistry::descriptors()->size() );
+
 
 	SECTION ( "RegisterAudioDescriptor<> is final" )
 	{
