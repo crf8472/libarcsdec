@@ -42,13 +42,6 @@ class DescriptorCue : public FileReaderDescriptor
 public:
 
 	/**
-	 * \brief Constructor.
-	 */
-	DescriptorCue()
-		: FileReaderDescriptor { { "cue" } }
-	{ /* empty */ }
-
-	/**
 	 * \brief Virtual default destructor.
 	 */
 	virtual ~DescriptorCue() noexcept override;
@@ -65,23 +58,9 @@ private:
 	 */
 	std::string do_name() const override;
 
-	/**
-	 * \brief Always returns TRUE since CueSheets cannot be recognized by a
-	 * certain byte sequence in a certain offset.
-	 *
-	 * \param[in] bytes  (ignored)
-	 * \param[in] offset (ignored)
-	 *
-	 * \return TRUE
-	 */
-	bool do_accepts_bytes(const std::vector<unsigned char> &bytes,
-			const uint64_t &offset) const override;
+	bool do_accepts_codec(Codec /* codec */) const override;
 
 	std::set<Format> define_formats() const override;
-
-	bool do_accepts_codec(Codec /* codec */) const override { return false; };
-
-	std::set<Codec> do_codecs() const override { return {}; };
 
 	LibInfo do_libraries() const override;
 

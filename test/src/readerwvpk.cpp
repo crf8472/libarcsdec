@@ -18,6 +18,32 @@
  */
 
 
+//TEST_CASE ("FormatWavpack", "[readerwvpk]" )
+//{
+//	auto f = arcsdec::FormatWavpack {};
+//
+//	SECTION ("Matches accepted bytes correctly")
+//	{
+//		CHECK ( f.bytes({ 0x77, 0x76, 0x70, 0x6B }, 0) );
+//	}
+//
+//	SECTION ("Matches accepted filenames correctly")
+//	{
+//		CHECK ( f.filename("foo.wv") );
+//		CHECK ( f.filename("bar.WV") );
+//
+//		CHECK ( !f.filename("bar.WAV") );
+//		CHECK ( !f.filename("bar.wav") );
+//
+//		CHECK ( !f.filename("bar.rwv") );
+//		CHECK ( !f.filename("bar.RWV") );
+//
+//		CHECK ( !f.filename("bar.wvx") );
+//		CHECK ( !f.filename("bar.WVX") );
+//	}
+//}
+
+
 TEST_CASE ("DescriptorWavpack", "[readerwvpk]" )
 {
 	using arcsdec::DescriptorWavpack;
@@ -38,11 +64,6 @@ TEST_CASE ("DescriptorWavpack", "[readerwvpk]" )
 		CHECK ( libs.size() == 1 );
 		CHECK ( libs.front().first  == "libwavpack" );
 		CHECK ( libs.front().second.find("libwavpack") != std::string::npos );
-	}
-
-	SECTION ("Matches accepted bytes correctly")
-	{
-		CHECK ( d.accepts_bytes({ 0x77, 0x76, 0x70, 0x6B }, 0) );
 	}
 
 	SECTION ("Matches accepted codecs correctly")
@@ -97,21 +118,6 @@ TEST_CASE ("DescriptorWavpack", "[readerwvpk]" )
 	SECTION ("Returns accepted formats correctly")
 	{
 		CHECK ( d.formats() == std::set<Format>{ Format::WV } );
-	}
-
-	SECTION ("Matches accepted filenames correctly")
-	{
-		CHECK ( d.accepts_name("foo.wv") );
-		CHECK ( d.accepts_name("bar.WV") );
-
-		CHECK ( !d.accepts_name("bar.WAV") );
-		CHECK ( !d.accepts_name("bar.wav") );
-
-		CHECK ( !d.accepts_name("bar.rwv") );
-		CHECK ( !d.accepts_name("bar.RWV") );
-
-		CHECK ( !d.accepts_name("bar.wvx") );
-		CHECK ( !d.accepts_name("bar.WVX") );
 	}
 }
 

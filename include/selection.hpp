@@ -4,18 +4,16 @@
 /**
  * \file
  *
- * \brief Toolkit for selecting file readers
+ * \brief Toolkit for selecting file readers by format and codec.
  */
 
-#include <cstddef>     // for size_t
-#include <cstdint>     // for uint32_t, uint64_t, int64_t
-#include <functional>  // for function
-#include <map>         // for map
-#include <memory>      // for unique_ptr, make_unique
-#include <set>         // for set
-#include <string>      // for string
-#include <type_traits> // for is_convertible
-#include <utility>     // for pair, move, make_pair, forward
+#include <memory>        // for unique_ptr, make_unique
+#include <set>           // for set
+#include <string>        // for string
+#include <type_traits>   // for is_convertible
+#include <unordered_map> // for unordered_map
+#include <utility>       // for pair, move, make_pair, forward
+#include <vector>        // for vector
 
 #ifndef __LIBARCSTK_LOGGING_HPP__
 #include <arcstk/logging.hpp>   // for ARCS_LOG_WARNING, ARCS_LOG_DEBUG
@@ -33,270 +31,136 @@ inline namespace v_1_0_0
 
 
 /**
- * \defgroup selction API for selecting FileReaders
+ * \defgroup selection API for selecting FileReaders
  *
  * \brief API for selecting \link FileReader FileReaders\endlink for given
  * input files.
  *
- * Abstract class FileReaderSelection provides the API for the mechanism to
- * check a specified input file for a matching FileReaderDescriptor. If a
- * matching FileReaderDescriptor is found, an instance of this descriptor is
- * returned which is then used to create the concrete FileReader instance.
+ * FileReaderSelection provides the API for selecting a FileReader from a set
+ * of available readers. It uses a DescriptorPreference to assign a preference
+ * to each descriptor based on the given Format and Codec and a
+ * FileReaderSelector to actually select the descriptor based on the preference.
+ * An instance of the selected descriptor is returned which can then be used to
+ * create the concrete FileReader instance.
  *
- * A FileReaderSelection holds a a list of tests to perform on the input file
- * and a list of supported FileReaderDescriptors. Internally, it uses an
- * instance of FileReaderSelector to select a concrete FileReaderDescriptor.
- * FileReaderSelector performs the selection obeying a certain selection policy.
- * The default FileReaderSelector just selects the first FileReaderDescriptor in
- * the list of supported FileReaderDescriptors that passes all tests in the
- * provided list of tests.
+ * A convenience interface to this mechanism is provided by functions
+ * select_descriptor() and select_reader().
  *
- * A FileTest implements a single test. It may or may not open the file to test.
+ * A FileReaderSelector can select() a matching FileReaderDescriptor by
+ * a pair of Format and Codec and a list of available FileReaderDescriptors.
  *
- * The \ref AudioReader and \ref MetadataParser APIs are built on this API.
+ * Class FileReaderRegistry holds the set of available FileReaderDescriptors as
+ * well as the set of supported \link Formats Format\endlink. It also defines
+ * default selections for Metadata/TOC formats as well as audio formats.
+ *
+ * The \ref AudioReader and \ref MetadataParser APIs are based on this API.
  *
  * @{
  */
 
-/**
- * \brief A set of FileReaderDescriptors.
- *
- * The set can be accessed via getting one of its members via an id. The set can
- * be traversed thereby applying a specified function to each member. The set
- * can be added a member. It provides iterators and size information as well as
- * an emptyness check.
- */
-class DescriptorSet final
-{
-private:
-
-	/**
-	 * \brief Map with the descriptor ID as a key and the type as value
-	 */
-	std::map<std::string, std::unique_ptr<FileReaderDescriptor>> descriptors_;
-
-public:
-
-	DescriptorSet();
-
-	/**
-	 * \brief Add a descriptor to the set
-	 *
-	 * \param[in] d Descriptor to be added to the set
-	 */
-	void insert(std::unique_ptr<FileReaderDescriptor> d);
-
-	/**
-	 * \brief Get a descriptor by id
-	 *
-	 * \param[in] id The id of the descriptor to get
-	 */
-	std::unique_ptr<FileReaderDescriptor> get(const std::string &id) const;
-
-	/**
-	 * \brief Traverse all descriptors and apply the specified
-	 * function \c func on each of them.
-	 *
-	 * This enables listing or querying the set of added descriptors.
-	 *
-	 * \param[in] func Function to apply to each descriptor.
-	 */
-	void traverse(std::function<void(const FileReaderDescriptor &)> func) const;
-
-	/**
-	 * \brief Total number of descriptors in the set.
-	 *
-	 * \return Total number of descriptors in the set.
-	 */
-	std::size_t size() const;
-
-	/**
-	 * \brief Returns \c TRUE iff the set is empty, otherwise \c FALSE.
-	 *
-	 * \return \c TRUE iff the set is empty, otherwise \c FALSE.
-	 */
-	bool empty() const;
-
-
-	using iterator = decltype(descriptors_)::iterator;
-	using const_iterator = decltype(descriptors_)::const_iterator;
-
-	iterator begin();
-	iterator end();
-
-	const_iterator begin() const;
-	const_iterator end() const;
-
-	const_iterator cbegin() const;
-	const_iterator cend() const;
-};
-
-
-class FileTest;
-bool operator == (const FileTest &lhs, const FileTest &rhs);
 
 /**
- * \brief A test whether a given FileReaderDescriptor matches a criterion.
+ * \brief Interface for a descriptor preference.
  *
- * FileTest instances are polymorphically comparable to support their use
- * in containers.
+ * A preference is a numerically expressed likeliness that a descriptor should
+ * be selected for the given pair of Format and Codec.
  *
- * \note
- * Instances of this class are non-copyable and non-movable but provide
- * protected special members for copy and move that can be used in subclasses.
+ * The actual \c type of a preference value is an unsigned integer type.
+ * The minimal possible preference is expressed by MIN_PREFERENCE which can be
+ * taken for 'no actual preference'. The maximal possible preference is
+ * MAX_PREFERENCE.
+ *
+ * \see DefaultPreference
  */
-class FileTest : public Comparable<FileTest>
+class DescriptorPreference
 {
 public:
 
-	friend bool operator == (const FileTest &lhs, const FileTest &rhs);
+	/**
+	 * \brief An unsigned integer type to express the actual preference value.
+	 */
+	using type = unsigned int;
 
 	/**
-	 * \brief Default constructor.
+	 * \brief Minimal preference value.
 	 */
-	FileTest();
+	constexpr static type MIN_PREFERENCE = 0;
+
+	/**
+	 * \brief Maximal preference value.
+	 */
+	constexpr static type MAX_PREFERENCE = 100;
 
 	/**
 	 * \brief Virtual default destructor.
 	 */
-	virtual ~FileTest() noexcept;
+	virtual ~DescriptorPreference() noexcept;
 
 	/**
-	 * \brief Short description of this test.
+	 * \brief Get a preference of one descriptor from a set for a specified pair
+	 * of Format and Codec.
 	 *
-	 * \returns Description of this test
+	 * \param[in] format  File format
+	 * \param[in] codec   Audio codec
+	 * \param[in] desc    The descriptor to check
+	 *
+	 * \return Preference value to read format and codec with this descriptor
 	 */
-	std::string description() const;
-
-	/**
-	 * \brief Perform test for a given pair of descriptor instance and filename.
-	 *
-	 * \param[in] desc     The FileReaderDescriptor to match
-	 * \param[in] filename The filename to test
-	 *
-	 * \return TRUE iff the descriptor matches the criterion of this test
-	 */
-	bool passes(const FileReaderDescriptor &desc, const std::string &filename)
-		const;
-
-protected:
-
-	FileTest(const FileTest &) = default;
-	FileTest& operator = (const FileTest &) = default;
-
-	FileTest(FileTest &&) noexcept = default;
-	FileTest& operator = (FileTest &&) noexcept = default;
-
-	/**
-	 * \brief TRUE if instance equals \c rhs.
-	 *
-	 * \param[in] rhs Right hand side of the comparison
-	 *
-	 * \returns TRUE if instance equals \c rhs.
-	 */
-	virtual bool equals(const FileTest &rhs) const
-	= 0;
+	type preference(const Format format, const Codec codec,
+		const FileReaderDescriptor &desc) const;
 
 private:
 
-	/**
-	 * \brief Implements FileTest::description().
-	 */
-	virtual std::string do_description() const
-	= 0;
-
-	/**
-	 * \brief Implements FileTest::passes().
-	 */
-	virtual bool do_passes(const FileReaderDescriptor &desc,
-			const std::string &filename) const
+	virtual type do_preference(const Format format, const Codec codec,
+		const FileReaderDescriptor &desc) const
 	= 0;
 };
 
 
 /**
- * \brief Test for matching a byte sequence from a file.
- */
-class FileTestBytes final : public FileTest
-{
-public:
-
-	/**
-	 * \brief Constructor.
-	 *
-	 * \param[in] offset The offset in bytes where this sequence starts
-	 * \param[in] length Number of bytes in the sequence
-	 */
-	FileTestBytes(const uint32_t &offset, const uint32_t &length);
-
-	/**
-	 * \brief Offset.
-	 *
-	 * \return Offset
-	 */
-	uint32_t offset() const;
-
-	/**
-	 * \brief Length.
-	 *
-	 * \return Length
-	 */
-	uint32_t length() const;
-
-protected:
-
-	bool equals(const FileTest &) const override;
-
-private:
-
-	std::string do_description() const override;
-
-	bool do_passes(const FileReaderDescriptor &desc,
-			const std::string &filename) const override;
-
-	/**
-	 * \brief Byte offset of the byte sequence in the file.
-	 */
-	uint32_t offset_;
-
-	/**
-	 * \brief Number of bytes to read from the start position.
-	 */
-	uint32_t length_;
-};
-
-
-/**
- * \brief Test for matching an actual filename.
- */
-class FileTestName final : public FileTest
-{
-private:
-
-	std::string do_description() const override;
-
-	bool do_passes(const FileReaderDescriptor &desc,
-			const std::string &filename) const override;
-
-protected:
-
-	bool equals(const FileTest &) const override;
-};
-
-
-/**
- * \brief A selection mechanism for a FileReaderSelection.
+ * \brief Default Preference based on Format and Codec.
  *
- * A FileReaderSelector applies FileTests to FileReaderDescriptors to select
- * a descriptor with a certain test result.
+ * A default preference value for the given input. The more formats and
+ * codecs a FileReader supports, the higher is the penalty subtracted from its
+ * preference for a given Format and Codec.
  *
- * It implements two different decisions. Implementing matches() defines which
- * descriptors are candidates to be selected. Implementing select() defines
- * which of the matching candidates is concretely selected.
+ * This prefers specialized readers (like libFLAC) over general multi-input
+ * readers (like ffmpeg).
+ */
+class DefaultPreference final : public DescriptorPreference
+{
+	type do_preference(const Format format, const Codec codec,
+		const FileReaderDescriptor &desc) const override;
+};
+
+
+/**
+ * \brief Preference based on the Format.
  *
  * \note
- * Instances of this class are non-copyable and non-movable but provide
- * protected special members for copy and move that can be used in subclasses.
+ * The codec is ignored. This preference model is used as the default model
+ * while codec recognition is not fully implemented. Once codec is fully
+ * supported, DefaultPreference will be the default instead of FormatPreference.
+ */
+class FormatPreference final : public DescriptorPreference
+{
+	type do_preference(const Format format, const Codec codec,
+		const FileReaderDescriptor &desc) const override;
+};
+
+
+/**
+ * \brief Type for the container of available FileReaderDescriptor instances.
+ *
+ * A single FileReaderDescriptor can be requested by its id.
+ * FileReaderDescriptor instances come without an inherent ordering.
+ */
+using FileReaders = std::unordered_map<std::string,
+		std::unique_ptr<FileReaderDescriptor>>;
+
+
+/**
+ * \brief Interface for a selector on a set of FileReaderDescriptor instances.
  *
  * \see DefaultSelector
  */
@@ -305,78 +169,34 @@ class FileReaderSelector
 public:
 
 	/**
-	 * \brief Default constructor.
-	 */
-	FileReaderSelector();
-
-	/**
 	 * \brief Virtual default destructor.
 	 */
 	virtual ~FileReaderSelector() noexcept;
 
 	/**
-	 * \brief Decide whether a descriptor matches the given set of tests.
+	 * \brief Selects a descriptor for the specified Format and Codec.
 	 *
-	 * This defines the set of selection candidates.
+	 * The concrete implementation is supposed to use \c pref_model() to
+	 * establish a preference ordering on the set of descriptors. Based on
+	 * this ordering the implementation of select() is free to decide which
+	 * position of the preference ordering is the one to pick.
 	 *
-	 * \param[in] filename Name of the file to perform the tests on
-	 * \param[in] tests    Set of tests to perform
-	 * \param[in] desc     The descriptor to check
-	 *
-	 * \return TRUE iff the descriptor matches the given set of tests
-	 */
-	bool matches(
-		const std::string &filename,
-		const std::set<std::unique_ptr<FileTest>> &tests,
-		const std::unique_ptr<FileReaderDescriptor> &desc) const;
-
-	/**
-	 * \brief Selects a descriptor using tests.
-	 *
-	 * This defines the selection of a concrete selection candidate.
-	 *
-	 * The concrete implementation is supposed to use \c matches() to
-	 * decide whether a descriptor is matched.
-	 *
-	 * \param[in] filename Name of the file to select a descriptor for
-	 * \param[in] tests    Set of tests to perform
+	 * \param[in] format   File format
+	 * \param[in] codec    Audio codec
 	 * \param[in] descs    Set of descriptors to select from
+	 * \param[in] pref_model Preference model for selecting descriptors
 	 *
-	 * \return A FileReaderDescriptor
+	 * \return A FileReaderDescriptor that accepts \c format and \c codec
 	 */
-	std::unique_ptr<FileReaderDescriptor> select(
-			const std::string &filename,
-			const std::set<std::unique_ptr<FileTest>> &tests,
-			const DescriptorSet &descs)
-		const;
-
-protected:
-
-	FileReaderSelector(const FileReaderSelector &rhs) = default;
-	FileReaderSelector& operator = (const FileReaderSelector &rhs) = default;
-
-	FileReaderSelector(FileReaderSelector &&rhs) = default;
-	FileReaderSelector& operator = (FileReaderSelector &&rhs) = default;
+	std::unique_ptr<FileReaderDescriptor> select(const Format format,
+			const Codec codec, const FileReaders &descs,
+			const DescriptorPreference &pref_model) const;
 
 private:
 
-	/**
-	 * \brief Implements FileReaderSelector::matches().
-	 */
-	virtual bool do_matches(
-		const std::string &filename,
-		const std::set<std::unique_ptr<FileTest>> &tests,
-		const std::unique_ptr<FileReaderDescriptor> &desc) const
-	= 0;
-
-	/**
-	 * \brief Implements FileReaderSelector::select().
-	 */
 	virtual std::unique_ptr<FileReaderDescriptor> do_select(
-			const std::string &filename,
-			const std::set<std::unique_ptr<FileTest>> &tests,
-			const DescriptorSet &descs)
-		const
+		const Format format, const Codec codec, const FileReaders &descs,
+		const DescriptorPreference &pref_model) const
 	= 0;
 };
 
@@ -384,140 +204,100 @@ private:
 /**
  * \brief Default selector.
  *
- * Selects the first descriptor from the descriptor list that passes all tests.
- *
- * Note that if no tests are passed, each FileReaderDescriptor matches!
- * This means that whatever is first descriptor in the sequence of descriptors
- * will be matched and create the FileReader.
+ * Assigns a preference to each FileReaderDescriptor and returns the first one
+ * (in order of occurrence) that has the highest occurring preference based on
+ * \c pref_model.
  */
 class DefaultSelector final : public FileReaderSelector
 {
 private:
 
-	std::unique_ptr<FileReaderDescriptor> do_select(
-			const std::string &filename,
-			const std::set<std::unique_ptr<FileTest>> &tests,
-			const DescriptorSet &descs)
-		const override;
-
-	bool do_matches(
-		const std::string &filename,
-		const std::set<std::unique_ptr<FileTest>> &tests,
-		const std::unique_ptr<FileReaderDescriptor> &desc) const override;
+	std::unique_ptr<FileReaderDescriptor> do_select(const Format format,
+			const Codec codec, const FileReaders &descs,
+			const DescriptorPreference &pref_model) const override;
 };
 
 
 /**
- * \brief Traversable selection of available FileReader descriptors.
- *
- * Default constructor initializes the selection with a DefaultSelector.
- *
- * \note
- * Instances of this class are non-copyable but movable.
+ * \brief Interface to select a FileReaderDescriptor by Format and Codec.
  */
-class FileReaderSelection final
+class FileReaderSelection
 {
 public:
 
 	/**
-	 * \brief Constructor.
+	 * \brief Virtual default destructor.
 	 */
-	FileReaderSelection();
-
-	FileReaderSelection(FileReaderSelection &&) noexcept = default;
-	FileReaderSelection& operator = (FileReaderSelection &&) noexcept = default;
+	virtual ~FileReaderSelection() noexcept;
 
 	/**
-	 * \brief Default destructor.
+	 * \brief Selects a descriptor for the specified Format and Codec.
+	 *
+	 * \param[in] format   File format
+	 * \param[in] codec    Audio codec
+	 * \param[in] descs    Set of descriptors to select from
+	 *
+	 * \return A FileReaderDescriptor that accepts \c format and \c codec
 	 */
-	~FileReaderSelection() noexcept; // Required by pimpl
-
-	/**
-	 * \brief Set the FileReaderSelector for this instance.
-	 *
-	 * \param[in] selector The FileReaderSelector for this instance
-	 */
-	void set_selector(std::unique_ptr<FileReaderSelector> selector);
-
-	/**
-	 * \brief Return the FileReaderSelector of this instance.
-	 *
-	 * \return The FileReaderSelector of this instance
-	 */
-	const FileReaderSelector& selector() const;
-
-	/**
-	 * \brief Register a test.
-	 *
-	 * \param[in] testobj The test to be registered
-	 */
-	void register_test(std::unique_ptr<FileTest> testobj);
-
-	/**
-	 * \brief Remove all matching tests.
-	 *
-	 * Removes all tests from the selection that qualify as equivalent to
-	 * \c test by testing equality with '=='.
-	 *
-	 * \param[in] test The FileTest to be removed
-	 *
-	 * \return Number of test instances removed.
-	 */
-	std::unique_ptr<FileTest> unregister_test(
-			const std::unique_ptr<FileTest> &test);
-
-	/**
-	 * \brief Removes all tests registered to this instance.
-	 */
-	void remove_all_tests();
-
-	/**
-	 * \brief Number of registered tests.
-	 *
-	 * \return The number of registered tests in this selection.
-	 */
-	std::size_t total_tests() const;
-
-	/**
-	 * \brief TRUE if this selection has no tests registered.
-	 *
-	 * \return TRUE if this selection has no tests registered.
-	 */
-	bool no_tests() const;
-
-	/**
-	 * \brief Determine a matching FileReaderDescriptor for the specified file.
-	 *
-	 * \param[in] filename Name of the file to determine a descriptor for
-	 *
-	 * \return A FileReaderDescriptor for the specified file
-	 */
-	std::unique_ptr<FileReaderDescriptor> get_descriptor(
-			const std::string &filename, const DescriptorSet &set) const;
-
-	/**
-	 * \brief Create an opaque FileReader for the given file.
-	 *
-	 * Will return \c nullptr if the file cannot be read or the filename is
-	 * empty. The FileReader returned is selected by \c select_descriptor().
-	 *
-	 * \param[in] filename Name of the file to create the reader for
-	 *
-	 * \return A FileReader for the specified file
-	 */
-	std::unique_ptr<FileReader> get_reader(
-			const std::string &filename, const DescriptorSet &set) const;
+	std::unique_ptr<FileReaderDescriptor> get(const Format format,
+			const Codec codec, const FileReaders &descs) const;
 
 private:
 
-	// forward declaration
-	class Impl;
+	virtual std::unique_ptr<FileReaderDescriptor> do_get(const Format format,
+			const Codec codec, const FileReaders &descs) const
+	= 0;
+};
+
+
+/**
+ * \brief A selection of FileReaderDescriptors.
+ *
+ * Use a concrete preference and selector type to determine a FileReader
+ * for a specified input file.
+ *
+ * \tparam P Concrete DescriptorPreference
+ * \tparam S Concrete FileReaderSelector
+ */
+template <typename P, typename S>
+class FileReaderPreferenceSelection final : public FileReaderSelection
+{
+public:
 
 	/**
-	 * \brief Private implementation of this FileReaderSelection.
+	 * \brief The DescriptorPreference type.
 	 */
-	std::unique_ptr<FileReaderSelection::Impl> impl_;
+	using preference_type = P;
+
+	/**
+	 * \brief The FileReaderSelector type.
+	 */
+	using selector_type = S;
+
+private:
+
+	inline std::unique_ptr<FileReaderDescriptor> do_get(const Format format,
+			const Codec codec, const FileReaders &descs) const final
+	{
+		static std::unique_ptr<DescriptorPreference> pref
+		{
+			std::make_unique<P>()
+		};
+
+		static std::unique_ptr<FileReaderSelector> selector
+		{
+			std::make_unique<S>()
+		};
+
+		return selector->select(format, codec, descs, *pref);
+	}
 };
+
+
+/**
+ * \brief An unordered container of \link Descriptor Descriptors\endlink.
+ */
+using FormatList = std::vector<std::unique_ptr<Descriptor>>;
 
 
 /**
@@ -531,14 +311,15 @@ using FunctionReturningUniquePtr = std::unique_ptr<T>(*)();
 
 
 /**
- * \brief A global registry holding all compiled-in FileReaderDescriptors.
+ * \brief Global registry holding all available FileReaderDescriptors
+ * and all supported Formats.
  *
  * A FileReaderDescriptor instance is registered via instantiating the template
- * subclass RegisterDescriptor with the appropriate FileReaderDescriptor type.
+ * subclass RegisterDescriptor with the appropriate Descriptor type.
  *
- * \note
- * Instances of this class are non-copyable and non-movable but provide
- * protected special members for copy and move that can be used in subclasses.
+ * A Format along with its byte and filename characteristics is registered via
+ * instantiating the template subclass RegisterFormat with the appropriate
+ * Format type.
  *
  * \note
  * This class is non-final but does not support polymorphic deletion.
@@ -547,56 +328,105 @@ using FunctionReturningUniquePtr = std::unique_ptr<T>(*)();
  */
 class FileReaderRegistry
 {
+	/**
+	 * \brief List of supported formats.
+	 */
+	static FormatList formats_;
+
+	/**
+	 * \brief Set of available readers.
+	 */
+	static std::unique_ptr<FileReaders> readers_;
+
+	/**
+	 * \brief Default selection for acquiring audio readers.
+	 */
+	static std::unique_ptr<FileReaderSelection> default_audio_selection_;
+
+	/**
+	 * \brief Default selection for acquiring metadata parsers.
+	 */
+	static std::unique_ptr<FileReaderSelection> default_toc_selection_;
+
 public:
 
 	/**
-	 * \brief Default constructor.
+	 * \brief Return TRUE iff at least one descriptor for \c f is registered.
+	 *
+	 * \param[in] f The format to check for
+	 *
+	 * \return TRUE iff descriptors for \c are registered, otherwise FALSE
 	 */
-	FileReaderRegistry();
+	static bool has_format(const Format f);
+
+	/**
+	 * \brief Get a FileReaderDescriptor by its id.
+	 *
+	 * \param[in] id Id of the FileReaderDescriptor to lookup
+	 *
+	 * \return The FileReaderDescriptor with the specified \c id or nullptr.
+	 */
+	static std::unique_ptr<FileReaderDescriptor> reader(const std::string &id);
+
+	/**
+	 * \brief List of supported formats.
+	 *
+	 * \return List of supported formats
+	 */
+	static const FormatList* formats();
 
 	/**
 	 * \brief Set of available descriptors for FileReaders.
 	 *
-	 * \return Set of available descriptors for FileReaders.
+	 * \return Set of available descriptors for FileReaders
 	 */
-	static const DescriptorSet* descriptors();
+	static const FileReaders* readers();
 
 	/**
 	 * \brief Create a default audio selection.
 	 *
 	 * This is used to initialize TOCParser and the Calculators with the same
-	 * default selection setup.
+	 * default selection setup for audio readers.
 	 *
-	 * \return The default selection for determining an AudioReader
+	 * \return The default selector for determining an AudioReader
 	 */
 	static const FileReaderSelection* default_audio_selection();
 
 	/**
-	 * \brief Create a default toc selection
+	 * \brief Create a default TOC selection.
 	 *
 	 * This is used to initialize TOCParser and the Calculators with the same
-	 * default selection setup.
+	 * default selection setup for TOCs.
 	 *
-	 * \return The default selection for determining a MetadataParser
+	 * \return The default selector for determining a MetadataParser
 	 */
 	static const FileReaderSelection* default_toc_selection();
 
 protected:
 
-	~FileReaderRegistry() noexcept = default;
-
-	FileReaderRegistry(const FileReaderRegistry &) = default;
-	FileReaderRegistry& operator = (const FileReaderRegistry &) = default;
-
-	FileReaderRegistry(FileReaderRegistry &&) noexcept = default;
-	FileReaderRegistry& operator = (FileReaderRegistry &&) noexcept = default;
+	/**
+	 * \brief Add a descriptor to this registry.
+	 *
+	 * \param[in] f Descriptor to add.
+	 */
+	static void add_format(std::unique_ptr<Descriptor> f);
 
 	/**
 	 * \brief Add a descriptor to this registry.
 	 *
 	 * \param[in] d Descriptor to add.
 	 */
-	static void add(std::unique_ptr<FileReaderDescriptor> d);
+	static void add_reader(std::unique_ptr<FileReaderDescriptor> d);
+
+	/**
+	 * \brief Instantiate the Descriptor with the given name.
+	 *
+	 * \param[in] create Function pointer to create the instance
+	 *
+	 * \return Instance returned by \c create
+	 */
+	static std::unique_ptr<Descriptor> call_maker(
+			FunctionReturningUniquePtr<Descriptor> create);
 
 	/**
 	 * \brief Instantiate the FileReader with the given name.
@@ -605,31 +435,28 @@ protected:
 	 *
 	 * \return Instance returned by \c create
 	 */
-	static std::unique_ptr<FileReaderDescriptor> call(
+	static std::unique_ptr<FileReaderDescriptor> call_maker(
 			FunctionReturningUniquePtr<FileReaderDescriptor> create);
-
-private:
-
-	static std::unique_ptr<DescriptorSet> descriptors_;
-
-	static std::unique_ptr<FileReaderSelection> default_audio_selection_;
-
-	static std::unique_ptr<FileReaderSelection> default_toc_selection_;
 };
 
 
 namespace details
 {
 
-/**
- * \brief Downcast a FileReader to a specialized ReaderType.
+/** \brief Downcast a FileReader to a specialized ReaderType.
  *
- * The operation is safe: if the cast fails, the input pointer is returned
- * unaltered as second element of the pair, together with a nullptr as casting
- * result. If the cast succeeds, the casted pointer is returned together with
- * a nullptr as second element.
+ * The first element of the returned pair is a pointer to the requested input
+ * object with the requested cast performed. If the cast fails, the first
+ * element is a nullptr. The unaltered input pointer is returned as a second
+ * element in any case.
+ *
+ * \tparam Concrete FileReader type to cast to
+ *
+ * \param[in] file_reader The pointer to cast
+ *
+ * \return Pair of casting result and the original input pointer.
  */
-template<typename ReaderType>
+template<class ReaderType>
 auto cast_reader(std::unique_ptr<FileReader> file_reader) noexcept
 	-> std::pair<std::unique_ptr<ReaderType>, std::unique_ptr<FileReader>>
 {
@@ -678,6 +505,46 @@ auto cast_reader(std::unique_ptr<FileReader> file_reader) noexcept
 
 
 /**
+ * \brief Select a FileReaderDescriptor.
+ *
+ * Select a reader that is guaranteed to accept the current input file or return
+ * a nullptr.
+ *
+ * \param[in] filename Name of the file to read
+ * \param[in] selector Selector to choose a reader
+ * \param[in] formats  Set of file formats to check \c filename for
+ * \param[in] readers  Set of available file readers
+ *
+ * \return Descriptor that accepts the input file.
+ */
+std::unique_ptr<FileReaderDescriptor> select_descriptor(
+		const std::string &filename,
+		const FileReaderSelection &selection,
+		const FormatList &formats,
+		const FileReaders &readers);
+
+
+/**
+ * \brief Select a FileReader.
+ *
+ * Select a reader that is guaranteed to accept the current input file or return
+ * a null pointer.
+ *
+ * \param[in] filename Name of the file to read
+ * \param[in] selector Selector to choose a reader
+ * \param[in] formats  Set of file formats to check \c filename for
+ * \param[in] readers  Set of available file readers
+ *
+ * \return FileReader that accepts the input file.
+ */
+std::unique_ptr<FileReader> select_reader(
+		const std::string &filename,
+		const FileReaderSelection &selection,
+		const FormatList &formats,
+		const FileReaders &readers);
+
+
+/**
  * \brief Functor to safely create a unique_ptr to a downcasted FileReader.
  *
  * It will either provide a valid FileReader of the requested type or will
@@ -686,7 +553,7 @@ auto cast_reader(std::unique_ptr<FileReader> file_reader) noexcept
  * \warning
  * This class is non-abstract and non-final and does not support polymorphic
  * deletion. It is intended to be used for private inheritance to stateless
- * subclasses.
+ * subclasses exclusively.
  *
  * \tparam ReaderType Concrete type of the required FileReader
  *
@@ -699,24 +566,28 @@ struct CreateReader
 	/**
 	 * \brief Return a unique_ptr to an instance of the specified \c ReaderType.
 	 *
-	 * \param[in] selection The FileReaderSelection to choose from
+	 * \param[in] selector  The FileReaderSelector to choose from
 	 * \param[in] filename  The name of the file to choose a FileReader
+	 * \param[in] formats   Set of supported formats
+	 * \param[in] readers   Set of available file readers
 	 */
-	auto operator()(const FileReaderSelection &selection,
-			const DescriptorSet &descriptors, const std::string &filename) const
-		-> std::unique_ptr<ReaderType>
+	auto operator()(const std::string &filename,
+			const FileReaderSelection &selection,
+			const FormatList &formats,
+			const FileReaders &readers) const
+	-> std::unique_ptr<ReaderType>
 	{
-		ARCS_LOG_DEBUG << "Recognize format of input file '" << filename << "'";
+		ARCS_LOG_DEBUG << "Input file: " << filename << "";
 
-		auto file_reader = selection.get_reader(filename, descriptors);
+		auto reader = select_reader(filename, selection, formats, readers);
 
-		if (!file_reader)
+		if (!reader)
 		{
 			throw InputFormatException("Could not identify file format: '"
 					+ filename + "'");
 		}
 
-		auto p = details::cast_reader<ReaderType>(std::move(file_reader));
+		auto p = details::cast_reader<ReaderType>(std::move(reader));
 
 		if (!p.first)
 		{
@@ -724,14 +595,14 @@ struct CreateReader
 					+ filename);
 		}
 
-		auto reader { std::move(p.first) };
+		auto file_reader { std::move(p.first) };
 
 		// XXX Return std::move(p.first) is quirky since it prevents RVO.
 		// Omitting the move and return p.first directly causes compile error
 		// since we try in fact to copy-construct a MetadataParser or
 		// AudioReader. Both classes are abstract.
 
-		return reader;
+		return file_reader;
 	}
 
 protected:
@@ -762,18 +633,51 @@ std::unique_ptr<FileReaderDescriptor> make_descriptor(Args&&... args)
 
 
 /**
- * \brief Register a FileReaderDescriptor type.
+ * \brief Register a Format.
  *
- * \note This is a quite convenient way to register FileReaderDescriptors
- * without having to keep a global singleton.
+ * Register a set of supported filename suffices and a byte sequence for a
+ * Format \c F.
+ *
+ * \tparam F The Format to register
+ */
+template <enum Format F>
+struct RegisterFormat final : private FileReaderRegistry
+{
+	/**
+	 * \brief Constructor
+	 *
+	 * \param[in] suffices Set of supported filename suffices for \c F
+	 * \param[in] codecs   Set of codecs supported with \c F
+	 */
+	RegisterFormat(const SuffixSet &suffices, const std::set<Codec> &codecs)
+	{
+		add_format(std::make_unique<FormatDescriptor<F>>(suffices, codecs));
+	}
+
+	/**
+	 * \brief Constructor
+	 *
+	 * \param[in] suffices Set of supported filename suffices for \c F
+	 * \param[in] bytes    Reference byte sequence to determine \c F
+	 * \param[in] codecs   Set of codecs supported with \c F
+	 */
+	RegisterFormat(const SuffixSet &suffices, const Bytes &bytes,
+			const std::set<Codec> &codecs)
+	{
+		add_format(std::make_unique<FormatDescriptor<F>>(suffices, bytes,
+					codecs));
+	}
+};
+
+
+/**
+ * \brief Register a FileReaderDescriptor type.
  *
  * \tparam D The descriptor type to register
  */
 template <class D>
-class RegisterDescriptor final : private FileReaderRegistry
+struct RegisterDescriptor final : private FileReaderRegistry
 {
-public:
-
 	/**
 	 * \brief Constructor
 	 *
@@ -781,7 +685,7 @@ public:
 	 */
 	RegisterDescriptor()
 	{
-		add(call(&details::make_descriptor<D>));
+		add_reader(call_maker(&details::make_descriptor<D>));
 	}
 };
 

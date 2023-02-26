@@ -20,10 +20,10 @@
 #endif
 
 #ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
-#include "descriptor.hpp"          // for FileReaderSelection
+#include "descriptor.hpp"          // for FileReaderDescriptor
 #endif
 #ifndef __LIBARCSDEC_SELECTION_HPP__
-#include "selection.hpp"           // for DescriptorSet, FileReaderSelection
+#include "selection.hpp"           // for FileReaders, FileReaderSelector
 #endif
 
 
@@ -85,18 +85,32 @@ public:
 	std::unique_ptr<TOC> parse(const std::string &metafilename) const;
 
 	/**
-	 * \brief Set the DescriptorSet for this instance.
+	 * \brief Set the list of supported formats.
 	 *
-	 * \param[in] descriptors The Descriptors to use
+	 * \param[in] formats The list of supported formats.
 	 */
-	void set_descriptorset(const DescriptorSet *descriptors);
+	void set_formats(const FormatList *formats);
+
+	/**
+	 * \brief List of supported formats.
+	 *
+	 * \return List of supported formats.
+	 */
+	const FormatList& formats() const;
+
+	/**
+	 * \brief Set the FileReaders for this instance.
+	 *
+	 * \param[in] readders The set of available FileReaderDescriptors to use
+	 */
+	void set_descriptorset(const FileReaders *readers);
 
 	/**
 	 * \brief Get the MetadataParserSelection used by this instance.
 	 *
 	 * \return The MetadataParserSelection used by this instance
 	 */
-	const DescriptorSet& descriptorset() const;
+	const FileReaders& descriptorset() const;
 
 	/**
 	 * \brief Set the selection for this instance.
@@ -163,18 +177,32 @@ public:
 			const std::string &metafilename);
 
 	/**
+	 * \brief Set the list of supported formats.
+	 *
+	 * \param[in] formats The list of supported formats.
+	 */
+	void set_formats(const FormatList *formats);
+
+	/**
+	 * \brief List of supported formats.
+	 *
+	 * \return List of supported formats.
+	 */
+	const FormatList& formats() const;
+
+	/**
 	 * \brief Set the \c FileReaderDescriptor s for this instance.
 	 *
 	 * \param[in] descriptors The \c FileReaderDescriptor s of this instance.
 	 */
-	void set_descriptorset(const DescriptorSet *descriptors);
+	void set_descriptorset(const FileReaders *descriptors);
 
 	/**
 	 * \brief The \c FileReaderDescriptor s of this instance.
 	 *
 	 * \return The \c FileReaderDescriptor s of this instance.
 	 */
-	const DescriptorSet& descriptorset() const;
+	const FileReaders& descriptorset() const;
 
 	/**
 	 * \brief Set the metadata parser selection for this instance.
@@ -308,9 +336,33 @@ public:
 	ChecksumSet calculate(const std::string &audiofilename,
 		const bool &skip_front, const bool &skip_back);
 
-	void set_descriptorset(const DescriptorSet *descriptors);
+	/**
+	 * \brief Set the list of supported formats.
+	 *
+	 * \param[in] formats The list of supported formats.
+	 */
+	void set_formats(const FormatList *formats);
 
-	const DescriptorSet& descriptorset() const;
+	/**
+	 * \brief List of supported formats.
+	 *
+	 * \return List of supported formats.
+	 */
+	const FormatList& formats() const;
+
+	/**
+	 * \brief Set the \c FileReaderDescriptor s for this instance.
+	 *
+	 * \param[in] descriptors The \c FileReaderDescriptor s of this instance.
+	 */
+	void set_descriptorset(const FileReaders *descriptors);
+
+	/**
+	 * \brief The \c FileReaderDescriptor s of this instance.
+	 *
+	 * \return The \c FileReaderDescriptor s of this instance.
+	 */
+	const FileReaders& descriptorset() const;
 
 	/**
 	 * \brief Set the AudioReaderSelection for this instance.

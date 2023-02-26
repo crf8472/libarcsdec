@@ -213,27 +213,13 @@ std::string DescriptorSndfile::do_name() const
 }
 
 
-bool DescriptorSndfile::do_accepts_bytes(
-		const std::vector<unsigned char> & /* bytes */,
-		const uint64_t & /* offset */) const
-{
-	return true;
-}
-
-
-//bool DescriptorSndfile::do_accepts_name(const std::string & /* suffix */)
-//	const
-//{
-//	return true;
-//}
-
-
 std::set<Format> DescriptorSndfile::define_formats() const
 {
 	return {
 		Format::WAV,
 		Format::FLAC,
 		Format::AIFF,
+		// TODO OGG?
 		Format::CAF
 	};
 }

@@ -337,19 +337,6 @@ std::string DescriptorFlac::do_name() const
 }
 
 
-bool DescriptorFlac::do_accepts_bytes(const std::vector<unsigned char> &bytes,
-		const uint64_t &offset) const
-{
-	return  bytes.size() >= 4
-		and offset       == 0
-		and bytes[0]     == 0x66  // f
-		and bytes[1]     == 0x4C  // L
-		and bytes[2]     == 0x61  // a
-		and bytes[3]     == 0x43  // C
-		;
-}
-
-
 std::set<Format> DescriptorFlac::define_formats() const
 {
 	return { Format::FLAC }; // TODO OGG ?

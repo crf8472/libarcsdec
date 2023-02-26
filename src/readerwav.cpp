@@ -1090,6 +1090,84 @@ void WavAudioReaderImpl::register_audio_handler(
 } // namespace details
 
 
+// FormatWavPCM
+
+
+//bool FormatWavPCM::do_bytes(const ByteSequence &bytes,
+//		const uint64_t &offset) const
+//{
+//	using details::wave::RIFFWAV_PCM_CDDA_t;
+//
+//	// No test bytes? => fail
+//	if (bytes.empty())
+//	{
+//		ARCS_LOG(DEBUG1) << "Test bytes empty, no match";
+//		return false;
+//	}
+//
+//	// Test Bytes Beyond Canonical Part? => accept
+//	if (offset >= RIFFWAV_PCM_CDDA_t::header().size())
+//	{
+//		ARCS_LOG(DEBUG1) <<
+//			"Test bytes accepted since they are beyond WAV header";
+//		return true;
+//	}
+//
+//	// determine start pointers
+//
+//	auto in_current  = bytes.begin();
+//	auto ref_current = RIFFWAV_PCM_CDDA_t::header().begin() + offset;
+//
+//	// determine end pointers
+//
+//	const auto ref_bytes    = RIFFWAV_PCM_CDDA_t::header().size() - offset;
+//	const bool longer_input = bytes.size() > ref_bytes;
+//
+//	const auto in_stop  = longer_input
+//		? bytes.begin() + static_cast<int>(ref_bytes) + 1 /* past-the-end */
+//		: bytes.end();
+//
+//	const auto ref_stop = longer_input
+//		? RIFFWAV_PCM_CDDA_t::header().end()
+//		: ref_current + bytes.size() + 1 /* past-the-end */;
+//
+//	do
+//	{
+//		const auto m = std::mismatch(in_current, in_stop, ref_current);
+//
+//		// Reached the end? => Success
+//		if (m.first == in_stop or m.second == ref_stop)
+//		{
+//			break;
+//		}
+//
+//		// Is it an actual mismatch (i.e. on a non-wildcard byte)?
+//		if (m.second != ref_stop
+//				and *m.second != RIFFWAV_PCM_CDDA_t::any_byte())
+//		{
+//			return false;
+//		}
+//
+//		// Mismatch was on a "wildcard byte", so skip all following bytes until
+//		// the wildcard sequence ends.
+//
+//		in_current  = m.first;
+//		ref_current = m.second;
+//
+//		// Skip all input bytes referring to 'any_byte' in the reference bytes
+//		while (in_current != in_stop and ref_current != ref_stop
+//				and *ref_current == RIFFWAV_PCM_CDDA_t::any_byte())
+//		{
+//			++in_current;
+//			++ref_current;
+//		}
+//
+//	} while (in_current != in_stop and ref_current != ref_stop);
+//
+//	return true;
+//}
+
+
 // DescriptorWavPCM
 
 
@@ -1105,81 +1183,6 @@ std::string DescriptorWavPCM::do_id() const
 std::string DescriptorWavPCM::do_name() const
 {
 	return "RIFF/WAV(PCM)";
-}
-
-
-bool DescriptorWavPCM::do_accepts_bytes(const std::vector<unsigned char> &bytes,
-		const uint64_t &offset) const
-{
-	using details::wave::RIFFWAV_PCM_CDDA_t;
-
-	// No test bytes? => fail
-	if (bytes.empty())
-	{
-		ARCS_LOG(DEBUG1) << "Test bytes empty, no match";
-		return false;
-	}
-
-	// Test Bytes Beyond Canonical Part? => accept
-	if (offset >= RIFFWAV_PCM_CDDA_t::header().size())
-	{
-		ARCS_LOG(DEBUG1) <<
-			"Test bytes accepted since they are beyond WAV header";
-		return true;
-	}
-
-	// determine start pointers
-
-	auto in_current  = bytes.begin();
-	auto ref_current = RIFFWAV_PCM_CDDA_t::header().begin() + offset;
-
-	// determine end pointers
-
-	const auto ref_bytes    = RIFFWAV_PCM_CDDA_t::header().size() - offset;
-	const bool longer_input = bytes.size() > ref_bytes;
-
-	const auto in_stop  = longer_input
-		? bytes.begin() + static_cast<int>(ref_bytes) + 1 /* past-the-end */
-		: bytes.end();
-
-	const auto ref_stop = longer_input
-		? RIFFWAV_PCM_CDDA_t::header().end()
-		: ref_current + bytes.size() + 1 /* past-the-end */;
-
-	do
-	{
-		const auto m = std::mismatch(in_current, in_stop, ref_current);
-
-		// Reached the end? => Success
-		if (m.first == in_stop or m.second == ref_stop)
-		{
-			break;
-		}
-
-		// Is it an actual mismatch (i.e. on a non-wildcard byte)?
-		if (m.second != ref_stop
-				and *m.second != RIFFWAV_PCM_CDDA_t::any_byte())
-		{
-			return false;
-		}
-
-		// Mismatch was on a "wildcard byte", so skip all following bytes until
-		// the wildcard sequence ends.
-
-		in_current  = m.first;
-		ref_current = m.second;
-
-		// Skip all input bytes referring to 'any_byte' in the reference bytes
-		while (in_current != in_stop and ref_current != ref_stop
-				and *ref_current == RIFFWAV_PCM_CDDA_t::any_byte())
-		{
-			++in_current;
-			++ref_current;
-		}
-
-	} while (in_current != in_stop and ref_current != ref_stop);
-
-	return true;
 }
 
 

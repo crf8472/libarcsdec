@@ -14,12 +14,104 @@
  */
 
 
+//TEST_CASE ("FormatWavPCM", "[readerwav]" )
+//{
+//	using arcsdec::details::wave::RIFFWAV_PCM_CDDA_t;
+//	auto d = arcsdec::FormatWavPCM {};
+//
+//	SECTION ("Matches accepted bytes correctly")
+//	{
+//		RIFFWAV_PCM_CDDA_t w;
+//
+//		CHECK ( not d.bytes( {}, 0 ));
+//		CHECK ( not d.bytes( {}, 12 ));
+//		CHECK ( not d.bytes( {}, 45 ));
+//		CHECK ( not d.bytes( {}, 145 ));
+//
+//		// wav-header (0-11)
+//		CHECK (     d.bytes( {'R', 'I', 'F', 'F'}, 0) );
+//		CHECK ( not d.bytes( {'R', 'I', 'F', 'F'}, 3) );
+//		CHECK (     d.bytes( {'I', 'F', 'F'}, 1) );
+//		CHECK ( not d.bytes( {'I', 'F', 'F'}, 2) );
+//		CHECK (     d.bytes( {'W', 'A', 'V', 'E'}, 8) );
+//		CHECK ( not d.bytes( {'W', 'A', 'V', 'E'}, 9) );
+//
+//		// 'fmt ' (12-33)
+//		CHECK (     d.bytes( {'f', 'm', 't', ' '}, 12) );
+//		CHECK ( not d.bytes( {'f', 'm', 't', '_'}, 12) );
+//		// size == 16, wFormatTag == 1, Channels == 2, dwSamplesPerSec = 44.100
+//		CHECK ( d.bytes( { 16, 0, 0, 0, 1, 0, 2, 0, 68, 172, 0, 0 },
+//				16) );
+//		CHECK ( not d.bytes( { 16, 1, 0, 0, 1, 1, 2, 1, 68, 173, 0, 0 },
+//				16) );
+//		CHECK ( d.bytes( { 68, 172, 0, 0}, 24));
+//		// dwAvgBytesPerSec == 176400, wBlockAlign  == 4
+//		CHECK ( d.bytes( { 16, 177, 2, 0, 4, 0 }, 28));
+//		CHECK ( not d.bytes( { 16, 177, 2, 1, 5, 0 }, 28));
+//		// wBitsPerSample == 16
+//		CHECK ( d.bytes( { 16, 0 }, 34));
+//		CHECK ( not d.bytes( { 16, 1 }, 34));
+//		CHECK ( not d.bytes( { 17, 0 }, 34));
+//
+//		CHECK ( not d.bytes( { 0, 0, 0, 16, 0, 1, 0, 2, 0, 0 }, 15) );
+//		CHECK ( not d.bytes( { 0, 0, 0, 16, 0, 1, 1, 2, 0, 0 }, 16) );
+//		CHECK ( not d.bytes( { 16, 176, 2, 0, 4, 0 }, 28));
+//		CHECK ( not d.bytes( { 16, 176, 2, 0, 5, 0 }, 28));
+//
+//		// Accepts any declared file size?
+//
+//		CHECK (     d.bytes( {' ', ' ', ' ', ' ' }, 4) );
+//		CHECK (     d.bytes( {' ', ' ', ' ', ' ', 'W' }, 4) );
+//		CHECK ( not d.bytes( {' ', ' ', ' ', ' ', 'T' }, 4) );
+//		CHECK (     d.bytes( {'I', 'F', 'F', ' ', ' ', ' ', ' ', 'W' },
+//					1) );
+//		CHECK (     d.bytes( {'I', 'F', 'F', '1', '2', '3', '4', 'W' },
+//					1) );
+//		CHECK ( not d.bytes( {'I', 'F', 'F', ' ', ' ', ' ', ' ', 'X' },
+//					1) );
+//
+//		// Accepts any declared data chunk size?
+//
+//		CHECK (     d.bytes( {' ', ' ', ' ', ' ' }, 40) );
+//		CHECK (     d.bytes( {' ', ' ', ' ', ' ', '%' }, 40) );
+//		CHECK (     d.bytes( {'a', 't', 'a', ' ', ' ', ' ', ' ', 'W' },
+//					37) );
+//		CHECK (     d.bytes( {'a', 't', 'a', '1', '2', '3', '4', 'T' },
+//					37) );
+//		CHECK ( not d.bytes( {'a', 't', 'i', ' ', ' ', ' ', ' ', 'X' },
+//					37) );
+//		CHECK (     d.bytes( {'a', 't', 'a', '1', '2', '3', '4' },
+//					37) );
+//	}
+//
+//	SECTION ("Matches accepted filenames correctly")
+//	{
+//		CHECK ( d.filename("foo.wav") );
+//		CHECK ( d.filename("bar.WAV") );
+//		CHECK ( d.filename("foo.wave") );
+//		CHECK ( d.filename("bar.WAVE") );
+//		CHECK ( d.filename("foo.wAvE") );
+//		CHECK ( d.filename("bar.Wave") );
+//
+//		CHECK ( not d.filename("bar.WAVX") );
+//		CHECK ( not d.filename("bar.wavx") );
+//		CHECK ( not d.filename("bar.waving") );
+//		CHECK ( not d.filename("bar.warg") );
+//		CHECK ( not d.filename("bar.walar") );
+//		CHECK ( not d.filename("bar.WALINOR") );
+//		CHECK ( not d.filename("bar.PWAV") );
+//		CHECK ( not d.filename("bar.pwav") );
+//		CHECK ( not d.filename("bar.CWAVE") );
+//		CHECK ( not d.filename("bar.cwave") );
+//	}
+//}
+
+
 TEST_CASE ("DescriptorWavPCM", "[readerwav]" )
 {
 	using arcsdec::DescriptorWavPCM;
 	using arcsdec::Format;
 	using arcsdec::Codec;
-	using arcsdec::details::wave::RIFFWAV_PCM_CDDA_t;
 
 	auto d = DescriptorWavPCM {};
 
@@ -35,71 +127,6 @@ TEST_CASE ("DescriptorWavPCM", "[readerwav]" )
 		CHECK ( libs.size() == 1 );
 		CHECK ( libs.front().first  == "-genuine-" );
 		CHECK ( libs.front().second.find("libarcsdec") != std::string::npos );
-	}
-
-	SECTION ("Matches accepted bytes correctly")
-	{
-		RIFFWAV_PCM_CDDA_t w;
-
-		CHECK ( not d.accepts_bytes( {}, 0 ));
-		CHECK ( not d.accepts_bytes( {}, 12 ));
-		CHECK ( not d.accepts_bytes( {}, 45 ));
-		CHECK ( not d.accepts_bytes( {}, 145 ));
-
-		// wav-header (0-11)
-		CHECK (     d.accepts_bytes( {'R', 'I', 'F', 'F'}, 0) );
-		CHECK ( not d.accepts_bytes( {'R', 'I', 'F', 'F'}, 3) );
-		CHECK (     d.accepts_bytes( {'I', 'F', 'F'}, 1) );
-		CHECK ( not d.accepts_bytes( {'I', 'F', 'F'}, 2) );
-		CHECK (     d.accepts_bytes( {'W', 'A', 'V', 'E'}, 8) );
-		CHECK ( not d.accepts_bytes( {'W', 'A', 'V', 'E'}, 9) );
-
-		// 'fmt ' (12-33)
-		CHECK (     d.accepts_bytes( {'f', 'm', 't', ' '}, 12) );
-		CHECK ( not d.accepts_bytes( {'f', 'm', 't', '_'}, 12) );
-		// size == 16, wFormatTag == 1, Channels == 2, dwSamplesPerSec = 44.100
-		CHECK ( d.accepts_bytes( { 16, 0, 0, 0, 1, 0, 2, 0, 68, 172, 0, 0 },
-				16) );
-		CHECK ( not d.accepts_bytes( { 16, 1, 0, 0, 1, 1, 2, 1, 68, 173, 0, 0 },
-				16) );
-		CHECK ( d.accepts_bytes( { 68, 172, 0, 0}, 24));
-		// dwAvgBytesPerSec == 176400, wBlockAlign  == 4
-		CHECK ( d.accepts_bytes( { 16, 177, 2, 0, 4, 0 }, 28));
-		CHECK ( not d.accepts_bytes( { 16, 177, 2, 1, 5, 0 }, 28));
-		// wBitsPerSample == 16
-		CHECK ( d.accepts_bytes( { 16, 0 }, 34));
-		CHECK ( not d.accepts_bytes( { 16, 1 }, 34));
-		CHECK ( not d.accepts_bytes( { 17, 0 }, 34));
-
-		CHECK ( not d.accepts_bytes( { 0, 0, 0, 16, 0, 1, 0, 2, 0, 0 }, 15) );
-		CHECK ( not d.accepts_bytes( { 0, 0, 0, 16, 0, 1, 1, 2, 0, 0 }, 16) );
-		CHECK ( not d.accepts_bytes( { 16, 176, 2, 0, 4, 0 }, 28));
-		CHECK ( not d.accepts_bytes( { 16, 176, 2, 0, 5, 0 }, 28));
-
-		// Accepts any declared file size?
-
-		CHECK (     d.accepts_bytes( {' ', ' ', ' ', ' ' }, 4) );
-		CHECK (     d.accepts_bytes( {' ', ' ', ' ', ' ', 'W' }, 4) );
-		CHECK ( not d.accepts_bytes( {' ', ' ', ' ', ' ', 'T' }, 4) );
-		CHECK (     d.accepts_bytes( {'I', 'F', 'F', ' ', ' ', ' ', ' ', 'W' },
-					1) );
-		CHECK (     d.accepts_bytes( {'I', 'F', 'F', '1', '2', '3', '4', 'W' },
-					1) );
-		CHECK ( not d.accepts_bytes( {'I', 'F', 'F', ' ', ' ', ' ', ' ', 'X' },
-					1) );
-
-		// Accepts any declared data chunk size?
-
-		CHECK (     d.accepts_bytes( {' ', ' ', ' ', ' ' }, 40) );
-		CHECK (     d.accepts_bytes( {' ', ' ', ' ', ' ', '%' }, 40) );
-		CHECK (     d.accepts_bytes( {'a', 't', 'a', ' ', ' ', ' ', ' ', 'W' },
-					37) );
-		CHECK (     d.accepts_bytes( {'a', 't', 'a', '1', '2', '3', '4', 'T' },
-					37) );
-		CHECK ( not d.accepts_bytes( {'a', 't', 'i', ' ', ' ', ' ', ' ', 'X' },
-					37) );
-		CHECK (     d.accepts_bytes( {'a', 't', 'a', '1', '2', '3', '4' },
-					37) );
 	}
 
 	SECTION ("Matches accepted codecs correctly")
@@ -163,27 +190,6 @@ TEST_CASE ("DescriptorWavPCM", "[readerwav]" )
 	SECTION ("Returns accepted formats correctly")
 	{
 		CHECK ( d.formats() == std::set<Format>{ Format::WAV } );
-	}
-
-	SECTION ("Matches accepted filenames correctly")
-	{
-		CHECK ( d.accepts_name("foo.wav") );
-		CHECK ( d.accepts_name("bar.WAV") );
-		CHECK ( d.accepts_name("foo.wave") );
-		CHECK ( d.accepts_name("bar.WAVE") );
-		CHECK ( d.accepts_name("foo.wAvE") );
-		CHECK ( d.accepts_name("bar.Wave") );
-
-		CHECK ( not d.accepts_name("bar.WAVX") );
-		CHECK ( not d.accepts_name("bar.wavx") );
-		CHECK ( not d.accepts_name("bar.waving") );
-		CHECK ( not d.accepts_name("bar.warg") );
-		CHECK ( not d.accepts_name("bar.walar") );
-		CHECK ( not d.accepts_name("bar.WALINOR") );
-		CHECK ( not d.accepts_name("bar.PWAV") );
-		CHECK ( not d.accepts_name("bar.pwav") );
-		CHECK ( not d.accepts_name("bar.CWAVE") );
-		CHECK ( not d.accepts_name("bar.cwave") );
 	}
 }
 

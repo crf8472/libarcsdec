@@ -55,10 +55,6 @@ class DescriptorSndfile : public FileReaderDescriptor
 
 public:
 
-	DescriptorSndfile()
-		: FileReaderDescriptor { { "wav", "flac", /* "ogg", */ "aiff" } }
-	{ /* empty */ }
-
 	/**
 	 * \brief Virtual default destructor.
 	 */
@@ -75,26 +71,6 @@ private:
 	 * \return "unknown (handled by sndfile)"
 	 */
 	std::string do_name() const override;
-
-	/**
-	 * \brief Returns TRUE for every input implying this format matches all
-	 * files.
-	 *
-	 * \param[in] bytes  The byte sequence to check (ignored)
-	 * \param[in] offset The offset to byte 0 in the file (ignored)
-	 *
-	 * \return TRUE
-	 */
-	bool do_accepts_bytes(const std::vector<unsigned char> &bytes,
-			const uint64_t &offset) const override;
-
-	/**
-	 * \brief Returns TRUE for every input implying this format matches all
-	 * files.
-	 *
-	 * \return TRUE
-	 */
-	//bool do_accepts_name(const std::string &) const override;
 
 	std::set<Format> define_formats() const override;
 

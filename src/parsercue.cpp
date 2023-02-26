@@ -315,11 +315,10 @@ std::string DescriptorCue::do_name() const
 }
 
 
-bool DescriptorCue::do_accepts_bytes(
-		const std::vector<unsigned char> & /* bytes */,
-		const uint64_t & /* offset */) const
+bool DescriptorCue::do_accepts_codec(Codec codec) const
 {
-	return true;
+	ARCS_LOG(DEBUG1) << "Is Codec NONE?";
+	return codec == Codec::NONE;
 }
 
 

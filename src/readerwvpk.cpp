@@ -380,7 +380,7 @@ bool WavpackOpenFile::Impl::channel_order() const
 	// It is already ensured by validate_cdda that num_channels == 2.
 	// No retest required.
 
-	std::vector<unsigned char> identities(
+	ByteSequence identities(
 			static_cast<unsigned int>(num_channels + 1)); // +1 for \0
 
 	::WavpackGetChannelIdentities(context_.get(), identities.data());
@@ -839,19 +839,6 @@ std::string DescriptorWavpack::do_id() const
 std::string DescriptorWavpack::do_name() const
 {
 	return "Wavpack";
-}
-
-
-bool DescriptorWavpack::do_accepts_bytes(
-		const std::vector<unsigned char> &bytes, const uint64_t &offset) const
-{
-	return  bytes.size() >= 4
-		and offset       == 0
-		and bytes [0]    == 0x77  // w
-		and bytes [1]    == 0x76  // v
-		and bytes [2]    == 0x70  // p
-		and bytes [3]    == 0x6B  // k
-		;
 }
 
 

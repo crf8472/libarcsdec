@@ -9,12 +9,12 @@
 #endif
 
 #include <algorithm>    // for find_if
-#include <cstddef>      // for size_t
-#include <cstdint>      // for uint32_t, uint64_t, int64_t
-#include <functional>   // for function
-#include <memory>       // for unique_ptr
-#include <string>       // for string, to_string
-#include <utility>      // for move, make_unique
+#include <iterator>     // for begin, end
+#include <memory>       // for unique_ptr, make_unique
+#include <set>          // for set
+#include <string>       // for string
+#include <type_traits>  // for remove_reference
+#include <utility>      // for pair, make_pair, move
 
 #ifndef __LIBARCSTK_LOGGING_HPP__
 #include <arcstk/logging.hpp> // for ARCS_LOG, _WARNING, _DEBUG
@@ -29,249 +29,275 @@ namespace arcsdec
 inline namespace v_1_0_0
 {
 
-// DescriptorSet
+/**
+ * \brief Amount of bytes to read from the beginning of a file.
+ *
+ * This amount is sufficient to determine the file format and codec.
+ */
+const uint32_t TOTAL_BYTES_TO_READ = 44;
+// Why 44? => Enough for WAVE and every other metadata format.
+// We want to recognize container format, codec and CDDA format.
+// Consider RIFFWAVE/PCM: the first 12 bytes identify the container
+// format ('RIFF' + size + 'WAVE'), PCM format is encoded in bytes
+// 20+21, but validating CDDA requires to read the entire format
+// chunk (up to and including byte 36). Bytes 37-40 are the data
+// subchunk id and 41-44 the data subchunk size. This length is also
+// sufficient to identify all other formats currently supported.
 
 
-DescriptorSet::DescriptorSet()
-	: descriptors_ { /* empty */ }
+// FileType
+
+
+/**
+ * \brief Determine a format and codec pair for a specified file.
+ */
+class FileType final
+{
+public:
+
+	/**
+	 * \brief Description.
+	 *
+	 * \param[in] filename File to read
+	 */
+	FileType(const std::string& filename);
+
+	/**
+	 * \brief Determine file type.
+	 */
+	std::pair<Format, Codec> type(const FormatList *formats) const;
+
+	/**
+	 * \brief Determines the format of a specified file.
+	 */
+	std::unique_ptr<Descriptor> format(const FormatList *formats) const;
+
+	/**
+	 * \brief Determines the Codec of a specified file.
+	*
+	 * Codec::UNKNOWN indicates that the codec could not be determined.
+	 * Codec::NONE indicates that the file is not an audio file.
+	 */
+	Codec codec(const std::set<Codec>& codecs) const;
+
+	/**
+	 * \brief Filename.
+	 *
+	 * \return The filename of the specified file.
+	 */
+	std::string filename() const;
+
+	/**
+	 * \brief Bytes read from the file.
+	 *
+	 * \return The sequence of bytes read from the file.
+	 */
+	Bytes bytes() const;
+
+protected:
+
+	uint32_t offset() const
+	{
+		return 0;
+	}
+
+	uint32_t total_bytes() const
+	{
+		return TOTAL_BYTES_TO_READ;
+	}
+
+private:
+
+	/**
+	 * \brief Internal representation of the filename.
+	 */
+	std::string filename_;
+
+	/**
+	 * \brief Internal representation of the bytes read from the file.
+	 */
+	Bytes bytes_;
+};
+
+
+// FileType
+
+
+FileType::FileType(const std::string& filename)
+	: filename_ { filename }
+	, bytes_    { details::read_bytes(filename, offset(), total_bytes()) }
 {
 	// empty
 }
 
 
-void DescriptorSet::insert(std::unique_ptr<FileReaderDescriptor> d)
+std::pair<Format, Codec> FileType::type(const FormatList *formats) const
 {
-	descriptors_.insert(std::make_pair(d->id(), std::move(d)));
+	const auto format_d = format(formats);
+
+	const auto format = format_d ? format_d->format() : Format::UNKNOWN;
+	const auto codec  = format_d ? this->codec(format_d->codecs())
+		: Codec::UNKNOWN;
+
+	ARCS_LOG_INFO << "Filetype recognized: Format is '" << name(format)
+		<< "', Codec is '" << name(codec) << "'";
+
+	return std::make_pair(format, codec);
 }
 
 
-std::unique_ptr<FileReaderDescriptor> DescriptorSet::get(const std::string &id)
-	const
+std::unique_ptr<Descriptor> FileType::format(
+		const FormatList *formats) const
 {
-	auto p = descriptors_.find(id);
-	if (p != descriptors_.end())
+	ARCS_LOG_DEBUG << "Try to recognize file format: " << filename();
+
+	for (const auto& accepted : *formats)
 	{
-		return p->second->clone();
+		ARCS_LOG(DEBUG1) << "Check for format: " << accepted->name();
+
+		if (accepted->matches(bytes()))
+		{
+			ARCS_LOG(DEBUG1) << accepted->name() << ": file bytes matched";
+
+			if (accepted->matches(filename()))
+			{
+				ARCS_LOG(DEBUG1) << accepted->name() << ": filename matched";
+				ARCS_LOG_DEBUG << "Recognized format: " << accepted->name();
+				return accepted->clone();
+			}
+
+			ARCS_LOG(DEBUG1) << "But filename did not match!";
+		}
+
+		ARCS_LOG(DEBUG1) << "Check for format " << accepted->name()
+			<< " failed";
 	}
 
+	ARCS_LOG_DEBUG << "File format is unknown. (Checked for "
+		<< formats->size()
+		<< " different formats.)";
 	return nullptr;
 }
 
 
-void DescriptorSet::traverse(
-			std::function<void(const FileReaderDescriptor &)> func) const
+Codec FileType::codec(const std::set<Codec>& codecs) const
 {
-	for (const auto& p : descriptors_)
+	ARCS_LOG_DEBUG << "Try to recognize codec: " << filename();
+
+	if (codecs.empty())
 	{
-		func(*p.second);
-	}
-}
-
-
-DescriptorSet::iterator DescriptorSet::begin()
-{
-	return descriptors_.begin();
-}
-
-
-DescriptorSet::iterator DescriptorSet::end()
-{
-	return descriptors_.end();
-}
-
-
-DescriptorSet::const_iterator DescriptorSet::begin() const
-{
-	return descriptors_.begin();
-}
-
-
-DescriptorSet::const_iterator DescriptorSet::end() const
-{
-	return descriptors_.end();
-}
-
-
-DescriptorSet::const_iterator DescriptorSet::cbegin() const
-{
-	return descriptors_.cbegin();
-}
-
-
-DescriptorSet::const_iterator DescriptorSet::cend() const
-{
-	return descriptors_.cend();
-}
-
-
-std::size_t DescriptorSet::size() const
-{
-	return descriptors_.size();
-}
-
-
-bool DescriptorSet::empty() const
-{
-	return descriptors_.empty();
-}
-
-
-// FileTest
-
-
-FileTest::FileTest() = default;
-
-
-FileTest::~FileTest() noexcept = default;
-
-
-std::string FileTest::description() const
-{
-	return do_description();
-}
-
-
-bool FileTest::passes(const FileReaderDescriptor &desc,
-		const std::string &filename) const
-{
-	ARCS_LOG_DEBUG << "Perform test: " << description();
-
-	if (filename.empty())
-	{
-		ARCS_LOG_WARNING << "Test for empty filename failed";
-		return false;
+		return Codec::NONE;
 	}
 
-	if (do_passes(desc, filename))
+	// TODO Implement codec analysis
+
+	ARCS_LOG(DEBUG1) << "This is not yet implemented";
+
+	// TODO Iterate over codecs and check each for a match with bytes
+	if (codecs.size() == 1) // Make Codec::NONE work
 	{
-		ARCS_LOG_DEBUG << "Test passed";
-		return true;
+		const auto codec = *codecs.begin();
+
+		ARCS_LOG(DEBUG1) << "Format supports only codec '" <<
+			arcsdec::name(codec) << "', so just assume this";
+
+		// TODO Activate/deactivate Validation?
+
+		return codec;
 	}
 
-	ARCS_LOG_DEBUG << "Test failed";
-	return false;
+	ARCS_LOG_DEBUG << "Try to recognize codec: " << filename();
+
+	return Codec::UNKNOWN;
 }
 
 
-bool operator == (const FileTest &lhs, const FileTest &rhs)
+std::string FileType::filename() const
 {
-	return lhs.equals(rhs);
+	return filename_;
 }
 
 
-// FileTestBytes
-
-
-FileTestBytes::FileTestBytes(const uint32_t &offset,
-		const uint32_t &length)
-	: offset_(offset)
-	, length_(length)
+Bytes FileType::bytes() const
 {
-	// empty
+	return bytes_;
 }
 
 
-uint32_t FileTestBytes::offset() const
+// DescriptorPreference
+
+
+DescriptorPreference::~DescriptorPreference() noexcept = default;
+
+
+DescriptorPreference::type DescriptorPreference::preference(
+		const Format format,
+		const Codec codec,
+		const FileReaderDescriptor &desc) const
 {
-	return offset_;
+	return this->do_preference(format, codec, desc);
 }
 
 
-uint32_t FileTestBytes::length() const
+// DefaultPreference
+
+
+DescriptorPreference::type DefaultPreference::do_preference(
+		const Format format, const Codec codec,
+		const FileReaderDescriptor &desc) const
 {
-	return length_;
+	constexpr static unsigned PENALTY_FOR_NONSPECIFICNESS = 2;
+
+	if (!desc.accepts(format, codec))
+	{
+		return MIN_PREFERENCE;
+	}
+
+	// Prefer specific readers over multi-format readers.
+	return MAX_PREFERENCE
+			- ((desc.formats().size() - 1) * PENALTY_FOR_NONSPECIFICNESS
+				- (desc.codecs().size()  - 1));
 }
 
 
-std::string FileTestBytes::do_description() const
+// FormatPreference
+
+
+FormatPreference::type FormatPreference::do_preference(
+		const Format format,
+		const Codec /* codec */,
+		const FileReaderDescriptor &desc) const
 {
-	return "Is byte sequence on offset " + std::to_string(offset_)
-		+ " of length " + std::to_string(length_)
-		+ " accepted?";
-}
+	if (!desc.accepts(format))
+	{
+		return MIN_PREFERENCE;
+	}
 
-
-bool FileTestBytes::do_passes(const FileReaderDescriptor &desc,
-		const std::string &filename) const
-{
-	ARCS_LOG(DEBUG1) << "Do the " << length_ << " bytes starting on offset "
-		<< offset_ << " in file " << filename <<
-		" match the definition in descriptor " << desc.name() << "?";
-
-	auto bytes = details::read_bytes(filename, offset_, length_);
-	return desc.accepts_bytes(bytes, offset_);
-}
-
-
-bool FileTestBytes::equals(const FileTest &rhs) const
-{
-	auto rhs_ftb = dynamic_cast<const FileTestBytes*>(&rhs);
-
-	return rhs_ftb != nullptr
-		and offset_ == rhs_ftb->offset_
-		and length_ == rhs_ftb->length_;
-}
-
-
-// FileTestName
-
-
-std::string FileTestName::do_description() const
-{
-	return "Filename analysis";
-}
-
-
-bool FileTestName::do_passes(const FileReaderDescriptor &desc,
-		const std::string &filename) const
-{
-	ARCS_LOG(DEBUG1) << "Does descriptor " << desc.name()
-		<< " accept file with name '" << filename << "'?";
-
-	return desc.accepts_name(filename);
-}
-
-
-bool FileTestName::equals(const FileTest &rhs) const
-{
-	return typeid(*this) == typeid(rhs);
+	return MAX_PREFERENCE - (desc.formats().size() - 1) * 2
+			- (desc.codecs().size() - 1);
 }
 
 
 // FileReaderSelector
 
 
-FileReaderSelector::FileReaderSelector() = default;
-
-
 FileReaderSelector::~FileReaderSelector() noexcept = default;
 
 
-bool FileReaderSelector::matches(
-		const std::string &filename,
-		const std::set<std::unique_ptr<FileTest>> &tests,
-		const std::unique_ptr<FileReaderDescriptor> &desc) const
+std::unique_ptr<FileReaderDescriptor> FileReaderSelector::select(
+		const Format format, const Codec codec, const FileReaders &readers,
+		const DescriptorPreference &strategy) const
 {
-	ARCS_LOG_DEBUG << "Try to match descriptor: " << desc->name();
+	ARCS_LOG_DEBUG << "Try to select a FileReader for filetype "
+		<< name(format) << "/" << name(codec);
 
-	if (do_matches(filename, tests, desc))
+	if (readers.empty())
 	{
-		ARCS_LOG_DEBUG << "Descriptor '" << desc->name() << "' matched";
-		return true;
+		ARCS_LOG_WARNING << "No FileReaderDescriptors to select from";
+		return nullptr;
 	}
 
-	ARCS_LOG_DEBUG << "Descriptor '" << desc->name()
-		<< "' does not match and is discarded";
-	return false;
-}
-
-
-std::unique_ptr<FileReaderDescriptor> FileReaderSelector::select(
-		const std::string &filename,
-		const std::set<std::unique_ptr<FileTest>> &tests,
-		const DescriptorSet &descs) const
-{
-	auto descriptor = do_select(filename, tests, descs);
+	auto descriptor = do_select(format, codec, readers, strategy);
 
 	if (!descriptor)
 	{
@@ -279,8 +305,8 @@ std::unique_ptr<FileReaderDescriptor> FileReaderSelector::select(
 		return nullptr;
 	}
 
-	ARCS_LOG_INFO << "Reader descriptor '" << descriptor->name()
-		<< "' selected for file '" << filename << "'";
+	ARCS_LOG_DEBUG << "Reader descriptor '" << descriptor->name()
+		<< "' selected";
 
 	return descriptor;
 }
@@ -289,407 +315,274 @@ std::unique_ptr<FileReaderDescriptor> FileReaderSelector::select(
 // DefaultSelector
 
 
-bool DefaultSelector::do_matches(
-		const std::string &filename,
-		const std::set<std::unique_ptr<FileTest>> &tests,
-		const std::unique_ptr<FileReaderDescriptor> &desc) const
-{
-	// The default implementation of matches() returns TRUE iff each test
-	// passes (== AND). It could be overwritten by a version that returns TRUE
-	// iff at least one test passes (== OR).
-
-	for (const auto& test : tests)
-	{
-		// Note that if no tests are registered, each descriptor matches!
-		// In this case, just the first descriptor wins.
-
-		if (not test->passes(*desc, filename))
-		{
-			ARCS_LOG(DEBUG1) << "Descriptor '" << desc->name()
-				<< "' failed test '"
-				<< test->description()
-				<< "' and is discarded";
-			return false;
-		}
-	}
-
-	// Note: We close and reopen the file while analyzing its file type.
-	// We 1 open the file, 2 read from it, 3 close it,
-	// 4 open it again with the determined FileReader and 5 read the content.
-	// This is inuitively two unnecessary operations (one open and one close).
-	// On the other hand, it is clean, requires no tricks and the application
-	// is not considered performance-critical. So for the moment, this is the
-	// way to go.
-
-	ARCS_LOG(DEBUG1) << "Descriptor '" << desc->name() << "' passed all tests";
-	return true;
-}
-
-
 std::unique_ptr<FileReaderDescriptor> DefaultSelector::do_select(
-		const std::string &filename,
-		const std::set<std::unique_ptr<FileTest>> &tests,
-		const DescriptorSet &descs) const
+		const Format format, const Codec codec, const FileReaders& readers,
+		const DescriptorPreference &p) const
 {
-	for (auto& desc : descs)
-	{
-		if (this->matches(filename, tests, desc.second))
-		{
-			ARCS_LOG(DEBUG1) << "First matching descriptor: '"
-				<< desc.second->name()
-				<< "'";
+	FileReaderDescriptor* result    = nullptr;
+	DescriptorPreference::type pref = DescriptorPreference::MIN_PREFERENCE;
 
-			return desc.second->clone();
+	DescriptorPreference::type curr_pref = pref;
+
+	for (auto& i : readers)
+	{
+		ARCS_LOG(DEBUG1) << "Check descriptor " << i.second->name();
+
+		curr_pref = p.preference(format, codec, *i.second);
+
+		ARCS_LOG(DEBUG1) << i.second->name() << ": preference for "
+			<< name(format) << '/' << name(codec) << " is " << curr_pref;
+
+		if (curr_pref > pref)
+		{
+			result = i.second.get();
+			pref   = curr_pref;
 		}
 	}
 
-	return nullptr;
-}
-
-
-/**
- * \internal
- *
- * \defgroup selectionImpl Implementation details for module 'selection'
- *
- * \ingroup selection
- * @{
- */
-
-/**
- * \brief Implementation of FileReaderSelection.
- */
-class FileReaderSelection::Impl final
-{
-public:
-
-	Impl(std::unique_ptr<FileReaderSelector> selector)
-		: selector_    { std::move(selector) }
-		, tests_       { /* empty */ }
-	{
-		/* empty */
-	}
-
-	void set_selector(std::unique_ptr<FileReaderSelector> selector);
-
-	const FileReaderSelector& selector() const;
-
-	void register_test(std::unique_ptr<FileTest> testobj);
-
-	std::unique_ptr<FileTest> unregister_test(
-			const std::unique_ptr<FileTest> &test);
-
-	std::size_t total_tests() const;
-
-	bool no_tests() const;
-
-	void remove_all_tests();
-
-	std::unique_ptr<FileReaderDescriptor> get_descriptor(
-			const std::string &filename, const DescriptorSet &set) const;
-
-	std::unique_ptr<FileReader> get_reader(
-			const std::string &filename, const DescriptorSet &set) const;
-
-private:
-
-	/**
-	 * \brief Internal FileReaderSelector
-	 */
-	std::unique_ptr<FileReaderSelector> selector_;
-
-	/**
-	 * \brief Internal set of FileTests to be performed by the selector_
-	 */
-	std::set<std::unique_ptr<FileTest>> tests_;
-};
-
-
-void FileReaderSelection::Impl::set_selector(
-		std::unique_ptr<FileReaderSelector> selector)
-{
-	selector_ = std::move(selector);
-}
-
-
-const FileReaderSelector& FileReaderSelection::Impl::selector() const
-{
-	return *selector_;
-}
-
-
-void FileReaderSelection::Impl::register_test(
-		std::unique_ptr<FileTest> testobj)
-{
-	tests_.insert(std::move(testobj));
-}
-
-
-std::unique_ptr<FileTest>
-	FileReaderSelection::Impl::unregister_test(
-			const std::unique_ptr<FileTest> &test)
-{
-	auto test_ptr = test.get();
-	auto pos = std::find_if(tests_.begin(), tests_.end(),
-			[test_ptr](const std::unique_ptr<FileTest> &t)
-			{
-				return test_ptr && *t == *test_ptr;
-			});
-
-	if (pos != tests_.end())
-	{
-		pos = tests_.erase(pos);
-	}
-
-	if (pos == tests_.end())
+	if (!result)
 	{
 		return nullptr;
 	}
 
-	return std::move(const_cast<std::unique_ptr<FileTest>&>(*pos));
+	ARCS_LOG(DEBUG1) << "First descriptor with highest preference: '"
+			<< result->name()
+			<< "'";
+
+	return result->clone();
 }
-
-
-std::size_t FileReaderSelection::Impl::total_tests() const
-{
-	return tests_.size();
-}
-
-
-bool FileReaderSelection::Impl::no_tests() const
-{
-	return tests_.empty();
-}
-
-
-void FileReaderSelection::Impl::remove_all_tests()
-{
-	tests_.clear();
-}
-
-
-std::unique_ptr<FileReaderDescriptor>
-FileReaderSelection::Impl::get_descriptor(const std::string &filename,
-		const DescriptorSet &set) const
-{
-	if (filename.empty())
-	{
-		throw FileReadException("Filename must not be empty");
-	}
-
-	std::unique_ptr<FileReaderDescriptor> desc =
-		selector_->select(filename, tests_, set);
-
-	if (!desc)
-	{
-		ARCS_LOG_WARNING << "File format is unknown, no reader available.";
-
-		return nullptr;
-	}
-
-	return desc;
-}
-
-
-std::unique_ptr<FileReader> FileReaderSelection::Impl::get_reader(
-		const std::string &filename, const DescriptorSet &set) const
-{
-	auto d = this->get_descriptor(filename, set);
-	return d ? d->create_reader() : nullptr;
-}
-
-/// @}
 
 
 // FileReaderSelection
 
 
-FileReaderSelection::FileReaderSelection()
-	: impl_ { std::make_unique<FileReaderSelection::Impl>(
-				std::make_unique<DefaultSelector>()) }
-{
-	// empty
-}
-
-
 FileReaderSelection::~FileReaderSelection() noexcept = default;
 
 
-void FileReaderSelection::set_selector(
-		std::unique_ptr<FileReaderSelector> selector)
+std::unique_ptr<FileReaderDescriptor> FileReaderSelection::get(
+		const Format format, const Codec codec, const FileReaders &descs) const
 {
-	impl_->set_selector(std::move(selector));
-}
-
-
-const FileReaderSelector& FileReaderSelection::selector() const
-{
-	return impl_->selector();
-}
-
-
-void FileReaderSelection::register_test(std::unique_ptr<FileTest> testobj)
-{
-	impl_->register_test(std::move(testobj));
-}
-
-
-std::unique_ptr<FileTest> FileReaderSelection::unregister_test(
-		const std::unique_ptr<FileTest> &test)
-{
-	return impl_->unregister_test(test);
-}
-
-
-void FileReaderSelection::remove_all_tests()
-{
-	return impl_->remove_all_tests();
-}
-
-
-std::size_t FileReaderSelection::total_tests() const
-{
-	return impl_->total_tests();
-}
-
-
-bool FileReaderSelection::no_tests() const
-{
-	return impl_->no_tests();
-}
-
-
-std::unique_ptr<FileReaderDescriptor> FileReaderSelection::get_descriptor(
-		const std::string &filename, const DescriptorSet &set) const
-{
-	return impl_->get_descriptor(filename, set);
-}
-
-
-std::unique_ptr<FileReader> FileReaderSelection::get_reader(
-		const std::string &filename, const DescriptorSet &set) const
-{
-	return impl_->get_reader(filename, set);
-}
-
-
-// DefaultAudioSelection
-
-
-struct DefaultAudioSelection final
-{
-	/**
-	 * \brief Amount of bytes to read from the beginning of a file.
-	 *
-	 * This amount is sufficient to determine the file format and codec.
-	 */
-	const uint32_t TOTAL_BYTES_TO_READ = 44;
-	// Why 44? => Enough for WAVE and every other metadata format.
-	// We want to recognize container format, codec and CDDA format.
-	// Consider RIFFWAVE/PCM: the first 12 bytes identify the container
-	// format ('RIFF' + size + 'WAVE'), PCM format is encoded in bytes
-	// 20+21, but validating CDDA requires to read the entire format
-	// chunk (up to and including byte 36). Bytes 37-40 are the data
-	// subchunk id and 41-44 the data subchunk size. This length is also
-	// sufficient to identify all other formats currently supported.
-
-	std::unique_ptr<FileReaderSelection> operator()() const;
-};
-
-
-std::unique_ptr<FileReaderSelection> DefaultAudioSelection::operator()()
-	const
-{
-	auto selection = std::make_unique<FileReaderSelection>();
-	selection->register_test(std::make_unique<FileTestName>());
-	selection->register_test(std::make_unique<FileTestBytes>(0,
-				TOTAL_BYTES_TO_READ));
-	return selection;
-}
-
-
-// DefaultMetadataSelection
-
-
-struct DefaultMetadataSelection final
-{
-	std::unique_ptr<FileReaderSelection> operator()() const;
-};
-
-
-std::unique_ptr<FileReaderSelection> DefaultMetadataSelection::operator()()
-	const
-{
-	auto selection = std::make_unique<FileReaderSelection>();
-	selection->register_test(std::make_unique<FileTestName>());
-	return selection;
+	return this->do_get(format, codec, descs);
 }
 
 
 // FileReaderRegistry
 
 
-FileReaderRegistry::FileReaderRegistry() = default;
+FormatList FileReaderRegistry::formats_;
 
 
-const DescriptorSet* FileReaderRegistry::descriptors()
+std::unique_ptr<FileReaders> FileReaderRegistry::readers_;
+
+
+std::unique_ptr<FileReaderSelection>
+	FileReaderRegistry::default_audio_selection_ =
+		std::make_unique<FileReaderPreferenceSelection<
+			FormatPreference, DefaultSelector>
+		>();
+
+
+std::unique_ptr<FileReaderSelection>
+	FileReaderRegistry::default_toc_selection_ =
+		std::make_unique<FileReaderPreferenceSelection<
+			FormatPreference, DefaultSelector>
+		>();
+
+
+bool FileReaderRegistry::has_format(const Format f)
 {
-	return descriptors_.get();
+	const auto fs = formats();
+
+	return std::end(*fs) != std::find_if(std::begin(*fs), std::end(*fs),
+			[f](const auto& p){ return p->format() == f; });
+}
+
+
+std::unique_ptr<FileReaderDescriptor> FileReaderRegistry::reader(
+		const std::string &id)
+{
+	auto p = readers_->find(id);
+	return p != readers_->end() ? p->second->clone() : nullptr;
+}
+
+
+const FormatList* FileReaderRegistry::formats()
+{
+	return &formats_;
+}
+
+
+const FileReaders* FileReaderRegistry::readers()
+{
+	return readers_.get();
 }
 
 
 const FileReaderSelection* FileReaderRegistry::default_audio_selection()
 {
-	if (!default_audio_selection_)
-	{
-		DefaultAudioSelection create;
-		default_audio_selection_ = create();
-	}
-
 	return default_audio_selection_.get();
 }
 
 
 const FileReaderSelection* FileReaderRegistry::default_toc_selection()
 {
-	if (!default_toc_selection_)
-	{
-		DefaultMetadataSelection create;
-		default_toc_selection_ = create();
-	}
-
 	return default_toc_selection_.get();
 }
 
 
-void FileReaderRegistry::add(std::unique_ptr<FileReaderDescriptor> d)
+void FileReaderRegistry::add_format(std::unique_ptr<Descriptor> f)
 {
-	if (!descriptors_)
-	{
-		descriptors_ = std::make_unique<DescriptorSet>();
-	}
-
-	descriptors_->insert(std::move(d));
+	// ... does not seem to require any further static initialization
+	if (f) { formats_.push_back(std::move(f)); }
 }
 
 
-std::unique_ptr<FileReaderDescriptor> FileReaderRegistry::call(
+void FileReaderRegistry::add_reader(std::unique_ptr<FileReaderDescriptor> d)
+{
+	static const bool r_guard = []{
+		FileReaderRegistry::readers_ = std::make_unique<FileReaders>();
+		return true;
+	}();
+	// add_reader() is called several times via RegisterDescriptor before
+	// entering main(), so readers_ will be initialized when reader() is called
+	// for the first time. Ugly, nonetheless.
+
+	if (d)
+	{
+		readers_->emplace(std::make_pair(d->id(), std::move(d)));
+	}
+
+	if (r_guard){} /* avoid -Wunused-variable firing */
+}
+
+
+std::unique_ptr<Descriptor> FileReaderRegistry::call_maker(
+			FunctionReturningUniquePtr<Descriptor> create)
+{
+	return create();
+}
+
+
+std::unique_ptr<FileReaderDescriptor> FileReaderRegistry::call_maker(
 			FunctionReturningUniquePtr<FileReaderDescriptor> create)
 {
 	return create();
 }
 
 
-std::unique_ptr<DescriptorSet> FileReaderRegistry::descriptors_;
+// non-member functions
+
+namespace details {
+
+std::unique_ptr<FileReaderDescriptor> select_descriptor(
+		const std::string &filename,
+		const FileReaderSelection &selection,
+		const FormatList &formats,
+		const FileReaders &readers)
+{
+	if (filename.empty())
+	{
+		throw FileReadException("Filename must not be empty");
+	}
+
+	const auto type { FileType(filename).type(&formats) };
+	auto reader = selection.get(type.first, type.second, readers);
+
+	if (!reader)
+	{
+		ARCS_LOG_WARNING << "File format is unknown, no reader available.";
+
+		return nullptr;
+	}
+
+	return reader;
+}
 
 
-std::unique_ptr<FileReaderSelection>
-	FileReaderRegistry::default_audio_selection_;
+std::unique_ptr<FileReader> select_reader(
+		const std::string &filename,
+		const FileReaderSelection &selection,
+		const FormatList &formats,
+		const FileReaders &readers)
+{
+	auto d = select_descriptor(filename, selection, formats, readers);
+	return d ? d->create_reader() : nullptr;
+}
+
+} // namespace details
 
 
-std::unique_ptr<FileReaderSelection>
-	FileReaderRegistry::default_toc_selection_;
+namespace {
 
+// Register all supported file formats.
+// This will not guarantee that a matching reader will be available!
+
+// TOC/Meta
+
+const auto dm1 = RegisterFormat<Format::CUE>({ "cue" }, { Codec::NONE} );
+
+const auto dm2 = RegisterFormat<Format::CDRDAO>({ "toc" }, { Codec::NONE } );
+
+// Audio
+
+const auto da1 = RegisterFormat<Format::WAV>({ "wav", "wave" },
+		{0, {
+		0x52, 0x49, 0x46, 0x46, // BE: 'R','I','F','F'
+		Bytes::any, Bytes::any, Bytes::any, Bytes::any,
+		// LE: filesize in bytes - 8
+		0x57, 0x41, 0x56, 0x45, // BE: 'W','A','V','E'
+		0x66, 0x6D, 0x74, 0x20, // BE: Format Subchunk Header: 'f','m','t',' '
+		0x10, 0x00, 0x00, 0x00, // LE: Format Subchunk Size: '16'
+		0x01, 0x00,             // LE: wFormatTag: 1 (means: PCM),
+		0x02, 0x00,             // LE: wChannels: 2 (means: stereo)
+		0x44, 0xAC, 0x00, 0x00, // LE: dwSamplesPerSec:  44100
+		0x10, 0xB1, 0x02, 0x00, // LE: dwAvgBytesPerSec: 176400
+		0x04, 0x00,             // LE: wBlockAlign: 4 (bytes per block)
+		0x10, 0x00,             // LE: wBitsPerSample: 16
+		0x64, 0x61, 0x74, 0x61  // BE: Data Subchunk Header: 'd','a','t','a'
+	                            // LE: Data Subchunk Size
+		}},
+		{ Codec::PCM_S16BE, Codec::PCM_S16BE_PLANAR,
+		  Codec::PCM_S16LE, Codec::PCM_S16LE_PLANAR,
+		  Codec::PCM_S32BE, Codec::PCM_S32BE_PLANAR,
+		  Codec::PCM_S32LE, Codec::PCM_S32LE_PLANAR });
+
+const auto da2 = RegisterFormat<Format::FLAC>({ "flac" },
+		{0, { 0x66 /* f */, 0x4C /* L */, 0x61 /* a */, 0x43 /* C */}},
+		{ Codec::FLAC } );
+
+const auto da3 = RegisterFormat<Format::APE>({ "ape" },
+		{0, { 0x4D /* M */, 0x41 /* A */, 0x43 /* C */, 0x20 /*   */}},
+		{ Codec::MONKEY } );
+
+const auto da4 = RegisterFormat<Format::CAF>({ "caf" },
+		{0, { 0x63 /* c */, 0x61 /* a */, 0x66 /* f */, 0x66 /* f */,
+			  0x00,         0x01,         0x00,         0x00        }},
+		{ Codec::ALAC } );
+
+const auto da5 = RegisterFormat<Format::M4A>({ "m4a" },
+		{4, { 0x66 /* f */, 0x74 /* t */, 0x79 /* y */, 0x70 /* p */,
+			  0x4D /* M */, 0x34 /* 4 */, 0x41 /* A */, 0x20 /*   */}},
+		{ Codec::ALAC } );
+
+const auto da6 = RegisterFormat<Format::OGG>({ "ogg", "oga" },
+		{0, { 0x4F /* O */, 0x67 /* g */, 0x67 /* g */, 0x53 /* S */}},
+		{ Codec::FLAC } );
+
+const auto da7 = RegisterFormat<Format::WV>({ "wv" },
+		{0, { 0x77 /* w */, 0x76 /* v */, 0x70 /* p */, 0x6B /* k */}},
+		{ Codec::WAVPACK} );
+
+const auto da8 = RegisterFormat<Format::AIFF>({ "aiff" },
+		{0, { 0x46 /* F */, 0x4F /* O */, 0x52 /* R */, 0x4D /* M */,
+			  Bytes::any,   Bytes::any,   Bytes::any,   Bytes::any,
+			  0x41 /* A */, 0x49 /* I */, 0x46 /* F */, 0x46 /* F */}},
+		{ Codec::PCM_S16BE, Codec::PCM_S16BE_PLANAR,
+		  Codec::PCM_S16LE, Codec::PCM_S16LE_PLANAR,
+		  Codec::PCM_S32BE, Codec::PCM_S32BE_PLANAR,
+		  Codec::PCM_S32LE, Codec::PCM_S32LE_PLANAR });
+
+} // namespace
 
 } // namespace v_1_0_0
 } // namespace arcsdec

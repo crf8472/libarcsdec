@@ -35,6 +35,7 @@ inline namespace v_1_0_0
  * @{
  */
 
+
 /**
  * \brief Libflac-based reader for fLaC containers holding fLaC data.
  *
@@ -44,13 +45,6 @@ inline namespace v_1_0_0
 class DescriptorFlac : public FileReaderDescriptor
 {
 public:
-
-	/**
-	 * \brief Constructor.
-	 */
-	DescriptorFlac()
-		: FileReaderDescriptor { { "flac" } }
-	{ /* empty */ }
 
 	/**
 	 * \brief Virtual default destructor.
@@ -69,21 +63,6 @@ private:
 	std::string do_name() const override;
 
 	LibInfo do_libraries() const override;
-
-	/**
-	 * \brief Test if this format is recognized on the given input bytes.
-	 *
-	 * The test is made against a slice of at least 4 bytes with offset from
-	 * the beginning of the file. The following three tests are performed:
-	 * Are bytes 0-3 of value 0x664C6143 (which is "fLaC" in ASCII)?
-	 *
-	 * \param[in] bytes  The byte sequence to check
-	 * \param[in] offset The offset to byte 0 in the file
-	 *
-	 * \return TRUE if the bytes match the DescriptorFlac, otherwise FALSE
-	 */
-	bool do_accepts_bytes(const std::vector<unsigned char> &bytes,
-			const uint64_t &offset) const override;
 
 	std::set<Format> define_formats() const override;
 

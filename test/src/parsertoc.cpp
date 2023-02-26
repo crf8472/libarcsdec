@@ -14,6 +14,33 @@
  */
 
 
+//TEST_CASE ("FormatToc", "[parsertoc]" )
+//{
+//	auto f = arcsdec::FormatToc{};
+//
+//	SECTION ("Matches accepted bytes correctly")
+//	{
+//		CHECK ( f.bytes({}, 0) );
+//		CHECK ( f.bytes({3, 2, 1}, 2) );
+//		CHECK ( f.bytes({0x65, 0x32, 0x88}, 1) );
+//		// TODO Check for always true
+//	}
+//
+//	SECTION ("Matches accepted filenames correctly")
+//	{
+//		CHECK ( f.filename("foo.toc") );
+//		CHECK ( f.filename("bar.TOC") );
+//		CHECK ( f.filename("bar.TOc") );
+//
+//		CHECK ( !f.filename("bar.rtoc") );
+//		CHECK ( !f.filename("bar.PTOc") );
+//
+//		CHECK ( !f.filename("bar.tocf") );
+//		CHECK ( !f.filename("bar.TOCl") );
+//	}
+//}
+
+
 TEST_CASE ("DescriptorToc", "[parsertoc]" )
 {
 	using arcsdec::DescriptorToc;
@@ -34,14 +61,6 @@ TEST_CASE ("DescriptorToc", "[parsertoc]" )
 		CHECK ( libs.size() == 1 );
 		CHECK ( libs.front().first  == "libcdio" );
 		//CHECK ( libs.front().second.find("libcdio++.so") != std::string::npos );
-	}
-
-	SECTION ("Matches accepted bytes correctly")
-	{
-		CHECK ( d.accepts_bytes({}, 0) );
-		CHECK ( d.accepts_bytes({3, 2, 1}, 2) );
-		CHECK ( d.accepts_bytes({0x65, 0x32, 0x88}, 1) );
-		// TODO Check for always true
 	}
 
 	SECTION ("Does not match any codecs not accepted by this descriptor")
@@ -93,19 +112,6 @@ TEST_CASE ("DescriptorToc", "[parsertoc]" )
 	SECTION ("Returns accepted formats correctly")
 	{
 		CHECK ( d.formats() == std::set<Format>{ Format::CDRDAO } );
-	}
-
-	SECTION ("Matches accepted filenames correctly")
-	{
-		CHECK ( d.accepts_name("foo.toc") );
-		CHECK ( d.accepts_name("bar.TOC") );
-		CHECK ( d.accepts_name("bar.TOc") );
-
-		CHECK ( !d.accepts_name("bar.rtoc") );
-		CHECK ( !d.accepts_name("bar.PTOc") );
-
-		CHECK ( !d.accepts_name("bar.tocf") );
-		CHECK ( !d.accepts_name("bar.TOCl") );
 	}
 
 	// TODO Does create_reader() really create a TocParserImpl?

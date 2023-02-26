@@ -63,14 +63,6 @@ class DescriptorFFmpeg : public FileReaderDescriptor
 public:
 
 	/**
-	 * \brief Constructor.
-	 */
-	DescriptorFFmpeg()
-		: FileReaderDescriptor { {
-			"wav", "flac", "ape", "caf", "m4a", /* "ogg", */ "aiff" } }
-	{ /* empty */ }
-
-	/**
 	 * \brief Virtual default destructor.
 	 */
 	~DescriptorFFmpeg() noexcept override;
@@ -85,23 +77,6 @@ private:
 	 * \return "FFmpeg"
 	 */
 	std::string do_name() const override;
-
-	/**
-	 * \brief Returns TRUE for every input implying this format matches all
-	 * files.
-	 *
-	 * \return TRUE
-	 */
-	bool do_accepts_bytes(const std::vector<unsigned char> &,
-			const uint64_t &) const override;
-
-	/**
-	 * \brief Returns TRUE for every input implying this format matches all
-	 * files.
-	 *
-	 * \return TRUE
-	 */
-	//bool do_accepts_name(const std::string &) const override;
 
 	std::set<Format> define_formats() const override;
 

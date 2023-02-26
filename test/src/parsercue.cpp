@@ -13,6 +13,37 @@
  * Tests for classes in parsercue.cpp
  */
 
+//TEST_CASE ("FormatCue", "[parsercue]" )
+//{
+//	auto f = arcsdec::FormatCue{};
+//
+//	SECTION ("Returns own name correctly")
+//	{
+//		CHECK ( "cue" == f.name() );
+//	}
+//
+//	SECTION ("Matches accepted bytes correctly")
+//	{
+//		CHECK ( f.bytes({}, 0) );
+//		CHECK ( f.bytes({3, 2, 1}, 2) );
+//		CHECK ( f.bytes({0x65, 0x32, 0x88}, 1) );
+//		// TODO Check for always true
+//	}
+//
+//	SECTION ("Matches accepted filenames correctly")
+//	{
+//		CHECK ( f.filename("foo.cue") );
+//		CHECK ( f.filename("bar.CUE") );
+//		CHECK ( f.filename("bar.CUe") );
+//
+//		CHECK ( !f.filename("bar.rcue") );
+//		CHECK ( !f.filename("bar.PCUe") );
+//
+//		CHECK ( !f.filename("bar.cuef") );
+//		CHECK ( !f.filename("bar.CUEl") );
+//	}
+//}
+
 
 TEST_CASE ("DescriptorCue", "[parsercue]" )
 {
@@ -20,7 +51,7 @@ TEST_CASE ("DescriptorCue", "[parsercue]" )
 	using arcsdec::Format;
 	using arcsdec::Codec;
 
-	auto d = DescriptorCue{};
+	auto d = arcsdec::DescriptorCue{};
 
 	SECTION ("Returns own name correctly")
 	{
@@ -34,14 +65,6 @@ TEST_CASE ("DescriptorCue", "[parsercue]" )
 		CHECK ( libs.size() == 1 );
 		CHECK ( libs.front().first  == "libcue" );
 		CHECK ( libs.front().second.find("libcue.so") != std::string::npos );
-	}
-
-	SECTION ("Matches accepted bytes correctly")
-	{
-		CHECK ( d.accepts_bytes({}, 0) );
-		CHECK ( d.accepts_bytes({3, 2, 1}, 2) );
-		CHECK ( d.accepts_bytes({0x65, 0x32, 0x88}, 1) );
-		// TODO Check for always true
 	}
 
 	SECTION ("Does not match any codecs not accepted by this descriptor")
@@ -93,19 +116,6 @@ TEST_CASE ("DescriptorCue", "[parsercue]" )
 	SECTION ("Returns accepted formats correctly")
 	{
 		CHECK ( d.formats() == std::set<Format>{ Format::CUE } );
-	}
-
-	SECTION ("Matches accepted filenames correctly")
-	{
-		CHECK ( d.accepts_name("foo.cue") );
-		CHECK ( d.accepts_name("bar.CUE") );
-		CHECK ( d.accepts_name("bar.CUe") );
-
-		CHECK ( !d.accepts_name("bar.rcue") );
-		CHECK ( !d.accepts_name("bar.PCUe") );
-
-		CHECK ( !d.accepts_name("bar.cuef") );
-		CHECK ( !d.accepts_name("bar.CUEl") );
 	}
 
 	// TODO Does create_reader() really create a CueParserImpl?

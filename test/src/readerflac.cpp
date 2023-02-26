@@ -21,6 +21,30 @@
  */
 
 
+//TEST_CASE ("FormatFlac", "[readerflac]" )
+//{
+//	auto f = arcsdec::FormatFlac{};
+//
+//	SECTION ("Matches accepted bytes correctly")
+//	{
+//		CHECK ( f.bytes({ 0x66, 0x4C, 0x61, 0x43 }, 0) );
+//	}
+//
+//	SECTION ("Matches names correctly")
+//	{
+//		CHECK ( f.filename("foo.flac") );
+//		CHECK ( f.filename("bar.FLAC") );
+//		CHECK ( f.filename("bar.FlAc") );
+//
+//		CHECK ( !f.filename("bar.rflac") );
+//		CHECK ( !f.filename("bar.PFLac") );
+//
+//		CHECK ( !f.filename("bar.flacr") );
+//		CHECK ( !f.filename("bar.FLACD") );
+//	}
+//}
+
+
 TEST_CASE ("DescriptorFlac", "[readerflac]" )
 {
 	using arcsdec::DescriptorFlac;
@@ -49,11 +73,6 @@ TEST_CASE ("DescriptorFlac", "[readerflac]" )
 
 		CHECK ( l->first  == "libFLAC" );
 		CHECK ( l->second.find("libFLAC") != std::string::npos );
-	}
-
-	SECTION ("Matches accepted bytes correctly")
-	{
-		CHECK ( d.accepts_bytes({ 0x66, 0x4C, 0x61, 0x43 }, 0) );
 	}
 
 	SECTION ("Matches accepted codecs correctly")
@@ -108,19 +127,6 @@ TEST_CASE ("DescriptorFlac", "[readerflac]" )
 	SECTION ("Returns accepted formats correctly")
 	{
 		CHECK ( d.formats() == std::set<Format>{ Format::FLAC } );
-	}
-
-	SECTION ("Matches names correctly")
-	{
-		CHECK ( d.accepts_name("foo.flac") );
-		CHECK ( d.accepts_name("bar.FLAC") );
-		CHECK ( d.accepts_name("bar.FlAc") );
-
-		CHECK ( !d.accepts_name("bar.rflac") );
-		CHECK ( !d.accepts_name("bar.PFLac") );
-
-		CHECK ( !d.accepts_name("bar.flacr") );
-		CHECK ( !d.accepts_name("bar.FLACD") );
 	}
 }
 

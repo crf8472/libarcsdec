@@ -51,13 +51,6 @@ class DescriptorWavpack : public FileReaderDescriptor
 public:
 
 	/**
-	 * \brief Constructor.
-	 */
-	DescriptorWavpack()
-		: FileReaderDescriptor { { "wv" } }
-	{ /* empty */ }
-
-	/**
 	 * \brief Virtual default destructor.
 	 */
 	~DescriptorWavpack() noexcept override;
@@ -72,21 +65,6 @@ private:
 	 * \return "Wavpack"
 	 */
 	std::string do_name() const override;
-
-	/**
-	 * \brief Test if this format is recognized on the given input bytes.
-	 *
-	 * The test is made against a slice of at least 4 bytes with offset 0
-	 * (from the beginning of the file). The following test is performed:
-	 * Are bytes 0-3 of value 0x7776706B (== "wvpk" in ASCII)?
-	 *
-	 * \param[in] bytes  The byte sequence to check
-	 * \param[in] offset The offset to byte 0 in the file
-	 *
-	 * \return TRUE if the bytes match the DescriptorWavpack, otherwise FALSE
-	 */
-	bool do_accepts_bytes(const std::vector<unsigned char> &bytes,
-			const uint64_t &offset) const override;
 
 	std::set<Format> define_formats() const override;
 

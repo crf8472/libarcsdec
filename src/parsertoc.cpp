@@ -86,12 +86,9 @@ std::string DescriptorToc::do_name() const
 }
 
 
-bool DescriptorToc::do_accepts_bytes(
-		const std::vector<unsigned char> & /* bytes */,
-		const uint64_t & /* offset */) const
+bool DescriptorToc::do_accepts_codec(Codec codec) const
 {
-	// TODO
-	return true;
+	return codec == Codec::NONE;
 }
 
 
