@@ -12,7 +12,9 @@
 #include <array>        // for array
 #include <cstdint>      // for uint32_t, uint64_t, int64_t
 #include <fstream>      // for ifstream
+#include <initializer_list>
 #include <ios>          // for ios, ios_base
+#include <iterator>     // for distance
 #include <memory>       // for unique_ptr
 #include <set>          // for set
 #include <stdexcept>    // for runtime_error
@@ -63,21 +65,147 @@ std::string name(Codec codec)
 	{
 		"unknown",
 		"PCM_S16BE",
-		"PCM_S16BE_PLANAR",
+		"PCM_S16BE(planar)",
 		"PCM_S16LE",
-		"PCM_S16LE_PLANAR",
+		"PCM_S16LE(planar)",
 		"PCM_S32BE",
-		"PCM_S32BE_PLANAR",
+		"PCM_S32BE(planar)",
 		"PCM_S32LE",
-		"PCM_S32LE_PLANAR",
-		"FLAC",
-		"WAVEPACK",
-		"MONKEY",
+		"PCM_S32LE(planar)",
+		"fLaC",
+		"Wavepack",
+		"Monkey",
 		"ALAC",
 		"none" // Allows combination with a non-audio format
 	};
 
 	return names[std::underlying_type_t<Codec>(codec)];
+}
+
+
+// ByteSeq
+
+
+ByteSeq::ByteSeq(ByteSeq::sequence_type::size_type length)
+	: sequence_(length)
+	, wildcards_ { /* empty */ }
+{
+	// empty
+}
+
+
+ByteSeq::ByteSeq(std::initializer_list<unsigned> values)
+	: sequence_  { /* empty */ }
+	, wildcards_ { /* empty */ }
+{
+	if (values.size() == 0) // TODO empty() only since C++17
+	{
+		return;
+	}
+
+	auto pos = unsigned { 0 };
+	sequence_.reserve(values.size());
+
+	// Initialize sequence_ while collecting positions with wildcards
+	std::transform(values.begin(), values.end(),
+			std::back_inserter(sequence_),
+			[&](const unsigned& v) -> byte_type
+			{
+				if (v > max_byte_value)
+				{
+					// Everything bigger than max_byte_value will count
+					// as undefined resp. wildcard
+					wildcards_.insert(pos);
+				}
+				++pos;
+
+				// Actual value on undefined positions will be max_byte_value
+				return v > max_byte_value ? max_byte_value : v;
+			});
+}
+
+
+bool ByteSeq::matches(sequence_type::size_type i, byte_type b) const
+{
+	return sequence_[i] == b || is_wildcard(i);
+}
+
+
+bool ByteSeq::is_wildcard(sequence_type::size_type i) const
+{
+	return wildcards_.find(i) != wildcards_.end();
+}
+
+
+ByteSeq::size_type ByteSeq::size() const
+{
+	return sequence_.size();
+}
+
+
+bool ByteSeq::empty() const
+{
+	return sequence_.empty();
+}
+
+
+ByteSeq::const_reference ByteSeq::operator[](ByteSeq::size_type i) const
+{
+	return sequence_[i];
+}
+
+
+ByteSeq::reference ByteSeq::operator[](ByteSeq::size_type i)
+{
+	return sequence_[i];
+}
+
+
+ByteSeq::sequence_type::iterator ByteSeq::begin()
+{
+	return sequence_.begin();
+}
+
+
+ByteSeq::sequence_type::iterator ByteSeq::end()
+{
+	return sequence_.end();
+}
+
+
+ByteSeq::sequence_type::const_iterator ByteSeq::begin() const
+{
+	return sequence_.begin();
+}
+
+
+ByteSeq::sequence_type::const_iterator ByteSeq::end() const
+{
+	return sequence_.end();
+}
+
+
+ByteSeq::sequence_type::const_iterator ByteSeq::cbegin() const
+{
+	return sequence_.cbegin();
+}
+
+
+ByteSeq::sequence_type::const_iterator ByteSeq::cend() const
+{
+	return sequence_.cend();
+}
+
+
+ByteSeq::byte_type* ByteSeq::data()
+{
+	return sequence_.data();
+}
+
+
+bool operator == (const ByteSeq &lhs, const ByteSeq &rhs)
+{
+	return lhs.sequence_ == rhs.sequence_ && lhs.wildcards_ == rhs.wildcards_;
 }
 
 
@@ -90,7 +218,7 @@ bool operator == (const Bytes &lhs, const Bytes &rhs)
 }
 
 
-constexpr unsigned char Bytes::any;
+constexpr unsigned int Bytes::any;
 
 
 Bytes::Bytes()
@@ -106,6 +234,12 @@ Bytes::Bytes(const uint32_t offset, const ByteSequence &bytes)
 	, seq_    { bytes }
 {
 	// empty
+}
+
+
+bool Bytes::match(const Bytes &bytes) const
+{
+	return match(bytes.sequence(), bytes.offset());
 }
 
 
@@ -158,6 +292,8 @@ bool Bytes::match(const ByteSequence &bytes, const uint32_t &ioffset) const
 		? ref_bytes().end()
 		: ref_current + static_cast<long>(bytes.size()) + 1 /* past-the-end */;
 
+	auto on_wildcard = bool { false };
+
 	do
 	{
 		const auto m = std::mismatch(in_current, in_stop, ref_current);
@@ -165,24 +301,27 @@ bool Bytes::match(const ByteSequence &bytes, const uint32_t &ioffset) const
 		// Reached the end? => Success
 		if (m.first == in_stop or m.second == ref_stop)
 		{
-			break;
+			return true;
 		}
 
+		// Has reference or input sequence a wildcard on their respective
+		// current position?
+		auto dist_r = std::distance(ref_bytes().begin(), m.second);
+		auto dist_i = std::distance(bytes.begin(), m.first);
+		on_wildcard = ref_bytes().is_wildcard(static_cast<unsigned>(dist_r))
+			|| bytes.is_wildcard(static_cast<unsigned>(dist_i));
+
 		// Is it an actual mismatch (i.e. on a non-wildcard byte)?
-		if (m.second != ref_stop and *m.second != wildcard())
+		if (m.second != ref_stop and !on_wildcard)
 		{
 			return false;
 		}
 
 		// Mismatch was on a "wildcard byte", so skip all following bytes until
 		// the wildcard sequence ends.
-
 		in_current  = m.first;
 		ref_current = m.second;
-
-		// Skip all input bytes referring to 'any_byte' in the reference bytes
-		while (in_current != in_stop and ref_current != ref_stop
-				and *ref_current == wildcard())
+		while (in_current != in_stop && ref_current != ref_stop && on_wildcard)
 		{
 			++in_current;
 			++ref_current;
@@ -218,15 +357,19 @@ ByteSequence::size_type Bytes::size() const
 }
 
 
-ByteSequence::const_reference Bytes::operator[](ByteSequence::size_type i) const
+ByteSequence::const_reference Bytes::operator[](
+		ByteSequence::size_type i) const
 {
 	return seq_[i];
 }
 
 
-unsigned char Bytes::wildcard() const
+Bytes& Bytes::swap(Bytes& b) // noexcept
 {
-	return Bytes::any;
+	using std::swap;
+	swap(this->seq_,    b.seq_); // noexcept only since C++17
+	swap(this->offset_, b.offset_);
+	return *this;
 }
 
 
@@ -367,16 +510,9 @@ std::string Descriptor::name() const
 }
 
 
-bool Descriptor::matches(const ByteSequence &bytes, const uint64_t &offset)
-	const
-{
-	return do_matches(bytes, offset);
-}
-
-
 bool Descriptor::matches(const Bytes &bytes) const
 {
-	return do_matches(bytes.sequence(), bytes.offset());
+	return do_matches(bytes);
 }
 
 
@@ -410,10 +546,16 @@ std::unique_ptr<Descriptor> Descriptor::clone() const
 }
 
 
+// libinfo_entry
+
+
+LibInfoEntry libinfo_entry(const std::string &libname)
+{
+	return { libname, details::libfile(libname) };
+}
+
+
 // FileReader
-
-
-FileReader::FileReader() = default;
 
 
 FileReader::~FileReader() noexcept = default;
@@ -458,15 +600,6 @@ FileReadException::FileReadException(const std::string &what_arg,
 int64_t FileReadException::byte_pos() const
 {
 	return byte_pos_;
-}
-
-
-// libinfo_entry
-
-
-LibInfoEntry libinfo_entry(const std::string &libname)
-{
-	return { libname, details::libfile(libname) };
 }
 
 
@@ -588,6 +721,12 @@ bool operator == (const FileReaderDescriptor &lhs,
 	// same static type
 
 	return typeid(lhs) == typeid(rhs);
+}
+
+
+void swap(Bytes &lhs, Bytes &rhs)
+{
+	lhs.swap(rhs);
 }
 
 } // namespace v_1_0_0

@@ -48,7 +48,7 @@ std::unique_ptr<FileReaderDescriptor> MetadataParserImpl::descriptor() const
 
 
 MetadataParser::MetadataParser(std::unique_ptr<MetadataParserImpl> impl)
-	: impl_(std::move(impl))
+	: impl_ { std::move(impl) }
 {
 	// empty
 }
@@ -83,7 +83,7 @@ std::unique_ptr<FileReaderDescriptor> MetadataParser::do_descriptor() const
 
 
 MetadataParseException::MetadataParseException(const std::string &what_arg)
-	: std::runtime_error(what_arg)
+	: std::runtime_error { what_arg }
 {
 	// empty
 }

@@ -162,15 +162,14 @@ std::unique_ptr<Descriptor> FileType::format(
 			if (accepted->matches(filename()))
 			{
 				ARCS_LOG(DEBUG1) << accepted->name() << ": filename matched";
-				ARCS_LOG_DEBUG << "Recognized format: " << accepted->name();
+				ARCS_LOG_DEBUG << "Format " << accepted->name() << " accepted";
 				return accepted->clone();
 			}
 
-			ARCS_LOG(DEBUG1) << "But filename did not match!";
+			ARCS_LOG(DEBUG1) << accepted->name() << ": filename did not match";
 		}
 
-		ARCS_LOG(DEBUG1) << "Check for format " << accepted->name()
-			<< " failed";
+		ARCS_LOG(DEBUG1) << "Format " << accepted->name() << " is not accepted";
 	}
 
 	ARCS_LOG_DEBUG << "File format is unknown. (Checked for "

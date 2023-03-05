@@ -7,6 +7,7 @@
  * \brief Toolkit for recognizing file types and selecting file readers.
  */
 
+#include <algorithm>   // for transform
 #include <cctype>      // for toupper
 #include <cstddef>     // for size_t
 #include <cstdint>     // for uint32_t, uint64_t, int64_t
@@ -215,16 +216,120 @@ struct Comparable
 };
 
 
+class ByteSeq;
+bool operator == (const ByteSeq &lhs, const ByteSeq &rhs);
+
+/**
+ * \brief Byte sequence.
+ */
+class ByteSeq : public Comparable<ByteSeq>
+{
+public:
+
+	/**
+	 * \brief Type to represent an actual byte.
+	 */
+	using byte_type = unsigned char;
+
+private:
+
+	/**
+	 * \brief Internal byte sequence.
+	 */
+	std::vector<byte_type> sequence_;
+
+	/**
+	 * \brief Type of the internal sequence.
+	 */
+	using sequence_type = decltype( sequence_ );
+
+	/**
+	 * \brief List of wildcard positions in the sequence.
+	 */
+	std::set<sequence_type::size_type> wildcards_;
+
+public:
+
+	friend bool operator == (const ByteSeq &lhs, const ByteSeq &rhs);
+
+	/**
+	 * \brief Numerical maximum of the \c byte_type.
+	 */
+	constexpr static byte_type max_byte_value {
+		std::numeric_limits<byte_type>::max() };
+
+	/**
+	 * \brief Constructor.
+	 *
+	 * \param[in] values List of byte values with or without wildcards.
+	 */
+	ByteSeq(std::initializer_list<unsigned> values);
+
+	/**
+	 * \brief Constructor.
+	 *
+	 * \param[in] length Actual length for a yet empty sequence
+	 */
+	ByteSeq(sequence_type::size_type length);
+
+	/**
+	 * \brief TRUE if byte on position \c i has value \c b.
+	 *
+	 * \return TRUE if byte on position \c i has value \c b, otherwise FALSE.
+	 */
+	bool matches(sequence_type::size_type i, byte_type b) const;
+
+	/**
+	 * \brief TRUE if byte on position \c i is a wildcard.
+	 *
+	 * \brief TRUE if byte on position \c i is a wildcard, otherwise FALSE.
+	 */
+	bool is_wildcard(sequence_type::size_type i) const;
+
+
+	// Wrappers for functions delegated to the sequence_type
+
+	using const_reference = sequence_type::const_reference;
+
+	using reference = sequence_type::reference;
+
+	using size_type = sequence_type::size_type;
+
+	size_type size() const;
+
+	bool empty() const;
+
+	const_reference operator[](size_type i) const;
+
+	reference operator[](size_type i);
+
+	sequence_type::iterator begin();
+	sequence_type::iterator end();
+
+	sequence_type::const_iterator begin() const;
+	sequence_type::const_iterator end() const;
+
+	sequence_type::const_iterator cbegin() const;
+	sequence_type::const_iterator cend() const;
+
+	byte_type* data();
+};
+
+
+
 /**
  * \brief A sequence of bytes.
  *
  * A sequence of bytes as read from a file.
  */
-using ByteSequence = std::vector<unsigned char>;
+using ByteSequence = ByteSeq;
 
 
 class Bytes;
+
 bool operator == (const Bytes &lhs, const Bytes &rhs);
+
+void swap(Bytes &lhs, Bytes &rhs);
 
 
 /**
@@ -241,7 +346,7 @@ public:
 	/**
 	 * \brief Wildcard for a single byte.
 	 */
-	static constexpr unsigned char any = 0xFF;
+	static constexpr unsigned int any = ByteSequence::max_byte_value + 1;
 
 	/**
 	 * \brief Constructor.
@@ -258,15 +363,18 @@ public:
 	 */
 	Bytes(const uint32_t offset, const ByteSequence &bytes);
 
-
-	Bytes(const Bytes& bytes) = default;
-
-	Bytes& operator = (const Bytes& bytes) = default;
-
-	Bytes(Bytes&& bytes) noexcept = default;
-
-	Bytes& operator = (Bytes&& bytes) noexcept = default;
-
+	/**
+	 * \brief Match a byte sequence with this instance.
+	 *
+	 * The match is tried starting on positin \c offset.() on this instance and
+	 * ends on the end of the shorter sequence, either \c bytes or this
+	 * instance.
+	 *
+	 * \param[in] bytes  Byte sequence to be matched
+	 *
+	 * \return TRUE iff this instance matches \c bytes, otherwise FALSE
+	 */
+	bool match(const Bytes &bytes) const;
 
 	/**
 	 * \brief Match a byte sequence starting with \c offset with this instance.
@@ -285,7 +393,6 @@ public:
 	 * \return TRUE iff this instance matches \c bytes, otherwise FALSE
 	 */
 	bool match(const ByteSequence &bytes, const uint32_t &offset) const;
-	//TODO bool match(const Bytes) const;
 
 	/**
 	 * \brief Match a bytes sequence with this instance.
@@ -326,14 +433,14 @@ public:
 	 */
 	ByteSequence::const_reference operator[](ByteSequence::size_type i) const;
 
-private:
-
 	/**
-	 * \brief Returns \c any.
+	 * \brief Swap this instance with another.
 	 *
-	 * \return \c any
+	 * \param[in] b The other instance to swap with
 	 */
-	unsigned char wildcard() const;
+	Bytes& swap(Bytes& b) ; //TODO noexcept possible when C++17
+
+private:
 
 	/**
 	 * \brief Returns the internal ByteSequence.
@@ -442,16 +549,6 @@ public:
 	 * \brief Match byte sequence located at a specific offset in the file.
 	 *
 	 * \param[in] bytes   Bytes of a file to check.
-	 * \param[in] offset  Offset where \c bytes occurred in the file.
-	 *
-	 * \return TRUE if \c bytes occur on \c offset in the target
-	 */
-	bool matches(const ByteSequence &bytes, const uint64_t &offset) const;
-
-	/**
-	 * \brief Match byte sequence located at a specific offset in the file.
-	 *
-	 * \param[in] bytes   Bytes of a file to check.
 	 *
 	 * \return TRUE if \c bytes occur in the target
 	 */
@@ -499,8 +596,7 @@ private:
 	virtual std::string do_name() const
 	= 0;
 
-	virtual bool do_matches(const ByteSequence &bytes,
-			const uint64_t &offset) const
+	virtual bool do_matches(const Bytes &bytes) const
 	= 0;
 
 	virtual bool do_matches(const std::string &filename) const
@@ -584,10 +680,9 @@ private:
 		return name(F);
 	}
 
-	inline bool do_matches(const ByteSequence &bytes,
-			const uint64_t &offset) const final
+	inline bool do_matches(const Bytes& bytes) const final
 	{
-		return bytes_.match(bytes, offset);
+		return bytes_.match(bytes);
 	}
 
 	inline bool do_matches(const std::string &filename) const final
@@ -633,53 +728,32 @@ private:
 };
 
 
-
-class FileReaderDescriptor;
+/**
+ * \brief Entry of a \c LibInfo.
+ *
+ * An entry for a LibInfo consists of the library name and an additional string.
+ * The additional string can for example be used for a concrete path where the
+ * library file is located.
+ */
+using LibInfoEntry = std::pair<std::string, std::string>;
 
 /**
- * \brief Abstract base class for \link FileReader FileReaders\endlink.
- *
- * \note
- * Instances of this class are non-copyable and non-movable but provide
- * protected special members for move that can be used in subclasses.
- *
- * \see AudioReader
- * \see MetadataParser
+ * \brief Represents a list of pairs of a library name and an additional string.
  */
-class FileReader
-{
-public:
+using LibInfo = std::list<LibInfoEntry>;
 
-	/**
-	 * \brief Default constructor.
-	 */
-	FileReader();
+/**
+ * \brief Create an entry for a LibInfo.
+ *
+ * The second part will contain the concrete filepath for the libname. The
+ * concrete shared object is inspected to determine this.
+ *
+ * \param[in] libname Name of a library.
+ *
+ * \return A LibInfoEntry that contains the concrete filepath for the library.
+ */
+LibInfoEntry libinfo_entry(const std::string &libname);
 
-	/**
-	 * \brief Virtual default destructor.
-	 */
-	virtual ~FileReader() noexcept;
-
-	/**
-	 * \brief Get a descriptor for this FileReader.
-	 *
-	 * \return Descriptor for this FileReader instance
-	 */
-	std::unique_ptr<FileReaderDescriptor> descriptor() const;
-
-protected:
-
-	FileReader(FileReader &&rhs) noexcept = default;
-	FileReader& operator = (FileReader &&rhs) noexcept = default;
-
-private:
-
-	/**
-	 * \brief Implements FileReader::descriptor().
-	 */
-	virtual std::unique_ptr<FileReaderDescriptor> do_descriptor() const
-	= 0;
-};
 
 
 /**
@@ -752,32 +826,38 @@ private:
 };
 
 
-/**
- * \brief Entry of a \c LibInfo.
- *
- * An entry for a LibInfo consists of the library name and an additional string.
- * The additional string can for example be used for a concrete path where the
- * library is located.
- */
-using LibInfoEntry = std::pair<std::string, std::string>;
+class FileReaderDescriptor;
 
 /**
- * \brief Represents a list of pairs of a library name and an additional string.
+ * \brief Abstract base class for \link FileReader FileReaders\endlink.
+ *
+ * \see AudioReader
+ * \see MetadataParser
  */
-using LibInfo = std::list<LibInfoEntry>;
+class FileReader
+{
+public:
 
-/**
- * \brief Create an entry for a LibInfo.
- *
- * The second part will contain the concrete filepath for the libname. The
- * concrete shared object is inspected to determine this.
- *
- * \param[in] libname Name of a library.
- *
- * \return A LibInfoEntry that contains the concrete filepath for the library.
- */
-LibInfoEntry libinfo_entry(const std::string &libname);
+	/**
+	 * \brief Virtual default destructor.
+	 */
+	virtual ~FileReader() noexcept;
 
+	/**
+	 * \brief Get a descriptor for this FileReader.
+	 *
+	 * \return Descriptor for this FileReader instance
+	 */
+	std::unique_ptr<FileReaderDescriptor> descriptor() const;
+
+private:
+
+	/**
+	 * \brief Implements FileReader::descriptor().
+	 */
+	virtual std::unique_ptr<FileReaderDescriptor> do_descriptor() const
+	= 0;
+};
 
 
 bool operator == (const FileReaderDescriptor &lhs,
@@ -791,7 +871,8 @@ bool operator == (const FileReaderDescriptor &lhs,
  * It can create an opaque reader that can read the file.
  *
  * \warning
- * FileReaderDescriptors are supposed to be stateless.
+ * FileReaderDescriptors are supposed to be stateless. If a subclass adds a
+ * state, the equality operator will not work as expected.
  *
  * \note
  * Instances of this class are non-copyable and non-movable but provide

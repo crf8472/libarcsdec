@@ -33,7 +33,10 @@ extern "C" {
 #endif
 
 #ifndef __LIBARCSDEC_METAPARSER_HPP__
-#include "metaparser.hpp" // for MetadataParseException
+#include "metaparser.hpp"  // for MetadataParseException
+#endif
+#ifndef __LIBARCSDEC_SELECTION_HPP__
+#include "selection.hpp"   // for RegisterDescriptor
 #endif
 
 

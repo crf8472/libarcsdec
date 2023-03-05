@@ -21,9 +21,6 @@
 #ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
 #include "descriptor.hpp"  // for FileReader, FileReaderDescriptor
 #endif
-#ifndef __LIBARCSDEC_SELECTION_HPP__
-#include "selection.hpp"   // for CreateReader
-#endif
 
 namespace arcsdec
 {
@@ -210,8 +207,8 @@ struct signedness : public std::integral_constant<bool,
 
 
 /**
- * \brief Service method: Cast a value of some integral type to an integral
- * type of smaller range.
+ * \brief Service method: Cast a value of some integral type safely to an
+ * integral type of smaller range.
  *
  * The types must either both be signed or both be unsigned.
  *
@@ -226,22 +223,23 @@ struct signedness : public std::integral_constant<bool,
  */
 template <typename S, typename T,
 		 std::enable_if_t<details::signedness<S, T>::value, int> = 0>
-auto cast_or_throw(const T value) -> S
+inline auto cast_or_throw(const T value) -> S
 {
+	auto throw_with_message = [](const T val, const std::string &msg)
+	{
+		std::ostringstream stream;
+		stream << "Value " << val << " " << msg;
+		throw std::out_of_range(stream.str());
+	};
+
 	if (value < std::numeric_limits<S>::min())
 	{
-		std::ostringstream msg;
-		msg << "Value " << value << " too small to cast";
-
-		throw std::out_of_range(msg.str());
+		throw_with_message(value, "is too small to cast");
 	}
 
 	if (value > std::numeric_limits<S>::max())
 	{
-		std::ostringstream msg;
-		msg << "Value " <<  value << " too big to cast";
-
-		throw std::out_of_range(msg.str());
+		throw_with_message(value, "is too big to cast");
 	}
 
 	return static_cast<S>(value);

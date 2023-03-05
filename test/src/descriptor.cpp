@@ -1,5 +1,6 @@
 #include "catch2/catch_test_macros.hpp"
 
+#include <climits>
 #include <type_traits>
 
 #ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
@@ -10,23 +11,79 @@
 /**
  * \file
  *
- * Tests for classes in descriptor.cpp
+ * \brief Tests for classes in descriptor.cpp
  */
 
 
-TEST_CASE ( "ci_string", "[ci_string]" )
+// TODO
+//TEST_CASE ( "ci_string", "[ci_string]" )
+//{
+	//using arcsdec::details::ci_string;
+
+//}
+
+
+TEST_CASE ( "ByteSeq", "[byteseq]")
 {
-	using arcsdec::details::ci_string;
+	using arcsdec::ByteSeq;
+	using arcsdec::Bytes;
+
+	SECTION ("Constants are correct")
+	{
+		CHECK ( ByteSeq::max_byte_value >= UCHAR_MAX );
+		CHECK ( Bytes::any > ByteSeq::max_byte_value );
+	}
+
+	SECTION ("Empty ByteSeq")
+	{
+		ByteSeq b { };
+
+		CHECK ( b.size() == 0 );
+		CHECK ( !b.is_wildcard(0) );
+	}
+
+	SECTION ("ByteSeq is constructed correctly")
+	{
+		//ByteSeq b1 { 0x16, 0x22,         0x4B, 0xFF };
+		ByteSeq b2 { 0x16, Bytes::any, 0x4B, 0xFF };
+
+		CHECK ( b2.size() == 4 );
+
+		CHECK ( !b2.is_wildcard(0) );
+		CHECK (  b2.is_wildcard(1) );
+		CHECK ( !b2.is_wildcard(2) );
+		CHECK ( !b2.is_wildcard(3) );
+	}
 }
 
 
-TEST_CASE ( "Bytes", "[bytes]" )
+TEST_CASE ( "Bytes special members and operators", "[bytes]" )
 {
 	using arcsdec::Bytes;
 	using arcsdec::ByteSequence;
 
 	auto bytes  { Bytes(0, { 0x01, 0x02, 0x06, 0x07, 0x4C, 0xF0 }) };
-	//auto bytes1 { Bytes(2, { 0x41, 0xC2, 0xA9, 0x08, 0xBF, 0xC4 }) };
+
+
+	SECTION ("Class Bytes is copy-constructible")
+	{
+		CHECK ( std::is_copy_constructible<Bytes>::value );
+	}
+
+	SECTION ("Class Bytes is copy-assignable")
+	{
+		CHECK ( std::is_copy_assignable<Bytes>::value );
+	}
+
+	SECTION ("Class Bytes is move-constructible")
+	{
+		CHECK ( std::is_move_constructible<Bytes>::value );
+	}
+
+	SECTION ("Class Bytes is move-assignable")
+	{
+		CHECK ( std::is_move_assignable<Bytes>::value );
+	}
 
 	SECTION ( "Instantiation is done correctly" )
 	{
@@ -58,6 +115,28 @@ TEST_CASE ( "Bytes", "[bytes]" )
 		CHECK ( bytes  != other_bytes4 );
 		CHECK ( bytes2 != other_bytes4 );
 	}
+
+	SECTION ("Swap works correctly")
+	{
+		// non-equal to 'bytes'
+		auto bytes2 { Bytes(5, { 0x05, 0x09, 0x01, 0x00, 0x42, 0x08 }) };
+		bytes.swap(bytes2);
+
+		CHECK ( bytes.sequence()  == ByteSequence{ 0x05, 0x09, 0x01, 0x00, 0x42, 0x08 } );
+		CHECK ( bytes2.sequence() == ByteSequence{ 0x01, 0x02, 0x06, 0x07, 0x4C, 0xF0 } );
+
+		CHECK ( bytes.offset()  == 5 );
+		CHECK ( bytes2.offset() == 0 );
+	}
+}
+
+
+TEST_CASE ( "Bytes::match()", "[bytes]" )
+{
+	using arcsdec::Bytes;
+	using arcsdec::ByteSequence;
+
+	auto bytes  { Bytes(0, { 0x01, 0x02, 0x06, 0x07, 0x4C, 0xF0 }) };
 
 	SECTION ( "match() matches matching sequences with different offsets" )
 	{
@@ -142,24 +221,36 @@ TEST_CASE ( "Bytes", "[bytes]" )
 //}
 
 
-TEST_CASE ( "FileReader", "[filereader]")
+TEST_CASE ( "FileReader special members", "[filereader]")
 {
 	using arcsdec::FileReader;
 
-	SECTION ( "Copy constructor and assignment operator are not declared" )
+	SECTION ( "FileReader is not copy-constructible" )
 	{
 		CHECK ( not std::is_copy_constructible<FileReader>::value );
-		CHECK ( not std::is_copy_assignable<FileReader>::value );
 	}
 
-
-	SECTION ( "Move constructor and assignment operator are not accessible" )
+	SECTION ( "FileReader is copy-assignable" )
 	{
-		CHECK ( not std::is_nothrow_move_constructible<FileReader>::value );
-		CHECK ( not std::is_nothrow_move_assignable<FileReader>::value );
+		CHECK ( std::is_copy_assignable<FileReader>::value );
 	}
 
-	// TODO Test for move
+	SECTION ( "FileReader is not move-constructible" )
+	{
+		CHECK ( not std::is_move_constructible<FileReader>::value );
+	}
+
+	SECTION ( "FileReader is move-assignable" )
+	{
+		CHECK ( std::is_move_assignable<FileReader>::value );
+	}
+
+	// TODO hash, swap, ==
+}
+
+
+TEST_CASE ( "FileReaderDescriptor special members", "[filereaderdescriptor]")
+{
 }
 
 
@@ -169,6 +260,18 @@ TEST_CASE ( "libinfo_entry", "[libinfo]" )
 	using arcsdec::LibInfo;
 	using arcsdec::libinfo_entry;
 }
+
+
+// TODO
+//TEST_CASE ( "ci_match_suffix", "[ci_match_suffix]" )
+//{
+//}
+
+
+// TODO
+//TEST_CASE ( "get_suffix", "[get_suffix]" )
+//{
+//}
 
 
 TEST_CASE ( "read_bytes", "[read_bytes]" )
@@ -227,10 +330,4 @@ TEST_CASE ( "read_bytes", "[read_bytes]" )
 		}
 	}
 }
-
-
-// TODO
-//TEST_CASE ( "get_suffix", "[get_suffix]" )
-//{
-//}
 

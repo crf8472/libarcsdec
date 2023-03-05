@@ -44,6 +44,9 @@ extern "C" {
 #ifndef __LIBARCSDEC_LIBINSPECT_HPP__
 #include "libinspect.hpp"   // for first_libname_match
 #endif
+#ifndef __LIBARCSDEC_SELECTION_HPP__
+#include "selection.hpp"    // for RegisterDescriptor
+#endif
 
 
 namespace arcsdec

@@ -20,10 +20,7 @@
 #endif
 
 #ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
-#include "descriptor.hpp" // for Codec, FileReaderDescriptor, ...
-#endif
-#ifndef __LIBARCSDEC_SELECTION_HPP__
-#include "selection.hpp"   // for CreateReader
+#include "descriptor.hpp"  // for Codec, FileReaderDescriptor, ...
 #endif
 #ifndef __LIBARCSDEC_SAMPLEPROC_HPP__
 #include "sampleproc.hpp"  // for SampleProcessor, SampleProvider

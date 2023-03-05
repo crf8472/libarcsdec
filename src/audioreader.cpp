@@ -185,7 +185,7 @@ InvalidAudioException::InvalidAudioException(const char *what_arg)
 
 
 AudioValidator::AudioValidator()
-	: errors_()
+	: errors_ { /* empty */ }
 {
   // empty
 }
@@ -421,7 +421,7 @@ void DefaultValidator::on_failure()
 
 
 AudioReaderImpl::AudioReaderImpl()
-	: processor_ { }
+	: processor_        { /* empty */ }
 	, samples_per_read_ { BLOCKSIZE::DEFAULT }
 {
 	// empty
@@ -600,14 +600,14 @@ private:
 
 AudioReader::Impl::Impl(std::unique_ptr<AudioReaderImpl> readerimpl,
 			SampleProcessor &processor)
-	: readerimpl_(std::move(readerimpl))
+	: readerimpl_ { std::move(readerimpl) }
 {
 	readerimpl_->attach_processor(processor);
 }
 
 
 AudioReader::Impl::Impl(std::unique_ptr<AudioReaderImpl> readerimpl)
-	: readerimpl_(std::move(readerimpl))
+	: readerimpl_ { std::move(readerimpl) }
 {
 	// empty
 }
@@ -674,14 +674,14 @@ const SampleProcessor* AudioReader::Impl::sampleprocessor()
 
 AudioReader::AudioReader(std::unique_ptr<AudioReaderImpl> impl,
 			SampleProcessor &proc)
-	: impl_(std::make_unique<AudioReader::Impl>(std::move(impl), proc))
+	: impl_ { std::make_unique<AudioReader::Impl>(std::move(impl), proc) }
 {
 	// empty
 }
 
 
 AudioReader::AudioReader(std::unique_ptr<AudioReaderImpl> impl)
-	: impl_(std::make_unique<AudioReader::Impl>(std::move(impl)))
+	: impl_ { std::make_unique<AudioReader::Impl>(std::move(impl)) }
 {
 	// empty
 }
