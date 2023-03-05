@@ -217,7 +217,10 @@ struct Comparable
 
 
 class ByteSeq;
+
 bool operator == (const ByteSeq &lhs, const ByteSeq &rhs);
+
+void swap(ByteSeq &lhs, ByteSeq &rhs);
 
 /**
  * \brief Byte sequence.
@@ -286,21 +289,24 @@ public:
 	 */
 	bool is_wildcard(sequence_type::size_type i) const;
 
+	/**
+	 * \brief Swap this instance with another.
+	 *
+	 * \param[in] b The other instance to swap with
+	 */
+	ByteSeq& swap(ByteSeq& b) ; //TODO noexcept possible when C++17
+
 
 	// Wrappers for functions delegated to the sequence_type
 
 	using const_reference = sequence_type::const_reference;
-
 	using reference = sequence_type::reference;
-
 	using size_type = sequence_type::size_type;
 
 	size_type size() const;
-
 	bool empty() const;
 
 	const_reference operator[](size_type i) const;
-
 	reference operator[](size_type i);
 
 	sequence_type::iterator begin();
@@ -312,7 +318,7 @@ public:
 	sequence_type::const_iterator cbegin() const;
 	sequence_type::const_iterator cend() const;
 
-	byte_type* data();
+	byte_type* data(); // forces contiguous memory layout
 };
 
 

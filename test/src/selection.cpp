@@ -177,3 +177,157 @@ TEST_CASE ( "RegisterDescriptor", "[registerdescriptor]")
 */
 }
 
+
+TEST_CASE ("FileReaderSelection", "[filereaderselection]")
+{
+	using arcsdec::FileReaderSelection;
+	using arcsdec::FileReaderRegistry;
+	using arcsdec::Format;
+	using arcsdec::Codec;
+
+	const auto default_selection {
+		FileReaderRegistry::default_audio_selection() };
+
+	REQUIRE ( default_selection );
+
+	const auto default_readers { FileReaderRegistry::readers() };
+
+	REQUIRE ( default_readers );
+
+
+	SECTION ( "Default settings select wavpcm for RIFFWAVE/PCM16LE" )
+	{
+		auto reader = default_selection->get(Format::WAV, Codec::PCM_S16LE,
+				*default_readers );
+
+		CHECK ( "wavpcm" == reader->id() );
+	}
+
+	SECTION ( "Default settings select wavpcm for RIFFWAVE/UNKNOWN" )
+	{
+		auto reader = default_selection->get(Format::WAV, Codec::UNKNOWN,
+				*default_readers );
+
+		CHECK ( "wavpcm" == reader->id() );
+	}
+
+
+	SECTION ( "Default settings select flac for FLAC/FLAC" )
+	{
+		auto reader = default_selection->get(Format::FLAC, Codec::FLAC,
+				*default_readers );
+
+		CHECK ( "flac" == reader->id() );
+	}
+
+	SECTION ( "Default settings select flac for FLAC/UNKNOWN" )
+	{
+		auto reader = default_selection->get(Format::FLAC, Codec::UNKNOWN,
+				*default_readers );
+
+		CHECK ( "flac" == reader->id() );
+	}
+
+
+	SECTION ( "Default settings select wavpack for WV/Wavpack" )
+	{
+		auto reader = default_selection->get(Format::WV, Codec::WAVPACK,
+				*default_readers );
+
+		CHECK ( "wavpack" == reader->id() );
+	}
+
+	SECTION ( "Default settings select wavpack for WV/UNKNOWN" )
+	{
+		auto reader = default_selection->get(Format::WV, Codec::UNKNOWN,
+				*default_readers );
+
+		CHECK ( "wavpack" == reader->id() );
+	}
+
+
+	SECTION ( "Default settings select ffmpeg for OGG/FLAC" )
+	{
+		auto reader = default_selection->get(Format::OGG, Codec::FLAC,
+				*default_readers );
+
+		CHECK ( "ffmpeg" == reader->id() );
+	}
+
+	SECTION ( "Default settings select ffmpeg for OGG/UNKNOWN" )
+	{
+		auto reader = default_selection->get(Format::OGG, Codec::UNKNOWN,
+				*default_readers );
+
+		CHECK ( "ffmpeg" == reader->id() );
+	}
+
+
+	SECTION ( "Default settings select ffmpeg for CAF/ALAC" )
+	{
+		auto reader = default_selection->get(Format::CAF, Codec::ALAC,
+				*default_readers );
+
+		CHECK ( "ffmpeg" == reader->id() );
+	}
+
+	SECTION ( "Default settings select ffmpeg for CAF/UNKNOWN" )
+	{
+		auto reader = default_selection->get(Format::CAF, Codec::UNKNOWN,
+				*default_readers );
+
+		CHECK ( "ffmpeg" == reader->id() );
+	}
+
+
+	SECTION ( "Default settings select ffmpeg for M4A/ALAC" )
+	{
+		auto reader = default_selection->get(Format::M4A, Codec::ALAC,
+				*default_readers );
+
+		CHECK ( "ffmpeg" == reader->id() );
+	}
+
+	SECTION ( "Default settings select ffmpeg for M4A/UNKNOWN" )
+	{
+		auto reader = default_selection->get(Format::M4A, Codec::UNKNOWN,
+				*default_readers );
+
+		CHECK ( "ffmpeg" == reader->id() );
+	}
+
+
+	SECTION ( "Default settings select ffmpeg for APE/MONKEY" )
+	{
+		auto reader = default_selection->get(Format::APE, Codec::MONKEY,
+				*default_readers );
+
+		CHECK ( "ffmpeg" == reader->id() );
+	}
+
+	SECTION ( "Default settings select ffmpeg for APE/UNKNOWN" )
+	{
+		auto reader = default_selection->get(Format::APE, Codec::UNKNOWN,
+				*default_readers );
+
+		CHECK ( "ffmpeg" == reader->id() );
+	}
+
+
+	SECTION ( "Default settings select libsndfile for AIFF/PCM_S16LE" )
+	{
+		auto reader = default_selection->get(Format::AIFF, Codec::PCM_S16LE,
+				*default_readers );
+
+		CHECK ( "libsndfile" == reader->id() );
+	}
+
+	SECTION ( "Default settings select libsndfile for AIFF/UNKNOWN" )
+	{
+		auto reader = default_selection->get(Format::AIFF, Codec::UNKNOWN,
+				*default_readers );
+
+		CHECK ( "libsndfile" == reader->id() );
+	}
+}
+

@@ -137,6 +137,15 @@ bool ByteSeq::is_wildcard(sequence_type::size_type i) const
 }
 
 
+ByteSeq& ByteSeq::swap(ByteSeq& rhs)
+{
+	using std::swap;
+	swap(this->sequence_,  rhs.sequence_);
+	swap(this->wildcards_, rhs.wildcards_);
+	return *this;
+}
+
+
 ByteSeq::size_type ByteSeq::size() const
 {
 	return sequence_.size();
@@ -206,6 +215,12 @@ ByteSeq::byte_type* ByteSeq::data()
 bool operator == (const ByteSeq &lhs, const ByteSeq &rhs)
 {
 	return lhs.sequence_ == rhs.sequence_ && lhs.wildcards_ == rhs.wildcards_;
+}
+
+
+void swap(ByteSeq &lhs, ByteSeq &rhs)
+{
+	lhs.swap(rhs);
 }
 
 

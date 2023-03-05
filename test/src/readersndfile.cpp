@@ -88,7 +88,8 @@ TEST_CASE ("DescriptorSndfile", "[readersndfile]" )
 		CHECK ( d.accepts(Format::WAV)  );
 		CHECK ( d.accepts(Format::FLAC) );
 		CHECK ( d.accepts(Format::AIFF) );
-		CHECK ( d.accepts(Format::CAF)  );
+		//CHECK ( d.accepts(Format::OGG)  );
+		//CHECK ( d.accepts(Format::CAF)  ); // TODO Activate when ready
 	}
 
 	SECTION ("Does not match any formats not accepted by this descriptor")
@@ -98,7 +99,6 @@ TEST_CASE ("DescriptorSndfile", "[readersndfile]" )
 		CHECK ( !d.accepts(Format::CDRDAO)  );
 		CHECK ( !d.accepts(Format::APE)     );
 		CHECK ( !d.accepts(Format::M4A)     );
-		CHECK ( !d.accepts(Format::OGG)     );
 	}
 
 	SECTION ("Returns accepted formats correctly")
@@ -106,8 +106,9 @@ TEST_CASE ("DescriptorSndfile", "[readersndfile]" )
 		CHECK ( d.formats() == std::set<Format>{
 			Format::WAV,
 			Format::FLAC,
-			Format::AIFF,
-			Format::CAF
+			Format::AIFF
+			//Format::OGG
+			//Format::CAF // TODO Activate when ready
 		} );
 	}
 

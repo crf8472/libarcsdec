@@ -221,9 +221,9 @@ std::set<Format> DescriptorSndfile::define_formats() const
 	return {
 		Format::WAV,
 		Format::FLAC,
-		Format::AIFF,
-		// TODO OGG?
-		Format::CAF
+		Format::AIFF
+		//Format::OGG // FIXME Accept OGG once it works!
+		//Format::CAF // FIXME Accept CAF once it works!
 	};
 }
 
