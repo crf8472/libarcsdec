@@ -259,6 +259,16 @@ DescriptorPreference::type DefaultPreference::do_preference(
 }
 
 
+// ConstMinPreference
+
+
+DescriptorPreference::type ConstMinPreference::do_preference(
+		const Format, const Codec, const FileReaderDescriptor &) const
+{
+	return MIN_PREFERENCE;
+}
+
+
 // FormatPreference
 
 
@@ -305,7 +315,7 @@ std::unique_ptr<FileReaderDescriptor> FileReaderSelector::select(
 	}
 
 	ARCS_LOG_DEBUG << "Reader descriptor '" << descriptor->name()
-		<< "' selected";
+		<< "' selected" << " (id: " << descriptor->id() << ")";
 
 	return descriptor;
 }
@@ -349,6 +359,34 @@ std::unique_ptr<FileReaderDescriptor> DefaultSelector::do_select(
 			<< "'";
 
 	return result->clone();
+}
+
+
+// IdSelector
+
+
+IdSelector::IdSelector(const std::string &reader_id)
+	: reader_id_ { reader_id }
+{
+	// empty
+}
+
+
+std::string IdSelector::reader_id() const
+{
+	return reader_id_;
+}
+
+
+std::unique_ptr<FileReaderDescriptor> IdSelector::do_select(
+		const Format /* format */, const Codec /* codec */,
+		const FileReaders &descs,
+		const DescriptorPreference &/* p */) const
+{
+	ARCS_LOG(DEBUG1) << "Try to select descriptor with id " << reader_id();
+
+	auto it { descs.find(reader_id()) };
+	return it != descs.end() ? it->second->clone() : nullptr;
 }
 
 

@@ -135,6 +135,20 @@ class DefaultPreference final : public DescriptorPreference
 
 
 /**
+ * \brief Dummy preference that is always MIN_PREFERENCE.
+ *
+ * \note
+ * Any input is ignored. This preference model can be combined with selectors
+ * that do not require a preference model, e.g. IdSelector.
+ */
+class ConstMinPreference final : public DescriptorPreference
+{
+	type do_preference(const Format format, const Codec codec,
+		const FileReaderDescriptor &desc) const override;
+};
+
+
+/**
  * \brief Preference based on the Format.
  *
  * \note
@@ -219,6 +233,43 @@ private:
 
 
 /**
+ * \brief Selector for a certain descriptor id.
+ *
+ * This selector will ignore Format and Codec and return exactly the reader
+ * with the specified id or nullptr if such a reader is not available.
+ */
+class IdSelector final : public FileReaderSelector
+{
+public:
+
+	/**
+	 * \brief Constructor.
+	 *
+	 * \param[in] reader_id Select reader with this id, if available
+	 */
+	IdSelector(const std::string &reader_id);
+
+	/**
+	 * \brief Reader id to select.
+	 *
+	 * \return Id of the reader selected by this selector.
+	 */
+	std::string reader_id() const;
+
+private:
+
+	/**
+	 * \brief Internal id of the reader to select.
+	 */
+	std::string reader_id_;
+
+	std::unique_ptr<FileReaderDescriptor> do_select(const Format format,
+			const Codec codec, const FileReaders &descs,
+			const DescriptorPreference &pref_model) const override;
+};
+
+
+/**
  * \brief Interface to select a FileReaderDescriptor by Format and Codec.
  */
 class FileReaderSelection
@@ -274,28 +325,82 @@ public:
 	 */
 	using selector_type = S;
 
+	/**
+	 * \brief Constructor.
+	 *
+	 * \tparam Args Arguments passed to the selector's constructor.
+	 */
+	template <typename... Args>
+	inline FileReaderPreferenceSelection(Args&&... args)
+		: preference_ { /* empty */ }
+		, selector_   { std::forward<Args>(args)... }
+	{
+		// empty
+	}
+
+	/**
+	 * \brief Set preference model for this selection.
+	 *
+	 * \param[in] preference The preference model to use
+	 */
+	inline void set_preference(const preference_type& preference)
+	{
+		preference_ = preference;
+	}
+
+	/**
+	 * \brief Preference model for this selection.
+	 *
+	 * \return Preference model for this selection.
+	 */
+	inline const DescriptorPreference* preference() const
+	{
+		return &preference_;
+	}
+
+	/**
+	 * \brief Set the selector for this selection.
+	 *
+	 * \param[in] selector The selector to use
+	 */
+	inline void set_selector(const selector_type& selector)
+	{
+		selector_ = selector;
+	}
+
+	/**
+	 * \brief Selector for this selection.
+	 *
+	 * \return Selector for this selection.
+	 */
+	inline const FileReaderSelector* selector() const
+	{
+		return &selector_;
+	}
+
 private:
+
+	/**
+	 * \brief Internal preference model.
+	 */
+	preference_type preference_;
+
+	/**
+	 * \brief Internal selector.
+	 */
+	selector_type selector_;
+
 
 	inline std::unique_ptr<FileReaderDescriptor> do_get(const Format format,
 			const Codec codec, const FileReaders &descs) const final
 	{
-		static std::unique_ptr<DescriptorPreference> pref
-		{
-			std::make_unique<P>()
-		};
-
-		static std::unique_ptr<FileReaderSelector> selector
-		{
-			std::make_unique<S>()
-		};
-
-		return selector->select(format, codec, descs, *pref);
+		return selector()->select(format, codec, descs, *preference());
 	}
 };
 
 
 /**
- * \brief An unordered container of \link Descriptor Descriptors\endlink.
+ * \brief An unordered list of \link Descriptor Descriptors\endlink.
  */
 using FormatList = std::vector<std::unique_ptr<Descriptor>>;
 

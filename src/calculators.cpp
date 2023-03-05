@@ -235,6 +235,45 @@ int64_t CalculationProcessor::samples_processed() const
 }
 
 
+// Calculator
+
+
+void Calculator::set_formats(const FormatList *formats)
+{
+	formats_ = formats;
+}
+
+
+const FormatList& Calculator::formats() const
+{
+	return *formats_;
+}
+
+
+void Calculator::set_filereaders(const FileReaders *descriptors)
+{
+	descriptors_ = descriptors;
+}
+
+
+const FileReaders& Calculator::filereaders() const
+{
+	return *descriptors_;
+}
+
+
+void Calculator::set_selection(const FileReaderSelection *selection)
+{
+	selection_ = selection;
+}
+
+
+const FileReaderSelection& Calculator::selection() const
+{
+	return *selection_;
+}
+
+
 /**
  * \brief Private implementation of a TOCParser.
  */
@@ -250,9 +289,9 @@ public:
 
 	const FormatList& formats() const;
 
-	void set_descriptorset(const FileReaders *descriptors);
+	void set_filereaders(const FileReaders *descriptors);
 
-	const FileReaders& descriptorset() const;
+	const FileReaders& filereaders() const;
 
 	void set_selection(const FileReaderSelection *selection);
 
@@ -289,9 +328,9 @@ public:
 
 	const FormatList& formats() const;
 
-	void set_descriptorset(const FileReaders *descriptors);
+	void set_filereaders(const FileReaders *descriptors);
 
-	const FileReaders& descriptorset() const;
+	const FileReaders& filereaders() const;
 
 	void set_toc_selection(const FileReaderSelection *selection);
 
@@ -353,9 +392,9 @@ public:
 
 	const FormatList& formats() const;
 
-	void set_descriptorset(const FileReaders *descriptors);
+	void set_filereaders(const FileReaders *descriptors);
 
-	const FileReaders& descriptorset() const;
+	const FileReaders& filereaders() const;
 
 	void set_selection(const FileReaderSelection *selection);
 
@@ -446,7 +485,7 @@ std::unique_ptr<TOC> TOCParser::Impl::parse(const std::string &metafilename)
 	CreateMetadataParser parser;
 
 	return parser(metafilename, selection(), *FileReaderRegistry::formats(),
-			descriptorset())->parse(metafilename);
+			filereaders())->parse(metafilename);
 }
 
 
@@ -462,13 +501,13 @@ const FormatList& TOCParser::Impl::formats() const
 }
 
 
-void TOCParser::Impl::set_descriptorset(const FileReaders *descriptors)
+void TOCParser::Impl::set_filereaders(const FileReaders *descriptors)
 {
 	descriptors_ = descriptors;
 }
 
 
-const FileReaders& TOCParser::Impl::descriptorset() const
+const FileReaders& TOCParser::Impl::filereaders() const
 {
 	return *descriptors_;
 }
@@ -564,7 +603,7 @@ std::unique_ptr<ARId> ARIdCalculator::Impl::calculate(
 
 	const auto toc =
 		parser(metafilename, toc_selection(), *FileReaderRegistry::formats(),
-				descriptorset())->parse(metafilename);
+				filereaders())->parse(metafilename);
 
 	if (toc->complete())
 	{
@@ -610,7 +649,7 @@ std::unique_ptr<ARId> ARIdCalculator::Impl::calculate(const TOC &toc,
 
 	CreateAudioReader create_reader;
 	auto reader { create_reader(audiofilename, audio_selection(),
-			*FileReaderRegistry::formats(), descriptorset()) };
+			*FileReaderRegistry::formats(), filereaders()) };
 
 	DefaultProcessor proc; // does nothing, but required by SampleProvider
 	reader->set_processor(proc);
@@ -632,13 +671,13 @@ const FormatList& ARIdCalculator::Impl::formats() const
 }
 
 
-void ARIdCalculator::Impl::set_descriptorset(const FileReaders *descriptors)
+void ARIdCalculator::Impl::set_filereaders(const FileReaders *descriptors)
 {
 	descriptors_ = descriptors;
 }
 
 
-const FileReaders& ARIdCalculator::Impl::descriptorset() const
+const FileReaders& ARIdCalculator::Impl::filereaders() const
 {
 	return *descriptors_;
 }
@@ -775,7 +814,7 @@ void ARCSCalculator::Impl::process_file(const std::string &audiofilename,
 {
 	CreateAudioReader create_reader;
 	auto reader = create_reader(audiofilename, selection(),
-			*FileReaderRegistry::formats(), descriptorset());
+			*FileReaderRegistry::formats(), filereaders());
 
 	// Configure AudioReader and process file
 
@@ -852,13 +891,13 @@ const FormatList& ARCSCalculator::Impl::formats() const
 }
 
 
-void ARCSCalculator::Impl::set_descriptorset(const FileReaders *descriptors)
+void ARCSCalculator::Impl::set_filereaders(const FileReaders *descriptors)
 {
 	descriptors_ = descriptors;
 }
 
 
-const FileReaders& ARCSCalculator::Impl::descriptorset() const
+const FileReaders& ARCSCalculator::Impl::filereaders() const
 {
 	return *descriptors_;
 }
@@ -939,15 +978,15 @@ const FormatList& TOCParser::formats() const
 }
 
 
-void TOCParser::set_descriptorset(const FileReaders *descriptors)
+void TOCParser::set_filereaders(const FileReaders *descriptors)
 {
-	impl_->set_descriptorset(descriptors);
+	impl_->set_filereaders(descriptors);
 }
 
 
-const FileReaders& TOCParser::descriptorset() const
+const FileReaders& TOCParser::filereaders() const
 {
-	return impl_->descriptorset();
+	return impl_->filereaders();
 }
 
 
@@ -1002,15 +1041,15 @@ const FormatList& ARIdCalculator::formats() const
 }
 
 
-void ARIdCalculator::set_descriptorset(const FileReaders *descriptors)
+void ARIdCalculator::set_filereaders(const FileReaders *descriptors)
 {
-	impl_->set_descriptorset(descriptors);
+	impl_->set_filereaders(descriptors);
 }
 
 
-const FileReaders& ARIdCalculator::descriptorset() const
+const FileReaders& ARIdCalculator::filereaders() const
 {
-	return impl_->descriptorset();
+	return impl_->filereaders();
 }
 
 
@@ -1098,15 +1137,15 @@ const FormatList& ARCSCalculator::formats() const
 }
 
 
-void ARCSCalculator::set_descriptorset(const FileReaders *descriptors)
+void ARCSCalculator::set_filereaders(const FileReaders *descriptors)
 {
-	impl_->set_descriptorset(descriptors);
+	impl_->set_filereaders(descriptors);
 }
 
 
-const FileReaders& ARCSCalculator::descriptorset() const
+const FileReaders& ARCSCalculator::filereaders() const
 {
-	return impl_->descriptorset();
+	return impl_->filereaders();
 }
 
 

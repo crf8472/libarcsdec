@@ -53,8 +53,8 @@ TEST_CASE ( "TOCParser", "[calculators]" )
 
 	SECTION ("Initial DescriptorSet is present and complete")
 	{
-		CHECK ( 7 >= p.descriptorset().size() );
-		CHECK ( not p.descriptorset().empty() );
+		CHECK ( 7 >= p.filereaders().size() );
+		CHECK ( not p.filereaders().empty() );
 	}
 
 	// TODO parse()
@@ -69,8 +69,8 @@ TEST_CASE ( "ARIdCalculator", "[calculators]" )
 
 	SECTION ("Initial DescriptorSet is present and complete")
 	{
-		CHECK ( 7 >= c.descriptorset().size() );
-		CHECK ( not c.descriptorset().empty() );
+		CHECK ( 7 >= c.filereaders().size() );
+		CHECK ( not c.filereaders().empty() );
 	}
 
 	// TODO calculate()
@@ -85,8 +85,8 @@ TEST_CASE ( "ARCSCalculator", "[calculators]" )
 
 	SECTION ("Initial DescriptorSet is present and complete")
 	{
-		CHECK ( 7 >= c.descriptorset().size() );
-		CHECK ( not c.descriptorset().empty() );
+		CHECK ( 7 >= c.filereaders().size() );
+		CHECK ( not c.filereaders().empty() );
 	}
 
 	// TODO calculate()

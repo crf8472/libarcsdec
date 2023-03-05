@@ -59,6 +59,79 @@ using arcstk::ChecksumSet;
 
 
 /**
+ * \brief Interface for a calculator.
+ */
+class Calculator
+{
+public:
+
+	/**
+	 * \brief Virtual default descriptor.
+	 */
+	virtual ~Calculator() noexcept;
+
+	/**
+	 * \brief Set the list of supported formats.
+	 *
+	 * \param[in] formats The list of supported formats.
+	 */
+	void set_formats(const FormatList *formats);
+
+	/**
+	 * \brief List of supported formats.
+	 *
+	 * \return List of supported formats.
+	 */
+	const FormatList& formats() const;
+
+	/**
+	 * \brief Set the FileReaders for this instance.
+	 *
+	 * \param[in] readers The set of available FileReaderDescriptors to use
+	 */
+	void set_filereaders(const FileReaders *readers);
+
+	/**
+	 * \brief Get the MetadataParserSelection used by this instance.
+	 *
+	 * \return The MetadataParserSelection used by this instance
+	 */
+	const FileReaders& filereaders() const;
+
+	/**
+	 * \brief Set the selection for this instance.
+	 *
+	 * \param[in] selection The selection to use
+	 */
+	void set_selection(const FileReaderSelection *selection);
+
+	/**
+	 * \brief Get the selection used by this instance.
+	 *
+	 * \return The selection used by this instance
+	 */
+	const FileReaderSelection& selection() const;
+
+private:
+
+	/**
+	 * \brief Internal list of supported formats
+	 */
+	const FormatList *formats_;
+
+	/**
+	 * \brief Internal list of available \link FileReaderDescriptor FileReaderDescriptors\endlink
+	 */
+	const FileReaders *descriptors_;
+
+	/**
+	 * \brief Internal selection for \link FileReaders FileReaders\endlink
+	 */
+	const FileReaderSelection *selection_;
+};
+
+
+/**
  * \brief Format-independent parser for CD TOC metadata files.
  */
 class TOCParser final
@@ -103,14 +176,14 @@ public:
 	 *
 	 * \param[in] readders The set of available FileReaderDescriptors to use
 	 */
-	void set_descriptorset(const FileReaders *readers);
+	void set_filereaders(const FileReaders *readers);
 
 	/**
 	 * \brief Get the MetadataParserSelection used by this instance.
 	 *
 	 * \return The MetadataParserSelection used by this instance
 	 */
-	const FileReaders& descriptorset() const;
+	const FileReaders& filereaders() const;
 
 	/**
 	 * \brief Set the selection for this instance.
@@ -195,14 +268,14 @@ public:
 	 *
 	 * \param[in] descriptors The \c FileReaderDescriptor s of this instance.
 	 */
-	void set_descriptorset(const FileReaders *descriptors);
+	void set_filereaders(const FileReaders *descriptors);
 
 	/**
 	 * \brief The \c FileReaderDescriptor s of this instance.
 	 *
 	 * \return The \c FileReaderDescriptor s of this instance.
 	 */
-	const FileReaders& descriptorset() const;
+	const FileReaders& filereaders() const;
 
 	/**
 	 * \brief Set the metadata parser selection for this instance.
@@ -355,14 +428,14 @@ public:
 	 *
 	 * \param[in] descriptors The \c FileReaderDescriptor s of this instance.
 	 */
-	void set_descriptorset(const FileReaders *descriptors);
+	void set_filereaders(const FileReaders *descriptors);
 
 	/**
 	 * \brief The \c FileReaderDescriptor s of this instance.
 	 *
 	 * \return The \c FileReaderDescriptor s of this instance.
 	 */
-	const FileReaders& descriptorset() const;
+	const FileReaders& filereaders() const;
 
 	/**
 	 * \brief Set the AudioReaderSelection for this instance.
