@@ -124,12 +124,12 @@ void LibsndfileAudioReaderImpl::do_process_file(const std::string &filename)
 
 	// Checking
 
-	int ints_in_block = 0;
+	auto ints_in_block = int { 0 };
 
 	// Logging
 
-	uint64_t sample_count = 0;
-	uint32_t blocks_processed = 0;
+	auto sample_count = uint64_t  { 0 };
+	auto blocks_processed = uint32_t  { 0 };
 
 	// Read blocks
 
