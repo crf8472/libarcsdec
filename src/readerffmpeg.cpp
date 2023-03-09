@@ -1309,7 +1309,13 @@ void print_codec_info(std::ostream &out, const ::AVCodecContext *cctx)
 	out << "  Samplerate:     " << cctx->sample_rate << " Hz (samples/sec)"
 		<< std::endl;
 	out << "  skip_bottom:      " << cctx->skip_bottom << std::endl;
+
+#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(60, 2, 100) //  < ffmpeg 6.0
 	out << "  frame_number:     " << cctx->frame_number << std::endl;
+#else
+	out << "  frame_num:     "    << cctx->frame_num << std::endl;
+#endif
+
 	out << "  frame_size:       " << cctx->frame_size << std::endl;
 	out << "  initial_padding:  " << cctx->initial_padding << std::endl;
 	out << "  trailing_padding: " << cctx->trailing_padding << std::endl;
