@@ -286,7 +286,7 @@ if (NOT LOAD_GENERATORS )
 	)
 
 	add_custom_target (libarcsdec_plain_doc DEPENDS ${DOC_OUTPUT_MAINPAGE} )
-	add_dependencies  (libarcsdec_plain_doc create_output_dir )
+	add_dependencies  (libarcsdec_plain_doc libarcsdec_create_output_dir )
 
 	add_dependencies  (libarcsdec_doc libarcsdec_plain_doc )
 
