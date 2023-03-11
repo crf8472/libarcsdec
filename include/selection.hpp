@@ -669,6 +669,11 @@ template <class ReaderType>
 struct CreateReader
 {
 	/**
+	 * \brief Default destructor.
+	 */
+	virtual ~CreateReader() noexcept = default;
+
+	/**
 	 * \brief Return a unique_ptr to an instance of the specified \c ReaderType.
 	 *
 	 * \param[in] selector  The FileReaderSelector to choose from
@@ -709,13 +714,6 @@ struct CreateReader
 
 		return file_reader;
 	}
-
-protected:
-
-	/**
-	 * \brief Default destructor.
-	 */
-	~CreateReader() noexcept = default;
 };
 
 
