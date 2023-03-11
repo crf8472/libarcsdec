@@ -766,7 +766,7 @@ LibInfoEntry libinfo_entry(const std::string &libname);
  * \brief Reports an error concerning the input file format.
  *
  * This exception can be thrown when the input format could not be determined
- * or nor FileReader could be acquired.
+ * or no FileReader could be acquired.
  */
 class InputFormatException final : public std::runtime_error
 {

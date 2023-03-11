@@ -135,12 +135,19 @@ std::pair<Format, Codec> FileType::type(const FormatList *formats) const
 {
 	const auto format_d = format(formats);
 
+	if (!format_d)
+	{
+		ARCS_LOG_WARNING << "Failed to recognize format and codec";
+	}
+
 	const auto format = format_d ? format_d->format() : Format::UNKNOWN;
+
+	ARCS_LOG_INFO << "Format is '" << name(format) << "'";
+
 	const auto codec  = format_d ? this->codec(format_d->codecs())
 		: Codec::UNKNOWN;
 
-	ARCS_LOG_INFO << "Filetype recognized: Format is '" << name(format)
-		<< "', Codec is '" << name(codec) << "'";
+	ARCS_LOG_INFO << "Codec is '" << name(codec) << "'";
 
 	return std::make_pair(format, codec);
 }
@@ -528,7 +535,7 @@ std::unique_ptr<FileReaderDescriptor> select_descriptor(
 
 	if (!reader)
 	{
-		ARCS_LOG_WARNING << "File format is unknown, no reader available.";
+		ARCS_LOG_WARNING << "No reader available.";
 
 		return nullptr;
 	}

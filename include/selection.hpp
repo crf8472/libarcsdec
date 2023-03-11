@@ -688,7 +688,7 @@ struct CreateReader
 
 		if (!reader)
 		{
-			throw InputFormatException("Could not identify file format: '"
+			throw InputFormatException("Failed to select a reader for file: '"
 					+ filename + "'");
 		}
 
@@ -696,7 +696,7 @@ struct CreateReader
 
 		if (!p.first)
 		{
-			throw InputFormatException("Could not acquire reader for file: "
+			throw InputFormatException("Failed to acquire reader for file: "
 					+ filename);
 		}
 
