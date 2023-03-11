@@ -462,8 +462,8 @@ private:
 
 
 TOCParser::Impl::Impl()
-	: formats_     { FileReaderRegistry::formats() }
-	, descriptors_ { FileReaderRegistry::readers() }
+	: formats_      { FileReaderRegistry::formats() }
+	, descriptors_  { FileReaderRegistry::readers() }
 	, selection_    { FileReaderRegistry::default_toc_selection() }
 {
 	// empty
@@ -529,8 +529,8 @@ const FileReaderSelection& TOCParser::Impl::selection() const
 
 
 ARIdCalculator::Impl::Impl()
-	: formats_        { FileReaderRegistry::formats() }
-	, descriptors_    { FileReaderRegistry::readers() }
+	: formats_         { FileReaderRegistry::formats() }
+	, descriptors_     { FileReaderRegistry::readers() }
 	, toc_selection_   { FileReaderRegistry::default_toc_selection() }
 	, audio_selection_ { FileReaderRegistry::default_audio_selection() }
 {
@@ -541,8 +541,11 @@ ARIdCalculator::Impl::Impl()
 std::unique_ptr<ARId> ARIdCalculator::Impl::calculate(
 		const std::string &metafilename) const
 {
-	TOCParser parser;
-	const auto toc { parser.parse(metafilename) };
+	CreateMetadataParser parser;
+
+	const auto toc =
+		parser(metafilename, toc_selection(), *FileReaderRegistry::formats(),
+				filereaders())->parse(metafilename);
 
 	if (toc->complete())
 	{
@@ -713,10 +716,10 @@ const FileReaderSelection& ARIdCalculator::Impl::audio_selection() const
 
 
 ARCSCalculator::Impl::Impl(const arcstk::checksum::type type)
-	: formats_     { FileReaderRegistry::formats() }
-	, descriptors_ { FileReaderRegistry::readers() }
+	: formats_      { FileReaderRegistry::formats() }
+	, descriptors_  { FileReaderRegistry::readers() }
 	, selection_    { FileReaderRegistry::default_audio_selection() }
-	, type_        { type }
+	, type_         { type }
 {
 	// empty
 }
