@@ -383,7 +383,8 @@ std::unique_ptr<FileReaderDescriptor> IdSelector::do_select(
 		const FileReaders &descs,
 		const DescriptorPreference &/* p */) const
 {
-	ARCS_LOG(DEBUG1) << "Try to select descriptor with id " << reader_id();
+	ARCS_LOG(DEBUG1) << "Try to select descriptor with id '"
+		<< reader_id() << "'";
 
 	auto it { descs.find(reader_id()) };
 	return it != descs.end() ? it->second->clone() : nullptr;
