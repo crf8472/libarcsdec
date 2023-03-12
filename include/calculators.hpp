@@ -62,6 +62,13 @@ using arcstk::ChecksumSet;
  * @{
  */
 
+// Deactivate -Weffc++ for the following two classes
+//
+// -Weffc++ will warn about ReaderAndFormatHolder and SelectionPerformer
+// not having declared copy constructor and copy assignment operator although
+// they have pointer type members. But this is intended + exactly what we want.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Weffc++"
 
 /**
  * \brief Interface for a class that holds formats and readers.
@@ -78,9 +85,9 @@ public:
 	ReaderAndFormatHolder();
 
 	/**
-	 * \brief Virtual default descriptor.
+	 * \brief Pure virtual default descriptor.
 	 */
-	virtual ~ReaderAndFormatHolder() noexcept;
+	virtual ~ReaderAndFormatHolder() noexcept = 0;
 
 	/**
 	 * \brief Set the list of supported formats.
@@ -211,6 +218,10 @@ private:
 	 */
 	details::CreateReader<ReaderType> create_;
 };
+
+
+// Re-activate -Weffc++ for all what follows
+#pragma GCC diagnostic pop
 
 
 /**

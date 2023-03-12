@@ -18,12 +18,20 @@
  */
 
 
+using arcsdec::ReaderAndFormatHolder;
+
+// ReaderAndFormatHolder is abstract by its destructor
+class TestHolder : public ReaderAndFormatHolder
+{
+	// empty
+};
+
+
 TEST_CASE ( "ReaderAndFormatHolder", "[readerandformatholder]")
 {
-	using arcsdec::ReaderAndFormatHolder;
 	using arcsdec::FileReaderRegistry;
 
-	ReaderAndFormatHolder h;
+	TestHolder h;
 
 	SECTION ( "Create Holder for Readers and Formats with defaults" )
 	{
@@ -55,11 +63,10 @@ TEST_CASE ( "SelectionPerformer", "[selectionperformer]")
 {
 	using arcsdec::SelectionPerformer;
 
-	using arcsdec::ReaderAndFormatHolder;
 	using arcsdec::MetadataParser;
 	using arcsdec::AudioReader;
 
-	ReaderAndFormatHolder h;
+	TestHolder h;
 	SelectionPerformer<MetadataParser> p;
 	SelectionPerformer<AudioReader> a;
 
