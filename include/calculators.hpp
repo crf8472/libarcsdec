@@ -23,8 +23,8 @@
 #include "descriptor.hpp"          // for FileReaderDescriptor
 #endif
 #ifndef __LIBARCSDEC_SELECTION_HPP__
-#include "selection.hpp"           // for FileReaders, FileReaderSelector
-#endif
+#include "selection.hpp"           // for CreateReader, FileReaders, FormatList,
+#endif                             // FileReaderSelector
 
 
 /**
@@ -39,6 +39,16 @@ namespace arcsdec
 inline namespace v_1_0_0
 {
 
+// required by interface
+class AudioReader;
+class MetadataParser;
+
+using arcstk::TOC;
+using arcstk::ARId;
+using arcstk::Checksums;
+using arcstk::ChecksumSet;
+
+
 /**
  * \defgroup calculators Calculators for AccurateRip Checksums and IDs
  *
@@ -52,23 +62,25 @@ inline namespace v_1_0_0
  * @{
  */
 
-using arcstk::TOC;
-using arcstk::ARId;
-using arcstk::Checksums;
-using arcstk::ChecksumSet;
-
 
 /**
- * \brief Interface for a calculator.
+ * \brief Interface for a class that holds formats and readers.
  */
-class Calculator
+class ReaderAndFormatHolder
 {
 public:
 
 	/**
+	 * \brief Constructor.
+	 *
+	 * Initializes the formats and readers from FileReaderRegistry.
+	 */
+	ReaderAndFormatHolder();
+
+	/**
 	 * \brief Virtual default descriptor.
 	 */
-	virtual ~Calculator() noexcept;
+	virtual ~ReaderAndFormatHolder() noexcept;
 
 	/**
 	 * \brief Set the list of supported formats.
@@ -82,35 +94,21 @@ public:
 	 *
 	 * \return List of supported formats.
 	 */
-	const FormatList& formats() const;
+	const FormatList* formats() const;
 
 	/**
 	 * \brief Set the FileReaders for this instance.
 	 *
 	 * \param[in] readers The set of available FileReaderDescriptors to use
 	 */
-	void set_filereaders(const FileReaders *readers);
+	void set_readers(const FileReaders *readers);
 
 	/**
 	 * \brief Get the MetadataParserSelection used by this instance.
 	 *
 	 * \return The MetadataParserSelection used by this instance
 	 */
-	const FileReaders& filereaders() const;
-
-	/**
-	 * \brief Set the selection for this instance.
-	 *
-	 * \param[in] selection The selection to use
-	 */
-	void set_selection(const FileReaderSelection *selection);
-
-	/**
-	 * \brief Get the selection used by this instance.
-	 *
-	 * \return The selection used by this instance
-	 */
-	const FileReaderSelection& selection() const;
+	const FileReaders* readers() const;
 
 private:
 
@@ -123,30 +121,113 @@ private:
 	 * \brief Internal list of available \link FileReaderDescriptor FileReaderDescriptors\endlink
 	 */
 	const FileReaders *descriptors_;
+};
+
+
+/**
+ * \brief Interface for a class that performs a selection.
+ */
+template <class ReaderType>
+class SelectionPerformer
+{
+public:
+
+	/**
+	 * \brief Constructor.
+	 *
+	 * Initializes the instance with
+	 * FileReaderRegistry::default_audio_selection().
+	 */
+	inline SelectionPerformer()
+		: selection_ { FileReaderRegistry::default_audio_selection() }
+		, create_    { /* empty */ }
+	{
+		// empty
+	}
+
+	/**
+	 * \brief Constructor.
+	 *
+	 * \param[in] selection The selection to use
+	 */
+	inline SelectionPerformer(const FileReaderSelection* selection)
+		: selection_ { selection }
+		, create_    { /* empty */ }
+	{
+		// empty
+	}
+
+	/**
+	 * \brief Virtual default destructor.
+	 */
+	inline virtual ~SelectionPerformer() noexcept
+	{
+		// empty
+	}
+
+	/**
+	 * \brief Set the selection to be used for selecting AudioReaders.
+	 *
+	 * \param[in] selection Selection for AudioReaders
+	 */
+	inline void set_selection(const FileReaderSelection *selection)
+	{
+		selection_ = selection;
+	}
+
+	/**
+	 * \brief Get the selection to be used for selecting AudioReaders.
+	 *
+	 * \return Selection for AudioReaders
+	 */
+	inline const FileReaderSelection* selection() const
+	{
+		return selection_;
+	}
+
+	/**
+	 * \brief Create an AudioReader capable of reading \c filename.
+	 *
+	 * \param[in] filename The file to read
+	 *
+	 * \return An AudioReader for the input file
+	 */
+	inline std::unique_ptr<ReaderType> file_reader(const std::string &filename,
+			const ReaderAndFormatHolder* h) const
+	{
+		return this->create_(filename, *this->selection(), *h->formats(),
+				*h->readers());
+	}
+
+private:
 
 	/**
 	 * \brief Internal selection for \link FileReaders FileReaders\endlink
 	 */
 	const FileReaderSelection *selection_;
+
+	/**
+	 * \brief Internal FileReader creator.
+	 */
+	details::CreateReader<ReaderType> create_;
 };
 
 
 /**
  * \brief Format-independent parser for CD TOC metadata files.
  */
-class TOCParser final
+class TOCParser final : public ReaderAndFormatHolder,
+						public SelectionPerformer<MetadataParser>
 {
 public:
 
 	/**
 	 * \brief Constructor.
+	 *
+	 * Sets FileReaderRegistry::default_toc_selection() as the default
+	 * selection.
 	 */
 	TOCParser();
-
-	/**
-	 * \brief Destructor.
-	 */
-	~TOCParser() noexcept; // required for completeness of Impl
 
 	/**
 	 * \brief Parse the metadata file to a TOC object.
@@ -156,164 +237,6 @@ public:
 	 * \return The parsed TOC
 	 */
 	std::unique_ptr<TOC> parse(const std::string &metafilename) const;
-
-	/**
-	 * \brief Set the list of supported formats.
-	 *
-	 * \param[in] formats The list of supported formats.
-	 */
-	void set_formats(const FormatList *formats);
-
-	/**
-	 * \brief List of supported formats.
-	 *
-	 * \return List of supported formats.
-	 */
-	const FormatList& formats() const;
-
-	/**
-	 * \brief Set the FileReaders for this instance.
-	 *
-	 * \param[in] readders The set of available FileReaderDescriptors to use
-	 */
-	void set_filereaders(const FileReaders *readers);
-
-	/**
-	 * \brief Get the MetadataParserSelection used by this instance.
-	 *
-	 * \return The MetadataParserSelection used by this instance
-	 */
-	const FileReaders& filereaders() const;
-
-	/**
-	 * \brief Set the selection for this instance.
-	 *
-	 * \param[in] selection The selection to use
-	 */
-	void set_selection(const FileReaderSelection *selection);
-
-	/**
-	 * \brief Get the selection used by this instance.
-	 *
-	 * \return The selection used by this instance
-	 */
-	const FileReaderSelection& selection() const;
-
-private:
-
-	// Forward declaration for private implementation.
-	class Impl;
-
-	/**
-	 * \brief Internal implementation instance.
-	 */
-	std::unique_ptr<Impl> impl_;
-};
-
-
-/**
- * \brief Calculate AccurateRip ID of an album.
- */
-class ARIdCalculator final
-{
-public:
-
-	/**
-	 * \brief Constructor.
-	 */
-	ARIdCalculator();
-
-	/**
-	 * \brief Destructor.
-	 */
-	~ARIdCalculator() noexcept; // required for completeness of Impl
-
-	/**
-	 * \brief Calculate ARId using the specified metadata file.
-	 *
-	 * \param[in] metafilename Name of the metadata file
-	 *
-	 * \return The AccurateRip id for this medium
-	 */
-	std::unique_ptr<ARId> calculate(const std::string &metafilename);
-
-	/**
-	 * \brief Calculate ARId using the specified metadata file and the specified
-	 * audio file.
-	 *
-	 * \param[in] audiofilename Name of the audiofile
-	 * \param[in] metafilename  Name of the metadata file
-	 *
-	 * \return The AccurateRip id for this medium
-	 */
-	std::unique_ptr<ARId> calculate(const std::string &audiofilename,
-			const std::string &metafilename);
-
-	/**
-	 * \brief Set the list of supported formats.
-	 *
-	 * \param[in] formats The list of supported formats.
-	 */
-	void set_formats(const FormatList *formats);
-
-	/**
-	 * \brief List of supported formats.
-	 *
-	 * \return List of supported formats.
-	 */
-	const FormatList& formats() const;
-
-	/**
-	 * \brief Set the \c FileReaderDescriptor s for this instance.
-	 *
-	 * \param[in] descriptors The \c FileReaderDescriptor s of this instance.
-	 */
-	void set_filereaders(const FileReaders *descriptors);
-
-	/**
-	 * \brief The \c FileReaderDescriptor s of this instance.
-	 *
-	 * \return The \c FileReaderDescriptor s of this instance.
-	 */
-	const FileReaders& filereaders() const;
-
-	/**
-	 * \brief Set the metadata parser selection for this instance.
-	 *
-	 * \param[in] selection The metadata parser selection to use
-	 */
-	void set_toc_selection(const FileReaderSelection *selection);
-
-	/**
-	 * \brief Get the metadata parser selection used by this instance.
-	 *
-	 * \return The metadata parser selection used by this instance
-	 */
-	const FileReaderSelection& toc_selection() const;
-
-	/**
-	 * \brief Set the audioreader selection for this instance.
-	 *
-	 * \param[in] selection The audioreader selection to use
-	 */
-	void set_audio_selection(const FileReaderSelection *selection);
-
-	/**
-	 * \brief Get the audioreader selection used by this instance.
-	 *
-	 * \return The audioreader selection used by this instance
-	 */
-	const FileReaderSelection& audio_selection() const;
-
-private:
-
-	// Forward declaration for private implementation.
-	class Impl;
-
-	/**
-	 * \brief Internal implementation instance.
-	 */
-	std::unique_ptr<Impl> impl_;
 };
 
 
@@ -323,16 +246,10 @@ private:
  * Note that ARCSCalculator does not perform any lookups in the filesystem. This
  * part is completely delegated to the \link FileReader FileReaders\endlink.
  */
-class ARCSCalculator final
+class ARCSCalculator final : public ReaderAndFormatHolder
+						   , public SelectionPerformer<AudioReader>
 {
 public:
-
-	/**
-	 * \brief Constructor.
-	 *
-	 * Uses ARCS1 and ARCS2 as default checksum types.
-	 */
-	ARCSCalculator();
 
 	/**
 	 * \brief Constructor
@@ -340,6 +257,13 @@ public:
 	 * \param[in] type The Checksum type to calculate.
 	 */
 	ARCSCalculator(const arcstk::checksum::type type);
+
+	/**
+	 * \brief Constructor.
+	 *
+	 * Uses ARCS1 and ARCS2 as default checksum types.
+	 */
+	ARCSCalculator();
 
 	/**
 	 * \brief Destructor.
@@ -410,48 +334,6 @@ public:
 		const bool &skip_front, const bool &skip_back);
 
 	/**
-	 * \brief Set the list of supported formats.
-	 *
-	 * \param[in] formats The list of supported formats.
-	 */
-	void set_formats(const FormatList *formats);
-
-	/**
-	 * \brief List of supported formats.
-	 *
-	 * \return List of supported formats.
-	 */
-	const FormatList& formats() const;
-
-	/**
-	 * \brief Set the \c FileReaderDescriptor s for this instance.
-	 *
-	 * \param[in] descriptors The \c FileReaderDescriptor s of this instance.
-	 */
-	void set_filereaders(const FileReaders *descriptors);
-
-	/**
-	 * \brief The \c FileReaderDescriptor s of this instance.
-	 *
-	 * \return The \c FileReaderDescriptor s of this instance.
-	 */
-	const FileReaders& filereaders() const;
-
-	/**
-	 * \brief Set the AudioReaderSelection for this instance.
-	 *
-	 * \param[in] selection The AudioReaderSelection to use
-	 */
-	void set_selection(const FileReaderSelection *selection);
-
-	/**
-	 * \brief Get the AudioReaderSelection used by this instance.
-	 *
-	 * \return The AudioReaderSelection used by this instance
-	 */
-	const FileReaderSelection& selection() const;
-
-	/**
 	 * \brief Set checksum::type for the instance to calculate.
 	 *
 	 * \param[in] type The checksum::type to calculate
@@ -467,19 +349,111 @@ public:
 
 private:
 
-	// Forward declaration for private implementation.
-	class Impl;
+	/**
+	 * \brief Worker method: calculating the ARCS of a single audiofile.
+	 *
+	 * \param[in] audiofilename Name of the audiofile
+	 *
+	 * \return The AccurateRip checksum of this track
+	 */
+	ChecksumSet calculate_track(const std::string &audiofilename,
+		const bool &skip_front, const bool &skip_back);
 
 	/**
-	 * \brief Internal implementation instance.
+	 * \brief Internal checksum type.
 	 */
-	std::unique_ptr<Impl> impl_;
+	arcstk::checksum::type type_;
+};
+
+
+/**
+ * \brief Calculate AccurateRip ID of an album.
+ */
+class ARIdCalculator final : public ReaderAndFormatHolder
+{
+public:
+
+	/**
+	 * \brief Constructor.
+	 */
+	ARIdCalculator();
+
+	/**
+	 * \brief Calculate ARId using the specified metadata file.
+	 *
+	 * \param[in] metafilename Name of the metadata file
+	 *
+	 * \return The AccurateRip id for this medium
+	 */
+	std::unique_ptr<ARId> calculate(const std::string &metafilename) const;
+
+	/**
+	 * \brief Calculate ARId using the specified metadata and audio files.
+	 *
+	 * \param[in] metafilename  Name of the metadata file
+	 * \param[in] audiofilename Name of the audiofile
+	 *
+	 * \return The AccurateRip id for this medium
+	 */
+	std::unique_ptr<ARId> calculate(const std::string &metafilename,
+			const std::string &audiofilename) const;
+
+	/**
+	 * \brief Set the audioreader selection for this instance.
+	 *
+	 * \param[in] selection The audioreader selection to use
+	 */
+	void set_audio_selection(const FileReaderSelection *selection);
+
+	/**
+	 * \brief Get the audioreader selection used by this instance.
+	 *
+	 * \return The audioreader selection used by this instance
+	 */
+	const FileReaderSelection* audio_selection() const;
+
+	/**
+	 * \brief Set the metadata parser selection for this instance.
+	 *
+	 * \param[in] selection The metadata parser selection to use
+	 */
+	void set_toc_selection(const FileReaderSelection *selection);
+
+	/**
+	 * \brief Get the metadata parser selection used by this instance.
+	 *
+	 * \return The metadata parser selection used by this instance
+	 */
+	const FileReaderSelection* toc_selection() const;
+
+private:
+
+	/**
+	 * \brief Worker: calculate ID from TOC while taking leadout from audio
+	 * file.
+	 *
+	 * \param[in] toc           TOC of the image
+	 * \param[in] audiofilename Name of the image audiofile
+	 *
+	 * \return The AccurateRip id for this medium
+	 */
+	std::unique_ptr<ARId> calculate(const TOC &toc,
+			const std::string &audiofilename) const;
+
+	/**
+	 * \brief Internal selection for AudioReaders.
+	 */
+	SelectionPerformer<AudioReader> audio_selection_;
+
+	/**
+	 * \brief Internal selection for MetadataParsers.
+	 */
+	SelectionPerformer<MetadataParser> toc_selection_;
 };
 
 /// @}
 
 } // namespace v_1_0_0
-
 } // namespace arcsdec
 
 #endif
