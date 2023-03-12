@@ -18,7 +18,7 @@ set (PROJECT_BRIEF_DESC "Audio decoder and TOC parser adapters for libarcstk" )
 
 set (PROJECT_URL "https://github.com/crf8472/${PROJECT_NAME}" )
 
-set (PROJECT_VERSION_SUFFIX "alpha.4" )
+set (PROJECT_VERSION_SUFFIX "alpha.5" )
 
 set (PROJECT_DEFAULT_BUILD_TYPE "Release" )
 

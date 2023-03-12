@@ -23,6 +23,7 @@ list (APPEND TEST_SETS libinspect   )
 list (APPEND TEST_SETS parsercue    )
 list (APPEND TEST_SETS readerwav    )
 list (APPEND TEST_SETS selection    )
+list (APPEND TEST_SETS version      )
 
 if (WITH_LIBCDIO )
 list (APPEND TEST_SETS parsertoc    )
@@ -116,7 +117,6 @@ foreach (_testcase ${TEST_SETS} )
 
 endforeach()
 
-
 ## Add FLAC dependencies to testcase
 if (WITH_FLAC )
 
@@ -128,27 +128,5 @@ if (WITH_FLAC )
 		target_link_libraries (readerflac_test
 			PRIVATE ${LIBFLACPP_LIBRARIES} )
 	endif()
-endif()
-
-## Add libsndfile dependencies to testcase
-if (WITH_LIBSNDFILE )
-
-	if (TARGET Sndfile::sndfile )
-		target_link_libraries (readersndfile_test PRIVATE Sndfile::sndfile )
-	else()
-		target_include_directories (readersndfile_test
-			PRIVATE ${libsndfile_INCLUDE_DIRS} )
-		target_link_libraries (readersndfile_test
-			PRIVATE ${libsndfile_LIBRARIES} )
-	endif()
-endif()
-
-## Add libcdio dependencies to testcase
-if (WITH_LIBCDIO )
-
-	target_include_directories (parsertoc_test
-		PRIVATE ${libcdio_INCLUDE_DIRS} )
-	target_link_libraries (parsertoc_test
-		PRIVATE ${libcdio_LIBRARIES} )
 endif()
 

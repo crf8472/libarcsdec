@@ -253,7 +253,7 @@ ReaderAndFormatHolder::ReaderAndFormatHolder()
 }
 
 
-ReaderAndFormatHolder::~ReaderAndFormatHolder() = default;
+ReaderAndFormatHolder::~ReaderAndFormatHolder() noexcept = default;
 
 
 void ReaderAndFormatHolder::set_formats(const FormatList *formats)
