@@ -398,9 +398,6 @@ ARCSCalculator::ARCSCalculator()
 }
 
 
-ARCSCalculator::~ARCSCalculator() noexcept = default;
-
-
 std::pair<Checksums, ARId> ARCSCalculator::calculate(
 		const std::string &audiofilename,
 		const TOC &toc)

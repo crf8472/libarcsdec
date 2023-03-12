@@ -277,11 +277,6 @@ public:
 	ARCSCalculator();
 
 	/**
-	 * \brief Destructor.
-	 */
-	~ARCSCalculator() noexcept; // required for completeness of Impl
-
-	/**
 	 * \brief Calculate ARCS values for an audio file, using the given TOC.
 	 *
 	 * The TOC is supposed to contain the offsets of all tracks represented
