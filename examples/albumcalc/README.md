@@ -16,15 +16,24 @@ libarcstk.
 
 Dependencies for building and running:
 
-- libarcsdec
-- libarcstk
+- libarcsdec.so in the ''build'' directory
+- libarcstk.so in the ''build/libs/libarcstk'' directory or installed in system
 
 
 ## Build
 
-Build application with just
+If you have configured libarcsdec with the switch ''-DWITH_SUBMODULE=ON'', the
+dependency libarcstk will be available in the build tree.
+
+In this case, build the application with just
 
 	$ make
+
+otherwise use
+
+	$ make LIBARCSTK=-larcstk
+
+to use the system-installed version, but make sure it's up-to-date.
 
 For removing all compiled and temporary files, just use
 
