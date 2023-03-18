@@ -16,7 +16,7 @@ inline namespace v_1_0_0
 {
 
 /**
- * \addtogroup logging
+ * \addtogroup version Version information
  * @{
  */
 

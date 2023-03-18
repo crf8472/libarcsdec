@@ -859,7 +859,7 @@ std::set<Codec> DescriptorWavpack::define_codecs() const
 
 LibInfo  DescriptorWavpack::do_libraries() const
 {
-	return { libinfo_entry("libwavpack") };
+	return { libinfo_entry_filepath("libwavpack") };
 }
 
 

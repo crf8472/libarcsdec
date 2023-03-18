@@ -70,7 +70,7 @@ public:
 	/**
 	 * \brief Determines the format of a specified file.
 	 */
-	std::unique_ptr<Descriptor> format(const FormatList *formats) const;
+	std::unique_ptr<Matcher> format(const FormatList *formats) const;
 
 	/**
 	 * \brief Determines the Codec of a specified file.
@@ -153,7 +153,7 @@ std::pair<Format, Codec> FileType::type(const FormatList *formats) const
 }
 
 
-std::unique_ptr<Descriptor> FileType::format(
+std::unique_ptr<Matcher> FileType::format(
 		const FormatList *formats) const
 {
 	ARCS_LOG_DEBUG << "Try to recognize file format: " << filename();
@@ -266,10 +266,10 @@ DescriptorPreference::type DefaultPreference::do_preference(
 }
 
 
-// ConstMinPreference
+// MinPreference
 
 
-DescriptorPreference::type ConstMinPreference::do_preference(
+DescriptorPreference::type MinPreference::do_preference(
 		const Format, const Codec, const FileReaderDescriptor &) const
 {
 	return MIN_PREFERENCE;
@@ -475,10 +475,10 @@ const FileReaderSelection* FileReaderRegistry::default_toc_selection()
 }
 
 
-void FileReaderRegistry::add_format(std::unique_ptr<Descriptor> f)
+void FileReaderRegistry::add_format(std::unique_ptr<Matcher> m)
 {
 	// ... does not seem to require any further static initialization
-	if (f) { formats_.push_back(std::move(f)); }
+	if (m) { formats_.push_back(std::move(m)); }
 }
 
 
@@ -501,8 +501,8 @@ void FileReaderRegistry::add_reader(std::unique_ptr<FileReaderDescriptor> d)
 }
 
 
-std::unique_ptr<Descriptor> FileReaderRegistry::call_maker(
-			FunctionReturningUniquePtr<Descriptor> create)
+std::unique_ptr<Matcher> FileReaderRegistry::call_maker(
+			FunctionReturningUniquePtr<Matcher> create)
 {
 	return create();
 }

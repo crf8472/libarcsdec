@@ -354,7 +354,8 @@ std::set<Codec> DescriptorFlac::define_codecs() const
 
 LibInfo DescriptorFlac::do_libraries() const
 {
-	return { libinfo_entry("libFLAC++"), libinfo_entry("libFLAC") };
+	return { libinfo_entry_filepath("libFLAC++"),
+			 libinfo_entry_filepath("libFLAC") };
 }
 
 

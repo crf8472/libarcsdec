@@ -72,6 +72,9 @@ using arcstk::ChecksumSet;
 
 /**
  * \brief Interface for a class that holds formats and readers.
+ *
+ * The default constructor initializes Formats and FileReaderDescriptors with
+ * their respective sets from FileReaderRegistry.
  */
 class ReaderAndFormatHolder
 {
@@ -90,14 +93,14 @@ public:
 	virtual ~ReaderAndFormatHolder() noexcept = 0;
 
 	/**
-	 * \brief Set the list of supported formats.
+	 * \brief Set the list of formats supported by this instance.
 	 *
 	 * \param[in] formats The list of supported formats.
 	 */
 	void set_formats(const FormatList *formats);
 
 	/**
-	 * \brief List of supported formats.
+	 * \brief List of formats supported by this instance.
 	 *
 	 * \return List of supported formats.
 	 */
@@ -111,7 +114,7 @@ public:
 	void set_readers(const FileReaders *readers);
 
 	/**
-	 * \brief Get the MetadataParserSelection used by this instance.
+	 * \brief Get the FileReaders used by this instance.
 	 *
 	 * \return The MetadataParserSelection used by this instance
 	 */
@@ -133,6 +136,9 @@ private:
 
 /**
  * \brief Interface for a class that performs a selection.
+ *
+ * The default Constructor initializes the selection by the default selection
+ * for AudioReaders as provided by FileReaderRegistry.
  */
 template <class ReaderType>
 class SelectionPerformer

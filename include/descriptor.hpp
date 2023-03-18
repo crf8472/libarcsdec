@@ -83,21 +83,42 @@ using ci_string = std::basic_string<char, ci_char_traits>;
 /**
  * \defgroup descriptor API for abstract FileReaders
  *
- * \brief API for describing opaque \link FileReader FileReaders\endlink for
- * given input files.
+ * \brief API for describing \link FileReader FileReaders\endlink for several
+ * file \link Format Formats\endlink.
  *
- * A Format represents a file format. A Codec represents an audio codec.
- * \link Format Formats\endlink and \link Codec Codecs\endlink can be
- * translated to their respective names by name().
+ * A Format represents a file format. A Codec represents an audio codec. For
+ * \link Format Formats\endlink as well as for \link Codec Codecs\endlink, their
+ * respective names can be achieved by functions name().
  *
- * A Format is described by a FormatDescriptor that can be used for format
- * recognition. A FormatDescriptor can check a byte sequence or a filename
- * for a match.
+ * A file can be matched against a Format by a FormatMatcher. A FormatMatcher
+ * is defined with some referential Bytes of a file or a SuffixSet for
+ * filenames.
+ *
+ * Bytes denote a reference sequence of bytes. They consist of an offset,
+ * denoting their required start position in the file and a
+ * \link ByteSeq ByteSequence\endlink which is a sequence of concrete byte
+ * values that may or may not contain wildcards.
+ *
+ * A FormatMatcher matches Bytes passed or a concrete filename suffix for
+ * matching its reference information. The interpretation of the match of one
+ * or both of these input informations is in the responsibility of the caller.
+ * This is a base mechanism for checking a file for a certain format and codec.
  *
  * A FileReader is an abstract base for either reading metadata/TOC files or
- * audio files. A FileReaderDescriptor contains metainformation about the
- * FileReader and can help to determine whether its FileReader is the right one
- * for reading a particular file.
+ * audio files. Any concrete FileReader implements a reading capability for at
+ * least one Format and at least one Codec. The FileReader interface defines
+ * only the capability to return a FileReaderDescriptor. (The definition of
+ * other capabilities is left to subclasses, as there are AudioReader and
+ * MetadataParser.)
+ *
+ * A FileReaderDescriptor contains metainformation about some concrete
+ * FileReader and can inform about whether this respective FileReader has
+ * the capability to read a particular file in question.
+ * \link FileReaderDescriptor FileReaderDescriptors\endlink either accept or
+ * do not accept any particular \link Format Formats\endlink. Any
+ * FileReaderDescriptor can create the concrete FileReader it describes. Any
+ * concrete FileReader can return its specific FileReaderDescriptor,
+ * accordingly.
  *
  * An InputFormatException indicates any error concerning the input file format.
  * A FileReadException indicates problems while actually reading the file.
@@ -105,11 +126,10 @@ using ci_string = std::basic_string<char, ci_char_traits>;
  * There are some helpers for implementing own
  * \link FileReaderDescriptor FileReaderDescriptors\endlink. Function
  * read_bytes() reads a specified amount of bytes from a specified position in
- * the file. The function returns a ByteSequence that is compatible with the
- * input for file format checks. Class Bytes represents a ByteSequence together
- * with its offset from the original file. Function get_suffix() returns the
- * suffix of a given filename. This suffix can be matched case-insensitive
- * against a set of suffices by ci_match_suffix().
+ * the file. The function returns a \link ByteSeq ByteSequence\endlink that is
+ * compatible with the input for file format checks. Function get_suffix()
+ * returns the suffix of a given filename. This suffix can be matched
+ * case-insensitive against a set of suffices by ci_match_suffix().
  *
  * The \ref AudioReader and \ref MetadataParser APIs are built on this API.
  *
@@ -120,8 +140,8 @@ using ci_string = std::basic_string<char, ci_char_traits>;
 /**
  * \brief List of supported file formats for metadata and audio.
  *
- * These are only the tested formats, in fact other file formats are
- * supported if an appropriate FileReader exists.
+ * Format::UNKNOWN represents a Format that was checked but could not be
+ * recognized.
  *
  * The intention is to support inspecting the capabilities of
  * \link FileReader FileReaders\endlink.
@@ -145,20 +165,26 @@ enum class Format : unsigned
 
 
 /**
- * \brief Return the name of the format.
+ * \brief Name of the \c format.
  *
- * \param[in] format The format to get the name for
+ * \param[in] format The Format to get the name for
  *
- * \return Name of the format.
+ * \return Name of the Format.
  */
 std::string name(Format format);
 
 
 /**
- * \brief List of supported audio codecs.
+ * \brief A supported audio codec.
  *
- * These are only the tested codecs, in fact other lossless codecs are supported
- * if an appropriate FileReader exists.
+ * The supported codecs are only the tested codecs, in fact other lossless
+ * codecs can be silently supported if an appropriate FileReader accepts a
+ * Format that supports this Codec and accepts Codec::UNKNOWN. However, the best
+ * practise is to explicitly support a Codec by an explicit check for it.
+ *
+ * Codec::UNKNOWN represents a codec that was checked but could not be
+ * recognized. Codec::NONE represents the information that no codec is expected,
+ * supported or available.
  *
  * The intention is to support inspecting the capabilities of
  * \link FileReader FileReaders\endlink.
@@ -183,11 +209,11 @@ enum class Codec : unsigned
 
 
 /**
- * \brief Return the name of the codec.
+ * \brief Name of the \c codec.
  *
- * \param[in] codec The codec to get the name for
+ * \param[in] codec The Codec to get the name for
  *
- * \return Name of the codec.
+ * \return Name of the Codec.
  */
 std::string name(Codec codec);
 
@@ -223,7 +249,7 @@ bool operator == (const ByteSeq &lhs, const ByteSeq &rhs);
 void swap(ByteSeq &lhs, ByteSeq &rhs);
 
 /**
- * \brief Byte sequence.
+ * \brief Byte sequence with or without wildcards.
  */
 class ByteSeq : public Comparable<ByteSeq>
 {
@@ -262,39 +288,41 @@ public:
 		std::numeric_limits<byte_type>::max() };
 
 	/**
-	 * \brief Constructor.
+	 * \brief Constructor using a sequence of byte values and wildcards.
 	 *
 	 * \param[in] values List of byte values with or without wildcards.
 	 */
 	ByteSeq(std::initializer_list<unsigned> values);
 
 	/**
-	 * \brief Constructor.
+	 * \brief Constructor for an empty sequence of specified length.
 	 *
 	 * \param[in] length Actual length for a yet empty sequence
 	 */
 	ByteSeq(sequence_type::size_type length);
 
 	/**
-	 * \brief TRUE if byte on position \c i has value \c b.
+	 * \brief TRUE if byte on position \c i of the sequence has value \c b.
 	 *
-	 * \return TRUE if byte on position \c i has value \c b, otherwise FALSE.
+	 * \return TRUE if byte on position \c i of the sequence has value \c b,
+	 * otherwise FALSE.
 	 */
 	bool matches(sequence_type::size_type i, byte_type b) const;
 
 	/**
-	 * \brief TRUE if byte on position \c i is a wildcard.
+	 * \brief TRUE if byte on position \c i of the sequence is a wildcard.
 	 *
-	 * \brief TRUE if byte on position \c i is a wildcard, otherwise FALSE.
+	 * \return TRUE if byte on position \c i of the sequence is a wildcard,
+	 * otherwise FALSE.
 	 */
 	bool is_wildcard(sequence_type::size_type i) const;
 
 	/**
 	 * \brief Swap this instance with another.
 	 *
-	 * \param[in] b The other instance to swap with
+	 * \param[in] rhs The other instance to swap with
 	 */
-	ByteSeq& swap(ByteSeq& b) ; //TODO noexcept possible when C++17
+	ByteSeq& swap(ByteSeq& rhs) ; //TODO noexcept possible when C++17
 
 
 	// Wrappers for functions delegated to the sequence_type
@@ -326,7 +354,7 @@ public:
 /**
  * \brief A sequence of bytes.
  *
- * A sequence of bytes as read from a file.
+ * As read from a file.
  */
 using ByteSequence = ByteSeq;
 
@@ -357,7 +385,7 @@ public:
 	/**
 	 * \brief Constructor.
 	 *
-	 * Initiates an \c empty() internal ByteSequence and offset() of 0.
+	 * Initiates an empty internal ByteSequence with an offset() of 0.
 	 */
 	Bytes();
 
@@ -372,7 +400,7 @@ public:
 	/**
 	 * \brief Match a byte sequence with this instance.
 	 *
-	 * The match is tried starting on positin \c offset.() on this instance and
+	 * The match is tried starting on positin offset() on this instance and
 	 * ends on the end of the shorter sequence, either \c bytes or this
 	 * instance.
 	 *
@@ -389,21 +417,23 @@ public:
 	 * ends on the end of the shorter sequence, either \c bytes or this
 	 * instance.
 	 *
-	 * \note Parameter \c offset does not indicate where in the file the
-	 * sequence \c bytes is located but whether \c bytes is the very start of
-	 * the reference region or only a shifted part of it.
+	 * \note Parameter \c offset does not refer to the original file position
+	 * but to the start of the reference ByteSequence. It does therfore not
+	 * indicate where in the file the sequence \c bytes is located but whether
+	 * \c bytes is the very start of the reference ByteSequence or only a
+	 * shifted part of it.
 	 *
-	 * \param[in] bytes  Byte sequence to be matched
-	 * \param[in] offset Offset to start on this instance
+	 * \param[in] bytes  ByteSequence from a file to be matched
+	 * \param[in] offset Offset to start of ByteSequence of this instance
 	 *
 	 * \return TRUE iff this instance matches \c bytes, otherwise FALSE
 	 */
 	bool match(const ByteSequence &bytes, const uint32_t &offset) const;
 
 	/**
-	 * \brief Match a bytes sequence with this instance.
+	 * \brief Match a byte sequence with offset 0 with this instance.
 	 *
-	 * This is equivalent to matching Bytes whose <tt>offset() == 0</tt>.
+	 * This is equivalent to <tt>match(bytes, 0)</tt>.
 	 *
 	 * \param[in] bytes ByteSequence to be matched
 	 *
@@ -419,16 +449,16 @@ public:
 	uint32_t offset() const;
 
 	/**
-	 * \brief Offset of this instance.
+	 * \brief ByteSequence of this instance.
 	 *
-	 * \return Offset of this instance.
+	 * \return ByteSequence of this instance.
 	 */
 	ByteSequence sequence() const;
 
 	/**
-	 * \brief Number of bytes contained.
+	 * \brief Total number of bytes contained.
 	 *
-	 * \return Number of bytes.
+	 * \return Total number of bytes.
 	 */
 	ByteSequence::size_type size() const;
 
@@ -442,9 +472,9 @@ public:
 	/**
 	 * \brief Swap this instance with another.
 	 *
-	 * \param[in] b The other instance to swap with
+	 * \param[in] rhs The other instance to swap with
 	 */
-	Bytes& swap(Bytes& b) ; //TODO noexcept possible when C++17
+	Bytes& swap(Bytes& rhs) ; //TODO noexcept possible when C++17
 
 private:
 
@@ -529,25 +559,25 @@ Bytes read_bytes(const std::string &filename,
 
 
 /**
- * \brief Interface for descriptors.
+ * \brief Interface for matchers.
  *
- * A Descriptor is a check for a certain file format or audio codec.
+ * A Matcher is a check for a certain file format or audio codec.
  */
-class Descriptor
+class Matcher
 {
 public:
 
 	/**
 	 * \brief Virtual default destructor.
 	 */
-	virtual ~Descriptor() noexcept;
+	virtual ~Matcher() noexcept;
 
 	/**
-	 * \brief Name of this descriptor.
+	 * \brief Name of this matcher.
 	 *
-	 * A printable name that hints about what this descriptor refers to.
+	 * A printable name that hints about what this matcher refers to.
 	 *
-	 * \return Name of this descriptor.
+	 * \return Name of this matcher.
 	 */
 	std::string name() const;
 
@@ -570,23 +600,23 @@ public:
 	bool matches(const std::string &filename) const;
 
 	/**
-	 * \brief Format defined by this descriptor.
+	 * \brief Format matched by this matcher.
 	 *
-	 * \return Format defined by this descriptor.
+	 * \return Format matched by this matcher.
 	 */
 	Format format() const;
 
 	/**
-	 * \brief Codecs supported by this descriptor.
+	 * \brief Codecs supported by this matcher.
 	 *
-	 * \return Codecs supported by this descriptor
+	 * \return Codecs supported by this matcher
 	 */
 	std::set<Codec> codecs() const;
 
 	/**
 	 * \brief Reference bytes to be matched.
 	 *
-	 * \return Reference bytes this descriptor tries to match.
+	 * \return Reference bytes this matcher tries to match.
 	 */
 	Bytes reference_bytes() const;
 
@@ -595,7 +625,7 @@ public:
 	 *
 	 * \return Deep copy of this instance.
 	 */
-	std::unique_ptr<Descriptor> clone() const;
+	std::unique_ptr<Matcher> clone() const;
 
 private:
 
@@ -617,29 +647,28 @@ private:
 	virtual Bytes do_reference_bytes() const
 	= 0;
 
-	virtual std::unique_ptr<Descriptor> do_clone() const
+	virtual std::unique_ptr<Matcher> do_clone() const
 	= 0;
 };
 
 
 /**
- * \brief Descriptor for file formats.
+ * \brief Matcher for file formats.
  *
- * Matches a specific \c Format. More than one descriptor can exist for a given
- * Format. A concrete descriptor can be implemented by constructing a
- * FormatDescriptor with the specified format as its template parameter along
- * with filename suffices and a byte sequence to match.
+ * Matches a specific Format. A FormatMatcher can be implemented by
+ * constructing a FormatMatcher with the specified format as its template
+ * parameter along with filename suffices and a byte sequence to match.
  *
- * \tparam F The Format matched by this descriptor.
+ * \tparam F The Format matched by this matcher.
  */
 template <enum Format F>
-class FormatDescriptor final : public Descriptor
-                             , public Comparable<FormatDescriptor<F>>
+class FormatMatcher final : public Matcher
+                          , public Comparable<FormatMatcher<F>>
 {
 public:
 
-	friend bool operator == (const FormatDescriptor &lhs,
-			const FormatDescriptor &rhs)
+	friend bool operator == (const FormatMatcher &lhs,
+			const FormatMatcher &rhs)
 	{
 		return lhs.suffices_ == rhs.suffices_ && lhs.bytes_ == rhs.bytes_
 			&& lhs.codecs_ == rhs.codecs_;
@@ -647,13 +676,13 @@ public:
 
 
 	/**
-	 * \brief Constructor.
+	 * \brief Constructor with reference suffices and bytes.
 	 *
 	 * \param[in] suffices  Suffices accepted by this Format
 	 * \param[in] bytes     A byte sequence accepted by this Format
 	 * \param[in] codecs    Codecs supported for this Format
 	 */
-	FormatDescriptor(const SuffixSet &suffices, const Bytes &bytes,
+	FormatMatcher(const SuffixSet &suffices, const Bytes &bytes,
 			const std::set<Codec> &codecs)
 		: suffices_ { suffices }
 		, bytes_    { bytes }
@@ -662,20 +691,20 @@ public:
 
 
 	/**
-	 * \brief Constructor.
+	 * \brief Constructor with reference suffices.
 	 *
 	 * \param[in] suffices  Suffices accepted by this Format
 	 * \param[in] codecs    Codecs supported for this Format
 	 */
-	FormatDescriptor(const SuffixSet &suffices, const std::set<Codec> &codecs)
-		: FormatDescriptor(suffices, { /* empty byte sequence */ }, codecs)
+	FormatMatcher(const SuffixSet &suffices, const std::set<Codec> &codecs)
+		: FormatMatcher(suffices, { /* empty byte sequence */ }, codecs)
 	{ /* empty */ };
 
 
 	/**
 	 * \brief Virtual default destructor.
 	 */
-	inline virtual ~FormatDescriptor() noexcept = default;
+	inline virtual ~FormatMatcher() noexcept = default;
 
 
 private:
@@ -711,10 +740,10 @@ private:
 		return bytes_;
 	}
 
-	inline std::unique_ptr<Descriptor> do_clone() const final
+	inline std::unique_ptr<Matcher> do_clone() const final
 	{
 		return
-			std::make_unique<FormatDescriptor<F>>(suffices_, bytes_, codecs_);
+			std::make_unique<FormatMatcher<F>>(suffices_, bytes_, codecs_);
 	}
 
 	/**
@@ -735,11 +764,10 @@ private:
 
 
 /**
- * \brief Entry of a \c LibInfo.
+ * \brief Entry of a LibInfo.
  *
  * An entry for a LibInfo consists of the library name and an additional string.
- * The additional string can for example be used for a concrete path where the
- * library file is located.
+ * The additional string can be used for information about the library.
  */
 using LibInfoEntry = std::pair<std::string, std::string>;
 
@@ -749,23 +777,23 @@ using LibInfoEntry = std::pair<std::string, std::string>;
 using LibInfo = std::list<LibInfoEntry>;
 
 /**
- * \brief Create an entry for a LibInfo.
+ * \brief Create a LibInfoEntry for \c libname, lookup filepath of library.
  *
- * The second part will contain the concrete filepath for the libname. The
- * concrete shared object is inspected to determine this.
+ * The second part will contain the concrete filepath for the library named
+ * \c libname. The libarcsdec binary is inspected to lookup this information.
  *
  * \param[in] libname Name of a library.
  *
  * \return A LibInfoEntry that contains the concrete filepath for the library.
  */
-LibInfoEntry libinfo_entry(const std::string &libname);
+LibInfoEntry libinfo_entry_filepath(const std::string &libname);
 
 
 
 /**
  * \brief Reports an error concerning the input file format.
  *
- * This exception can be thrown when the input format could not be determined
+ * This exception reports that the input format could not be determined
  * or no FileReader could be acquired.
  */
 class InputFormatException final : public std::runtime_error
@@ -784,8 +812,8 @@ public:
 /**
  * \brief Reports an error while reading a file.
  *
- * This exception can be thrown when the file does not exist or is not readable
- * or another IO related error occurrs while reading the file content.
+ * This exception reports that the file does not exist or is not readable
+ * or another IO related error occurred while reading the file content.
  *
  * A FileReadException may optionally report the byte position of the error. A
  * negative value indicates that no position is known.
@@ -873,16 +901,13 @@ bool operator == (const FileReaderDescriptor &lhs,
  * \brief Abstract base class for the properties of a FileReader.
  *
  * A FileReaderDescriptor provides all required information to decide
- * whether a a given file can be read by readers conforming to this descriptor.
- * It can create an opaque reader that can read the file.
+ * whether a a given file can be read by readers specified and created by this
+ * descriptor. It can create an opaque reader that can read the successfully
+ * matched file.
  *
  * \warning
  * FileReaderDescriptors are supposed to be stateless. If a subclass adds a
  * state, the equality operator will not work as expected.
- *
- * \note
- * Instances of this class are non-copyable and non-movable but provide
- * protected special members for copy and move that can be used in subclasses.
  */
 class FileReaderDescriptor : public Comparable<FileReaderDescriptor>
 {
@@ -969,10 +994,10 @@ public:
 	// TODO List accepted format/codec pairs
 
 	/**
-	 * \brief Names of the underlying libraries.
+	 * \brief Names of the libraries the reader used to implement the reader.
 	 *
 	 * Each library is represented by its name and the filepath of the
-	 * concrete module loaded at runtime.
+	 * concrete binary object loaded at runtime.
 	 *
 	 * \return Names of the underlying libraries
 	 */
@@ -988,7 +1013,7 @@ public:
 	/**
 	 * \brief Clone this instance.
 	 *
-	 * Duplicates the instance.
+	 * Provides a deep copy of the instance.
 	 *
 	 * \return A deep copy of the instance
 	 */

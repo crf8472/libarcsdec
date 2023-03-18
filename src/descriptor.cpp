@@ -513,58 +513,58 @@ Bytes read_bytes(const std::string &filename,
 } // namespace details
 
 
-// Descriptor
+// Matcher
 
 
-Descriptor::~Descriptor() noexcept = default;
+Matcher::~Matcher() noexcept = default;
 
 
-std::string Descriptor::name() const
+std::string Matcher::name() const
 {
 	return do_name();
 }
 
 
-bool Descriptor::matches(const Bytes &bytes) const
+bool Matcher::matches(const Bytes &bytes) const
 {
 	return do_matches(bytes);
 }
 
 
-bool Descriptor::matches(const std::string &filename) const
+bool Matcher::matches(const std::string &filename) const
 {
 	return do_matches(filename);
 }
 
 
-Format Descriptor::format() const
+Format Matcher::format() const
 {
 	return do_format();
 }
 
 
-std::set<Codec> Descriptor::codecs() const
+std::set<Codec> Matcher::codecs() const
 {
 	return do_codecs();
 }
 
 
-Bytes Descriptor::reference_bytes() const
+Bytes Matcher::reference_bytes() const
 {
 	return do_reference_bytes();
 }
 
 
-std::unique_ptr<Descriptor> Descriptor::clone() const
+std::unique_ptr<Matcher> Matcher::clone() const
 {
 	return do_clone();
 }
 
 
-// libinfo_entry
+// libinfo_entry_filepath
 
 
-LibInfoEntry libinfo_entry(const std::string &libname)
+LibInfoEntry libinfo_entry_filepath(const std::string &libname)
 {
 	return { libname, details::libfile(libname) };
 }

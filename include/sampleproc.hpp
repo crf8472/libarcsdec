@@ -113,26 +113,26 @@ protected:
 private:
 
 	/**
-	 * \brief Implements SampleProcessor::start_input.
+	 * \brief Implements \ref start_input().
 	 */
 	virtual void do_start_input()
 	= 0;
 
 	/**
-	 * \brief Implements SampleProcessor::append_samples.
+	 * \brief Implements \ref append_samples().
 	 */
 	virtual void do_append_samples(SampleInputIterator begin,
 			SampleInputIterator end)
 	= 0;
 
 	/**
-	 * \brief Implements SampleProcessor::update_audiosize.
+	 * \brief Implements \ref update_audiosize().
 	 */
 	virtual void do_update_audiosize(const AudioSize &size)
 	= 0;
 
 	/**
-	 * \brief Implements SampleProcessor::end_input.
+	 * \brief Implements \ref end_input().
 	 */
 	virtual void do_end_input()
 	= 0;

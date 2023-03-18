@@ -258,7 +258,7 @@ TEST_CASE ( "libinfo_entry", "[libinfo]" )
 {
 	using arcsdec::LibInfoEntry;
 	using arcsdec::LibInfo;
-	using arcsdec::libinfo_entry;
+	using arcsdec::libinfo_entry_filepath;
 }
 
 

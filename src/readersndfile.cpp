@@ -247,7 +247,7 @@ std::set<Codec> DescriptorSndfile::define_codecs() const
 
 LibInfo DescriptorSndfile::do_libraries() const
 {
-	return { libinfo_entry("libsndfile") };
+	return { libinfo_entry_filepath("libsndfile") };
 }
 
 

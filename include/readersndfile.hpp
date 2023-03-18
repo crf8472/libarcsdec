@@ -24,9 +24,9 @@ namespace arcsdec
 inline namespace v_1_0_0
 {
 
-
 /**
- * \internal \defgroup readersndfile Audio: Generic by libsndfile
+ * \internal
+ * \defgroup readersndfile Audio: Generic by libsndfile
  *
  * \brief A generic AudioReader for losslessly encoded audio files.
  *

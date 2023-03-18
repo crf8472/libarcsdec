@@ -333,7 +333,7 @@ std::set<Format> DescriptorCue::define_formats() const
 
 LibInfo DescriptorCue::do_libraries() const
 {
-	return { libinfo_entry("libcue") };
+	return { libinfo_entry_filepath("libcue") };
 }
 
 

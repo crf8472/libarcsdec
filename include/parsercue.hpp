@@ -25,7 +25,8 @@ inline namespace v_1_0_0
 {
 
 /**
- * \internal \defgroup parsercue Metadata: CueSheet
+ * \internal
+ * \defgroup parsercue Metadata: CueSheet
  *
  * \brief A MetadataParser for CueSheet files
  *

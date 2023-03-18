@@ -36,24 +36,26 @@ inline namespace v_1_0_0
  * \brief API for selecting \link FileReader FileReaders\endlink for given
  * input files.
  *
- * FileReaderSelection provides the API for selecting a FileReader from a set
- * of available readers. It uses a DescriptorPreference to assign a preference
- * to each descriptor based on the given Format and Codec and a
- * FileReaderSelector to actually select the descriptor based on the preference.
- * An instance of the selected descriptor is returned which can then be used to
- * create the concrete FileReader instance.
+ * A concrete DescriptorPreference assigns a preference value to each descriptor
+ * based on the specified Format and Codec. It represents a preference to use
+ * the descriptor in question to read a file with this Format and Codec.
  *
- * A convenience interface to this mechanism is provided by functions
+ * A concrete FileReaderSelector can select a matching FileReaderDescriptor by
+ * a pair of Format and Codec from a list of available FileReaderDescriptors.
+ * The concrete selection mechanism is implemented by the subclass.
+ *
+ * FileReaderSelection provides an API for selecting a FileReaderDescriptor
+ * from a set of available descriptors. It uses a concrete DescriptorPreference
+ * and a concrete FileReaderSelector to actually select the descriptor based on
+ * the preference. An instance of the selected descriptor is returned which can
+ * then create the concrete FileReader instance.
+ *
+ * A convenience interface to this entire mechanism is provided by functions
  * select_descriptor() and select_reader().
  *
- * A FileReaderSelector can select() a matching FileReaderDescriptor by
- * a pair of Format and Codec and a list of available FileReaderDescriptors.
- *
  * Class FileReaderRegistry holds the set of available FileReaderDescriptors as
- * well as the set of supported \link Formats Format\endlink. It also defines
+ * well as the set of supported \link Format Formats\endlink. It also defines
  * default selections for Metadata/TOC formats as well as audio formats.
- *
- * The \ref AudioReader and \ref MetadataParser APIs are based on this API.
  *
  * @{
  */
@@ -97,7 +99,7 @@ public:
 	virtual ~DescriptorPreference() noexcept;
 
 	/**
-	 * \brief Get a preference of one descriptor from a set for a specified pair
+	 * \brief Get a preference of one descriptor for a specified pair
 	 * of Format and Codec.
 	 *
 	 * \param[in] format  File format
@@ -118,7 +120,8 @@ private:
 
 
 /**
- * \brief Default Preference based on Format and Codec.
+ * \brief DescriptorPreference for the most specific descriptor (with least
+ * supported Formats and Codecs).
  *
  * A default preference value for the given input. The more formats and
  * codecs a FileReader supports, the higher is the penalty subtracted from its
@@ -126,6 +129,14 @@ private:
  *
  * This prefers specialized readers (like libFLAC) over general multi-input
  * readers (like ffmpeg).
+ *
+ * \note
+ * DefaultPreference is currently <b>not</b> the actual default preference.
+ * DefaultPreference checks for acceptance of the Codec and therefore the
+ * concrete descriptor decides whether it respects Codec::UNKNOWN. Since Codec
+ * recognition is currently not implemented, the input will mostly be UNKNOWN
+ * which currently has to be accepted. Therefore, the current default is
+ * \ref FormatPreference.
  */
 class DefaultPreference final : public DescriptorPreference
 {
@@ -135,13 +146,14 @@ class DefaultPreference final : public DescriptorPreference
 
 
 /**
- * \brief Dummy preference that is always MIN_PREFERENCE.
+ * \brief DescriptorPreference that is always
+ * DescriptorPreference::MIN_PREFERENCE.
  *
  * \note
  * Any input is ignored. This preference model can be combined with selectors
  * that do not require a preference model, e.g. IdSelector.
  */
-class ConstMinPreference final : public DescriptorPreference
+class MinPreference final : public DescriptorPreference
 {
 	type do_preference(const Format format, const Codec codec,
 		const FileReaderDescriptor &desc) const override;
@@ -149,7 +161,8 @@ class ConstMinPreference final : public DescriptorPreference
 
 
 /**
- * \brief Preference based on the Format.
+ * \brief DescriptorPreference for the most specific descriptor that accepts the
+ * Format.
  *
  * \note
  * The codec is ignored. This preference model is used as the default model
@@ -190,10 +203,10 @@ public:
 	/**
 	 * \brief Selects a descriptor for the specified Format and Codec.
 	 *
-	 * The concrete implementation is supposed to use \c pref_model() to
+	 * The concrete implementation is supposed to use \c pref_model to
 	 * establish a preference ordering on the set of descriptors. Based on
 	 * this ordering the implementation of select() is free to decide which
-	 * position of the preference ordering is the one to pick.
+	 * position of the ordering is the one to pick.
 	 *
 	 * \param[in] format   File format
 	 * \param[in] codec    Audio codec
@@ -216,11 +229,12 @@ private:
 
 
 /**
- * \brief Default selector.
+ * \brief FileReaderSelector for first descriptor (in order of occurrence) with
+ * highest preference.
  *
  * Assigns a preference to each FileReaderDescriptor and returns the first one
  * (in order of occurrence) that has the highest occurring preference based on
- * \c pref_model.
+ * the actual DescriptorPreference.
  */
 class DefaultSelector final : public FileReaderSelector
 {
@@ -233,10 +247,10 @@ private:
 
 
 /**
- * \brief Selector for a certain descriptor id.
+ * \brief FileReaderSelector for a specific descriptor id.
  *
- * This selector will ignore Format and Codec and return exactly the reader
- * with the specified id or nullptr if such a reader is not available.
+ * Ignore any preference and return exactly either the reader with the specified
+ * id if such a reader is available or otherwise nullptr.
  */
 class IdSelector final : public FileReaderSelector
 {
@@ -302,13 +316,13 @@ private:
 
 
 /**
- * \brief A selection of FileReaderDescriptors.
+ * \brief FileReaderSelection of FileReaderDescriptors.
  *
  * Use a concrete preference and selector type to determine a FileReader
  * for a specified input file.
  *
- * \tparam P Concrete DescriptorPreference
- * \tparam S Concrete FileReaderSelector
+ * \tparam P Concrete DescriptorPreference type
+ * \tparam S Concrete FileReaderSelector type
  */
 template <typename P, typename S>
 class FileReaderPreferenceSelection final : public FileReaderSelection
@@ -400,9 +414,9 @@ private:
 
 
 /**
- * \brief An unordered list of \link Descriptor Descriptors\endlink.
+ * \brief An unordered list of \link Matcher Matchers\endlink for Formats.
  */
-using FormatList = std::vector<std::unique_ptr<Descriptor>>;
+using FormatList = std::vector<std::unique_ptr<Matcher>>;
 
 
 /**
@@ -416,7 +430,7 @@ using FunctionReturningUniquePtr = std::unique_ptr<T>(*)();
 
 
 /**
- * \brief Global registry holding all available FileReaderDescriptors
+ * \brief Registry holding all available FileReaderDescriptors
  * and all supported Formats.
  *
  * A FileReaderDescriptor instance is registered via instantiating the template
@@ -430,6 +444,7 @@ using FunctionReturningUniquePtr = std::unique_ptr<T>(*)();
  * This class is non-final but does not support polymorphic deletion.
  *
  * \see RegisterDescriptor
+ * \see RegisterFormat
  */
 class FileReaderRegistry
 {
@@ -456,7 +471,8 @@ class FileReaderRegistry
 public:
 
 	/**
-	 * \brief Return TRUE iff at least one descriptor for \c f is registered.
+	 * \brief Return TRUE iff at least one descriptor is registered that
+	 * accepts \c f.
 	 *
 	 * \param[in] f The format to check for
 	 *
@@ -474,21 +490,21 @@ public:
 	static std::unique_ptr<FileReaderDescriptor> reader(const std::string &id);
 
 	/**
-	 * \brief List of supported formats.
+	 * \brief List of supported \link Format Formats\endlink.
 	 *
 	 * \return List of supported formats
 	 */
 	static const FormatList* formats();
 
 	/**
-	 * \brief Set of available descriptors for FileReaders.
+	 * \brief Set of available \link FileReader FileReaderDescriptors\endlink.
 	 *
 	 * \return Set of available descriptors for FileReaders
 	 */
 	static const FileReaders* readers();
 
 	/**
-	 * \brief Create a default audio selection.
+	 * \brief Default selection for \link AudioReader AudioReaders\endlink.
 	 *
 	 * This is used to initialize TOCParser and the Calculators with the same
 	 * default selection setup for audio readers.
@@ -498,7 +514,8 @@ public:
 	static const FileReaderSelection* default_audio_selection();
 
 	/**
-	 * \brief Create a default TOC selection.
+	 * \brief Default selection for
+	 * \link MetadataParser MetatdataParsers\endlink.
 	 *
 	 * This is used to initialize TOCParser and the Calculators with the same
 	 * default selection setup for TOCs.
@@ -510,11 +527,11 @@ public:
 protected:
 
 	/**
-	 * \brief Add a descriptor to this registry.
+	 * \brief Add a Matcher for a Format to this registry.
 	 *
-	 * \param[in] f Descriptor to add.
+	 * \param[in] m Matcher to add.
 	 */
-	static void add_format(std::unique_ptr<Descriptor> f);
+	static void add_format(std::unique_ptr<Matcher> m);
 
 	/**
 	 * \brief Add a descriptor to this registry.
@@ -524,17 +541,17 @@ protected:
 	static void add_reader(std::unique_ptr<FileReaderDescriptor> d);
 
 	/**
-	 * \brief Instantiate the Descriptor with the given name.
+	 * \brief Instantiate the concrete Matcher with the given name.
 	 *
 	 * \param[in] create Function pointer to create the instance
 	 *
 	 * \return Instance returned by \c create
 	 */
-	static std::unique_ptr<Descriptor> call_maker(
-			FunctionReturningUniquePtr<Descriptor> create);
+	static std::unique_ptr<Matcher> call_maker(
+			FunctionReturningUniquePtr<Matcher> create);
 
 	/**
-	 * \brief Instantiate the FileReader with the given name.
+	 * \brief Instantiate the concrete FileReaderDescriptor with the given name.
 	 *
 	 * \param[in] create Function pointer to create the instance
 	 *
@@ -736,7 +753,7 @@ std::unique_ptr<FileReaderDescriptor> make_descriptor(Args&&... args)
 
 
 /**
- * \brief Register a Format.
+ * \brief Register a \ref Format.
  *
  * Register a set of supported filename suffices and a byte sequence for a
  * Format \c F.
@@ -754,7 +771,7 @@ struct RegisterFormat final : private FileReaderRegistry
 	 */
 	RegisterFormat(const SuffixSet &suffices, const std::set<Codec> &codecs)
 	{
-		add_format(std::make_unique<FormatDescriptor<F>>(suffices, codecs));
+		add_format(std::make_unique<FormatMatcher<F>>(suffices, codecs));
 	}
 
 	/**
@@ -767,8 +784,7 @@ struct RegisterFormat final : private FileReaderRegistry
 	RegisterFormat(const SuffixSet &suffices, const Bytes &bytes,
 			const std::set<Codec> &codecs)
 	{
-		add_format(std::make_unique<FormatDescriptor<F>>(suffices, bytes,
-					codecs));
+		add_format(std::make_unique<FormatMatcher<F>>(suffices, bytes, codecs));
 	}
 };
 
@@ -782,9 +798,7 @@ template <class D>
 struct RegisterDescriptor final : private FileReaderRegistry
 {
 	/**
-	 * \brief Constructor
-	 *
-	 * Registers a descriptor of the template type
+	 * \brief Registers a descriptor of the template type \c D.
 	 */
 	RegisterDescriptor()
 	{

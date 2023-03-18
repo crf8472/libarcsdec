@@ -1587,9 +1587,9 @@ std::set<Codec> DescriptorFFmpeg::define_codecs() const
 LibInfo DescriptorFFmpeg::do_libraries() const
 {
 	return {
-		libinfo_entry("libavformat"),
-		libinfo_entry("libavcodec"),
-		libinfo_entry("libavutil"),
+		libinfo_entry_filepath("libavformat"),
+		libinfo_entry_filepath("libavcodec"),
+		libinfo_entry_filepath("libavutil"),
 	};
 }
 

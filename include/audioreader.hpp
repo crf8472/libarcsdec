@@ -42,11 +42,10 @@ using arcstk::AudioSize;
  * Class AudioReader provides an interface for reading audio files.
  *
  * The AudioReader provides two actual operations on the input file: it can
- * either analyze the file via \c acquire_size() to provide an
- * arcstk::CalcContext for it or actually process the file via
- * \c process_file(), which yields the actual calculation results. An
- * AudioReader can be attached a pre-configured arcstk::Calculation to perform
- * the actual calculation.
+ * either analyze the file via \c acquire_size() or actually process the file
+ * via \c process_file(), which yields the actual calculation results. An
+ * AudioReader is a SampleProvider and hence a SampleProcessor can be
+ * attached to it.
  *
  * An AudioReader internally holds a concrete instance of AudioReaderImpl.
  * AudioReaderImpl can be subclassed to implement the capabilities of an
@@ -56,24 +55,16 @@ using arcstk::AudioSize;
  * of AudioReaderImpl. An AudioReaderImpl can be set to a block size, that may
  * or may not refer to a buffer size, depending on the actual implementation.
  *
- * AudioValidator wraps a CDDAValidator with error tracking for easy
- * registering validation functionality to an AudioReaderImpl. It provides
- * default implementations for CDDA testing. Subclasses are supposed to add
- * validation for the concrete codec.
- *
- * Validation failures are reported as InvalidAudioException.
- *
- * BufferedAudioReaderImpl is a base class that buffers SampleSequences.
- *
- * To avoid reimplementing things, there are some tools provided in this API
- * module:
- *
- * CreateAudioReader creates an AudioReader from a selection of readers and
- * a given filename.
- *
  * CDDAValidator provides a uniform implementation of checking sample size,
  * sampling rate and number of channels of an input audio file for CDDA
  * conformity.
+ *
+ * AudioValidator wraps a CDDAValidator with error tracking for easy
+ * registering validation functionality to an AudioReaderImpl. It provides
+ * default implementations for CDDA testing. Subclasses are supposed to add
+ * validation for the concrete format and codec.
+ *
+ * Validation failures are reported as InvalidAudioException.
  *
  * BigEndianBytes and LittleEndianBytes decode short sequences of single chars
  * to integers.

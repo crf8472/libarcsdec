@@ -48,9 +48,6 @@ using arcstk::TOC;
  *
  * A parse error is reported by a MetadataParseException.
  *
- * CreateMetadataParser creates a MetadataParser from a selection of readers and
- * a given filename.
- *
  * @{
  */
 
@@ -203,8 +200,6 @@ struct signedness : public std::integral_constant<bool,
 	// empty
 };
 
-} // namespace details
-
 
 /**
  * \brief Service method: Cast a value of some integral type safely to an
@@ -244,6 +239,8 @@ inline auto cast_or_throw(const T value) -> S
 
 	return static_cast<S>(value);
 }
+
+} // namespace details
 
 /// @}
 

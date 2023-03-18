@@ -103,7 +103,7 @@ std::set<Format> DescriptorToc::define_formats() const
 
 LibInfo DescriptorToc::do_libraries() const
 {
-	return { libinfo_entry("libcdio") };
+	return { libinfo_entry_filepath("libcdio") };
 }
 
 
