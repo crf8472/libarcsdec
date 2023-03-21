@@ -6,6 +6,9 @@
 #ifndef __LIBARCSDEC_READERSNDFILE_DETAILS_HPP__
 #include "readersndfile_details.hpp"
 #endif
+#ifndef __LIBARCSDEC_SELECTION_HPP__
+#include "selection.hpp"
+#endif
 
 /**
  * \file
@@ -34,11 +37,6 @@ TEST_CASE ("DescriptorSndfile", "[readersndfile]" )
 		CHECK ( libs.size() == 1 );
 		CHECK ( libs.front().first  == "libsndfile" );
 		CHECK ( libs.front().second.find("libsndfile") != std::string::npos );
-	}
-
-	SECTION ("Matches accepted bytes correctly")
-	{
-		//CHECK ( d.accepts_bytes({ 0x77, 0x76, 0x70, 0x6B }, 0) );
 	}
 
 	SECTION ("Matches accepted codecs correctly")
@@ -112,8 +110,49 @@ TEST_CASE ("DescriptorSndfile", "[readersndfile]" )
 		} );
 	}
 
+	// TODO Implement test for filename matching
 	//SECTION ("Matches accepted filenames correctly")
 	//{
 	//}
+}
+
+
+TEST_CASE ("FileReaderSelection", "[filereaderselection]")
+{
+	using arcsdec::FileReaderSelection;
+	using arcsdec::FileReaderRegistry;
+	using arcsdec::Format;
+	using arcsdec::Codec;
+
+	const auto default_selection {
+		FileReaderRegistry::default_audio_selection() };
+
+	REQUIRE ( default_selection );
+
+	const auto default_readers { FileReaderRegistry::readers() };
+
+	REQUIRE ( default_readers );
+
+
+	SECTION ( "Descriptor is registered" )
+	{
+		CHECK ( nullptr != arcsdec::FileReaderRegistry::reader("libsndfile") );
+	}
+
+	SECTION ( "Default settings select libsndfile for AIFF/PCM_S16LE" )
+	{
+		auto reader = default_selection->get(Format::AIFF, Codec::PCM_S16LE,
+				*default_readers );
+
+		CHECK ( "libsndfile" == reader->id() );
+	}
+
+	SECTION ( "Default settings select libsndfile for AIFF/UNKNOWN" )
+	{
+		auto reader = default_selection->get(Format::AIFF, Codec::UNKNOWN,
+				*default_readers );
+
+		CHECK ( "libsndfile" == reader->id() );
+	}
 }
 

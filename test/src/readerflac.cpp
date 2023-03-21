@@ -6,6 +6,9 @@
 #ifndef __LIBARCSDEC_READERFLAC_DETAILS_HPP__
 #include "readerflac_details.hpp"
 #endif
+#ifndef __LIBARCSDEC_SELECTION_HPP__
+#include "selection.hpp"
+#endif
 
 #ifndef __LIBARCSDEC_READERMOCKS_HPP__
 #include "readermocks.hpp"
@@ -19,30 +22,6 @@
  *
  * Tests for classes in readerflac.cpp
  */
-
-
-//TEST_CASE ("FormatFlac", "[readerflac]" )
-//{
-//	auto f = arcsdec::FormatFlac{};
-//
-//	SECTION ("Matches accepted bytes correctly")
-//	{
-//		CHECK ( f.bytes({ 0x66, 0x4C, 0x61, 0x43 }, 0) );
-//	}
-//
-//	SECTION ("Matches names correctly")
-//	{
-//		CHECK ( f.filename("foo.flac") );
-//		CHECK ( f.filename("bar.FLAC") );
-//		CHECK ( f.filename("bar.FlAc") );
-//
-//		CHECK ( !f.filename("bar.rflac") );
-//		CHECK ( !f.filename("bar.PFLac") );
-//
-//		CHECK ( !f.filename("bar.flacr") );
-//		CHECK ( !f.filename("bar.FLACD") );
-//	}
-//}
 
 
 TEST_CASE ("DescriptorFlac", "[readerflac]" )
@@ -168,6 +147,46 @@ TEST_CASE ("FlacAudioReaderImpl", "[readerflac]" )
 	{
 		r.process_file("test01.flac");
 		// TODO What the mock sees in its callbacks has to be tested
+	}
+}
+
+
+TEST_CASE ("FileReaderSelection", "[filereaderselection]")
+{
+	using arcsdec::FileReaderSelection;
+	using arcsdec::FileReaderRegistry;
+	using arcsdec::Format;
+	using arcsdec::Codec;
+
+	const auto default_selection {
+		FileReaderRegistry::default_audio_selection() };
+
+	REQUIRE ( default_selection );
+
+	const auto default_readers { FileReaderRegistry::readers() };
+
+	REQUIRE ( default_readers );
+
+
+	SECTION ( "Descriptor is registered" )
+	{
+		CHECK ( nullptr != arcsdec::FileReaderRegistry::reader("flac") );
+	}
+
+	SECTION ( "Default settings select flac for FLAC/FLAC" )
+	{
+		auto reader = default_selection->get(Format::FLAC, Codec::FLAC,
+				*default_readers );
+
+		CHECK ( "flac" == reader->id() );
+	}
+
+	SECTION ( "Default settings select flac for FLAC/UNKNOWN" )
+	{
+		auto reader = default_selection->get(Format::FLAC, Codec::UNKNOWN,
+				*default_readers );
+
+		CHECK ( "flac" == reader->id() );
 	}
 }
 

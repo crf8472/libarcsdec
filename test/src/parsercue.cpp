@@ -6,43 +6,15 @@
 #ifndef __LIBARCSDEC_PARSERCUE_DETAILS_HPP__
 #include "parsercue_details.hpp"
 #endif
+#ifndef __LIBARCSDEC_SELECTION_HPP__
+#include "selection.hpp"
+#endif
 
 /**
  * \file
  *
  * Tests for classes in parsercue.cpp
  */
-
-//TEST_CASE ("FormatCue", "[parsercue]" )
-//{
-//	auto f = arcsdec::FormatCue{};
-//
-//	SECTION ("Returns own name correctly")
-//	{
-//		CHECK ( "cue" == f.name() );
-//	}
-//
-//	SECTION ("Matches accepted bytes correctly")
-//	{
-//		CHECK ( f.bytes({}, 0) );
-//		CHECK ( f.bytes({3, 2, 1}, 2) );
-//		CHECK ( f.bytes({0x65, 0x32, 0x88}, 1) );
-//		// TODO Check for always true
-//	}
-//
-//	SECTION ("Matches accepted filenames correctly")
-//	{
-//		CHECK ( f.filename("foo.cue") );
-//		CHECK ( f.filename("bar.CUE") );
-//		CHECK ( f.filename("bar.CUe") );
-//
-//		CHECK ( !f.filename("bar.rcue") );
-//		CHECK ( !f.filename("bar.PCUe") );
-//
-//		CHECK ( !f.filename("bar.cuef") );
-//		CHECK ( !f.filename("bar.CUEl") );
-//	}
-//}
 
 
 TEST_CASE ("DescriptorCue", "[parsercue]" )
@@ -156,6 +128,30 @@ TEST_CASE ("CueParserImpl", "[parsercue]" )
 
 		CHECK ( cue->leadout() == 0 ); // since last track (2) has unkown length
 		CHECK ( !cue->complete() ); // since leadout is 0
+	}
+}
+
+
+TEST_CASE ("FileReaderSelection", "[filereaderselection]")
+{
+	using arcsdec::FileReaderSelection;
+	using arcsdec::FileReaderRegistry;
+	using arcsdec::Format;
+	using arcsdec::Codec;
+
+	const auto default_selection {
+		FileReaderRegistry::default_audio_selection() };
+
+	REQUIRE ( default_selection );
+
+	const auto default_readers { FileReaderRegistry::readers() };
+
+	REQUIRE ( default_readers );
+
+
+	SECTION ( "Descriptor is registered" )
+	{
+		CHECK ( nullptr != arcsdec::FileReaderRegistry::reader("cuesheet") );
 	}
 }
 

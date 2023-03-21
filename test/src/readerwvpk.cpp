@@ -6,6 +6,9 @@
 #ifndef __LIBARCSDEC_READERWAV_DETAILS_HPP__
 #include "readerwvpk_details.hpp"
 #endif
+#ifndef __LIBARCSDEC_SELECTION_HPP__
+#include "selection.hpp"
+#endif
 
 #ifndef __LIBARCSDEC_READERMOCKS_HPP__
 #include "readermocks.hpp"
@@ -16,32 +19,6 @@
  *
  * Tests for classes in readerwvpk.cpp
  */
-
-
-//TEST_CASE ("FormatWavpack", "[readerwvpk]" )
-//{
-//	auto f = arcsdec::FormatWavpack {};
-//
-//	SECTION ("Matches accepted bytes correctly")
-//	{
-//		CHECK ( f.bytes({ 0x77, 0x76, 0x70, 0x6B }, 0) );
-//	}
-//
-//	SECTION ("Matches accepted filenames correctly")
-//	{
-//		CHECK ( f.filename("foo.wv") );
-//		CHECK ( f.filename("bar.WV") );
-//
-//		CHECK ( !f.filename("bar.WAV") );
-//		CHECK ( !f.filename("bar.wav") );
-//
-//		CHECK ( !f.filename("bar.rwv") );
-//		CHECK ( !f.filename("bar.RWV") );
-//
-//		CHECK ( !f.filename("bar.wvx") );
-//		CHECK ( !f.filename("bar.WVX") );
-//	}
-//}
 
 
 TEST_CASE ("DescriptorWavpack", "[readerwvpk]" )
@@ -236,6 +213,46 @@ TEST_CASE ("WavpackValidatingHandler", "[readerwvpk]" )
 	SECTION ("Validates CDDA conformity correctly")
 	{
 		CHECK ( h->validate_cdda(file) );
+	}
+}
+
+
+TEST_CASE ("FileReaderSelection", "[filereaderselection]")
+{
+	using arcsdec::FileReaderSelection;
+	using arcsdec::FileReaderRegistry;
+	using arcsdec::Format;
+	using arcsdec::Codec;
+
+	const auto default_selection {
+		FileReaderRegistry::default_audio_selection() };
+
+	REQUIRE ( default_selection );
+
+	const auto default_readers { FileReaderRegistry::readers() };
+
+	REQUIRE ( default_readers );
+
+
+	SECTION ( "Descriptor is registered" )
+	{
+		CHECK ( nullptr != arcsdec::FileReaderRegistry::reader("wavpack") );
+	}
+
+	SECTION ( "Default settings select wavpack for WV/Wavpack" )
+	{
+		auto reader = default_selection->get(Format::WV, Codec::WAVPACK,
+				*default_readers );
+
+		CHECK ( "wavpack" == reader->id() );
+	}
+
+	SECTION ( "Default settings select wavpack for WV/UNKNOWN" )
+	{
+		auto reader = default_selection->get(Format::WV, Codec::UNKNOWN,
+				*default_readers );
+
+		CHECK ( "wavpack" == reader->id() );
 	}
 }
 

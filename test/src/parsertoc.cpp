@@ -6,39 +6,15 @@
 #ifndef __LIBARCSDEC_PARSERTOC_DETAILS_HPP__
 #include "parsertoc_details.hpp"
 #endif
+#ifndef __LIBARCSDEC_SELECTION_HPP__
+#include "selection.hpp"
+#endif
 
 /**
  * \file
  *
  * Tests for classes in parsertoc.cpp
  */
-
-
-//TEST_CASE ("FormatToc", "[parsertoc]" )
-//{
-//	auto f = arcsdec::FormatToc{};
-//
-//	SECTION ("Matches accepted bytes correctly")
-//	{
-//		CHECK ( f.bytes({}, 0) );
-//		CHECK ( f.bytes({3, 2, 1}, 2) );
-//		CHECK ( f.bytes({0x65, 0x32, 0x88}, 1) );
-//		// TODO Check for always true
-//	}
-//
-//	SECTION ("Matches accepted filenames correctly")
-//	{
-//		CHECK ( f.filename("foo.toc") );
-//		CHECK ( f.filename("bar.TOC") );
-//		CHECK ( f.filename("bar.TOc") );
-//
-//		CHECK ( !f.filename("bar.rtoc") );
-//		CHECK ( !f.filename("bar.PTOc") );
-//
-//		CHECK ( !f.filename("bar.tocf") );
-//		CHECK ( !f.filename("bar.TOCl") );
-//	}
-//}
 
 
 TEST_CASE ("DescriptorToc", "[parsertoc]" )
@@ -60,7 +36,7 @@ TEST_CASE ("DescriptorToc", "[parsertoc]" )
 
 		CHECK ( libs.size() == 1 );
 		CHECK ( libs.front().first  == "libcdio" );
-		//CHECK ( libs.front().second.find("libcdio++.so") != std::string::npos );
+		// TODO Test for libcdio++.so
 	}
 
 	SECTION ("Does not match any codecs not accepted by this descriptor")
@@ -132,28 +108,29 @@ TEST_CASE ("TocParserImpl", "[parsertoc]" )
 
 		CHECK ( dynamic_cast<const DescriptorToc*>(p) != nullptr );
 	}
+}
 
-	SECTION ("Parses a syntactically intact input correctly")
+
+TEST_CASE ("FileReaderSelection", "[filereaderselection]")
+{
+	using arcsdec::FileReaderSelection;
+	using arcsdec::FileReaderRegistry;
+	using arcsdec::Format;
+	using arcsdec::Codec;
+
+	const auto default_selection {
+		FileReaderRegistry::default_audio_selection() };
+
+	REQUIRE ( default_selection );
+
+	const auto default_readers { FileReaderRegistry::readers() };
+
+	REQUIRE ( default_readers );
+
+
+	SECTION ( "Descriptor is registered" )
 	{
-		using arcsdec::details::cdrdao::TocParserImpl;
-		auto parser = TocParserImpl{};
-		/*
-		const auto toc = parser.parse("test01_ok.toc");
-
-		CHECK ( toc->total_tracks() == 2 );
-
-		CHECK ( toc->filename(1) == "john_doe_album.wav" );
-		CHECK ( toc->filename(2) == "john_doe_album.wav" );
-
-		CHECK ( toc->offset(1) == 150 );
-		CHECK ( toc->offset(2) == 25072 );
-
-		CHECK ( toc->parsed_length(1) == 24922 );
-		CHECK ( toc->parsed_length(2) == 0 ); // OK since AudioSize is unknown
-
-		CHECK ( toc->leadout() == 0 ); // since last track (2) has unkown length
-		CHECK ( !toc->complete() ); // since leadout is 0
-		*/
+		CHECK ( nullptr != arcsdec::FileReaderRegistry::reader("cdrdaotoc") );
 	}
 }
 

@@ -55,28 +55,6 @@ TEST_CASE ( "FileReaderSelector", "[filereaderselector]")
 }
 
 
-TEST_CASE ( "DefaultSelector", "[defaultselector]")
-{
-	using arcsdec::DefaultSelector;
-
-/*
-	SECTION ( "Copy constructor and assignment operator are declared" )
-	{
-		CHECK ( std::is_copy_constructible<DefaultSelector>::value );
-		CHECK ( std::is_copy_assignable<DefaultSelector>::value );
-	}
-
-	SECTION ( "Move constructor and assignment operator are declared" )
-	{
-		CHECK ( std::is_nothrow_move_constructible<DefaultSelector>::value );
-		CHECK ( std::is_nothrow_move_assignable<DefaultSelector>::value );
-	}
-*/
-
-	// TODO Test for move constructor
-}
-
-
 TEST_CASE ( "FileReaderRegistry", "[filereaderregistry]")
 {
 	using arcsdec::FileReaderRegistry;
@@ -124,210 +102,215 @@ TEST_CASE ( "FileReaderRegistry", "[filereaderregistry]")
 		CHECK ( 10 == FileReaderRegistry::formats()->size() );
 	}
 
-	SECTION ( "Registered descriptors are present" )
+	SECTION ( "Mandatory descriptors are registered" )
 	{
-		// at least 2 readers:
+		// At least the 2 non-optional descriptors:
 		// Maybe not each available reader was compiled, but we will always have
 		// the genuine wav reader + libcue-based cuesheet parser
 		CHECK ( 2 <= arcsdec::FileReaderRegistry::readers()->size() );
-
-		// in case each parser + each reader is compiled
-		CHECK ( 7 >= arcsdec::FileReaderRegistry::readers()->size() );
-
-		CHECK ( nullptr != arcsdec::FileReaderRegistry::reader("flac") );
-		CHECK ( nullptr != arcsdec::FileReaderRegistry::reader("ffmpeg") );
-		CHECK ( nullptr != arcsdec::FileReaderRegistry::reader("libsndfile") );
-		CHECK ( nullptr != arcsdec::FileReaderRegistry::reader("wavpcm") );
+		// Specific tests are in parsercue.cpp and readerwav.cpp
 	}
 }
 
 
-// TODO
-//TEST_CASE ( "RegisterFormat", "[registerformat]")
+//TEST_CASE ("FormatCue", "[parsercue]" )
 //{
+//	auto f = arcsdec::FormatCue{};
+//
+//	SECTION ("Returns own name correctly")
+//	{
+//		CHECK ( "cue" == f.name() );
+//	}
+//
+//	SECTION ("Matches accepted bytes correctly")
+//	{
+//		CHECK ( f.bytes({}, 0) );
+//		CHECK ( f.bytes({3, 2, 1}, 2) );
+//		CHECK ( f.bytes({0x65, 0x32, 0x88}, 1) );
+//		// TODO Check for always true
+//	}
+//
+//	SECTION ("Matches accepted filenames correctly")
+//	{
+//		CHECK ( f.filename("foo.cue") );
+//		CHECK ( f.filename("bar.CUE") );
+//		CHECK ( f.filename("bar.CUe") );
+//
+//		CHECK ( !f.filename("bar.rcue") );
+//		CHECK ( !f.filename("bar.PCUe") );
+//
+//		CHECK ( !f.filename("bar.cuef") );
+//		CHECK ( !f.filename("bar.CUEl") );
+//	}
 //}
 
 
-TEST_CASE ( "RegisterDescriptor", "[registerdescriptor]")
-{
-	using arcsdec::RegisterDescriptor;
-	using arcsdec::DescriptorWavPCM;
-	using arcsdec::DescriptorCue;
-
-	// at least 9 stock formats
-	REQUIRE ( 9 <= arcsdec::FileReaderRegistry::formats()->size() );
-	REQUIRE ( 0  < arcsdec::FileReaderRegistry::formats()->size() );
-
-/*
-	SECTION ( "RegisterAudioDescriptor<> is final" )
-	{
-		using WavPCMRegisterType = RegisterDescriptor<DescriptorWavPCM>;
-
-		CHECK ( std::is_final<WavPCMRegisterType>::value );
-		CHECK ( 7 >= arcsdec::FileReaderRegistry::readers()->size() );
-	}
-
-	SECTION ( "RegisterMetadataDescriptor<> is final" )
-	{
-		using CueRegisterType = RegisterDescriptor<DescriptorCue>;
-
-		CHECK ( std::is_final<CueRegisterType>::value );
-		CHECK ( 7 >= arcsdec::FileReaderRegistry::readers()->size() );
-	}
-*/
-}
+//TEST_CASE ("FormatToc", "[parsertoc]" )
+//{
+//	auto f = arcsdec::FormatToc{};
+//
+//	SECTION ("Matches accepted bytes correctly")
+//	{
+//		CHECK ( f.bytes({}, 0) );
+//		CHECK ( f.bytes({3, 2, 1}, 2) );
+//		CHECK ( f.bytes({0x65, 0x32, 0x88}, 1) );
+//		// TODO Check for always true
+//	}
+//
+//	SECTION ("Matches accepted filenames correctly")
+//	{
+//		CHECK ( f.filename("foo.toc") );
+//		CHECK ( f.filename("bar.TOC") );
+//		CHECK ( f.filename("bar.TOc") );
+//
+//		CHECK ( !f.filename("bar.rtoc") );
+//		CHECK ( !f.filename("bar.PTOc") );
+//
+//		CHECK ( !f.filename("bar.tocf") );
+//		CHECK ( !f.filename("bar.TOCl") );
+//	}
+//}
 
 
-TEST_CASE ("FileReaderSelection", "[filereaderselection]")
-{
-	using arcsdec::FileReaderSelection;
-	using arcsdec::FileReaderRegistry;
-	using arcsdec::Format;
-	using arcsdec::Codec;
-
-	const auto default_selection {
-		FileReaderRegistry::default_audio_selection() };
-
-	REQUIRE ( default_selection );
-
-	const auto default_readers { FileReaderRegistry::readers() };
-
-	REQUIRE ( default_readers );
-
-
-	SECTION ( "Default settings select wavpcm for RIFFWAVE/PCM16LE" )
-	{
-		auto reader = default_selection->get(Format::WAV, Codec::PCM_S16LE,
-				*default_readers );
-
-		CHECK ( "wavpcm" == reader->id() );
-	}
-
-	SECTION ( "Default settings select wavpcm for RIFFWAVE/UNKNOWN" )
-	{
-		auto reader = default_selection->get(Format::WAV, Codec::UNKNOWN,
-				*default_readers );
-
-		CHECK ( "wavpcm" == reader->id() );
-	}
-
-
-	SECTION ( "Default settings select flac for FLAC/FLAC" )
-	{
-		auto reader = default_selection->get(Format::FLAC, Codec::FLAC,
-				*default_readers );
-
-		CHECK ( "flac" == reader->id() );
-	}
-
-	SECTION ( "Default settings select flac for FLAC/UNKNOWN" )
-	{
-		auto reader = default_selection->get(Format::FLAC, Codec::UNKNOWN,
-				*default_readers );
-
-		CHECK ( "flac" == reader->id() );
-	}
-
-
-	SECTION ( "Default settings select wavpack for WV/Wavpack" )
-	{
-		auto reader = default_selection->get(Format::WV, Codec::WAVPACK,
-				*default_readers );
-
-		CHECK ( "wavpack" == reader->id() );
-	}
-
-	SECTION ( "Default settings select wavpack for WV/UNKNOWN" )
-	{
-		auto reader = default_selection->get(Format::WV, Codec::UNKNOWN,
-				*default_readers );
-
-		CHECK ( "wavpack" == reader->id() );
-	}
-
-
-	SECTION ( "Default settings select ffmpeg for OGG/FLAC" )
-	{
-		auto reader = default_selection->get(Format::OGG, Codec::FLAC,
-				*default_readers );
-
-		CHECK ( "ffmpeg" == reader->id() );
-	}
-
-	SECTION ( "Default settings select ffmpeg for OGG/UNKNOWN" )
-	{
-		auto reader = default_selection->get(Format::OGG, Codec::UNKNOWN,
-				*default_readers );
-
-		CHECK ( "ffmpeg" == reader->id() );
-	}
-
-
-	SECTION ( "Default settings select ffmpeg for CAF/ALAC" )
-	{
-		auto reader = default_selection->get(Format::CAF, Codec::ALAC,
-				*default_readers );
-
-		CHECK ( "ffmpeg" == reader->id() );
-	}
-
-	SECTION ( "Default settings select ffmpeg for CAF/UNKNOWN" )
-	{
-		auto reader = default_selection->get(Format::CAF, Codec::UNKNOWN,
-				*default_readers );
-
-		CHECK ( "ffmpeg" == reader->id() );
-	}
+//TEST_CASE ("FormatWavPCM", "[readerwav]" )
+//{
+//	using arcsdec::details::wave::RIFFWAV_PCM_CDDA_t;
+//	auto d = arcsdec::FormatWavPCM {};
+//
+//	SECTION ("Matches accepted bytes correctly")
+//	{
+//		RIFFWAV_PCM_CDDA_t w;
+//
+//		CHECK ( not d.bytes( {}, 0 ));
+//		CHECK ( not d.bytes( {}, 12 ));
+//		CHECK ( not d.bytes( {}, 45 ));
+//		CHECK ( not d.bytes( {}, 145 ));
+//
+//		// wav-header (0-11)
+//		CHECK (     d.bytes( {'R', 'I', 'F', 'F'}, 0) );
+//		CHECK ( not d.bytes( {'R', 'I', 'F', 'F'}, 3) );
+//		CHECK (     d.bytes( {'I', 'F', 'F'}, 1) );
+//		CHECK ( not d.bytes( {'I', 'F', 'F'}, 2) );
+//		CHECK (     d.bytes( {'W', 'A', 'V', 'E'}, 8) );
+//		CHECK ( not d.bytes( {'W', 'A', 'V', 'E'}, 9) );
+//
+//		// 'fmt ' (12-33)
+//		CHECK (     d.bytes( {'f', 'm', 't', ' '}, 12) );
+//		CHECK ( not d.bytes( {'f', 'm', 't', '_'}, 12) );
+//		// size == 16, wFormatTag == 1, Channels == 2, dwSamplesPerSec = 44.100
+//		CHECK ( d.bytes( { 16, 0, 0, 0, 1, 0, 2, 0, 68, 172, 0, 0 },
+//				16) );
+//		CHECK ( not d.bytes( { 16, 1, 0, 0, 1, 1, 2, 1, 68, 173, 0, 0 },
+//				16) );
+//		CHECK ( d.bytes( { 68, 172, 0, 0}, 24));
+//		// dwAvgBytesPerSec == 176400, wBlockAlign  == 4
+//		CHECK ( d.bytes( { 16, 177, 2, 0, 4, 0 }, 28));
+//		CHECK ( not d.bytes( { 16, 177, 2, 1, 5, 0 }, 28));
+//		// wBitsPerSample == 16
+//		CHECK ( d.bytes( { 16, 0 }, 34));
+//		CHECK ( not d.bytes( { 16, 1 }, 34));
+//		CHECK ( not d.bytes( { 17, 0 }, 34));
+//
+//		CHECK ( not d.bytes( { 0, 0, 0, 16, 0, 1, 0, 2, 0, 0 }, 15) );
+//		CHECK ( not d.bytes( { 0, 0, 0, 16, 0, 1, 1, 2, 0, 0 }, 16) );
+//		CHECK ( not d.bytes( { 16, 176, 2, 0, 4, 0 }, 28));
+//		CHECK ( not d.bytes( { 16, 176, 2, 0, 5, 0 }, 28));
+//
+//		// Accepts any declared file size?
+//
+//		CHECK (     d.bytes( {' ', ' ', ' ', ' ' }, 4) );
+//		CHECK (     d.bytes( {' ', ' ', ' ', ' ', 'W' }, 4) );
+//		CHECK ( not d.bytes( {' ', ' ', ' ', ' ', 'T' }, 4) );
+//		CHECK (     d.bytes( {'I', 'F', 'F', ' ', ' ', ' ', ' ', 'W' },
+//					1) );
+//		CHECK (     d.bytes( {'I', 'F', 'F', '1', '2', '3', '4', 'W' },
+//					1) );
+//		CHECK ( not d.bytes( {'I', 'F', 'F', ' ', ' ', ' ', ' ', 'X' },
+//					1) );
+//
+//		// Accepts any declared data chunk size?
+//
+//		CHECK (     d.bytes( {' ', ' ', ' ', ' ' }, 40) );
+//		CHECK (     d.bytes( {' ', ' ', ' ', ' ', '%' }, 40) );
+//		CHECK (     d.bytes( {'a', 't', 'a', ' ', ' ', ' ', ' ', 'W' },
+//					37) );
+//		CHECK (     d.bytes( {'a', 't', 'a', '1', '2', '3', '4', 'T' },
+//					37) );
+//		CHECK ( not d.bytes( {'a', 't', 'i', ' ', ' ', ' ', ' ', 'X' },
+//					37) );
+//		CHECK (     d.bytes( {'a', 't', 'a', '1', '2', '3', '4' },
+//					37) );
+//	}
+//
+//	SECTION ("Matches accepted filenames correctly")
+//	{
+//		CHECK ( d.filename("foo.wav") );
+//		CHECK ( d.filename("bar.WAV") );
+//		CHECK ( d.filename("foo.wave") );
+//		CHECK ( d.filename("bar.WAVE") );
+//		CHECK ( d.filename("foo.wAvE") );
+//		CHECK ( d.filename("bar.Wave") );
+//
+//		CHECK ( not d.filename("bar.WAVX") );
+//		CHECK ( not d.filename("bar.wavx") );
+//		CHECK ( not d.filename("bar.waving") );
+//		CHECK ( not d.filename("bar.warg") );
+//		CHECK ( not d.filename("bar.walar") );
+//		CHECK ( not d.filename("bar.WALINOR") );
+//		CHECK ( not d.filename("bar.PWAV") );
+//		CHECK ( not d.filename("bar.pwav") );
+//		CHECK ( not d.filename("bar.CWAVE") );
+//		CHECK ( not d.filename("bar.cwave") );
+//	}
+//}
 
 
-	SECTION ( "Default settings select ffmpeg for M4A/ALAC" )
-	{
-		auto reader = default_selection->get(Format::M4A, Codec::ALAC,
-				*default_readers );
-
-		CHECK ( "ffmpeg" == reader->id() );
-	}
-
-	SECTION ( "Default settings select ffmpeg for M4A/UNKNOWN" )
-	{
-		auto reader = default_selection->get(Format::M4A, Codec::UNKNOWN,
-				*default_readers );
-
-		CHECK ( "ffmpeg" == reader->id() );
-	}
-
-
-	SECTION ( "Default settings select ffmpeg for APE/MONKEY" )
-	{
-		auto reader = default_selection->get(Format::APE, Codec::MONKEY,
-				*default_readers );
-
-		CHECK ( "ffmpeg" == reader->id() );
-	}
-
-	SECTION ( "Default settings select ffmpeg for APE/UNKNOWN" )
-	{
-		auto reader = default_selection->get(Format::APE, Codec::UNKNOWN,
-				*default_readers );
-
-		CHECK ( "ffmpeg" == reader->id() );
-	}
+//TEST_CASE ("FormatFlac", "[readerflac]" )
+//{
+//	auto f = arcsdec::FormatFlac{};
+//
+//	SECTION ("Matches accepted bytes correctly")
+//	{
+//		CHECK ( f.bytes({ 0x66, 0x4C, 0x61, 0x43 }, 0) );
+//	}
+//
+//	SECTION ("Matches names correctly")
+//	{
+//		CHECK ( f.filename("foo.flac") );
+//		CHECK ( f.filename("bar.FLAC") );
+//		CHECK ( f.filename("bar.FlAc") );
+//
+//		CHECK ( !f.filename("bar.rflac") );
+//		CHECK ( !f.filename("bar.PFLac") );
+//
+//		CHECK ( !f.filename("bar.flacr") );
+//		CHECK ( !f.filename("bar.FLACD") );
+//	}
+//}
 
 
-	SECTION ( "Default settings select libsndfile for AIFF/PCM_S16LE" )
-	{
-		auto reader = default_selection->get(Format::AIFF, Codec::PCM_S16LE,
-				*default_readers );
-
-		CHECK ( "libsndfile" == reader->id() );
-	}
-
-	SECTION ( "Default settings select libsndfile for AIFF/UNKNOWN" )
-	{
-		auto reader = default_selection->get(Format::AIFF, Codec::UNKNOWN,
-				*default_readers );
-
-		CHECK ( "libsndfile" == reader->id() );
-	}
-}
+//TEST_CASE ("FormatWavpack", "[readerwvpk]" )
+//{
+//	auto f = arcsdec::FormatWavpack {};
+//
+//	SECTION ("Matches accepted bytes correctly")
+//	{
+//		CHECK ( f.bytes({ 0x77, 0x76, 0x70, 0x6B }, 0) );
+//	}
+//
+//	SECTION ("Matches accepted filenames correctly")
+//	{
+//		CHECK ( f.filename("foo.wv") );
+//		CHECK ( f.filename("bar.WV") );
+//
+//		CHECK ( !f.filename("bar.WAV") );
+//		CHECK ( !f.filename("bar.wav") );
+//
+//		CHECK ( !f.filename("bar.rwv") );
+//		CHECK ( !f.filename("bar.RWV") );
+//
+//		CHECK ( !f.filename("bar.wvx") );
+//		CHECK ( !f.filename("bar.WVX") );
+//	}
+//}
 
