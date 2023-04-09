@@ -318,6 +318,12 @@ std::string DescriptorCue::do_name() const
 }
 
 
+InputType DescriptorCue::do_input_type() const
+{
+	return InputType::TOC;
+}
+
+
 bool DescriptorCue::do_accepts_codec(Codec codec) const
 {
 	ARCS_LOG(DEBUG1) << "Is Codec NONE?";

@@ -89,6 +89,12 @@ std::string DescriptorToc::do_name() const
 }
 
 
+InputType DescriptorToc::do_input_type() const
+{
+	return InputType::TOC;
+}
+
+
 bool DescriptorToc::do_accepts_codec(Codec codec) const
 {
 	return codec == Codec::NONE;

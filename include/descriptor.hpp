@@ -897,6 +897,17 @@ private:
 bool operator == (const FileReaderDescriptor &lhs,
 			const FileReaderDescriptor &rhs);
 
+
+/**
+ * \brief Input filetype.
+ */
+enum class InputType: unsigned
+{
+	AUDIO,
+	TOC
+};
+
+
 /**
  * \brief Abstract base class for the properties of a FileReader.
  *
@@ -1004,6 +1015,14 @@ public:
 	LibInfo libraries() const;
 
 	/**
+	 * \brief Returns TRUE iff this descriptor is for an AudioReader, otherwise
+	 * FALSE.
+	 *
+	 * \return InputType of this Descriptor
+	 */
+	InputType input_type() const;
+
+	/**
 	 * \brief Create an opaque reader for the tested file.
 	 *
 	 * \return A FileReader that can read the tested file
@@ -1027,6 +1046,8 @@ private:
 	virtual std::string do_name() const
 	= 0;
 
+
+	virtual InputType do_input_type() const;
 
 	virtual bool do_accepts_format(const Format f) const;
 

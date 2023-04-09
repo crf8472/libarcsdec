@@ -672,6 +672,12 @@ LibInfo FileReaderDescriptor::libraries() const
 }
 
 
+InputType FileReaderDescriptor::input_type() const
+{
+	return this->do_input_type();
+}
+
+
 std::unique_ptr<FileReader> FileReaderDescriptor::create_reader() const
 {
 	return this->do_create_reader();
@@ -681,6 +687,12 @@ std::unique_ptr<FileReader> FileReaderDescriptor::create_reader() const
 std::unique_ptr<FileReaderDescriptor> FileReaderDescriptor::clone() const
 {
 	return this->do_clone();
+}
+
+
+InputType FileReaderDescriptor::do_input_type() const
+{
+	return InputType::AUDIO;
 }
 
 

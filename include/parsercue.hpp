@@ -59,6 +59,8 @@ private:
 	 */
 	std::string do_name() const override;
 
+	InputType do_input_type() const override;
+
 	bool do_accepts_codec(Codec /* codec */) const override;
 
 	std::set<Format> define_formats() const override;
