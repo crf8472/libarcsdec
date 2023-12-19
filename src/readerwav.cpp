@@ -449,7 +449,7 @@ void WavAudioHandler::chunk_descriptor(
 
 	if (not this->assert_equals_u("Test: RIFF Header present?",
 		descriptor.id, valid_->chunk_id(),
-		"Unexpected header start"))
+		"Unexpected RIFF-Header start"))
 	{
 		this->on_failure();
 	}
@@ -462,14 +462,14 @@ void WavAudioHandler::chunk_descriptor(
 		"Test: Declared file size conforms to physical file size?",
 		descriptor.file_size + 2 * sizeof(uint32_t),
 		this->physical_file_size(),
-		"Unexpected header start"))
+		"Physical filesize differs from size declaration in RIFF-Header."))
 	{
 		this->on_failure();
 	}
 
 	if (not this->assert_equals_u("Test: Header declares WAVE format?",
 		descriptor.format, valid_->format(),
-		"Header does not declare WAVE format"))
+		"RIFF-Header does not declare WAVE format"))
 	{
 		this->on_failure();
 	}
