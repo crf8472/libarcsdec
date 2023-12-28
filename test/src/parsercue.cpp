@@ -109,11 +109,12 @@ TEST_CASE ("CueParserImpl", "[parsercue]" )
 		CHECK ( dynamic_cast<const DescriptorCue*>(p) != nullptr );
 	}
 
-	SECTION ("Parses a syntactically intact input correctly")
+	SECTION ("test01_ok.cue: Parses a syntactically intact input correctly")
 	{
 		using arcsdec::details::libcue::CueParserImpl;
 		auto parser = CueParserImpl{};
 		const auto cue = parser.parse("test01_ok.cue");
+		// This Cuesheet is complete and syntactically correct
 
 		CHECK ( cue->total_tracks() == 2 );
 
