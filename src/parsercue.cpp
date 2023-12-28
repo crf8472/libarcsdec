@@ -88,7 +88,6 @@ void Free_Cd::operator()(::Cd* cd) const
 
 CdPtr Make_CdPtr::operator()(const std::string &filename) const
 {
-	//::Cd* cd_info = nullptr;
 	CdPtr cd_ptr;
 
 	{ // begin scope of FILE f
@@ -111,16 +110,12 @@ CdPtr Make_CdPtr::operator()(const std::string &filename) const
 
 		ARCS_LOG(DEBUG1) << "Start reading Cuesheet file with libcue";
 
-		//cd_info = ::cue_parse_file(f);
 		cd_ptr = CdPtr(::cue_parse_file(f));
 
 		// Close file
 
 		if (std::fclose(f)) // fclose returns 0 on success and EOF on error
 		{
-			//::cd_delete(cd_info);
-			//cd_info = nullptr;
-
 			std::ostringstream message;
 			message << "Failed to close Cuesheet file after reading: "
 				<< filename;
@@ -136,8 +131,6 @@ CdPtr Make_CdPtr::operator()(const std::string &filename) const
 
 		throw MetadataParseException(message.str());
 	}
-
-	//cd_info_ = CdPtr(cd_info);
 
 	ARCS_LOG(DEBUG1) << "Cuesheet file successfully read";
 
