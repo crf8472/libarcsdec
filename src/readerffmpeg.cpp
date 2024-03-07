@@ -560,11 +560,28 @@ AVCodecContextPtr FFmpegFile::audio_decoder(::AVFormatContext *fctx,
 
 	{ // Inspect side data
 
+		auto skip = bool { false };
+
+#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(60, 31, 102)
 		const uint8_t *data =
 			::av_stream_get_side_data(
 					stream, ::AV_PKT_DATA_SKIP_SAMPLES, nullptr);
 
-		if (data)
+		skip = data != nullptr;
+#else
+		for (auto i = int { 0 }; i < stream->codecpar->nb_coded_side_data; ++i)
+		{
+			const AVPacketSideData* const sd =
+				&stream->codecpar->coded_side_data[i];
+			if (::AV_PKT_DATA_SKIP_SAMPLES == sd->type)
+			{
+				skip = true;
+				break;
+			}
+		}
+#endif
+
+		if (skip)
 		{
 			ARCS_LOG_WARNING << "Stream side data indicates skipped samples!"
 				<< " This is not yet implemented! Verify checksums carefully!";
@@ -1515,7 +1532,11 @@ void print_stream_info(std::ostream &out, const ::AVStream *s)
 	out << "  initial_padding:  " << s->codecpar->initial_padding << std::endl;
 	out << "  trailing_padding: " << s->codecpar->trailing_padding << std::endl;
 	out << "  frame_size:       " << s->codecpar->frame_size << std::endl;
+#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(60, 31, 102)
 	out << "  nb_side_data:     " << s->nb_side_data << std::endl;
+#else
+	out << "  nb_coded_side_data: " << s->codecpar->nb_coded_side_data << std::endl;
+#endif
 	out << "  nb_frames:        " << s->nb_frames;
 }
 
