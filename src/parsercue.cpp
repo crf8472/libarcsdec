@@ -15,7 +15,6 @@ extern "C" {
 #include <libcue/libcue.h>
 }
 
-#include <cstdint>   // for uint64_t
 #include <cstdio>    // for fopen, fclose, FILE
 #include <iomanip>   // for setw
 #include <memory>    // for unique_ptr
@@ -32,9 +31,6 @@ extern "C" {
 #include <arcstk/logging.hpp>
 #endif
 
-#ifndef __LIBARCSDEC_LIBINSPECT_HPP__
-#include "libinspect.hpp"  // for first_libname_match
-#endif
 #ifndef __LIBARCSDEC_METAPARSER_HPP__
 #include "metaparser.hpp"  // for MetadataParseException
 #endif
