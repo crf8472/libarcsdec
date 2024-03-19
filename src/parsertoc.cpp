@@ -1,19 +1,15 @@
 /**
  * \file
  *
- * \brief Implements libcue-based parser for CUESheets.
+ * \brief Implements libcdio-based parser for CDRDAO/TOC files.
  */
 
 #ifndef __LIBARCSDEC_PARSERTOC_HPP__
 #include "parsertoc.hpp"
 #endif
 #ifndef __LIBARCSDEC_PARSERTOC_DETAILS_HPP__
-#include "parsertoc_details.hpp"  // for 
+#include "parsertoc_details.hpp"
 #endif
-
-extern "C" {
-//#include <libcue/libcue.h>
-}
 
 #include <cstdint>   // for uint64_t
 #include <cstdio>    // for fopen, fclose, FILE

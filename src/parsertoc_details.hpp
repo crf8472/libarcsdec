@@ -17,9 +17,8 @@
 #include <tuple>    // for tuple
 #include <vector>   // for vector
 
-//extern "C" {
+
 #include <cdio++/cdio.hpp>  // for
-//}
 
 #ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
 #include "descriptor.hpp"        // for FileReaderDescriptor
