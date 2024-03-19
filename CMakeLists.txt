@@ -69,13 +69,17 @@ message (STATUS "Changed CMAKE_MODULE_PATH to: ${CMAKE_MODULE_PATH}" )
 
 ## --- Project Directory Layout
 
+## "Root directory for sources"
+set (PROJECT_SOURCE_DIR        "${CMAKE_CURRENT_SOURCE_DIR}/src" )
+
+## "Root directory for public/exported headers"
+set (PROJECT_LOCAL_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include" )
+
+
 ## "Root directory for out-of-source build"
 set (PROJECT_BINARY_DIR       "${CMAKE_CURRENT_BINARY_DIR}" )
 
-## "Root directory for sources"
-set (PROJECT_SOURCE_DIR       "${CMAKE_CURRENT_SOURCE_DIR}/src" )
-
-## "Root directory for public/exported headers"
+## "Target directory for public/exported headers"
 set (PROJECT_INCLUDE_DIR      "${PROJECT_BINARY_DIR}/include/arcsdec" )
 
 ## "Target directory for non-cmake logs"
