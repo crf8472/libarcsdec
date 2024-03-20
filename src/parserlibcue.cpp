@@ -4,11 +4,11 @@
  * \brief Implements libcue-based parser for CueSheets.
  */
 
-#ifndef __LIBARCSDEC_PARSERCUE_HPP__
-#include "parsercue.hpp"
+#ifndef __LIBARCSDEC_PARSERLIBCUE_HPP__
+#include "parserlibcue.hpp"
 #endif
-#ifndef __LIBARCSDEC_PARSERCUE_DETAILS_HPP__
-#include "parsercue_details.hpp"  // for CueParserImpl, CueOpenFile
+#ifndef __LIBARCSDEC_PARSERLIBCUE_DETAILS_HPP__
+#include "parserlibcue_details.hpp"  // for CueParserImpl, CueOpenFile
 #endif
 
 extern "C" {

@@ -177,7 +177,7 @@ add_library (${PROJECT_NAME} SHARED
 	"${PROJECT_SOURCE_DIR}/descriptor.cpp"
 	"${PROJECT_SOURCE_DIR}/libinspect.cpp"
 	"${PROJECT_SOURCE_DIR}/metaparser.cpp"
-	## parsercue.cpp     is required, depends on libcue
+	## parserlibcue.cpp  is required, depends on libcue
 	## parsertoc.cpp     is optional and default OFF, depends on libcdio
 	## readerffmpeg.cpp  is optional and default ON,  depends on parts of ffmpeg
 	## readerflac.cpp    is optional and default ON,  depends on FLAC
@@ -405,12 +405,12 @@ option (WITH_LIBSNDFILE "Add libsndfile reading capabilities" OFF )
 option (WITH_LIBCDIO "Add libcdio reading capabilities" OFF )
 
 
-## --- Required: parsercue (requires libcue)
+## --- Required: parserlibcue (requires libcue)
 
 find_package (libcue 2.0.0 REQUIRED )
 list (APPEND PKG_REQUIRE_ARRAY "libcue >= 2.0.0" )
 
-target_sources (${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/parsercue.cpp )
+target_sources (${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/parserlibcue.cpp )
 target_include_directories (${PROJECT_NAME} PRIVATE ${libcue_INCLUDE_DIRS} )
 target_link_libraries (${PROJECT_NAME} PRIVATE ${libcue_LIBRARIES} )
 

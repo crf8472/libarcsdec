@@ -1,10 +1,10 @@
 #include "catch2/catch_test_macros.hpp"
 
-#ifndef __LIBARCSDEC_PARSERCUE_HPP__
-#include "parsercue.hpp"
+#ifndef __LIBARCSDEC_PARSERLIBCUE_HPP__
+#include "parserlibcue.hpp"
 #endif
-#ifndef __LIBARCSDEC_PARSERCUE_DETAILS_HPP__
-#include "parsercue_details.hpp"
+#ifndef __LIBARCSDEC_PARSERLIBCUE_DETAILS_HPP__
+#include "parserlibcue_details.hpp"
 #endif
 #ifndef __LIBARCSDEC_SELECTION_HPP__
 #include "selection.hpp"
@@ -13,11 +13,11 @@
 /**
  * \file
  *
- * Tests for classes in parsercue.cpp
+ * Tests for classes in parserlibcue.cpp
  */
 
 
-TEST_CASE ("DescriptorCue", "[parsercue]" )
+TEST_CASE ("DescriptorCue", "[parserlibcue]" )
 {
 	using arcsdec::DescriptorCue;
 	using arcsdec::Format;
@@ -94,7 +94,7 @@ TEST_CASE ("DescriptorCue", "[parsercue]" )
 }
 
 
-TEST_CASE ("CueParserImpl", "[parsercue]" )
+TEST_CASE ("CueParserImpl", "[parserlibcue]" )
 {
 	using arcsdec::details::libcue::CueParserImpl;
 	using arcsdec::DescriptorCue;

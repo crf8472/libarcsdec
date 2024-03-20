@@ -5,8 +5,8 @@
  */
 
 
-#ifndef __LIBARCSDEC_PARSERCUE_HPP__
-#define __LIBARCSDEC_PARSERCUE_HPP__
+#ifndef __LIBARCSDEC_PARSERLIBCUE_HPP__
+#define __LIBARCSDEC_PARSERLIBCUE_HPP__
 
 #include <cstdint>  // for uint64_t
 #include <memory>   // for unique_ptr
@@ -26,7 +26,7 @@ inline namespace v_1_0_0
 
 /**
  * \internal
- * \defgroup parsercue Metadata: CueSheet
+ * \defgroup parserlibcue Metadata: CueSheet
  *
  * \brief A MetadataParser for CueSheet files
  *

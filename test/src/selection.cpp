@@ -13,8 +13,8 @@
 #ifndef __LIBARCSDEC_METAPARSER_HPP__
 #include "metaparser.hpp"
 #endif
-#ifndef __LIBARCSDEC_PARSERCUE_HPP__
-#include "parsercue.hpp"
+#ifndef __LIBARCSDEC_PARSERLIBCUE_HPP__
+#include "parserlibcue.hpp"
 #endif
 #ifndef __LIBARCSDEC_READERWAV_HPP__
 #include "readerwav.hpp"
@@ -108,12 +108,12 @@ TEST_CASE ( "FileReaderRegistry", "[filereaderregistry]")
 		// Maybe not each available reader was compiled, but we will always have
 		// the genuine wav reader + libcue-based cuesheet parser
 		CHECK ( 2 <= arcsdec::FileReaderRegistry::readers()->size() );
-		// Specific tests are in parsercue.cpp and readerwav.cpp
+		// Specific tests are in parserlibcue.cpp and readerwav.cpp
 	}
 }
 
 
-//TEST_CASE ("FormatCue", "[parsercue]" )
+//TEST_CASE ("FormatCue", "[parserlibcue]" )
 //{
 //	auto f = arcsdec::FormatCue{};
 //

@@ -1,5 +1,5 @@
-#ifndef __LIBARCSDEC_PARSERCUE_HPP__
-#error "Do not include parsercue_details.hpp, include parsercue.hpp instead"
+#ifndef __LIBARCSDEC_PARSERLIBCUE_HPP__
+#error "Do not include parserlibcue_details.hpp, include parserlibcue.hpp instead"
 #endif
 
 /**
@@ -8,8 +8,8 @@
  * \brief Internal APIs for libcue-based CueSheet reader
  */
 
-#ifndef __LIBARCSDEC_PARSERCUE_DETAILS_HPP__
-#define __LIBARCSDEC_PARSERCUE_DETAILS_HPP__
+#ifndef __LIBARCSDEC_PARSERLIBCUE_DETAILS_HPP__
+#define __LIBARCSDEC_PARSERLIBCUE_DETAILS_HPP__
 
 #include <cstdint>  // for uint16_t, int32_t
 #include <memory>   // for unique_ptr
@@ -47,7 +47,7 @@ using arcstk::TOC;
 /**
  * \internal \defgroup parserCueImpl Implementation details of CueSheet parsing
  *
- * \ingroup parsercue
+ * \ingroup parserlibcue
  *
  * @{
  */
