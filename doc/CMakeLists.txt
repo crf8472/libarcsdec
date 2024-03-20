@@ -223,7 +223,8 @@ macro (add_doxygen_target DOXY_TARGET DOXYFILE INDEXFILE )
 
 		## Setup doxygen run target
 		add_custom_target (${DOXY_TARGET}_run DEPENDS ${INDEXFILE} )
-		add_dependencies  (${DOXY_TARGET}_run libarcsdec_create_output_dir )
+		add_dependencies  (${DOXY_TARGET}_run
+			libarcsdec_create_log_dir libarcsdec_create_output_dir )
 
 		set (STAMP_FILE ${INDEXFILE}.deduplicated )
 
@@ -256,7 +257,8 @@ macro (add_doxygen_target DOXY_TARGET DOXYFILE INDEXFILE )
 	else()
 
 		add_custom_target (${DOXY_TARGET} DEPENDS ${INDEXFILE} )
-		add_dependencies  (${DOXY_TARGET} libarcsdec_create_output_dir )
+		add_dependencies  (${DOXY_TARGET}
+			libarcsdec_create_log_dir libarcsdec_create_output_dir )
 	endif()
 endmacro()
 
@@ -287,7 +289,8 @@ if (NOT LOAD_GENERATORS )
 	)
 
 	add_custom_target (libarcsdec_plain_doc DEPENDS ${DOC_OUTPUT_MAINPAGE} )
-	add_dependencies  (libarcsdec_plain_doc libarcsdec_create_output_dir )
+	add_dependencies  (libarcsdec_plain_doc
+		libarcsdec_create_log_dir libarcsdec_create_output_dir )
 
 	add_dependencies  (libarcsdec_doc libarcsdec_plain_doc )
 
@@ -300,5 +303,5 @@ if (NOT TARGET doc)
 	add_custom_target (doc )
 endif()
 
-add_dependencies (doc libarcsdec_doc )
+add_dependencies (doc libarcsdec_create_log_dir libarcsdec_doc )
 
