@@ -1,10 +1,13 @@
 ## Root CMake file for libarcsdec
 
-cmake_minimum_required (VERSION 3.9.6 )
+cmake_minimum_required (VERSION 3.14.0 )
 
 ## Set variables corresponding to unspecified versions to the empty string
 ## Required for specifying the project version along with the name in project()
 cmake_policy (SET CMP0048 NEW )
+
+## 3.14: Make bison run in CMAKE_CURRENT_BINARY_DIR
+cmake_policy (SET CMP0088 NEW )
 
 
 project (libarcsdec VERSION 0.1.0 LANGUAGES CXX )
@@ -403,6 +406,33 @@ else()
 	message (FATAL_ERROR
 		"libarcstk is not present, neither system-wide nor as a submodule" )
 endif()
+
+
+## --- Cuesheet parser and scanner
+
+find_package (BISON ) # 3.8.2
+find_package (FLEX  ) # 2.6.4
+
+bison_target (cueparser
+	${PROJECT_SOURCE_DIR}/cuesheet.y
+	${PROJECT_BUILD_SOURCE_DIR}/cuesheet.tab.cpp
+	DEFINES_FILE ${PROJECT_BUILD_SOURCE_DIR}/cuesheet.tab.hpp
+	)
+
+flex_target  (cuescanner
+	${PROJECT_SOURCE_DIR}/cuesheet.l
+	${PROJECT_BUILD_SOURCE_DIR}/cuesheet.yy.cpp )
+
+add_flex_bison_dependency (cuescanner cueparser )
+
+add_library (cue
+	${BISON_cueparser_OUTPUTS}
+	${FLEX_cuescanner_OUTPUTS} )
+
+target_include_directories (cue
+	PRIVATE ${PROJECT_SOURCE_DIR}       ## lexer.hpp + lexer_defs.hpp
+	PRIVATE ${PROJECT_BUILD_SOURCE_DIR} ## generated sources
+	)
 
 
 ## --- Configure optional features
