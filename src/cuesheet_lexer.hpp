@@ -19,7 +19,7 @@
 #include <FlexLexer.h>
 #undef yyFlexLexer
 
-#include "lexer_defs.hpp"
+#include "cuesheet_lexer_defs.hpp"
 
 #endif // CUESHEET_YYCUESHEET_LEXER_HPP
 

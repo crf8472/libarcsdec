@@ -28,16 +28,18 @@
 /* Write summary to stderr when generating the lexer. */
 %option verbose
 
-/* See the defined macro of yyFlexLexer in lexer.hpp */
+/* See the defined macro of yyFlexLexer in cuesheet_lexer.hpp */
 %option prefix="Cuesheet_"
 /* Note: each flex-generated scanner inherits from a class whose name is      */
 /* specified by macro yyFlexLexer. This macro has to be present in each header*/
 /* that defines the flex-generated lexer class. Thus there is no obvious way  */
 /* to use different flex-generated lexers in the same compilation unit. The   */
 /* only trick to achieve that is to put the definition of each lexer class in */
-/* its own header file (for cuesheet: lexer_defs.hpp). Then, a wrapper header   */
-/* is defined that redefines yyFlexLexer according to the prefix above before */
-/* including the defs header (for cuesheet: lexer.hpp).                       */
+/* its own header file (for cuesheet: cuesheet_lexer_defs.hpp). Then, a       */
+/* wrapper header is defined that redefines yyFlexLexer according to the      */
+/* prefix above before including the defs header                              */
+/* (for cuesheet: cuesheet_lexer.hpp).                                        */
+/* */
 /* Cf. Flex Manual, Ch. 18 'Generating C++-Scanners' (very end of the chapter)*/
 
 
@@ -47,8 +49,8 @@
 #include <iostream>       /* for cout */
 #include <iomanip>        /* for setw, setfill, left, right */
 
-#include "lexer_defs.hpp" /* for Lexer */
-#include "driver.hpp"     /* for Driver */
+#include "cuesheet_lexer_defs.hpp" /* for Lexer */
+#include "driver.hpp"              /* for Driver */
 
 #include "cuesheet.tab.hpp" /* auto-generated: Token Definitions of bison */
 #include "location.hh"      /* auto-generated */

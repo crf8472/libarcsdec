@@ -68,7 +68,7 @@
 	#include <iostream>
 	#include <string>
 
-	#include "lexer.hpp"
+	#include "cuesheet_lexer.hpp"
 	#include "driver.hpp"  // user-defined
 	//#include "handler.hpp" // user-defined
 
