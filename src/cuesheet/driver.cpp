@@ -1,7 +1,7 @@
 #include "driver.hpp"
 
 //#include "handler.hpp"
-#include "lexer.hpp"   // includes also cuesheet.tab.hpp
+#include "cuesheet_lexer.hpp"   // includes also cuesheet.tab.hpp
 
 
 namespace cuesheet {
@@ -33,9 +33,9 @@ void Driver::set_lexer_debug_level(const int lvl)
 }
 
 
-void Driver::set_parser_debug_level(const int lvl)
+void Driver::set_parser_debug_level(const int /*lvl*/)
 {
-	parser_->set_debug_level(lvl);
+	//parser_->set_debug_level(lvl); // %define parse.trace
 }
 
 

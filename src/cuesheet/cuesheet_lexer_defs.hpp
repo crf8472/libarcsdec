@@ -9,9 +9,9 @@
  * Original yylex() returns int. Since Bison 3 uses symbol_type, we must change
  * the returned type.
  *
- * We also rename yylex() to Lexer::get_next_token().
+ * We also rename yylex() to Lexer::next_token().
 */
-#define YY_DECL cuesheet::yycuesheet::Parser::symbol_type cuesheet::yycuesheet::Lexer::get_next_token()
+#define YY_DECL cuesheet::yycuesheet::Parser::symbol_type cuesheet::yycuesheet::Lexer::next_token()
 
 
 #include <memory>
@@ -95,7 +95,7 @@ public:
 	 *
 	 * \return Next token
 	 */
-	Parser::symbol_type get_next_token();
+	Parser::symbol_type next_token();
 
 
 private:

@@ -186,6 +186,7 @@ list (APPEND INTERFACE_HEADERS
 ## --- Add and configure project target
 
 add_library (${PROJECT_NAME} SHARED
+	"${PROJECT_SOURCE_DIR}/cuesheet/driver.cpp"
 	"${PROJECT_SOURCE_DIR}/audioreader.cpp"
 	"${PROJECT_SOURCE_DIR}/calculators.cpp"
 	"${PROJECT_SOURCE_DIR}/descriptor.cpp"
@@ -217,7 +218,8 @@ target_include_directories (${PROJECT_NAME}
 		$<BUILD_INTERFACE:${PROJECT_INCLUDE_DIR}>
 		$<INSTALL_INTERFACE:${PROJECT_INSTALL_INCLUDES_SUBDIR}>
 	PRIVATE
-		"${PROJECT_BUILD_SOURCE_DIR}" ## for generated headers
+		$<BUILD_INTERFACE:${PROJECT_BUILD_SOURCE_DIR}>
+		## for generated sources
 	)
 
 set_target_properties (${PROJECT_NAME} PROPERTIES
@@ -419,20 +421,27 @@ bison_target (cueparser
 	DEFINES_FILE ${PROJECT_BUILD_SOURCE_DIR}/cuesheet.tab.hpp
 	)
 
-flex_target  (cuescanner
+flex_target (cuescanner
 	${PROJECT_SOURCE_DIR}/cuesheet/cuesheet.l
-	${PROJECT_BUILD_SOURCE_DIR}/cuesheet.yy.cpp )
+	${PROJECT_BUILD_SOURCE_DIR}/cuesheet.yy.cpp
+	)
 
 add_flex_bison_dependency (cuescanner cueparser )
 
-add_library (cue
+add_library (cuesheet OBJECT
 	${BISON_cueparser_OUTPUTS}
-	${FLEX_cuescanner_OUTPUTS} )
+	${FLEX_cuescanner_OUTPUTS}
+	)
 
-target_include_directories (cue
+set_property (TARGET cuesheet PROPERTY POSITION_INDEPENDENT_CODE ON )
+
+target_include_directories (cuesheet
 	PRIVATE ${PROJECT_SOURCE_DIR}/cuesheet/ ## lexer.hpp + lexer_defs.hpp
 	PRIVATE ${PROJECT_BUILD_SOURCE_DIR}     ## generated sources
 	)
+
+add_dependencies      (${PROJECT_NAME} cuesheet )
+target_link_libraries (${PROJECT_NAME} PRIVATE cuesheet )
 
 
 ## --- Configure optional features

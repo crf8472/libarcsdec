@@ -65,6 +65,10 @@
 /* Goes to source file _before_ cuesheet.tab.hpp is included */
 %code top
 {
+	#pragma GCC diagnostic push
+
+	#pragma GCC diagnostic ignored "-Weffc++"
+
 	#include <iostream>
 	#include <string>
 
@@ -78,9 +82,9 @@
 	 * \brief Override yylex() to be called in Parser::parse()
 	 */
 	static cuesheet::yycuesheet::Parser::symbol_type yylex(
-			cuesheet::yycuesheet::Lexer &lexer, cuesheet::Driver &driver)
+			cuesheet::yycuesheet::Lexer &lexer, cuesheet::Driver& /*driver*/)
 	{
-		return lexer.get_next_token();
+		return lexer.next_token(); // renamed yylex()
 	}
 	// Only called inside bison, so make it static to limit visibility.
 	// Namespaces are required since yylex() is in global namespace.
@@ -271,6 +275,7 @@ time
 
 %%
 
+#pragma GCC diagnostic pop
 
 /* Bison expects us to provide implementation, otherwise linker complains */
 namespace cuesheet {
