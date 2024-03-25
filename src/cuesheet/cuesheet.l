@@ -66,7 +66,7 @@
 #include "driver.hpp"              /* for Driver */
 
 #include "cuesheet.tab.hpp" /* auto-generated: Token Definitions of bison */
-#include "location.hh"      /* auto-generated */
+#include "cuesheet_location.hpp"  /* auto-generated */
 
 
 // Redefine calls of yyterminate():

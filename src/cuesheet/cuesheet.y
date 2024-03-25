@@ -29,6 +29,9 @@
 /* Report unexpected token as well as expected ones. */
 %define parse.error verbose
 
+/* Define filename for location header (instead of location.hh) */
+%define api.location.file "cuesheet_location.hpp"
+
 /* Location tracking */
 %locations
 
@@ -72,11 +75,11 @@
 	#include <iostream>
 	#include <string>
 
-	#include "cuesheet_lexer.hpp"
+	#include "cuesheet_lexer.hpp" // user-defined
+	#include "cuesheet_location.hpp" // auto-generated
+
 	#include "driver.hpp"  // user-defined
 	//#include "handler.hpp" // user-defined
-
-	#include "location.hh" // auto-generated
 
 	/**
 	 * \brief Override yylex() to be called in Parser::parse()
