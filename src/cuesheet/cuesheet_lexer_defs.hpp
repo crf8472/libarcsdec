@@ -61,20 +61,19 @@ private:
 
 
 /**
- * \brief BibTeX Lexer.
+ * \brief Cuesheet Lexer.
  */
 class Lexer final : public Cuesheet_FlexLexer
 {
 public:
 
 	/**
-	 * \brief Constructor for BibTeX lexer.
+	 * \brief Constructor for Cuesheet lexer.
 	 *
 	 * \param driver The cuesheet::Driver that constructed this lexer.
 	 */
 	explicit Lexer(Driver &driver)
 		: driver_ { driver }
-		, braces_opened_ { 0 }
 		, current_pos_ {}
 		, printer_ { std::make_unique<Printer>() }
 	{
@@ -100,29 +99,6 @@ public:
 
 
 private:
-
-	/**
-	 * \brief Recognize an opening brace (LBRACE) within a quoted string.
-	 *
-	 * Called by yylex() to signal an open brace within a string.
-	 */
-	void open_brace();
-
-	/**
-	 * \brief Recognize a closing brace (RBRACE) within a quoted string.
-	 *
-	 * Called by yylex() to signal a closing brace within a string.
-	 */
-	void close_brace();
-
-	/**
-	 * \brief Returns TRUE iff <tt>braces_opened() > 0</tt> otherwise FALSE.
-	 *
-	 * Called by yylex() to check whether braces are currently opened.
-	 *
-	 * \return TRUE if position is between LBRACE and RBRACE.
-	 */
-	bool within_braces() const;
 
 	/**
 	 * \brief Sets the internal position to the end of the current token.
@@ -161,11 +137,16 @@ private:
 	 */
 	Printer& printer();
 
+	/**
+	 * \brief Get the driver to start some user action.
+	 *
+	 * \return The Driver of this Lexer
+	 */
+	Driver& get();
+
 
 
 	Driver &driver_;
-
-	int braces_opened_;
 
 	position current_pos_;
 

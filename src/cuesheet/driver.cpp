@@ -65,14 +65,14 @@ const Handler& Driver::handler()
 }
 */
 
-void Driver::update_token_location(const yycuesheet::position &p)
+void Driver::update_loc(const yycuesheet::position &p)
 {
 	current_token_location_->step();
 	current_token_location_->end = p;
 }
 
 
-yycuesheet::location Driver::current_token_location() const
+yycuesheet::location Driver::loc() const
 {
 	return *current_token_location_;
 }

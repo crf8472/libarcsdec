@@ -130,7 +130,7 @@ private:
 	 *
 	 * \param p End position of current token
 	 */
-	void update_token_location(const position &p);
+	void update_loc(const position &p);
 
 	/**
 	 * \brief Returns last Lexer location.
@@ -139,7 +139,7 @@ private:
 	 *
 	 * \return Last Lexer location
 	 */
-	location current_token_location() const;
+	location loc() const;
 
 	/**
 	 * \brief Access driver handler.

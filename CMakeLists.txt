@@ -414,13 +414,13 @@ find_package (BISON ) # 3.8.2
 find_package (FLEX  ) # 2.6.4
 
 bison_target (cueparser
-	${PROJECT_SOURCE_DIR}/cuesheet.y
+	${PROJECT_SOURCE_DIR}/cuesheet/cuesheet.y
 	${PROJECT_BUILD_SOURCE_DIR}/cuesheet.tab.cpp
 	DEFINES_FILE ${PROJECT_BUILD_SOURCE_DIR}/cuesheet.tab.hpp
 	)
 
 flex_target  (cuescanner
-	${PROJECT_SOURCE_DIR}/cuesheet.l
+	${PROJECT_SOURCE_DIR}/cuesheet/cuesheet.l
 	${PROJECT_BUILD_SOURCE_DIR}/cuesheet.yy.cpp )
 
 add_flex_bison_dependency (cuescanner cueparser )
@@ -430,8 +430,8 @@ add_library (cue
 	${FLEX_cuescanner_OUTPUTS} )
 
 target_include_directories (cue
-	PRIVATE ${PROJECT_SOURCE_DIR}       ## lexer.hpp + lexer_defs.hpp
-	PRIVATE ${PROJECT_BUILD_SOURCE_DIR} ## generated sources
+	PRIVATE ${PROJECT_SOURCE_DIR}/cuesheet/ ## lexer.hpp + lexer_defs.hpp
+	PRIVATE ${PROJECT_BUILD_SOURCE_DIR}     ## generated sources
 	)
 
 
