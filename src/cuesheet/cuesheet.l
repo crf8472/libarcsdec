@@ -49,6 +49,15 @@
 %{
 // from cuesheet.l
 
+#pragma GCC diagnostic push
+
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+#pragma GCC diagnostic ignored "-Wuseless-cast"
+#pragma GCC diagnostic ignored "-Weffc++"
+#pragma GCC diagnostic ignored "-Wstrict-overflow"
+#pragma GCC diagnostic ignored "-Wswitch-default"
+#pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
+
 #include <cstring>        /* for strncpy */
 #include <iostream>       /* for cout */
 #include <iomanip>        /* for setw, setfill, left, right */
@@ -156,6 +165,7 @@ REPLAYGAIN_TRACK_PEAK { return Parser::make_REPLAYGAIN_TRACK_PEAK(get().loc()); 
 
 %%
 
+#pragma GCC diagnostic pop
 
 namespace cuesheet { namespace yycuesheet {
 

@@ -15,11 +15,17 @@
  * [1] GNU Flex manual, section: "Generating C++ Scanners".
  * [2] https://stackoverflow.com/questions/35606354/multiple-parsers-in-flex-bison-include-fails
  */
+#pragma GCC diagnostic push
+
+#pragma GCC diagnostic ignored "-Weffc++"
+
 #define yyFlexLexer Cuesheet_FlexLexer
 #include <FlexLexer.h>
 #undef yyFlexLexer
 
 #include "cuesheet_lexer_defs.hpp"
+
+#pragma GCC diagnostic pop
 
 #endif // CUESHEET_YYCUESHEET_LEXER_HPP
 
