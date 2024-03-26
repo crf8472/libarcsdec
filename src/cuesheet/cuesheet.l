@@ -89,10 +89,10 @@ using cuesheet::yycuesheet::position;
 
 WHITESPACE      [ \t\r]+
 DIGITS          [[:digit:]]+
-QSTRING1        \'([^\']|\\\')*\'
-QSTRING2        \"([^\"]|\\\")*\"
 GLYPHS          [[:graph:]]+
 REM             REM[[:blank:]]+
+QSTRING1        \'([^\'\n]|\\\')*\'
+QSTRING2        \"([^\"\n]|\\\")*\"
 
 %%
 
@@ -113,7 +113,7 @@ FLAGS       { return Parser::make_FLAGS(get().loc());      }
 PREGAP      { return Parser::make_PREGAP(get().loc());     }
 POSTGAP     { return Parser::make_POSTGAP(get().loc());    }
 ISRC        { return Parser::make_ISRC(get().loc());       }
-INDEX       { BEGIN(INDEX); return Parser::make_INDEX(get().loc());      }
+INDEX       { BEGIN(INDEX); return Parser::make_INDEX(get().loc()); }
 
 BINARY      { return Parser::make_BINARY(get().loc());   }
 MOTOROLA    { return Parser::make_MOTOROLA(get().loc()); }
@@ -146,10 +146,16 @@ SIZE_INFO   { return Parser::make_SIZE_INFO(get().loc());  }
 {REM}REPLAYGAIN_ALBUM_PEAK { BEGIN(REMVAL); return Parser::make_REPLAYGAIN_ALBUM_PEAK(get().loc()); }
 {REM}REPLAYGAIN_TRACK_GAIN { BEGIN(REMVAL); return Parser::make_REPLAYGAIN_TRACK_GAIN(get().loc()); }
 {REM}REPLAYGAIN_TRACK_PEAK { BEGIN(REMVAL); return Parser::make_REPLAYGAIN_TRACK_PEAK(get().loc()); }
-<REMVAL>[[:graph:]]+       { BEGIN(REM); return Parser::make_STRING(YYText(), get().loc()); }
+
+<REMVAL>({QSTRING1}|{QSTRING2}|{GLYPHS}) {
+				BEGIN(REM);
+				return Parser::make_STRING(YYText(), get().loc());
+				/* First string (without spaces) will be returned, */
+				/* rest of the line will be ignored in state REM.  */
+			}
 
 {REM}                      { BEGIN(REM); }
-<REM>[[:print:]]+          { BEGIN(INITIAL); /* discard text */  }
+<REM>[^\n]*                { BEGIN(INITIAL); /* discard rest of line */  }
 
 <*>{WHITESPACE} { /* ignore */ }
 
