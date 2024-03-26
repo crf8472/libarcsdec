@@ -25,6 +25,8 @@ list (APPEND TEST_SETS readerwav    )
 list (APPEND TEST_SETS selection    )
 list (APPEND TEST_SETS dec_version  )
 
+list (APPEND TEST_SETS cuesheet.yy  )
+
 if (WITH_LIBCDIO )
 list (APPEND TEST_SETS parsertoc    )
 endif()

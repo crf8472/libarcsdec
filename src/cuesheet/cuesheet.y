@@ -138,6 +138,7 @@
 %token COMPOSER
 %token ARRANGER
 %token MESSAGE
+%token GENRE
 %token DISC_ID
 %token TOC_INFO1
 %token TOC_INFO2
@@ -145,15 +146,17 @@
 %token SIZE_INFO
 
 %token DATE
-%token GENRE
+%token REMGENRE
 %token REPLAYGAIN_ALBUM_GAIN
 %token REPLAYGAIN_ALBUM_PEAK
 %token REPLAYGAIN_TRACK_GAIN
 %token REPLAYGAIN_TRACK_PEAK
 
-%token <int>         NUMBER
-%token <const char*> STRING
+%token <std::string> NUMBER
+%token <std::string> STRING
 %token COLON
+
+%nterm <std::string> time
 
 %token END 0 "End of file"
 
@@ -173,75 +176,82 @@ global_statements
 	;
 
 global_statement
-	: CATALOG    STRING { }
-	| CDTEXTFILE STRING { }
-	| FILETAG STRING file_format_tag { }
+	: CATALOG    NUMBER        { std::cout << "CATALOG: " << $2 << '\n';    }
+	| CDTEXTFILE STRING        { std::cout << "CDTEXTFILE: " << $2 << '\n'; }
+	| FILETAG    STRING file_format_tag
+		{
+			std::cout << "FILE: " << $2 << '\n';
+		}
 	| cdtext_statement  { }
 	| rem_statement     { }
 	;
 
 file_format_tag
-	: BINARY
-	| MOTOROLA
-	| AIFF
-	| WAVE
-	| MP3
-	| FLAC
+	: BINARY   { }
+	| MOTOROLA { }
+	| AIFF     { }
+	| WAVE     { }
+	| MP3      { }
+	| FLAC     { }
 	;
 
 cdtext_statement
-	: cdtext_tag STRING { }
+	: cdtext_tag STRING { std::cout << ": " << $2 << '\n'; }
 
 cdtext_tag
-	: TITLE STRING { }
-	| PERFORMER STRING { }
-	| SONGWRITER STRING { }
-	| COMPOSER STRING { }
-	| ARRANGER STRING { }
-	| MESSAGE STRING { }
-	| DISC_ID STRING { }
-	| GENRE STRING { }
-	| TOC_INFO1 STRING { }
-	| TOC_INFO2 STRING { }
-	| UPC_EAN STRING { }
-	| ISRC STRING { }
-	| SIZE_INFO STRING { }
+	: TITLE      { std::cout << "TITLE";  }
+	| PERFORMER  { std::cout << "PERFORMER";  }
+	| SONGWRITER { }
+	| COMPOSER   { }
+	| ARRANGER   { }
+	| MESSAGE    { }
+	| DISC_ID    { }
+	| GENRE      { }
+	| TOC_INFO1  { }
+	| TOC_INFO2  { }
+	| UPC_EAN    { }
+	| ISRC       { }
+	| SIZE_INFO  { }
 	;
 
 rem_statement
-	: rem_item STRING { }
+	: rem_item STRING  { std::cout << ": " << $2 << '\n';  }
 	;
 
 rem_item
-	: DATE
-	| GENRE
-	| REPLAYGAIN_ALBUM_GAIN
-	| REPLAYGAIN_ALBUM_PEAK
-	| REPLAYGAIN_TRACK_GAIN
-	| REPLAYGAIN_TRACK_PEAK
+	: DATE { std::cout << "DATE"; }
+	| REMGENRE { std::cout << "GENRE"; }
+	| REPLAYGAIN_ALBUM_GAIN { }
+	| REPLAYGAIN_ALBUM_PEAK { }
+	| REPLAYGAIN_TRACK_GAIN { }
+	| REPLAYGAIN_TRACK_PEAK { }
 	;
 
 track_list
-	: track
-	| track_list track
+	: track { }
+	| track_list track { }
 	;
 
 track
 	: track_header track_statements
+	;
 
 track_header
 	: TRACK NUMBER track_mode_tag
+		{
+			std::cout << "TRACK " << $2 << '\n';
+		}
 	;
 
 track_mode_tag
-	: AUDIO
-	| MODE1_2048
-	| MODE1_2352
-	| MODE2_2336
-	| MODE2_2048
-	| MODE2_2342
-	| MODE2_2332
-	| MODE2_2352
+	: AUDIO { }
+	| MODE1_2048 { }
+	| MODE1_2352 { }
+	| MODE2_2336 { }
+	| MODE2_2048 { }
+	| MODE2_2342 { }
+	| MODE2_2332 { }
+	| MODE2_2352 { }
 	;
 
 track_statements
@@ -253,27 +263,34 @@ track_statement
 	: cdtext_statement
 	| rem_statement
 	| FLAGS track_flags
-	| TRACK_ISRC STRING
-	| PREGAP       time
-	| POSTGAP      time
-	| INDEX NUMBER time
+	| TRACK_ISRC STRING { }
+	| PREGAP       time { }
+	| POSTGAP      time { }
+	| INDEX NUMBER time { std::cout << "INDEX " << $2 << " " << $3 << '\n'; }
 	/* | file_statment */   /* support EAC format variant */
 	;
 
 track_flags
 	: track_flags track_flag
+	| /* empty */
 	;
 
 track_flag
-	: PRE
-	| DCP
-	| FOUR_CH
-	| SCMS
+	: PRE { }
+	| DCP { }
+	| FOUR_CH { }
+	| SCMS { }
 	;
 
 time
 	: NUMBER
+		{
+			$$ = $1;
+		}
 	| NUMBER COLON NUMBER COLON NUMBER
+		{
+			$$ = $1 + ':' + $3 + ':' + $5;
+		}
 	;
 
 %%
@@ -286,9 +303,8 @@ namespace yycuesheet {
 
 void Parser::error(const location &loc, const std::string &message)
 {
-	std::cout << "Parser error: " << message << std::endl
-		<< "At token position: " << loc << std::endl
-		<< "Driver says:       " << driver.loc() << std::endl;
+	std::cerr << "Parser error at " << loc << ": " << message << std::endl;
+		//<< "Driver says:       "  << driver.loc()
 }
 
 } // namespace yycuesheet

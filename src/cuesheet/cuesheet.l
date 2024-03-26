@@ -14,7 +14,7 @@
 %option ecs
 
 /* Do not generate a default rule. A non-matching character is an error. */
-%option nodefault
+/* %option nodefault */
 
 /* Assume only one input file: do not call yywrap on EOF, just stop. */
 %option noyywrap
@@ -26,7 +26,7 @@
 %option yylineno
 
 /* Write summary to stderr when generating the lexer. */
-%option verbose
+/* %option verbose */
 
 /* See the defined macro of yyFlexLexer in cuesheet_lexer.hpp */
 %option prefix="Cuesheet_"
@@ -46,6 +46,10 @@
 %option nounput
 %option caseless
 
+%s INDEX
+%s REM
+%s REMVAL
+
 %{
 // from cuesheet.l
 
@@ -59,6 +63,7 @@
 #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
 
 #include <cstring>        /* for strncpy */
+#include <cstdlib>        /* for atoi */
 #include <iostream>       /* for cout */
 #include <iomanip>        /* for setw, setfill, left, right */
 
@@ -83,50 +88,38 @@ using cuesheet::yycuesheet::Parser;
 using cuesheet::yycuesheet::location;
 using cuesheet::yycuesheet::position;
 
-//char yy_buffer[PARSER_BUFFER];
-
 // end cuesheet.l
 %}
 
-WHITESPACE	[ \t\r]+
+WHITESPACE      [ \t\r]+
+DIGITS          [[:digit:]]+
+QSTRING1        \'([^\']|\\\')*\'
+QSTRING2        \"([^\"]|\\\")*\"
+GLYPHS          [[:graph:]]+
+REM             REM[[:blank:]]+
 
 %%
 
-\'([^\']|\\\')*\' |
-\"([^\"]|\\\")*\" {
-				/*
-				const auto length =
-					(yyleng > sizeof(yy_buffer) ? sizeof(yy_buffer) : yyleng);
-				yylval.sval = std::strncpy(yy_buffer, ++yytext, length);
-				yylval.sval[length - 2] = '\0';
-				*/
-				return Parser::make_STRING(yytext, get().loc());
+{DIGITS}    {
+				return Parser::make_NUMBER(YYText(), get().loc());
 			}
 
-[[:digit:]]+ {
-				return Parser::make_NUMBER(atoi(yytext), get().loc());
-			}
+:			{ return Parser::make_COLON(get().loc()); }
 
-:           { return Parser::make_COLON(get().loc()); }
-
-WHITESPACE	{ /* ignore */ }
-
-
-CATALOG     { return Parser::make_CATALOG(get().loc()); }
-FILETAG     { return Parser::make_FILETAG(get().loc()); }
+CATALOG     { return Parser::make_CATALOG(get().loc());    }
+FILE        { return Parser::make_FILETAG(get().loc());    }
 CDTEXTFILE  { return Parser::make_CDTEXTFILE(get().loc()); }
-TITLE       { return Parser::make_TITLE(get().loc()); }
-PERFORMER   { return Parser::make_PERFORMER(get().loc()); }
+TITLE       { return Parser::make_TITLE(get().loc());      }
+PERFORMER   { return Parser::make_PERFORMER(get().loc());  }
 SONGWRITER  { return Parser::make_SONGWRITER(get().loc()); }
-TRACK       { return Parser::make_TRACK(get().loc()); }
-FLAGS       { return Parser::make_FLAGS(get().loc()); }
-PREGAP      { return Parser::make_PREGAP(get().loc()); }
-POSTGAP     { return Parser::make_POSTGAP(get().loc()); }
-ISRC        { return Parser::make_ISRC(get().loc()); }
-INDEX       { return Parser::make_INDEX(get().loc()); }
-REM         {  }
+TRACK       { return Parser::make_TRACK(get().loc());      }
+FLAGS       { return Parser::make_FLAGS(get().loc());      }
+PREGAP      { return Parser::make_PREGAP(get().loc());     }
+POSTGAP     { return Parser::make_POSTGAP(get().loc());    }
+ISRC        { return Parser::make_ISRC(get().loc());       }
+INDEX       { BEGIN(INDEX); return Parser::make_INDEX(get().loc());      }
 
-BINARY      { return Parser::make_BINARY(get().loc()); }
+BINARY      { return Parser::make_BINARY(get().loc());   }
 MOTOROLA    { return Parser::make_MOTOROLA(get().loc()); }
 AIFF        { return Parser::make_AIFF(get().loc());     }
 WAVE        { return Parser::make_WAVE(get().loc());     }
@@ -142,26 +135,35 @@ MODE2_2342  { return Parser::make_MODE2_2342(get().loc()); }
 MODE2_2332  { return Parser::make_MODE2_2332(get().loc()); }
 MODE2_2352  { return Parser::make_MODE2_2352(get().loc()); }
 
-COMPOSER    { return Parser::make_COMPOSER(get().loc());      }
-ARRANGER    { return Parser::make_ARRANGER(get().loc());      }
-DISC_ID     { return Parser::make_DISC_ID(get().loc());      }
+COMPOSER    { return Parser::make_COMPOSER(get().loc());   }
+ARRANGER    { return Parser::make_ARRANGER(get().loc());   }
+DISC_ID     { return Parser::make_DISC_ID(get().loc());    }
 GENRE       { return Parser::make_GENRE(get().loc());      }
-TOC_INFO1   { return Parser::make_TOC_INFO1(get().loc());      }
-TOC_INFO2   { return Parser::make_TOC_INFO2(get().loc());      }
-UPC_EAN     { return Parser::make_UPC_EAN(get().loc());      }
-SIZE_INFO   { return Parser::make_SIZE_INFO(get().loc());      }
+TOC_INFO1   { return Parser::make_TOC_INFO1(get().loc());  }
+TOC_INFO2   { return Parser::make_TOC_INFO2(get().loc());  }
+UPC_EAN     { return Parser::make_UPC_EAN(get().loc());    }
+SIZE_INFO   { return Parser::make_SIZE_INFO(get().loc());  }
 
-DATE                  { return Parser::make_DATE(get().loc()); }
-GENRE                 { return Parser::make_GENRE(get().loc()); }
-REPLAYGAIN_ALBUM_GAIN { return Parser::make_REPLAYGAIN_ALBUM_GAIN(get().loc()); }
-REPLAYGAIN_ALBUM_PEAK { return Parser::make_REPLAYGAIN_ALBUM_PEAK(get().loc()); }
-REPLAYGAIN_TRACK_GAIN { return Parser::make_REPLAYGAIN_TRACK_GAIN(get().loc()); }
-REPLAYGAIN_TRACK_PEAK { return Parser::make_REPLAYGAIN_TRACK_PEAK(get().loc()); }
+{REM}DATE                  { BEGIN(REMVAL); return Parser::make_DATE(get().loc());                  }
+{REM}REMGENRE              { BEGIN(REMVAL); return Parser::make_REMGENRE(get().loc());              }
+{REM}REPLAYGAIN_ALBUM_GAIN { BEGIN(REMVAL); return Parser::make_REPLAYGAIN_ALBUM_GAIN(get().loc()); }
+{REM}REPLAYGAIN_ALBUM_PEAK { BEGIN(REMVAL); return Parser::make_REPLAYGAIN_ALBUM_PEAK(get().loc()); }
+{REM}REPLAYGAIN_TRACK_GAIN { BEGIN(REMVAL); return Parser::make_REPLAYGAIN_TRACK_GAIN(get().loc()); }
+{REM}REPLAYGAIN_TRACK_PEAK { BEGIN(REMVAL); return Parser::make_REPLAYGAIN_TRACK_PEAK(get().loc()); }
+<REMVAL>[[:graph:]]+       { BEGIN(REM); return Parser::make_STRING(YYText(), get().loc()); }
 
-<<EOF>>     {
-				return yyterminate();
-			}
+{REM}                      { BEGIN(REM); }
+<REM>[[:print:]]+          { BEGIN(INITIAL); /* discard text */  }
 
+<*>{WHITESPACE} { /* ignore */ }
+
+{QSTRING1}|{QSTRING2} { return Parser::make_STRING(YYText(), get().loc()); }
+
+<INITIAL>{GLYPHS}     { return Parser::make_STRING(YYText(), get().loc()); }
+
+<*>\n        { BEGIN(INITIAL); /* acts as delimiter */ }
+
+<<EOF>>      { return yyterminate(); }
 
 %%
 
