@@ -419,13 +419,13 @@ bison_target (cueparser
 	${PROJECT_SOURCE_DIR}/cuesheet/cuesheet.y
 	${PROJECT_BUILD_SOURCE_DIR}/cuesheet.tab.cpp
 	DEFINES_FILE ${PROJECT_BUILD_SOURCE_DIR}/cuesheet.tab.hpp
-	COMPILE_FLAGS --verbose
+	COMPILE_FLAGS "--verbose"
 	)
 
 flex_target (cuescanner
 	${PROJECT_SOURCE_DIR}/cuesheet/cuesheet.l
 	${PROJECT_BUILD_SOURCE_DIR}/cuesheet.yy.cpp
-	COMPILE_FLAGS --verbose
+	COMPILE_FLAGS "--verbose"
 	)
 
 add_flex_bison_dependency (cuescanner cueparser )
