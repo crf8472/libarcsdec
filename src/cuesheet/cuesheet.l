@@ -42,10 +42,6 @@
 /* */
 /* Cf. Flex Manual, Ch. 18 'Generating C++-Scanners' (very end of the chapter)*/
 
-%option noinput
-%option nounput
-%option caseless
-
 %s INDEX
 %s REM
 %s REMVAL
