@@ -80,14 +80,15 @@
 
 	#pragma GCC diagnostic ignored "-Weffc++"
 
-	#include <iostream>
-	#include <string>
+	#include <cstdlib> // for atoi
+	#include <string>  // for string
+	#include <tuple>   // for tuple
 
-	#include "cuesheet_lexer.hpp" // user-defined
+	#include "cuesheet_lexer.hpp"    // user-defined
 	#include "cuesheet_location.hpp" // auto-generated
 
 	#include "driver.hpp"  // user-defined
-	//#include "handler.hpp" // user-defined
+	#include "handler.hpp" // user-defined
 
 	/**
 	 * \brief Override yylex() to be called in Parser::parse()
@@ -166,7 +167,7 @@
 %token <std::string> STRING
 %token COLON
 
-%nterm <std::string> time
+%nterm <std::tuple<int, int, int>> time
 
 %token END 0 "End of file"
 
@@ -178,6 +179,9 @@
 
 cuesheet
 	: global_statements track_list
+		{
+			driver.get_handler()->end_input();
+		}
 	;
 
 global_statements
@@ -187,9 +191,6 @@ global_statements
 
 global_statement
 	: CATALOG    NUMBER { /* MCN: [0-9]{13} */ }
-		{
-			std::cout << "CATALOG: " << $2 << '\n';
-		}
 	| CDTEXTFILE STRING
 	| FILETAG    STRING file_format_tag
 		{
@@ -252,7 +253,7 @@ track
 track_header
 	: TRACK NUMBER track_mode_tag
 		{
-			std::cout << "TRACK = " << $2 << '\n';
+			driver.get_handler()->track(std::atoi(&$2[0]), TRACK_MODE::AUDIO);
 		}
 	;
 
@@ -277,9 +278,14 @@ track_statement
 	| rem_statement
 	| FLAGS track_flags
 	| TRACK_ISRC STRING { std::cout << "  ISRC: " << $2 << '\n'; }
-	| PREGAP       time { std::cout << "  PREGAP: " << $2 << '\n'; }
-	| POSTGAP      time { std::cout << "  POSTGAP: " << $2 << '\n'; }
-	| INDEX NUMBER time { std::cout << "  INDEX " << $2 << " " << $3 << '\n'; }
+	| PREGAP       time
+	| POSTGAP      time
+	| INDEX NUMBER time
+		{
+			auto msf { $3 };
+			driver.get_handler()->index(std::atoi(&$2[0]),
+				std::get<0>(msf), std::get<1>(msf), std::get<2>(msf));
+		}
 	/* | file_statment */   /* support EAC format variant */
 	;
 
@@ -296,13 +302,12 @@ track_flag
 	;
 
 time
-	: NUMBER
+	: NUMBER COLON NUMBER COLON NUMBER
 		{
-			$$ = $1;
-		}
-	| NUMBER COLON NUMBER COLON NUMBER
-		{
-			$$ = $1 + ':' + $3 + ':' + $5;
+			$$ = std::make_tuple(
+					std::atoi(&$1[0]),
+					std::atoi(&$3[0]),
+					std::atoi(&$5[0]));
 		}
 	;
 

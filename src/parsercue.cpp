@@ -38,6 +38,9 @@
 #ifndef __LIBARCSDEC_CUESHEET_DRIVER_HPP__
 #include "cuesheet/driver.hpp"
 #endif
+#ifndef __LIBARCSDEC_CUESHEET_TOCHANDLER_HPP__
+#include "cuesheet/tochandler.hpp"
+#endif
 
 namespace arcsdec
 {
@@ -56,14 +59,30 @@ using arcstk::InvalidMetadataException;
 std::unique_ptr<TOC> CuesheetParserImpl::do_parse(const std::string &filename)
 {
 	Driver driver;
+											//
+	TOCHandler handler;
+	driver.set_handler(handler);
 
 	std::ifstream file;
-	file.open(filename, std::ifstream::in);
+	file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+	try
+	{
+		file.open(filename, std::ifstream::in);
+	} catch (const std::ifstream::failure& f)
+	{
+		throw std::runtime_error(std::string { "Failed to open file " }
+				+ filename + ". Message: " + f.what());
+	}
 	driver.set_input(file);
 
-	const int res { driver.parse() };
+	if (driver.parse() != 0)
+	{
+		throw InvalidMetadataException(
+				std::string { "Faild to parse file " } + filename);
+	}
 
-	return nullptr; // TODO
+	return make_toc(handler.total_tracks(), handler.offsets(),
+			handler.lengths());
 }
 
 std::unique_ptr<FileReaderDescriptor> CuesheetParserImpl::do_descriptor() const

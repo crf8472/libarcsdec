@@ -17,7 +17,6 @@ inline namespace v_1_0_0
 {
 namespace details
 {
-
 namespace cuesheet
 {
 
@@ -119,8 +118,7 @@ public:
 
 private:
 
-	virtual void do_reset()
-	= 0;
+	virtual void do_reset();
 
 	virtual void do_start_input();
 

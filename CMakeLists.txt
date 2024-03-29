@@ -188,6 +188,7 @@ list (APPEND INTERFACE_HEADERS
 add_library (${PROJECT_NAME} SHARED
 	"${PROJECT_SOURCE_DIR}/cuesheet/driver.cpp"
 	"${PROJECT_SOURCE_DIR}/cuesheet/handler.cpp"
+	"${PROJECT_SOURCE_DIR}/cuesheet/tochandler.cpp"
 	"${PROJECT_SOURCE_DIR}/audioreader.cpp"
 	"${PROJECT_SOURCE_DIR}/calculators.cpp"
 	"${PROJECT_SOURCE_DIR}/descriptor.cpp"

@@ -100,6 +100,12 @@ void Handler::track(const int i, const TRACK_MODE& m)
 }
 
 
+void Handler::do_reset()
+{
+	// empty
+}
+
+
 void Handler::do_start_input()
 {
 	// empty
