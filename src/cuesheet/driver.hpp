@@ -160,7 +160,7 @@ private:
 	 *
 	 * \param p End position of current token
 	 */
-	void update_loc(const position& p);
+	void step_to(const position& p);
 
 	/**
 	 * \brief Returns last Lexer location.

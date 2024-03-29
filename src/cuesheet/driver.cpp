@@ -32,7 +32,7 @@ Driver::Driver()
 Driver::~Driver() = default;
 
 
-void Driver::set_input(std::istream &is)
+void Driver::set_input(std::istream& is)
 {
 	reset();
 	lexer_->switch_streams(&is, nullptr);
@@ -77,14 +77,14 @@ const Handler& Driver::handler()
 }
 
 
-void Driver::notify(const int state, const std::string& token_name,
-			const std::string& chars)
+void Driver::notify(const int /*state*/, const std::string& /*token_name*/,
+			const std::string& /*chars*/)
 {
 	// TODO
 }
 
 
-void Driver::unexpected(const std::string& chars, const location& loc)
+void Driver::unexpected(const std::string& /*chars*/, const location& /*loc*/)
 {
 	// TODO
 }
@@ -96,10 +96,10 @@ void Driver::reset_loc()
 }
 
 
-void Driver::update_loc(const yycuesheet::position &p)
+void Driver::step_to(const yycuesheet::position& lexer_pos)
 {
-	current_token_location_->step();
-	current_token_location_->end = p;
+	current_token_location_->step(); // set begin to end
+	current_token_location_->end = lexer_pos; // set end to current
 }
 
 

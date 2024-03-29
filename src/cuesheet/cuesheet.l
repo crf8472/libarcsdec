@@ -58,6 +58,7 @@
 #pragma GCC diagnostic ignored "-Wswitch-default"
 #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
 
+
 #include <cstring>        /* for strncpy */
 #include <cstdlib>        /* for atoi */
 #include <iostream>       /* for cout */
@@ -73,10 +74,12 @@
 // Redefine calls of yyterminate():
 // Original yyterminate() macro returns int. Since we're using Bison 3 variants
 // as tokens, call context will expect `Parser::semantic_type` instead.
-#define yyterminate() arcsdec::details::cuesheet::yycuesheet::Parser::make_END(get().loc());
+#define yyterminate()       Parser::make_END(get().loc());
 
-// Track current lexer location
-#define YY_USER_ACTION shift_pos(yylineno, yyleng);
+// Track current lexer position + update driver location with it
+#define YY_USER_ACTION \
+		shift_pos(yylineno, yyleng); \
+		driver_.step_to(current_pos_);
 
 // Declare the symbols from yycuesheet that are to be used in yylex().
 // (yylex() is in global namespace)
@@ -189,13 +192,17 @@ void Lexer::shift_pos(const int line_no, const int token_length)
 {
 	// Current position is always the _end_ of the current token
 
-	if (current_pos_.line != line_no) {
-		current_pos_.line = line_no;
-		current_pos_.column = 0;
+	if (line_no != current_pos_.line) // newline occurred?
+	{
+		current_pos_.lines(line_no - current_pos_.line);
+		current_pos_.column = 1; // Ignore newlines when stepping forward
+	} else
+	{
+		current_pos_.columns(token_length);
 	}
-	current_pos_.columns(token_length - 1);
 
-	driver_.update_loc(current_pos_);
+	//std::cout << "Line " << line_no << ", token_length: " << token_length;
+	//std::cout << " - pos is now: " << current_pos_ << '\n';
 }
 
 Driver& Lexer::get()
