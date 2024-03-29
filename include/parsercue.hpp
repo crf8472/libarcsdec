@@ -24,9 +24,9 @@ inline namespace v_1_0_0
 
 /**
  * \internal
- * \defgroup parsercue Metadata: CueSheet
+ * \defgroup parsercue Metadata: Cuesheet
  *
- * \brief A MetadataParser for CueSheet files
+ * \brief A MetadataParser for Cuesheet files
  *
  * @{
  */
@@ -51,9 +51,9 @@ private:
 	std::string do_id() const override;
 
 	/**
-	 * \brief Returns "CueSheet".
+	 * \brief Returns "Cuesheet".
 	 *
-	 * \return "CueSheet"
+	 * \return "Cuesheet"
 	 */
 	std::string do_name() const override;
 

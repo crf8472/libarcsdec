@@ -5,7 +5,7 @@
 /**
  * \file
  *
- * \brief Internal APIs for CueSheet reader
+ * \brief Internal APIs for Cuesheet reader
  */
 
 #ifndef __LIBARCSDEC_PARSERCUE_DETAILS_HPP__
@@ -34,6 +34,10 @@ inline namespace v_1_0_0
 {
 namespace details
 {
+
+/**
+ * \brief Namespace for implementation details of parsercue
+ */
 namespace cuesheet
 {
 
@@ -41,7 +45,7 @@ using arcstk::TOC;
 
 
 /**
- * \internal \defgroup parserCueImpl Implementation details of CueSheet parsing
+ * \internal \defgroup parserCueImpl Implementation details of Cuesheet parsing
  *
  * \ingroup parsercue
  *
