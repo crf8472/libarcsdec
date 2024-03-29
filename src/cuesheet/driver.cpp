@@ -23,7 +23,7 @@ Driver::Driver()
 	: current_token_location_{}
 	, lexer_ (std::make_unique<cuesheet::yycuesheet::Lexer>(*this))
 	, parser_(std::make_unique<cuesheet::yycuesheet::Parser>(*lexer_, *this))
-	//, handler_ {nullptr}
+	, handler_ {nullptr}
 {
 	// empty
 }
@@ -53,14 +53,14 @@ void Driver::set_parser_debug_level(const int /*lvl*/)
 
 int Driver::parse()
 {
-	current_token_location_ = std::make_unique<location>(nullptr, 1, 1);
+	reset_loc();
 	return parser_->parse();
 }
 
 
 void Driver::reset()
 {
-	current_token_location_ = std::make_unique<location>(nullptr, 1, 1);
+	reset_loc();
 	//handler_->reset();
 }
 
@@ -77,6 +77,25 @@ const Handler& Driver::handler()
 }
 
 
+void Driver::notify(const int state, const std::string& token_name,
+			const std::string& chars)
+{
+	// TODO
+}
+
+
+void Driver::unexpected(const std::string& chars, const location& loc)
+{
+	// TODO
+}
+
+
+void Driver::reset_loc()
+{
+	current_token_location_ = create_initial_loc();
+}
+
+
 void Driver::update_loc(const yycuesheet::position &p)
 {
 	current_token_location_->step();
@@ -87,6 +106,12 @@ void Driver::update_loc(const yycuesheet::position &p)
 yycuesheet::location Driver::loc() const
 {
 	return *current_token_location_;
+}
+
+
+std::unique_ptr<location> Driver::create_initial_loc() const
+{
+	return std::make_unique<location>(nullptr, 1, 1);
 }
 
 

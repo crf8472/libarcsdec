@@ -52,6 +52,8 @@ using yycuesheet::position;
 
 class Handler;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Weffc++"
 
 /**
  * \brief Interface to bison-generated cuesheet parser.
@@ -136,11 +138,29 @@ public:
 private:
 
 	/**
+	 * \brief Callback for Lexer about current token.
+	 */
+	void notify(const int state, const std::string& token_name,
+			const std::string& chars);
+
+	/**
+	 * \brief Callback for Lexer about unexpected characters.
+	 */
+	void unexpected(const std::string& chars, const location& loc);
+
+	/**
+	 * \brief Clear source location info.
+	 *
+	 * Called by parse() on start and by reset().
+	 */
+	void reset_loc();
+
+	/**
 	 * \brief Called by Lexer to update the internal location.
 	 *
 	 * \param p End position of current token
 	 */
-	void update_loc(const position &p);
+	void update_loc(const position& p);
 
 	/**
 	 * \brief Returns last Lexer location.
@@ -150,6 +170,13 @@ private:
 	 * \return Last Lexer location
 	 */
 	location loc() const;
+
+	/**
+	 * \brief Create initial location information.
+	 *
+	 * Called by reset_loc().
+	 */
+	std::unique_ptr<location> create_initial_loc() const;
 
 	/**
 	 * \brief Access driver handler.
@@ -168,6 +195,8 @@ private:
 
 	Handler* handler_;
 };
+
+#pragma GCC diagnostic pop
 
 } // namespace cuesheet
 } // namespace details

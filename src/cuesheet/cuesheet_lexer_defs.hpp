@@ -42,32 +42,8 @@ class Driver;
 namespace yycuesheet
 {
 
-
-/**
- * \brief Print tokens.
- */
-class Printer final
-{
-public:
-
-	Printer(std::ostream &out) : out_(out) { /* empty */ }
-
-	Printer() : Printer(std::cout) { /* empty */ };
-
-	void token(const int state, const std::string &token_name,
-			const std::string &token_value) const;
-
-	std::ostream& error();
-
-	std::ostream& warn();
-
-	std::ostream& info();
-
-
-private:
-
-	std::ostream &out_;
-};
+// NOTE What is declared here receives its implementation from the third
+// section in cuesheet.l.
 
 
 /**
@@ -78,17 +54,26 @@ private:
  */
 class Lexer final : public Cuesheet_FlexLexer
 {
+	/**
+	 * \brief Internal token position.
+	 */
+	position current_pos_;
+
+	/**
+	 * \brief Class for interfacing the lexer from calling code.
+	 */
+	Driver &driver_;
+
 public:
 
 	/**
 	 * \brief Constructor for Cuesheet lexer.
 	 *
-	 * \param driver The cuesheet::Driver that constructed this lexer.
+	 * \param[in] driver The cuesheet::Driver that constructed this lexer.
 	 */
 	explicit Lexer(Driver &driver)
-		: driver_ { driver }
-		, current_pos_ {}
-		, printer_ { std::make_unique<Printer>() }
+		: current_pos_ {}
+		, driver_ { driver }
 	{
 		/* empty */
 	}
@@ -96,7 +81,23 @@ public:
 	/**
 	 * \brief Destructor.
 	 */
-	~Lexer() noexcept override = default;
+	~Lexer() noexcept = default;
+
+	/**
+	 * \brief Called by yylex() to notify Lexer about current token.
+	 *
+	 * \param[in] token_name Token name
+	 * \param[in] chars      Characters in token
+	 */
+	void notify(const std::string& token_name, const std::string& chars);
+
+	/**
+	 * \brief Called by yylex() on unexpected characters.
+	 *
+	 * \param[in] chars Characters
+	 * \param[in] loc   Location
+	 */
+	void unexpected(const std::string& chars, const location& loc);
 
 	/**
 	 * \brief Return next token.
@@ -109,7 +110,6 @@ public:
 	 * \return Next token
 	 */
 	Parser::symbol_type next_token();
-
 
 private:
 
@@ -124,46 +124,11 @@ private:
 	void shift_pos(const int line_no, const int token_length);
 
 	/**
-	 * \brief Notifies about the current token.
-	 *
-	 * Called by yylex() to notify Lexer about current token.
-	 *
-	 * \param[in] token_name Name of the token
-	 * \param[in] characters Parsed characters (e.g. yytext)
-	 */
-	void notify(const std::string &token_name, const std::string &characters);
-
-	/**
-	 * \brief Hook for intercepting unexpected characters.
-	 *
-	 * Called by yylex() on unexpected characters.
-	 *
-	 * \param[in] chars The unexpected characters
-	 * \param[in] loc   Location of the unexpected characters
-	 */
-	void unexpected(const std::string &chars, const location &loc);
-
-	/**
-	 * \brief Use the Printer instance.
-	 *
-	 * \return The Printer of this Lexer
-	 */
-	Printer& printer();
-
-	/**
 	 * \brief Get the driver to start some user action.
 	 *
 	 * \return The Driver of this Lexer
 	 */
 	Driver& get();
-
-
-
-	Driver &driver_;
-
-	position current_pos_;
-
-	std::unique_ptr<Printer> printer_;
 };
 
 } // namespace yycuesheet

@@ -175,50 +175,14 @@ SIZE_INFO   { return Parser::make_SIZE_INFO(get().loc());  }
 namespace arcsdec { namespace details {
 namespace cuesheet { namespace yycuesheet {
 
-
-void Printer::token(const int state,
-		const std::string &token_name, const std::string &token_val) const
+void Lexer::notify(const std::string& token_name, const std::string& chars)
 {
-	if (true)
-	{
-	out_ << std::setw( 2) << std::right << state;
-	out_ << "   ";
-	out_ << std::setw(15) << std::left  << token_name;
-	out_ << "   ";
-	out_ << std::setw(15) << std::left  << token_val;
-	out_ << std::endl;
-	}
+	driver_.notify(YYSTATE, token_name, chars);
 }
 
-std::ostream& Printer::error()
+void Lexer::unexpected(const std::string& chars, const location& loc)
 {
-	out_ << "Lexer error: ";
-	return out_;
-}
-
-std::ostream& Printer::warn()
-{
-	out_ << "Lexer warning: ";
-	return out_;
-}
-
-std::ostream& Printer::info()
-{
-	out_ << "Lexer info: ";
-	return out_;
-}
-
-void Lexer::notify(const std::string &token_name, const std::string &characters)
-{
-	printer().token(YYSTATE, token_name, characters);
-}
-
-void Lexer::unexpected(const std::string &chars, const location &loc)
-{
-	printer().error() << "Unexpected character '" << chars
-		<< "' in line "  << loc.begin.line
-		<< " at column " << loc.begin.column
-		<< std::endl;
+	driver_.unexpected(chars, loc);
 }
 
 void Lexer::shift_pos(const int line_no, const int token_length)
@@ -232,11 +196,6 @@ void Lexer::shift_pos(const int line_no, const int token_length)
 	current_pos_.columns(token_length - 1);
 
 	driver_.update_loc(current_pos_);
-}
-
-Printer& Lexer::printer()
-{
-	return *printer_;
 }
 
 Driver& Lexer::get()
