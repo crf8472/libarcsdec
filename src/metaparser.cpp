@@ -88,6 +88,30 @@ MetadataParseException::MetadataParseException(const std::string &what_arg)
 	// empty
 }
 
+
+namespace details
+{
+
+long msf_to_frames(const int m, const int s, const int f)
+{
+	if (m < 0 || m > 99 || s < 0 || s >= 60 || f < 0 || f >= 75) {
+		return -1;
+	}
+
+	return (m * 60 + s) * 75 + f;
+}
+
+
+void frames_to_msg(long frames, int* m, int* s, int* f)
+{
+	*f = frames % 75;
+	frames /= 75;
+	*s = frames % 60;
+	frames /= 60;
+	*m = frames;
+}
+
+} // namespace details
 } // namespace v_1_0_0
 } // namespace arcsdec
 

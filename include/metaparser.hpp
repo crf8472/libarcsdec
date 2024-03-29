@@ -240,6 +240,18 @@ inline auto cast_or_throw(const T value) -> S
 	return static_cast<S>(value);
 }
 
+
+/**
+ * \brief Convert MSF time to CDDA frames.
+ */
+long msf_to_frames(const int m, const int s, const int f);
+
+
+/**
+ * \brief Convert CDDA frames to MSF frames.
+ */
+void frames_to_msg(long frames, int* m, int* s, int* f);
+
 } // namespace details
 
 /// @}
