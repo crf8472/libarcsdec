@@ -1,5 +1,5 @@
-#ifndef CUESHEET_YYCUESHEET_LEXER_DEFS_HPP
-#define CUESHEET_YYCUESHEET_LEXER_DEFS_HPP
+#ifndef __LIBARCSDEC_CUESHEET_LEXER_DEFS_HPP__
+#define __LIBARCSDEC_CUESHEET_LEXER_DEFS_HPP__
 
 /**
  * \file
@@ -135,5 +135,5 @@ private:
 } // namespace cuesheet
 } /*details*/ } /*v_1_0_0*/ } /*arcsdec*/
 
-#endif // CUESHEET_YYCUESHEET_LEXER_DEFS_HPP
+#endif // __LIBARCSDEC_CUESHEET_LEXER_DEFS_HPP__
 

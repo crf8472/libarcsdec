@@ -84,11 +84,19 @@
 	#include <string>  // for string
 	#include <tuple>   // for tuple
 
-	#include "cuesheet_lexer.hpp"    // user-defined
-	#include "cuesheet_location.hpp" // auto-generated
+	#ifndef __LIBARCSDEC_CUESHEET_LEXER_HPP__
+	#include "cuesheet_lexer.hpp"               // user-defined
+	#endif
 
-	#include "driver.hpp"  // user-defined
-	#include "handler.hpp" // user-defined
+	#include "cuesheet_location.hpp"            // auto-generated
+
+	#ifndef __LIBARCSDEC_CUESHEET_DRIVER_HPP__
+	#include "driver.hpp"                       // user-defined
+	#endif
+
+	#ifndef __LIBARCSDEC_CUESHEET_HANDLER_HPP__
+	#include "handler.hpp"                      // user-defined
+	#endif
 
 	/**
 	 * \brief Override yylex() to be called in Parser::parse()

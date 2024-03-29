@@ -1,5 +1,5 @@
-#ifndef CUESHEET_YYCUESHEET_LEXER_HPP
-#define CUESHEET_YYCUESHEET_LEXER_HPP
+#ifndef __LIBARCSDEC_CUESHEET_LEXER_HPP__
+#define __LIBARCSDEC_CUESHEET_LEXER_HPP__
 
 /**
  * Generated Flex class name is yyFlexLexer by default.
@@ -13,11 +13,12 @@
  *
  * See:
  * [1] GNU Flex manual, section: "Generating C++ Scanners".
- * [2] https://stackoverflow.com/questions/35606354/multiple-parsers-in-flex-bison-include-fails
+ * [2] https://stackoverflow.com/q/35606354
  */
 #pragma GCC diagnostic push
 
 #pragma GCC diagnostic ignored "-Weffc++"
+
 
 #define yyFlexLexer Cuesheet_FlexLexer
 #include <FlexLexer.h>
@@ -25,7 +26,8 @@
 
 #include "cuesheet_lexer_defs.hpp"
 
+
 #pragma GCC diagnostic pop
 
-#endif // CUESHEET_YYCUESHEET_LEXER_HPP
+#endif // __LIBARCSDEC_CUESHEET_LEXER_HPP__
 
