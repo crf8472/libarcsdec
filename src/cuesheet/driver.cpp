@@ -21,8 +21,8 @@ namespace cuesheet
 
 Driver::Driver()
 	: current_token_location_{}
-	, lexer_ (std::make_unique<cuesheet::yycuesheet::Lexer>(*this))
-	, parser_(std::make_unique<cuesheet::yycuesheet::Parser>(*lexer_, *this))
+	, lexer_ (std::make_unique<yycuesheet::Lexer>(*this))
+	, parser_(std::make_unique<yycuesheet::Parser>(*lexer_, *this))
 	, handler_ {nullptr}
 {
 	// empty
@@ -119,7 +119,6 @@ Handler* Driver::get_handler()
 {
 	return handler_;
 }
-
 
 } // namespace cuesheet
 } // namespace details
