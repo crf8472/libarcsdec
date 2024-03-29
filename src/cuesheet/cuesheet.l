@@ -90,9 +90,9 @@ using cuesheet::yycuesheet::position;
 WHITESPACE      [ \t\r]+
 DIGITS          [[:digit:]]+
 GLYPHS          [[:graph:]]+
-REM             REM[[:blank:]]+
 QSTRING1        \'([^\'\n]|\\\')*\'
 QSTRING2        \"([^\"\n]|\\\")*\"
+REM             REM[[:blank:]]+
 
 %%
 
@@ -123,13 +123,19 @@ MP3         { return Parser::make_MP3(get().loc());      }
 FLAC        { return Parser::make_FLAC(get().loc());     }
 
 AUDIO       { return Parser::make_AUDIO(get().loc());      }
-MODE1_2048  { return Parser::make_MODE1_2048(get().loc()); }
+MODE1_2048  { /**/ return Parser::make_MODE1_2048(get().loc()); }
 MODE1_2352  { return Parser::make_MODE1_2352(get().loc()); }
-MODE2_2336  { return Parser::make_MODE2_2336(get().loc()); }
 MODE2_2048  { return Parser::make_MODE2_2048(get().loc()); }
-MODE2_2342  { return Parser::make_MODE2_2342(get().loc()); }
-MODE2_2332  { return Parser::make_MODE2_2332(get().loc()); }
+MODE2_2324  { /* ? return Parser::make_MODE2_2324(get().loc()); */ }
+MODE2_2332  { /* ? */ return Parser::make_MODE2_2332(get().loc()); }
+MODE2_2336  { return Parser::make_MODE2_2336(get().loc()); }
+MODE2_2342  { /* ? */ return Parser::make_MODE2_2342(get().loc()); }
 MODE2_2352  { return Parser::make_MODE2_2352(get().loc()); }
+
+PRE         { return Parser::make_PRE(get().loc());        }
+DCP         { return Parser::make_DCP(get().loc());        }
+4CH         { return Parser::make_FOUR_CH(get().loc());    }
+SCMS        { return Parser::make_SCMS(get().loc());       }
 
 COMPOSER    { return Parser::make_COMPOSER(get().loc());   }
 ARRANGER    { return Parser::make_ARRANGER(get().loc());   }
@@ -141,21 +147,16 @@ UPC_EAN     { return Parser::make_UPC_EAN(get().loc());    }
 SIZE_INFO   { return Parser::make_SIZE_INFO(get().loc());  }
 
 {REM}DATE                  { BEGIN(REMVAL); return Parser::make_DATE(get().loc());                  }
-{REM}REMGENRE              { BEGIN(REMVAL); return Parser::make_REMGENRE(get().loc());              }
+{REM}GENRE                 { BEGIN(REMVAL); return Parser::make_REMGENRE(get().loc());              }
 {REM}REPLAYGAIN_ALBUM_GAIN { BEGIN(REMVAL); return Parser::make_REPLAYGAIN_ALBUM_GAIN(get().loc()); }
 {REM}REPLAYGAIN_ALBUM_PEAK { BEGIN(REMVAL); return Parser::make_REPLAYGAIN_ALBUM_PEAK(get().loc()); }
 {REM}REPLAYGAIN_TRACK_GAIN { BEGIN(REMVAL); return Parser::make_REPLAYGAIN_TRACK_GAIN(get().loc()); }
 {REM}REPLAYGAIN_TRACK_PEAK { BEGIN(REMVAL); return Parser::make_REPLAYGAIN_TRACK_PEAK(get().loc()); }
 
-<REMVAL>({QSTRING1}|{QSTRING2}|{GLYPHS}) {
-				BEGIN(REM);
-				return Parser::make_STRING(YYText(), get().loc());
-				/* First string (without spaces) will be returned, */
-				/* rest of the line will be ignored in state REM.  */
-			}
+<REMVAL>[^\n]* { return Parser::make_STRING(YYText(), get().loc()); }
 
-{REM}                      { BEGIN(REM); }
-<REM>[^\n]*                { BEGIN(INITIAL); /* discard rest of line */  }
+{REM}       { BEGIN(REM); }
+<REM>[^\n]* { BEGIN(INITIAL); /* discard rest of line */  }
 
 <*>{WHITESPACE} { /* ignore */ }
 

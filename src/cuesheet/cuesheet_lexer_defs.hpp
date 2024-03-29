@@ -23,14 +23,15 @@
 // in section "code top" (that calls get_next_token())
 #include "cuesheet.tab.hpp"
 
-
-namespace cuesheet {
+namespace cuesheet
+{
 
 
 class Driver;
 
 
-namespace yycuesheet {
+namespace yycuesheet
+{
 
 
 /**

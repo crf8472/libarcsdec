@@ -61,7 +61,6 @@
 			class Lexer;
 		} // namespace yycuesheet
 	} // namespace cuesheet
-
 }
 
 
@@ -176,60 +175,63 @@ global_statements
 	;
 
 global_statement
-	: CATALOG    NUMBER        { std::cout << "CATALOG: " << $2 << '\n';    }
-	| CDTEXTFILE STRING        { std::cout << "CDTEXTFILE: " << $2 << '\n'; }
+	: CATALOG    NUMBER { /* MCN: [0-9]{13} */ }
+		{
+			std::cout << "CATALOG: " << $2 << '\n';
+		}
+	| CDTEXTFILE STRING
 	| FILETAG    STRING file_format_tag
 		{
 			std::cout << "FILE: " << $2 << '\n';
 		}
-	| cdtext_statement  { }
-	| rem_statement     { }
+	| cdtext_statement
+	| rem_statement
 	;
 
 file_format_tag
-	: BINARY   { }
-	| MOTOROLA { }
-	| AIFF     { }
-	| WAVE     { }
-	| MP3      { }
-	| FLAC     { }
+	: BINARY
+	| MOTOROLA
+	| AIFF
+	| WAVE
+	| MP3
+	| FLAC
 	;
 
 cdtext_statement
-	: cdtext_tag STRING { std::cout << ": " << $2 << '\n'; }
+	: cdtext_tag STRING
 
 cdtext_tag
-	: TITLE      { std::cout << "TITLE";  }
-	| PERFORMER  { std::cout << "PERFORMER";  }
-	| SONGWRITER { }
-	| COMPOSER   { }
-	| ARRANGER   { }
-	| MESSAGE    { }
-	| DISC_ID    { }
-	| GENRE      { }
-	| TOC_INFO1  { }
-	| TOC_INFO2  { }
-	| UPC_EAN    { }
-	| ISRC       { }
-	| SIZE_INFO  { }
+	: TITLE      { std::cout << "TITLE\n";  }
+	| PERFORMER
+	| SONGWRITER
+	| COMPOSER
+	| ARRANGER
+	| MESSAGE
+	| DISC_ID
+	| GENRE
+	| TOC_INFO1
+	| TOC_INFO2
+	| UPC_EAN
+	| ISRC       { std::cout << "ISRC\n"; /* [[:alnum:]]{5}[0-9]{7} */ }
+	| SIZE_INFO
 	;
 
 rem_statement
-	: rem_item STRING  { std::cout << ": " << $2 << '\n';  }
+	: rem_item STRING
 	;
 
 rem_item
-	: DATE { std::cout << "DATE"; }
-	| REMGENRE { std::cout << "GENRE"; }
-	| REPLAYGAIN_ALBUM_GAIN { }
-	| REPLAYGAIN_ALBUM_PEAK { }
-	| REPLAYGAIN_TRACK_GAIN { }
-	| REPLAYGAIN_TRACK_PEAK { }
+	: DATE
+	| REMGENRE
+	| REPLAYGAIN_ALBUM_GAIN
+	| REPLAYGAIN_ALBUM_PEAK
+	| REPLAYGAIN_TRACK_GAIN
+	| REPLAYGAIN_TRACK_PEAK
 	;
 
 track_list
-	: track { }
-	| track_list track { }
+	: track
+	| track_list track
 	;
 
 track
@@ -239,19 +241,19 @@ track
 track_header
 	: TRACK NUMBER track_mode_tag
 		{
-			std::cout << "TRACK " << $2 << '\n';
+			std::cout << "TRACK = " << $2 << '\n';
 		}
 	;
 
 track_mode_tag
-	: AUDIO { }
-	| MODE1_2048 { }
-	| MODE1_2352 { }
-	| MODE2_2336 { }
-	| MODE2_2048 { }
-	| MODE2_2342 { }
-	| MODE2_2332 { }
-	| MODE2_2352 { }
+	: AUDIO
+	| MODE1_2048
+	| MODE1_2352
+	| MODE2_2336
+	| MODE2_2048
+	| MODE2_2342
+	| MODE2_2332
+	| MODE2_2352
 	;
 
 track_statements
@@ -263,10 +265,10 @@ track_statement
 	: cdtext_statement
 	| rem_statement
 	| FLAGS track_flags
-	| TRACK_ISRC STRING { }
-	| PREGAP       time { }
-	| POSTGAP      time { }
-	| INDEX NUMBER time { std::cout << "INDEX " << $2 << " " << $3 << '\n'; }
+	| TRACK_ISRC STRING { std::cout << "  ISRC: " << $2 << '\n'; }
+	| PREGAP       time { std::cout << "  PREGAP: " << $2 << '\n'; }
+	| POSTGAP      time { std::cout << "  POSTGAP: " << $2 << '\n'; }
+	| INDEX NUMBER time { std::cout << "  INDEX " << $2 << " " << $3 << '\n'; }
 	/* | file_statment */   /* support EAC format variant */
 	;
 
@@ -276,10 +278,10 @@ track_flags
 	;
 
 track_flag
-	: PRE { }
-	| DCP { }
-	| FOUR_CH { }
-	| SCMS { }
+	: PRE
+	| DCP
+	| FOUR_CH
+	| SCMS
 	;
 
 time
