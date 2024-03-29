@@ -1,10 +1,22 @@
+#ifndef __LIBARCSDEC_CUESHEET_DRIVER_HPP__
 #include "driver.hpp"
+#endif
 
-//#include "handler.hpp"
+#ifndef __LIBARCSDEC_CUESHEET_HANDLER_HPP__
+#include "handler.hpp"
+#endif
+
 #include "cuesheet_lexer.hpp"   // includes also cuesheet.tab.hpp
 
 
-namespace cuesheet {
+namespace arcsdec
+{
+inline namespace v_1_0_0
+{
+namespace details
+{
+namespace cuesheet
+{
 
 
 Driver::Driver()
@@ -52,10 +64,10 @@ void Driver::reset()
 	//handler_->reset();
 }
 
-/*
-void Driver::set_handler(Handler *handler)
+
+void Driver::set_handler(Handler& handler)
 {
-	handler_ = handler;
+	handler_ = &handler;
 }
 
 
@@ -63,7 +75,7 @@ const Handler& Driver::handler()
 {
 	return *handler_;
 }
-*/
+
 
 void Driver::update_loc(const yycuesheet::position &p)
 {
@@ -77,12 +89,15 @@ yycuesheet::location Driver::loc() const
 	return *current_token_location_;
 }
 
-/*
+
 Handler* Driver::get_handler()
 {
 	return handler_;
 }
-*/
+
 
 } // namespace cuesheet
+} // namespace details
+} // namespace v_1_0_0
+} // namespace arcsdec
 

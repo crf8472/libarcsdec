@@ -1,5 +1,5 @@
-#ifndef CUESHEET_DRIVER_HPP
-#define CUESHEET_DRIVER_HPP
+#ifndef __LIBARCSDEC_CUESHEET_DRIVER_HPP__
+#define __LIBARCSDEC_CUESHEET_DRIVER_HPP__
 
 /**
  * \file
@@ -9,18 +9,28 @@
 
 #include <memory>
 
+#include "version.hpp" // for v_1_0_0
+
+namespace arcsdec
+{
+inline namespace v_1_0_0
+{
+namespace details
+{
 
 /**
  * \brief Main namespace for Cuesheet tool classes.
  */
-namespace cuesheet {
+namespace cuesheet
+{
 
 /**
  * \internal
  *
  * \brief Namespace for implementation details of '::cuesheet'.
  */
-namespace yycuesheet {
+namespace yycuesheet
+{
 
 // We cannot include 'lexer.hpp' since this would import yyFlexLexer into
 // cuesheet.l/cuesheet.yy.cpp (via this file, 'driver.hpp'). This must be avoided
@@ -40,11 +50,11 @@ using yycuesheet::location;
 using yycuesheet::position;
 
 
-//class Handler;
+class Handler;
 
 
 /**
- * \brief Interface to Cuesheet parser.
+ * \brief Interface to bison-generated cuesheet parser.
  *
  * It drives the lexer, keeps parsed content and is a good place to store
  * additional context data.
@@ -115,12 +125,12 @@ public:
 	 *
 	 * \param[in] handler The parser handler to use
 	 */
-	//void set_handler(Handler *handler);
+	void set_handler(Handler& handler);
 
 	/**
 	 * \brief Returns the parser handler used.
 	 */
-	//const Handler& handler();
+	const Handler& handler();
 
 
 private:
@@ -146,7 +156,7 @@ private:
 	 *
 	 * \return Handler used by this instance
 	 */
-	//Handler* get_handler();
+	Handler* get_handler();
 
 
 
@@ -156,10 +166,13 @@ private:
 
 	std::unique_ptr<Parser> parser_;
 
-	//Handler* handler_;
+	Handler* handler_;
 };
 
 } // namespace cuesheet
+} // namespace details
+} // namespace v_1_0_0
+} // namespace arcsdec
 
-#endif // CUESHEET_DRIVER_HPP
+#endif // __LIBARCSDEC_CUESHEET_DRIVER_HPP__
 

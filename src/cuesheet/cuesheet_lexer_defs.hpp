@@ -1,6 +1,11 @@
 #ifndef CUESHEET_YYCUESHEET_LEXER_DEFS_HPP
 #define CUESHEET_YYCUESHEET_LEXER_DEFS_HPP
 
+/**
+ * \file
+ *
+ * \brief Declaration of the FlexLexer subclass for Cuesheet lexing.
+ */
 
 #undef YY_DECL
 /**
@@ -11,7 +16,7 @@
  *
  * We also rename yylex() to Lexer::next_token().
 */
-#define YY_DECL cuesheet::yycuesheet::Parser::symbol_type cuesheet::yycuesheet::Lexer::next_token()
+#define YY_DECL arcsdec::details::cuesheet::yycuesheet::Parser::symbol_type arcsdec::details::cuesheet::yycuesheet::Lexer::next_token()
 
 
 #include <memory>
@@ -23,6 +28,10 @@
 // in section "code top" (that calls get_next_token())
 #include "cuesheet.tab.hpp"
 
+/* NOTE that Lexer is part of v_1_0_0! File cuesheet.l does always refer to */
+/* the Lexer class without specifiying the inline namespace for version!    */
+
+namespace arcsdec { namespace v_1_0_0 { namespace details {
 namespace cuesheet
 {
 
@@ -63,6 +72,9 @@ private:
 
 /**
  * \brief Cuesheet Lexer.
+ *
+ * Subclass of the flex provided lexer interface. Provides interface to the
+ * flex-generated lexing routines.
  */
 class Lexer final : public Cuesheet_FlexLexer
 {
@@ -156,6 +168,7 @@ private:
 
 } // namespace yycuesheet
 } // namespace cuesheet
+} /*details*/ } /*v_1_0_0*/ } /*arcsdec*/
 
 #endif // CUESHEET_YYCUESHEET_LEXER_DEFS_HPP
 

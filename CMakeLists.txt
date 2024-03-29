@@ -187,12 +187,14 @@ list (APPEND INTERFACE_HEADERS
 
 add_library (${PROJECT_NAME} SHARED
 	"${PROJECT_SOURCE_DIR}/cuesheet/driver.cpp"
+	"${PROJECT_SOURCE_DIR}/cuesheet/handler.cpp"
 	"${PROJECT_SOURCE_DIR}/audioreader.cpp"
 	"${PROJECT_SOURCE_DIR}/calculators.cpp"
 	"${PROJECT_SOURCE_DIR}/descriptor.cpp"
 	"${PROJECT_SOURCE_DIR}/libinspect.cpp"
 	"${PROJECT_SOURCE_DIR}/metaparser.cpp"
-	## parserlibcue.cpp  is required, depends on libcue
+	"${PROJECT_SOURCE_DIR}/parsercue.cpp"
+	## parserlibcue.cpp  is optional and default OFF, depends on libcue
 	## parsertoc.cpp     is optional and default OFF, depends on libcdio
 	## readerffmpeg.cpp  is optional and default ON,  depends on parts of ffmpeg
 	## readerflac.cpp    is optional and default ON,  depends on FLAC
@@ -438,6 +440,7 @@ add_library (cuesheet OBJECT
 set_property (TARGET cuesheet PROPERTY POSITION_INDEPENDENT_CODE ON )
 
 target_include_directories (cuesheet
+	PRIVATE ${PROJECT_LOCAL_INCLUDE_DIR}    ## public headers
 	PRIVATE ${PROJECT_SOURCE_DIR}/cuesheet/ ## lexer.hpp + lexer_defs.hpp
 	PRIVATE ${PROJECT_BUILD_SOURCE_DIR}     ## generated sources
 	)

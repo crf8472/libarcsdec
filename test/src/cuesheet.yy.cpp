@@ -12,7 +12,7 @@
 
 TEST_CASE ("cuesheet", "[yycuesheet]" )
 {
-	using cuesheet::Driver;
+	using arcsdec::details::cuesheet::Driver;
 
 	Driver driver;
 

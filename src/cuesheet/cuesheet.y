@@ -6,7 +6,7 @@
 
 
 /* Namespace for generated parser class */
-%define api.namespace          {cuesheet::yycuesheet}
+%define api.namespace          {arcsdec::v_1_0_0::details::cuesheet::yycuesheet}
 
 /* Classname for generated parser class */
 %define api.parser.class       {Parser}
@@ -47,20 +47,29 @@
 /* Goes to .tab.hpp header file (therefore included in source) */
 %code requires
 {
+	#ifndef __LIBARCSDEC_VERSION_HPP__
+	#include "version.hpp" // for v_1_0_0
+	#endif
+
 	// Forward declare what we are about to use
 	int yylex (void);
 	int yyerror (const char *s);
 
 	// Forward declarations
+	namespace arcsdec { namespace v_1_0_0 { namespace details {
 	namespace cuesheet {
 
 		class Driver;
 
+		/**
+		 * \brief Namespace for flex- and bison generated sources for parsercue.
+		 */
 		namespace yycuesheet {
 
 			class Lexer;
 		} // namespace yycuesheet
 	} // namespace cuesheet
+	} /*details*/ } /*v_1_0_0*/ } /*arcsdec*/
 }
 
 
@@ -83,8 +92,10 @@
 	/**
 	 * \brief Override yylex() to be called in Parser::parse()
 	 */
-	static cuesheet::yycuesheet::Parser::symbol_type yylex(
-			cuesheet::yycuesheet::Lexer &lexer, cuesheet::Driver& /*driver*/)
+	static arcsdec::v_1_0_0::details::cuesheet::yycuesheet::Parser::symbol_type
+	yylex(
+			arcsdec::v_1_0_0::details::cuesheet::yycuesheet::Lexer &lexer,
+			arcsdec::v_1_0_0::details::cuesheet::Driver& /*driver*/)
 	{
 		return lexer.next_token(); // renamed yylex()
 	}
@@ -300,6 +311,7 @@ time
 #pragma GCC diagnostic pop
 
 /* Bison expects us to provide implementation, otherwise linker complains */
+namespace arcsdec { namespace v_1_0_0 { namespace details {
 namespace cuesheet {
 namespace yycuesheet {
 
@@ -311,4 +323,5 @@ void Parser::error(const location &loc, const std::string &message)
 
 } // namespace yycuesheet
 } // namespace cuesheet
+} /*details*/ } /*v_1_0_0*/ } /*arcsdec*/
 

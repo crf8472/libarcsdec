@@ -20,7 +20,7 @@
 %option noyywrap
 
 /* Specify name of the generated lexer class */
-%option yyclass="cuesheet::yycue::Lexer"
+%option yyclass="arcsdec::details::cuesheet::yycue::Lexer"
 
 /* Maintain the lineno */
 %option yylineno
@@ -73,16 +73,16 @@
 // Redefine calls of yyterminate():
 // Original yyterminate() macro returns int. Since we're using Bison 3 variants
 // as tokens, call context will expect `Parser::semantic_type` instead.
-#define yyterminate() cuesheet::yycuesheet::Parser::make_END(get().loc());
+#define yyterminate() arcsdec::details::cuesheet::yycuesheet::Parser::make_END(get().loc());
 
 // Track current lexer location
 #define YY_USER_ACTION shift_pos(yylineno, yyleng);
 
 // Declare the symbols from yycuesheet that are to be used in yylex().
 // (yylex() is in global namespace)
-using cuesheet::yycuesheet::Parser;
-using cuesheet::yycuesheet::location;
-using cuesheet::yycuesheet::position;
+using arcsdec::details::cuesheet::yycuesheet::Parser;
+using arcsdec::details::cuesheet::yycuesheet::location;
+using arcsdec::details::cuesheet::yycuesheet::position;
 
 // end cuesheet.l
 %}
@@ -172,6 +172,7 @@ SIZE_INFO   { return Parser::make_SIZE_INFO(get().loc());  }
 
 #pragma GCC diagnostic pop
 
+namespace arcsdec { namespace details {
 namespace cuesheet { namespace yycuesheet {
 
 
@@ -244,4 +245,5 @@ Driver& Lexer::get()
 }
 
 } /* namespace yycuesheet */ } /* namespace cuesheet */
+} /*details*/ } /*arcsdec*/
 
