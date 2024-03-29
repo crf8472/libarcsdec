@@ -75,6 +75,10 @@ set (DOXYGEN_STRIP_FROM_PATH        "${PROJECT_LOCAL_INCLUDE_DIR}/" )
 string (REPLACE ";" " " DOXYGEN_INPUT
 	"${PROJECT_LOCAL_INCLUDE_DIR}/;${DOC_TEXTS_GEN_DIR}/" )
 
+if (WITH_INTERNAL_DOCS )
+	set (DOXYGEN_INPUT "${DOXYGEN_INPUT} ${DOC_GEN_DIR}/cuesheet/" )
+endif()
+
 
 ## Build internal docs if requested
 
