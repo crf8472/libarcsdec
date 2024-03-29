@@ -322,8 +322,29 @@ namespace yycuesheet {
 
 void Parser::error(const location &loc, const std::string &message)
 {
-	std::cerr << "Parser error at " << loc << ": " << message << std::endl;
-		//<< "Driver says:       "  << driver.loc()
+	if (loc.begin.line == loc.end.line)
+	{
+		if (loc.end.column - 1 == loc.begin.column)
+		{
+			std::cerr << "Parser error at line " << loc.begin.line
+				<< ", char " << loc.begin.column
+				<< ": " << message << std::endl;
+		} else
+		{
+			std::cerr << "Parser error at line " << loc.begin.line
+				<< " chars " << loc.begin.column
+				<< "-" << loc.end.column - 1
+				<< ": " << message << std::endl;
+		}
+	} else
+	{
+		std::cerr << "Parser error from line " << loc.begin.line
+			<< ", char " << loc.begin.column
+			<< " till line " << loc.end.line
+			<< ", char " << loc.end.column - 1
+			<< ": " << message << std::endl;
+
+	}
 }
 
 } // namespace yycuesheet
