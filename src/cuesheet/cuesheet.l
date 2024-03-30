@@ -25,6 +25,9 @@
 /* Maintain the lineno */
 %option yylineno
 
+/* We do not manipulate yytext */
+%option noinput nounput
+
 /* Write summary to stderr when generating the lexer. */
 /* %option verbose */
 
@@ -110,8 +113,6 @@ REM             REM[[:blank:]]+
 				return Parser::make_NUMBER(YYText(), get().loc());
 			}
 
-:			{ return Parser::make_COLON(get().loc()); }
-
 CATALOG     { return Parser::make_CATALOG(get().loc());    }
 FILE        { return Parser::make_FILETAG(get().loc());    }
 CDTEXTFILE  { return Parser::make_CDTEXTFILE(get().loc()); }
@@ -149,12 +150,14 @@ SCMS        { return Parser::make_SCMS(get().loc());       }
 
 COMPOSER    { return Parser::make_COMPOSER(get().loc());   }
 ARRANGER    { return Parser::make_ARRANGER(get().loc());   }
+MESSAGE     { return Parser::make_MESSAGE(get().loc());   }
 DISC_ID     { return Parser::make_DISC_ID(get().loc());    }
 GENRE       { return Parser::make_GENRE(get().loc());      }
 TOC_INFO1   { return Parser::make_TOC_INFO1(get().loc());  }
 TOC_INFO2   { return Parser::make_TOC_INFO2(get().loc());  }
 UPC_EAN     { return Parser::make_UPC_EAN(get().loc());    }
 SIZE_INFO   { return Parser::make_SIZE_INFO(get().loc());  }
+
 
 {REM}DATE                  { BEGIN(REMVAL); return Parser::make_DATE(get().loc());                  }
 {REM}GENRE                 { BEGIN(REMVAL); return Parser::make_REMGENRE(get().loc());              }
@@ -165,14 +168,20 @@ SIZE_INFO   { return Parser::make_SIZE_INFO(get().loc());  }
 
 <REMVAL>[^\n]* { return Parser::make_STRING(YYText(), get().loc()); }
 
-{REM}       { BEGIN(REM); }
-<REM>[^\n]* { BEGIN(INITIAL); /* discard rest of line */  }
+
+{REM}       { BEGIN(REM);     /* REM: discard everything from here */ }
+<REM>[^\n]* { BEGIN(INITIAL); /* REM: discard rest of line */  }
+
 
 {QSTRING1}|{QSTRING2} { return Parser::make_STRING(YYText(), get().loc()); }
+
+:			{ return Parser::make_COLON(get().loc()); }
 
 <INITIAL>{GLYPHS}     { return Parser::make_STRING(YYText(), get().loc()); }
 
 <*>\n        { BEGIN(INITIAL); /* acts as delimiter */ }
+
+<INDEX>[^[:blank:][:digit:]:\n]+   { /* rule out from INDEX */ BEGIN(INITIAL); return Parser::make_STRING(YYText(), get().loc()); }
 
 <<EOF>>      { return yyterminate(); }
 
