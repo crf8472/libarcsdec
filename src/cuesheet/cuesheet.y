@@ -68,6 +68,7 @@
 
 			class Lexer;
 		} // namespace yycuesheet
+
 	} // namespace cuesheet
 	} /*details*/ } /*v_1_0_0*/ } /*arcsdec*/
 }
@@ -194,16 +195,13 @@ cuesheet
 
 global_statements
 	: global_statements global_statement
-	| /* empty */
+	| global_statement
 	;
 
 global_statement
 	: CATALOG    NUMBER { /* MCN: [0-9]{13} */ }
 	| CDTEXTFILE STRING
 	| FILETAG    STRING file_format_tag
-		{
-			std::cout << "FILE: " << $2 << '\n';
-		}
 	| cdtext_statement
 	| rem_statement
 	;
@@ -221,7 +219,7 @@ cdtext_statement
 	: cdtext_tag STRING
 
 cdtext_tag
-	: TITLE      { std::cout << "TITLE\n";  }
+	: TITLE
 	| PERFORMER
 	| SONGWRITER
 	| COMPOSER
@@ -232,7 +230,7 @@ cdtext_tag
 	| TOC_INFO1
 	| TOC_INFO2
 	| UPC_EAN
-	| ISRC       { std::cout << "ISRC\n"; /* [[:alnum:]]{5}[0-9]{7} */ }
+	| ISRC       { /* [[:alnum:]]{5}[0-9]{7} */ }
 	| SIZE_INFO
 	;
 
@@ -283,9 +281,10 @@ track_statements
 
 track_statement
 	: cdtext_statement
+	/* | file_statment */   /* support EAC format variant */
 	| rem_statement
 	| FLAGS track_flags
-	| TRACK_ISRC STRING { std::cout << "  ISRC: " << $2 << '\n'; }
+	| TRACK_ISRC STRING
 	| PREGAP       time
 	| POSTGAP      time
 	| INDEX NUMBER time
@@ -294,12 +293,11 @@ track_statement
 			driver.get_handler()->index(std::atoi(&$2[0]),
 				std::get<0>(msf), std::get<1>(msf), std::get<2>(msf));
 		}
-	/* | file_statment */   /* support EAC format variant */
 	;
 
 track_flags
 	: track_flags track_flag
-	| /* empty */
+	| track_flag
 	;
 
 track_flag
