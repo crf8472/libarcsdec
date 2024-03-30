@@ -161,10 +161,10 @@ SIZE_INFO   { return Parser::make_SIZE_INFO(get().loc());  }
 
 {REM}DATE                  { BEGIN(REMVAL); return Parser::make_DATE(get().loc());                  }
 {REM}GENRE                 { BEGIN(REMVAL); return Parser::make_REMGENRE(get().loc());              }
-{REM}REPLAYGAIN_ALBUM_GAIN { BEGIN(REMVAL); return Parser::make_REPLAYGAIN_ALBUM_GAIN(get().loc()); }
-{REM}REPLAYGAIN_ALBUM_PEAK { BEGIN(REMVAL); return Parser::make_REPLAYGAIN_ALBUM_PEAK(get().loc()); }
-{REM}REPLAYGAIN_TRACK_GAIN { BEGIN(REMVAL); return Parser::make_REPLAYGAIN_TRACK_GAIN(get().loc()); }
-{REM}REPLAYGAIN_TRACK_PEAK { BEGIN(REMVAL); return Parser::make_REPLAYGAIN_TRACK_PEAK(get().loc()); }
+{REM}REPLAYGAIN_ALBUM_GAIN { BEGIN(REMVAL); return Parser::make_RPG_ALBUM_GAIN(get().loc()); }
+{REM}REPLAYGAIN_ALBUM_PEAK { BEGIN(REMVAL); return Parser::make_RPG_ALBUM_PEAK(get().loc()); }
+{REM}REPLAYGAIN_TRACK_GAIN { BEGIN(REMVAL); return Parser::make_RPG_TRACK_GAIN(get().loc()); }
+{REM}REPLAYGAIN_TRACK_PEAK { BEGIN(REMVAL); return Parser::make_RPG_TRACK_PEAK(get().loc()); }
 
 <REMVAL>[^\n]* { return Parser::make_STRING(YYText(), get().loc()); }
 
