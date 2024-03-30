@@ -65,15 +65,15 @@
 #include <iostream>       /* for cout */
 #include <iomanip>        /* for setw, setfill, left, right */
 
+#include "cuesheet.tab.hpp"       /* auto-generated: bison token definitions */
+#include "cuesheet_location.hpp"  /* auto-generated: position + location */
+
 #ifndef __LIBARCSDEC_CUESHEET_LEXER_DEFS_HPP__
 #include "cuesheet_lexer_defs.hpp" /* for Lexer */
 #endif
 #ifndef __LIBARCSDEC_CUESHEET_DRIVER_HPP__
 #include "driver.hpp"              /* for Driver */
 #endif
-
-#include "cuesheet.tab.hpp" /* auto-generated: Token Definitions of bison */
-#include "cuesheet_location.hpp"  /* auto-generated */
 
 
 // Redefine calls of yyterminate():
