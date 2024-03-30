@@ -553,11 +553,11 @@ if (WITH_LIBSNDFILE )
 
 	message (STATUS "Build with libsndfile support" )
 
-	target_sources (${PROJECT_NAME}
-		PRIVATE ${PROJECT_SOURCE_DIR}/readersndfile.cpp )
-
 	find_package (SndFile 1.0.17 REQUIRED )
 	list (APPEND PKG_REQUIRE_ARRAY "sndfile >= 1.0.17" )
+
+	target_sources (${PROJECT_NAME}
+		PRIVATE ${PROJECT_SOURCE_DIR}/readersndfile.cpp )
 
 	if (TARGET SndFile::sndfile )
 		## found by libsndfile's cmake config
