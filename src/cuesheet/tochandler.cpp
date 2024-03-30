@@ -100,13 +100,16 @@ void TOCHandler::do_cdtextfile(const std::string& /*name*/)
 }
 
 
-void TOCHandler::do_file(const std::string& /*name*/, const FILE_TYPE& /*t*/)
+void TOCHandler::do_file(const std::string& /*name*/, const FILE_FORMAT& /*t*/)
 {
 	// empty
 }
 
 
-// flags
+void TOCHandler::do_track_flags(const std::vector<TRACK_FLAG>& /*flags*/)
+{
+	// empty
+}
 
 
 void TOCHandler::do_index(const int i, const int m, const int s, const int f)
@@ -137,7 +140,10 @@ void TOCHandler::do_isrc(const std::string& /*name*/)
 }
 
 
-// performer
+void TOCHandler::do_performer(const std::string& /*name*/)
+{
+	// empty
+}
 
 
 void TOCHandler::do_postgap(const int /*m*/, const int /*s*/, const int /*f*/)
@@ -154,7 +160,12 @@ void TOCHandler::do_pregap(const int m, const int s, const int f)
 
 
 // rem
-// songwriter
+
+
+void TOCHandler::do_songwriter(const std::string& /*name*/)
+{
+	// empty
+}
 
 
 void TOCHandler::do_title(const std::string& /*title*/)

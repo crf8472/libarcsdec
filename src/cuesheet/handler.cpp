@@ -48,13 +48,16 @@ void Handler::cdtextfile(const std::string& name)
 }
 
 
-void Handler::file(const std::string& name, const FILE_TYPE& t)
+void Handler::file(const std::string& name, const FILE_FORMAT& t)
 {
 	do_file(name, t);
 }
 
 
-// flags
+void Handler::track_flags(const std::vector<TRACK_FLAG>& flags)
+{
+	do_track_flags(flags);
+}
 
 
 void Handler::index(const int i, const int m, const int s, const int f)
@@ -69,7 +72,10 @@ void Handler::isrc(const std::string& name)
 }
 
 
-// performer
+void Handler::performer(const std::string& name)
+{
+	do_performer(name);
+}
 
 
 void Handler::postgap(const int m, const int s, const int f)
@@ -85,7 +91,12 @@ void Handler::pregap(const int m, const int s, const int f)
 
 
 // rem
-// songwriter
+
+
+void Handler::songwriter(const std::string& name)
+{
+	do_songwriter(name);
+}
 
 
 void Handler::title(const std::string& title)

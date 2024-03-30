@@ -8,6 +8,7 @@
  */
 
 #include <string>
+#include <vector>
 
 #include "version.hpp"
 
@@ -20,11 +21,10 @@ namespace details
 namespace cuesheet
 {
 
-
 /**
- * \brief FILE types in cuesheets.
+ * \brief FILE formats in cuesheets.
  */
-enum class FILE_TYPE
+enum class FILE_FORMAT : int
 {
 	BINARY,
 	MOTOROLA,
@@ -36,21 +36,9 @@ enum class FILE_TYPE
 
 
 /**
- * \brief TRACK flags in cuesheets
- */
-enum class TRACK_FLAGS
-{
-	PRE,
-	DCP,
-	FOUR_CH,
-	SCMS
-};
-
-
-/**
  * \brief TRACK modes in cuesheets.
  */
-enum class TRACK_MODE
+enum class TRACK_MODE : int
 {
 	AUDIO,
 	MODE1_2048,
@@ -61,6 +49,18 @@ enum class TRACK_MODE
 	MODE2_2336,
 	MODE2_2342,
 	MODE2_2352
+};
+
+
+/**
+ * \brief TRACK flags in cuesheets
+ */
+enum class TRACK_FLAG : int
+{
+	PRE,
+	DCP,
+	FOUR_CH,
+	SCMS
 };
 
 
@@ -104,15 +104,15 @@ public:
 
 	void catalog(const std::string& mcn);
 	void cdtextfile(const std::string& name);
-	void file(const std::string& name, const FILE_TYPE& t);
-	// flags
+	void file(const std::string& name, const FILE_FORMAT& t);
+	void track_flags(const std::vector<TRACK_FLAG>& flags);
 	void index(const int i, const int m, const int s, const int f);
 	void isrc(const std::string& name);
-	// performer
+	void performer(const std::string& name);
 	void postgap(const int m, const int s, const int f);
 	void pregap(const int m, const int s, const int f);
 	// rem
-	// songwriter
+	void songwriter(const std::string& name);
 	void title(const std::string& title);
 	void track(const int i, const TRACK_MODE& m);
 
@@ -130,10 +130,11 @@ private:
 	virtual void do_cdtextfile(const std::string& name)
 	= 0;
 
-	virtual void do_file(const std::string& name, const FILE_TYPE& t)
+	virtual void do_file(const std::string& name, const FILE_FORMAT& t)
 	= 0;
 
-	// flags
+	virtual void do_track_flags(const std::vector<TRACK_FLAG>& flags)
+	= 0;
 
 	virtual void do_index(const int i, const int m, const int s, const int f)
 	= 0;
@@ -141,7 +142,8 @@ private:
 	virtual void do_isrc(const std::string& name)
 	= 0;
 
-	// performer
+	virtual void do_performer(const std::string& name)
+	= 0;
 
 	virtual void do_postgap(const int m, const int s, const int f)
 	= 0;
@@ -150,7 +152,9 @@ private:
 	= 0;
 
 	// rem
-	// songwriter
+
+	virtual void do_songwriter(const std::string& name)
+	= 0;
 
 	virtual void do_title(const std::string& title)
 	= 0;

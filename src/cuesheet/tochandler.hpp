@@ -74,22 +74,23 @@ class TOCHandler final : public Handler
 
 	void do_cdtextfile(const std::string& name) final;
 
-	void do_file(const std::string& name, const FILE_TYPE& t) final;
+	void do_file(const std::string& name, const FILE_FORMAT& t) final;
 
-	// flags
+	void do_track_flags(const std::vector<TRACK_FLAG>& flags) final;
 
 	void do_index(const int i, const int m, const int s, const int f) final;
 
 	void do_isrc(const std::string& name) final;
 
-	// performer
+	void do_performer(const std::string& name) final;
 
 	void do_postgap(const int m, const int s, const int f) final;
 
 	void do_pregap(const int m, const int s, const int f) final;
 
 	// rem
-	// songwriter
+
+	void do_songwriter(const std::string& name) final;
 
 	void do_title(const std::string& title) final;
 

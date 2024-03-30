@@ -51,6 +51,10 @@
 	#include "version.hpp" // for v_1_0_0
 	#endif
 
+	#ifndef __LIBARCSDEC_CUESHEET_HANDLER_HPP__
+	#include "handler.hpp"                      // user-defined
+	#endif
+
 	// Forward declare what we are about to use
 	int yylex (void);
 	int yyerror (const char *s);
@@ -93,10 +97,6 @@
 
 	#ifndef __LIBARCSDEC_CUESHEET_DRIVER_HPP__
 	#include "driver.hpp"                       // user-defined
-	#endif
-
-	#ifndef __LIBARCSDEC_CUESHEET_HANDLER_HPP__
-	#include "handler.hpp"                      // user-defined
 	#endif
 
 	/**
@@ -176,15 +176,21 @@
 %token <std::string> STRING
 %token COLON
 
-%nterm <std::tuple<int, int, int>> time
-
 %token END 0 "End of file"
+
+/* Non-Terminals */
+%nterm <std::tuple<int, int, int>> time
+%nterm <FILE_FORMAT>               file_format_tag
+%nterm <TRACK_MODE>                track_mode_tag
+%nterm <TRACK_FLAG>                track_flag
+%nterm <std::vector<TRACK_FLAG>>   track_flags
 
 
 %start cuesheet
 
 
 %%
+
 
 cuesheet
 	: global_statements track_list
@@ -199,30 +205,54 @@ global_statements
 	;
 
 global_statement
-	: CATALOG    NUMBER { /* MCN: [0-9]{13} */ }
+	: CATALOG NUMBER
+		{   /* MCN: [0-9]{13} */
+			driver.get_handler()->catalog($2);
+		}
 	| CDTEXTFILE STRING
-	| FILETAG    STRING file_format_tag
+		{
+			driver.get_handler()->cdtextfile($2);
+		}
+	| FILETAG STRING file_format_tag
+		{
+			driver.get_handler()->file($2, $3);
+		}
 	| cdtext_statement
 	| rem_statement
 	;
 
 file_format_tag
-	: BINARY
-	| MOTOROLA
-	| AIFF
-	| WAVE
-	| MP3
-	| FLAC
+	: BINARY    { $$ = FILE_FORMAT::BINARY;   /* cdrwin */ }
+	| MOTOROLA  { $$ = FILE_FORMAT::MOTOROLA; /* cdrwin */ }
+	| AIFF      { $$ = FILE_FORMAT::AIFF;     /* cdrwin */ }
+	| WAVE      { $$ = FILE_FORMAT::WAVE;     /* cdrwin */ }
+	| MP3       { $$ = FILE_FORMAT::MP3;      /* cdrwin */ }
+	| FLAC      { $$ = FILE_FORMAT::FLAC;     }
 	;
 
 cdtext_statement
-	: cdtext_tag STRING
+	: TITLE STRING
+		{
+			driver.get_handler()->title($2);
+		}
+	| PERFORMER STRING
+		{
+			driver.get_handler()->performer($2);
+		}
+	| SONGWRITER STRING
+		{
+			driver.get_handler()->songwriter($2);
+		}
+	| ISRC STRING
+		{
+			/* ISRC: [[:alnum:]]{5}[0-9]{7} */
+			driver.get_handler()->isrc($2);
+		}
+	| cdtext_tag STRING
+	;
 
 cdtext_tag
-	: TITLE
-	| PERFORMER
-	| SONGWRITER
-	| COMPOSER
+	: COMPOSER
 	| ARRANGER
 	| MESSAGE
 	| DISC_ID
@@ -230,7 +260,6 @@ cdtext_tag
 	| TOC_INFO1
 	| TOC_INFO2
 	| UPC_EAN
-	| ISRC       { /* [[:alnum:]]{5}[0-9]{7} */ }
 	| SIZE_INFO
 	;
 
@@ -259,19 +288,19 @@ track
 track_header
 	: TRACK NUMBER track_mode_tag
 		{
-			driver.get_handler()->track(std::atoi(&$2[0]), TRACK_MODE::AUDIO);
+			driver.get_handler()->track(std::atoi(&$2[0]), $3);
 		}
 	;
 
 track_mode_tag
-	: AUDIO
-	| MODE1_2048
-	| MODE1_2352
-	| MODE2_2336
-	| MODE2_2048
-	| MODE2_2342
-	| MODE2_2332
-	| MODE2_2352
+	: AUDIO       { $$ = TRACK_MODE::AUDIO;      }
+	| MODE1_2048  { $$ = TRACK_MODE::MODE1_2048; }
+	| MODE1_2352  { $$ = TRACK_MODE::MODE1_2352; }
+	| MODE2_2336  { $$ = TRACK_MODE::MODE2_2336; }
+	| MODE2_2048  { $$ = TRACK_MODE::MODE2_2048; }
+	| MODE2_2342  { $$ = TRACK_MODE::MODE2_2342; }
+	| MODE2_2332  { $$ = TRACK_MODE::MODE2_2332; }
+	| MODE2_2352  { $$ = TRACK_MODE::MODE2_2352; }
 	;
 
 track_statements
@@ -284,9 +313,27 @@ track_statement
 	/* | file_statment */   /* support EAC format variant */
 	| rem_statement
 	| FLAGS track_flags
+		{
+			driver.get_handler()->track_flags($2);
+		}
 	| TRACK_ISRC STRING
+		{
+			/* ISRC: [[:alnum:]]{5}[0-9]{7} */
+			driver.get_handler()->isrc($2);
+		}
 	| PREGAP       time
+		{
+			auto msf { $2 };
+			driver.get_handler()->pregap(
+				std::get<0>(msf), std::get<1>(msf), std::get<2>(msf));
+
+		}
 	| POSTGAP      time
+		{
+			auto msf { $2 };
+			driver.get_handler()->postgap(
+				std::get<0>(msf), std::get<1>(msf), std::get<2>(msf));
+		}
 	| INDEX NUMBER time
 		{
 			auto msf { $3 };
@@ -297,14 +344,20 @@ track_statement
 
 track_flags
 	: track_flags track_flag
+		{
+			$$.emplace_back($2);
+		}
 	| track_flag
+		{
+			$$.emplace_back($1);
+		}
 	;
 
 track_flag
-	: PRE
-	| DCP
-	| FOUR_CH
-	| SCMS
+	: PRE      { $$ = TRACK_FLAG::PRE;     }
+	| DCP      { $$ = TRACK_FLAG::DCP;     }
+	| FOUR_CH  { $$ = TRACK_FLAG::FOUR_CH; }
+	| SCMS     { $$ = TRACK_FLAG::SCMS;    }
 	;
 
 time
@@ -317,7 +370,9 @@ time
 		}
 	;
 
+
 %%
+
 
 #pragma GCC diagnostic pop
 
