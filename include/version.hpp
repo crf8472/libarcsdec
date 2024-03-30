@@ -16,7 +16,10 @@ inline namespace v_1_0_0
 {
 
 /**
- * \addtogroup version Version information
+ * \defgroup version Version information
+ *
+ * \brief Access version information and check version
+ *
  * @{
  */
 
