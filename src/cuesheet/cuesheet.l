@@ -43,8 +43,9 @@
 /* Cf. Flex Manual, Ch. 18 'Generating C++-Scanners' (very end of the chapter)*/
 
 %s INDEX
-%s REM
 %s REMVAL
+
+%x REM
 
 %{
 // from cuesheet.l
@@ -102,6 +103,8 @@ QSTRING2        \"([^\"\n]|\\\")*\"
 REM             REM[[:blank:]]+
 
 %%
+
+<*>{WHITESPACE} { /* ignore */ }
 
 {DIGITS}    {
 				return Parser::make_NUMBER(YYText(), get().loc());
@@ -164,8 +167,6 @@ SIZE_INFO   { return Parser::make_SIZE_INFO(get().loc());  }
 
 {REM}       { BEGIN(REM); }
 <REM>[^\n]* { BEGIN(INITIAL); /* discard rest of line */  }
-
-<*>{WHITESPACE} { /* ignore */ }
 
 {QSTRING1}|{QSTRING2} { return Parser::make_STRING(YYText(), get().loc()); }
 
