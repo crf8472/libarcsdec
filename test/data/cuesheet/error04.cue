@@ -1,6 +1,6 @@
 CATALOG 1234567890123
 FILE "john_doe_album.wav" WAVE
-CDTEXTFILE foo.txt
+foo CDTEXTFILE foo.txt
 TITLE "John Doe: CD 2"
 REM DISCID 8D0F910B
 REM DATE 2023-01-07
@@ -14,7 +14,7 @@ PERFORMER "John Doe"
 	REM Some remark
     INDEX 00 00:01:74
     INDEX 01 00:02:00
-  TRACK 02 AUDIO foobar
+  TRACK 02 AUDIO
     TITLE "John Doe Piece 2"
     PERFORMER "Jane Doe"
     INDEX 01 05:34:22

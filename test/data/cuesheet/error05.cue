@@ -2,6 +2,7 @@ CATALOG 1234567890123
 FILE "john_doe_album.wav" WAVE
 CDTEXTFILE foo.txt
 TITLE "John Doe: CD 2"
+IRREGULARTAG "And some string"
 REM DISCID 8D0F910B
 REM DATE 2023-01-07
 REM COMMENT "ExactAudioCopy v1.0b3" "foo" BAR

@@ -226,6 +226,121 @@ TEST_CASE ("cuesheet", "[yycuesheet]" )
 				      -1 //18935 // not from Cuesheet
 				});
 	}
+
+	SECTION ("Cuesheet with trailing chars in FILE statement fails")
+	{
+		std::ifstream file;
+		file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+		try
+		{
+			file.open("cuesheet/error01.cue", std::ifstream::in);
+		}
+		catch (const std::ifstream::failure& f)
+		{
+			throw std::runtime_error(
+				std::string { "Failed to open file "
+					"'cuesheet/error01.cue', got: " }
+				+ typeid(f).name()
+				+ ", message: " + f.what());
+		}
+
+		driver.set_input(file);
+		const int result { driver.parse() };
+
+		CHECK ( result > 0 );
+	}
+
+	SECTION ("Cuesheet with trailing chars in TRACK statement fails")
+	{
+		std::ifstream file;
+		file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+		try
+		{
+			file.open("cuesheet/error02.cue", std::ifstream::in);
+		}
+		catch (const std::ifstream::failure& f)
+		{
+			throw std::runtime_error(
+				std::string { "Failed to open file "
+					"'cuesheet/error02.cue', got: " }
+				+ typeid(f).name()
+				+ ", message: " + f.what());
+		}
+
+		driver.set_input(file);
+		const int result { driver.parse() };
+
+		CHECK ( result > 0 );
+	}
+
+	SECTION ("Cuesheet with trailing chars in INDEX statement fails")
+	{
+		std::ifstream file;
+		file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+		try
+		{
+			file.open("cuesheet/error03.cue", std::ifstream::in);
+		}
+		catch (const std::ifstream::failure& f)
+		{
+			throw std::runtime_error(
+				std::string { "Failed to open file "
+					"'cuesheet/error03.cue', got: " }
+				+ typeid(f).name()
+				+ ", message: " + f.what());
+		}
+
+		driver.set_input(file);
+		const int result { driver.parse() };
+
+		CHECK ( result > 0 );
+	}
+
+	SECTION ("Cuesheet erroneous leading characters in CDTEXTFILE fails")
+	{
+		std::ifstream file;
+		file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+		try
+		{
+			file.open("cuesheet/error04.cue", std::ifstream::in);
+		}
+		catch (const std::ifstream::failure& f)
+		{
+			throw std::runtime_error(
+				std::string { "Failed to open file "
+					"'cuesheet/error04.cue', got: " }
+				+ typeid(f).name()
+				+ ", message: " + f.what());
+		}
+
+		driver.set_input(file);
+		const int result { driver.parse() };
+
+		CHECK ( result > 0 );
+	}
+
+	SECTION ("Cuesheet with unknown global statement tag fails")
+	{
+		std::ifstream file;
+		file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+		try
+		{
+			file.open("cuesheet/error05.cue", std::ifstream::in);
+		}
+		catch (const std::ifstream::failure& f)
+		{
+			throw std::runtime_error(
+				std::string { "Failed to open file "
+					"'cuesheet/error05.cue', got: " }
+				+ typeid(f).name()
+				+ ", message: " + f.what());
+		}
+
+		driver.set_input(file);
+		const int result { driver.parse() };
+
+		CHECK ( result > 0 );
+	}
 }
 
 
