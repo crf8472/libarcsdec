@@ -121,15 +121,6 @@ foreach (_testcase ${TEST_SETS} )
 
 endforeach()
 
-## Add libcue dependencies to testcase
-if (WITH_LIBCUE )
-
-	target_include_directories (parserlibcue_test
-		PRIVATE ${libcue_INCLUDE_DIRS} )
-
-	target_link_libraries (parserlibcue_test PRIVATE ${libcue_LIBRARIES} )
-endif()
-
 ## Add FLAC dependencies to testcase
 if (WITH_FLAC )
 

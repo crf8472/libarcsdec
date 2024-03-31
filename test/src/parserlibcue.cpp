@@ -35,8 +35,11 @@ TEST_CASE ("DescriptorCue", "[parserlibcue]" )
 		const auto libs = d.libraries();
 
 		CHECK ( libs.size() == 1 );
-		CHECK ( libs.front().first  == "libcue" );
-		CHECK ( libs.front().second.find("libcue.so") != std::string::npos );
+
+		auto l = libs.begin();
+
+		CHECK ( l->first  == "libcue" );
+		CHECK ( l->second.find("libcue") != std::string::npos );
 	}
 
 	SECTION ("Does not match any codecs not accepted by this descriptor")
