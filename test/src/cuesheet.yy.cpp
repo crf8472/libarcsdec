@@ -34,9 +34,9 @@ TEST_CASE ("cuesheet", "[yycuesheet]" )
 		std::ifstream file;
 		file.open("test01_ok.cue", std::ifstream::in);
 		driver.set_input(file);
-		const int res { driver.parse() };
+		const int result { driver.parse() };
 
-		CHECK ( res == 0 );
+		CHECK ( result == 0 );
 	}
 
 	SECTION ("Cuesheet without syntax errors and no newline is OK")
@@ -44,9 +44,9 @@ TEST_CASE ("cuesheet", "[yycuesheet]" )
 		std::ifstream file;
 		file.open("test01_ok_without_lf.cue", std::ifstream::in);
 		driver.set_input(file);
-		const int res { driver.parse() };
+		const int result { driver.parse() };
 
-		CHECK ( res == 0 );
+		CHECK ( result == 0 );
 	}
 
 	SECTION ("Cuesheet without syntax errors and no newline is OK")
@@ -54,9 +54,10 @@ TEST_CASE ("cuesheet", "[yycuesheet]" )
 		std::ifstream file;
 		file.open("bach.cue", std::ifstream::in);
 		driver.set_input(file);
-		const int res { driver.parse() };
+		const int result { driver.parse() };
 
-		CHECK ( res == 0 );
+		CHECK ( result == 0 );
+
 		CHECK ( handler.offsets().size() == 15 );
 		CHECK ( handler.offsets() == std::vector<int32_t>{
 					  33,
@@ -77,7 +78,7 @@ TEST_CASE ("cuesheet", "[yycuesheet]" )
 				});
 		CHECK ( handler.lengths().size() == 15 );
 		CHECK ( handler.lengths() == std::vector<int32_t>{
-				    5192,
+					5192,
 					2165,
 				   15990,
 				   12228,
@@ -90,7 +91,7 @@ TEST_CASE ("cuesheet", "[yycuesheet]" )
 				   40632,
 				   14873,
 				   11952,
-				    8783,
+					8783,
 				      -1 //18935 // not from Cuesheet
 				});
 	}
