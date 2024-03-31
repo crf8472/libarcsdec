@@ -20,12 +20,14 @@ list (APPEND TEST_SETS audioreader  )
 list (APPEND TEST_SETS calculators  )
 list (APPEND TEST_SETS descriptor   )
 list (APPEND TEST_SETS libinspect   )
-list (APPEND TEST_SETS parserlibcue )
+list (APPEND TEST_SETS cuesheet.yy  ) # details of parsercue
 list (APPEND TEST_SETS readerwav    )
 list (APPEND TEST_SETS selection    )
 list (APPEND TEST_SETS dec_version  )
 
-list (APPEND TEST_SETS cuesheet.yy  )
+if (WITH_LIBCUE )
+list (APPEND TEST_SETS parserlibcue )
+endif()
 
 if (WITH_LIBCDIO )
 list (APPEND TEST_SETS parsertoc    )
@@ -118,6 +120,15 @@ foreach (_testcase ${TEST_SETS} )
 	)
 
 endforeach()
+
+## Add libcue dependencies to testcase
+if (WITH_LIBCUE )
+
+	target_include_directories (parserlibcue_test
+		PRIVATE ${libcue_INCLUDE_DIRS} )
+
+	target_link_libraries (parserlibcue_test PRIVATE ${libcue_LIBRARIES} )
+endif()
 
 ## Add FLAC dependencies to testcase
 if (WITH_FLAC )

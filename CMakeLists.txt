@@ -454,34 +454,63 @@ target_link_libraries (${PROJECT_NAME} PRIVATE cuesheet )
 
 ## Default configuration for optional features
 
-option (WITH_FLAC    "Add FLAC reading capability"     ON )
-option (WITH_WAVPACK "Add WavPack reading capability"  ON )
-option (WITH_FFMPEG  "Add ffmpeg reading capabilities" ON )
+option (WITH_LIBCUE     "Add libcue parsing capability"       OFF )
+option (WITH_LIBCDIO    "Add libcdio parsing capabilities"    OFF )
+option (WITH_FLAC       "Add FLAC reading capability"          ON )
+option (WITH_WAVPACK    "Add WavPack reading capability"       ON )
+option (WITH_FFMPEG     "Add ffmpeg reading capabilities"      ON )
 option (WITH_LIBSNDFILE "Add libsndfile reading capabilities" OFF )
-option (WITH_LIBCDIO "Add libcdio reading capabilities" OFF )
 
 
-## --- Required: parserlibcue (requires libcue)
+## --- Optional: parserlibcue (requires libcue, default: OFF)
 
-find_package (libcue 2.0.0 REQUIRED )
-list (APPEND PKG_REQUIRE_ARRAY "libcue >= 2.0.0" )
+if (WITH_LIBCUE )
 
-target_sources (${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/parserlibcue.cpp )
-target_include_directories (${PROJECT_NAME} PRIVATE ${libcue_INCLUDE_DIRS} )
-target_link_libraries (${PROJECT_NAME} PRIVATE ${libcue_LIBRARIES} )
+	message (STATUS "Build with libcue parsing capability for cuesheets" )
+
+	find_package (libcue 2.0.0 REQUIRED )
+	list (APPEND PKG_REQUIRE_ARRAY "libcue >= 2.0.0" )
+
+	target_include_directories (${PROJECT_NAME} PRIVATE ${libcue_INCLUDE_DIRS} )
+
+	target_link_libraries (${PROJECT_NAME} PRIVATE ${libcue_LIBRARIES} )
+
+	target_sources (${PROJECT_NAME}
+		PRIVATE ${PROJECT_SOURCE_DIR}/parserlibcue.cpp )
+else (WITH_LIBCUE)
+
+	message (STATUS "Build without libcue parsing capability" )
+endif (WITH_LIBCUE)
+
+
+## --- Optional: Add CDRDAO/TOC (requires libcdio, default: OFF)
+
+if (WITH_LIBCDIO )
+
+	message (STATUS "Build with cdrdao/toc parsing capability" )
+	message (WARNING "There is currently no functional libcio support" )
+
+	find_package (libcdio 2.0.0 REQUIRED )
+	list (APPEND PKG_REQUIRE_ARRAY "libcdio >= 2.0.0" )
+
+	target_include_directories (${PROJECT_NAME}
+		PRIVATE ${libcdio_INCLUDE_DIRS} )
+
+	target_link_libraries (${PROJECT_NAME} PUBLIC ${libcdio_LIBRARIES} )
+
+	target_sources (${PROJECT_NAME}
+		PRIVATE ${PROJECT_SOURCE_DIR}/parsertoc.cpp )
+endif()
 
 
 ## --- Optional: Add FLAC (requires FLAC++, default: ON)
 
 if (WITH_FLAC )
 
-	message (STATUS "Build with fLaC reading capability" )
+	message (STATUS "Build with fLaC reading capability for fLaC audio" )
 
 	find_package (FLAC 1.3.1 REQUIRED ) ## checks libFLAC as well as libFLAC++
 	list (APPEND PKG_REQUIRE_ARRAY "flac++ >= 1.3.1" )
-
-	target_sources (${PROJECT_NAME}
-		PRIVATE ${PROJECT_SOURCE_DIR}/readerflac.cpp )
 
 	if (TARGET FLAC::FLAC++ )
 		## found by flac's cmake config
@@ -494,6 +523,9 @@ if (WITH_FLAC )
 			PRIVATE ${LIBFLACPP_LIBRARIES} )
 	endif()
 
+	target_sources (${PROJECT_NAME}
+		PRIVATE ${PROJECT_SOURCE_DIR}/readerflac.cpp )
+
 else (WITH_FLAC)
 
 	message (STATUS "Build without FLAC reading capability" )
@@ -504,16 +536,18 @@ endif (WITH_FLAC)
 
 if (WITH_WAVPACK)
 
-	message (STATUS "Build with WavPack reading capability" )
+	message (STATUS "Build with WavPack reading capability for wavpack audio" )
 
 	find_package (libwavpack 5.0.0 REQUIRED )
 	list (APPEND PKG_REQUIRE_ARRAY "wavpack >= 5.0.0" )
 
-	target_sources (${PROJECT_NAME}
-		PRIVATE ${PROJECT_SOURCE_DIR}/readerwvpk.cpp )
 	target_include_directories (${PROJECT_NAME}
 		PRIVATE ${libwavpack_INCLUDE_DIRS} )
+
 	target_link_libraries (${PROJECT_NAME} PUBLIC ${libwavpack_LIBRARIES} )
+
+	target_sources (${PROJECT_NAME}
+		PRIVATE ${PROJECT_SOURCE_DIR}/readerwvpk.cpp )
 
 else (WITH_WAVPACK)
 
@@ -525,7 +559,7 @@ endif (WITH_WAVPACK)
 
 if (WITH_FFMPEG)
 
-	message (STATUS "Build with ffmpeg support" )
+	message (STATUS "Build with ffmpeg support for audio" )
 
 	## find_package does not respect versions for components but the ffmpeg
 	## version is not trivial to access in a Find module.
@@ -573,9 +607,6 @@ if (WITH_FFMPEG)
 	#at_least_version ("59.19.100" ${avformat_VERSION} ) ## 2022-03-15
 	#at_least_version ("57.24.100" ${avutil_VERSION} )   ## 2022-03-15
 
-	target_sources (${PROJECT_NAME}
-		PRIVATE ${PROJECT_SOURCE_DIR}/readerffmpeg.cpp )
-
 	target_include_directories (${PROJECT_NAME}
 		PRIVATE ${avcodec_INCLUDE_DIRS}
 		PRIVATE ${avformat_INCLUDE_DIRS}
@@ -585,6 +616,9 @@ if (WITH_FFMPEG)
 		PUBLIC ${avcodec_LIBRARIES}
 		PUBLIC ${avformat_LIBRARIES}
 		PUBLIC ${avutil_LIBRARIES} )
+
+	target_sources (${PROJECT_NAME}
+		PRIVATE ${PROJECT_SOURCE_DIR}/readerffmpeg.cpp )
 
 else (WITH_FFMPEG)
 
@@ -596,13 +630,10 @@ endif (WITH_FFMPEG)
 
 if (WITH_LIBSNDFILE )
 
-	message (STATUS "Build with libsndfile support" )
+	message (STATUS "Build with libsndfile support for audio" )
 
 	find_package (SndFile 1.0.17 REQUIRED )
 	list (APPEND PKG_REQUIRE_ARRAY "sndfile >= 1.0.17" )
-
-	target_sources (${PROJECT_NAME}
-		PRIVATE ${PROJECT_SOURCE_DIR}/readersndfile.cpp )
 
 	if (TARGET SndFile::sndfile )
 		## found by libsndfile's cmake config
@@ -620,28 +651,13 @@ if (WITH_LIBSNDFILE )
 			PUBLIC ${libsndfile_LIBRARIES} )
 	endif()
 
+	target_sources (${PROJECT_NAME}
+		PRIVATE ${PROJECT_SOURCE_DIR}/readersndfile.cpp )
+
 else (WITH_LIBSNDFILE )
 
 	message (STATUS "Build without libsndfile support" )
 endif (WITH_LIBSNDFILE )
-
-
-## --- Optional: Add CDRDAO/TOC (requires libcdio, default: OFF)
-
-if (WITH_LIBCDIO )
-
-	message (STATUS "Build with cdrdao/toc reading capability" )
-	message (WARNING "There is currently no functional libcio support" )
-
-	find_package (libcdio 2.0.0 REQUIRED )
-	list (APPEND PKG_REQUIRE_ARRAY "libcdio >= 2.0.0" )
-
-	target_sources (${PROJECT_NAME}
-		PRIVATE ${PROJECT_SOURCE_DIR}/parsertoc.cpp )
-	target_include_directories (${PROJECT_NAME}
-		PRIVATE ${libcdio_INCLUDE_DIRS} )
-	target_link_libraries (${PROJECT_NAME} PUBLIC ${libcdio_LIBRARIES} )
-endif()
 
 
 
