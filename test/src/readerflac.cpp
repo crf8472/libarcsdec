@@ -46,7 +46,6 @@ TEST_CASE ("DescriptorFlac", "[readerflac]" )
 		auto l = libs.begin();
 
 		CHECK ( l->first  == "libFLAC++" );
-		//CHECK ( l->second.find("libFLAC") != std::string::npos );
 
 		++l;
 
