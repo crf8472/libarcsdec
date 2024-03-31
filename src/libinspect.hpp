@@ -75,7 +75,7 @@ std::regex to_libname_pattern(const std::string &libname);
  *
  * \return Filepath for the object or empty string.
  */
-const std::string& first_libname_match(const std::list<std::string> &list,
+const std::string& first_libname_match(const std::vector<std::string> &list,
 		const std::string &name);
 
 
@@ -93,7 +93,7 @@ const std::string& first_libname_match(const std::list<std::string> &list,
  *
  * \return List of runtime dependencies of an object
  */
-std::list<std::string> runtime_deps(const std::string &object_name);
+std::vector<std::string> runtime_deps(const std::string &object_name);
 
 
 /**
@@ -102,7 +102,7 @@ std::list<std::string> runtime_deps(const std::string &object_name);
  *
  * \return List of runtime dependencies of libarcsdec
  */
-std::list<std::string> acquire_libarcsdec_deps();
+std::vector<std::string> acquire_libarcsdec_deps();
 
 
 /**
@@ -110,7 +110,7 @@ std::list<std::string> acquire_libarcsdec_deps();
  *
  * \return Comprehensive list of libarcsdec runtime dependency libraries.
  */
-const std::list<std::string>& libarcsdec_deps();
+const std::vector<std::string>& libarcsdec_deps();
 
 
 /**

@@ -65,14 +65,17 @@ std::regex to_libname_pattern(const std::string &libname)
 }
 
 
-const std::string& first_libname_match(const std::list<std::string> &list,
+const std::string& first_libname_match(const std::vector<std::string> &list,
 		const std::string &name)
 {
 	static const auto empty_entry = std::string{};
 
 	const auto pattern = to_libname_pattern(name);
 
-	const auto first_match = std::find_if(list.begin(), list.end(),
+	using std::begin;
+	using std::end;
+
+	const auto first_match = std::find_if(begin(list), end(list),
 			[pattern](const std::string &lname)
 			{
 				return std::regex_match(lname, pattern);
@@ -88,8 +91,10 @@ const std::string& first_libname_match(const std::list<std::string> &list,
 }
 
 
-std::list<std::string> runtime_deps(const std::string &object_name)
+std::vector<std::string> runtime_deps(const std::string &object_name)
 {
+	//std::cerr << "Runtime deps of " << object_name << '\n';
+
 	// C-Style stuff: Messing with glibc to get shared object paths
 	// Use dlfcn.h and link.h. Do not know a better way yet.
 
@@ -131,14 +136,16 @@ std::list<std::string> runtime_deps(const std::string &object_name)
 
 	// Traverse link_map for names
 
-	auto so_list = std::list<std::string>{};
+	auto so_list = std::vector<std::string>{};
 
 	while (lmap)
 	{
 		so_list.push_back(lmap->l_name);
+		//std::cerr << "Add: " << lmap->l_name << '\n';
 
 		lmap = lmap->l_next;
 	}
+	//std::cerr << "List completed" << '\n';
 
 	::dlclose(handle);
 
@@ -146,7 +153,7 @@ std::list<std::string> runtime_deps(const std::string &object_name)
 }
 
 
-std::list<std::string> acquire_libarcsdec_deps()
+std::vector<std::string> acquire_libarcsdec_deps()
 {
 	ARCS_LOG_DEBUG << "Acquire runtime dependencies for libarcsdec";
 
@@ -173,9 +180,9 @@ std::list<std::string> acquire_libarcsdec_deps()
 }
 
 
-const std::list<std::string>& libarcsdec_deps()
+const std::vector<std::string>& libarcsdec_deps()
 {
-	static const std::list<std::string> libarcsdec_deps =
+	static const std::vector<std::string> libarcsdec_deps =
 		acquire_libarcsdec_deps();
 
 	return libarcsdec_deps;
