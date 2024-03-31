@@ -112,11 +112,33 @@ TEST_CASE ("CueParserImpl", "[parserlibcue]" )
 		CHECK ( dynamic_cast<const DescriptorCue*>(p) != nullptr );
 	}
 
-	SECTION ("test01_ok.cue: Parses a syntactically intact input correctly")
+	SECTION ("ok01.cue: Parses a syntactically intact input correctly")
 	{
 		using arcsdec::details::libcue::CueParserImpl;
 		auto parser = CueParserImpl{};
-		const auto cue = parser.parse("test01_ok.cue");
+		const auto cue = parser.parse("cuesheet/ok01.cue");
+		// This Cuesheet is complete and syntactically correct
+
+		CHECK ( cue->total_tracks() == 2 );
+
+		CHECK ( cue->filename(1) == "john_doe_album.wav" );
+		CHECK ( cue->filename(2) == "john_doe_album.wav" );
+
+		CHECK ( cue->offset(1) == 150 );
+		CHECK ( cue->offset(2) == 25072 );
+
+		CHECK ( cue->parsed_length(1) == 24922 );
+		CHECK ( cue->parsed_length(2) == 0 ); // OK since AudioSize is unknown
+
+		CHECK ( cue->leadout() == 0 ); // since last track (2) has unkown length
+		CHECK ( !cue->complete() ); // since leadout is 0
+	}
+
+	SECTION ("ok02.cue: Parses a syntactically intact input correctly")
+	{
+		using arcsdec::details::libcue::CueParserImpl;
+		auto parser = CueParserImpl{};
+		const auto cue = parser.parse("cuesheet/ok02.cue");
 		// This Cuesheet is complete and syntactically correct
 
 		CHECK ( cue->total_tracks() == 2 );
@@ -155,7 +177,7 @@ TEST_CASE ("FileReaderSelection", "[filereaderselection]")
 
 	SECTION ( "Descriptor is registered" )
 	{
-		CHECK ( nullptr != arcsdec::FileReaderRegistry::reader("cuesheet") );
+		CHECK ( nullptr != arcsdec::FileReaderRegistry::reader("libcue") );
 	}
 }
 

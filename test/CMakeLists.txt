@@ -20,7 +20,7 @@ list (APPEND TEST_SETS audioreader  )
 list (APPEND TEST_SETS calculators  )
 list (APPEND TEST_SETS descriptor   )
 list (APPEND TEST_SETS libinspect   )
-list (APPEND TEST_SETS cuesheet.yy  ) # details of parsercue
+list (APPEND TEST_SETS parsercue    )
 list (APPEND TEST_SETS readerwav    )
 list (APPEND TEST_SETS selection    )
 list (APPEND TEST_SETS dec_version  )

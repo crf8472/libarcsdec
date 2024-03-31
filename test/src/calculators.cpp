@@ -72,7 +72,7 @@ TEST_CASE ( "SelectionPerformer", "[selectionperformer]")
 
 	SECTION ( "Create reader for CueSheet correctly" )
 	{
-		auto reader = p.file_reader("test01_ok.cue", &h);
+		auto reader = p.file_reader("cuesheet/ok01.cue", &h);
 
 		CHECK ( reader != nullptr );
 	}
@@ -102,7 +102,7 @@ TEST_CASE ( "TOCParser", "[calculators]" )
 
 	SECTION( "Parse CueSheet file correctly" )
 	{
-		const auto toc = p.parse("test01_ok.cue");
+		const auto toc = p.parse("cuesheet/ok01.cue");
 
 		CHECK ( toc->total_tracks() == 2 );
 		CHECK ( toc->offset(1)      == 150 );
