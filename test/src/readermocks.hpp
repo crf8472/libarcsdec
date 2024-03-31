@@ -10,19 +10,23 @@ class SampleProcessorMock : public arcsdec::SampleProcessor
 {
 	void do_start_input() final
 	{
+		// empty
 	}
 
 	void do_append_samples(arcstk::SampleInputIterator /*begin*/,
 			arcstk::SampleInputIterator /*end*/) final
 	{
+		// empty
 	}
 
 	void do_update_audiosize(const arcstk::AudioSize &/*size*/) final
 	{
+		// empty
 	}
 
 	void do_end_input() final
 	{
+		// empty
 	}
 };
 
