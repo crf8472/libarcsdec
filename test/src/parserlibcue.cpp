@@ -27,7 +27,7 @@ TEST_CASE ("DescriptorCue", "[parserlibcue]" )
 
 	SECTION ("Returns own name correctly")
 	{
-		CHECK ( "CueSheet" == d.name() );
+		CHECK ( "Libcue" == d.name() );
 	}
 
 	SECTION ("Returns linked libraries correctly")

@@ -297,13 +297,13 @@ DescriptorCue::~DescriptorCue() noexcept = default;
 
 std::string DescriptorCue::do_id() const
 {
-	return "cuesheet";
+	return "libcue";
 }
 
 
 std::string DescriptorCue::do_name() const
 {
-	return "CueSheet";
+	return "Libcue";
 }
 
 
