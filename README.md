@@ -116,8 +116,8 @@ build switches.
 
 ## How to Use
 
-- Consult the [example application](./examples). It illustrates the supported
-  usecases.
+- Consult the [example application](./examples/albumcalc). It illustrates how to
+  calculate checksums without caring about the details of input formats.
 - [Build the API documentation](BUILD.md#building-the-api-documentation) and
   view it in a browser
 
