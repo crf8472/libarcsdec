@@ -22,16 +22,19 @@
 #include <memory>
 #include <ostream>
 
-//  for clang++
+#if defined(__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Winline-namespace-reopened-noninline"
+#endif
 
 // From cuesheet.y:
 // Include the Token definitions as well as the redefined yylex()
 // in section "code top" (that calls get_next_token())
 #include "cuesheet.tab.hpp"
 
+#if defined(__clang__)
 #pragma clang diagnostic pop
+#endif
 
 /* NOTE that Lexer is part of v_1_0_0! File cuesheet.l does always refer to */
 /* the Lexer class without specifiying the inline namespace for version!    */
