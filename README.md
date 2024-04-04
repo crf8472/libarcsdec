@@ -56,25 +56,30 @@ Libarcsdec contains:
 
 ### Mandatory buildtime dependencies:
 
-- cmake >= 3.9.6
+- cmake >= 3.14
+- flex >= 2.6.4  (maybe earlier 2.6.x will do)
+- bison >= 3.8.2  (maybe earlier 3.8.x will do)
 
 ### Mandatory build- and runtime dependencies:
 
-- libarcstk >= 0.1.0-alpha.2
-- libcue >= 2.0.0
+- libarcstk >= 0.2.0-alpha.1
 
 ### Optional default build- and runtime dependencies:
 
+- libcue >= 2.0.0
 - FLAC++ headers >= 1.3.1
 - libwavpack >= 5.0.0
 - ffmpeg >= 3.1
+- libsndfile >= 1.0.17
 
 If you do not need any of the optional default dependencies, you can switch them
 off independently from each other:
 
+- build without libcue support by ``-DWITH_LIBCUE=OFF``
 - build without FLAC support by ``-DWITH_FLAC=OFF``
 - build without WavPack support by ``-DWITH_WVPK=OFF``
 - build without ffmpeg support by ``-DWITH_FFMPEG=OFF``
+- build without libsndfile support by ``-DWITH_LIBSNDFILE=OFF``
 
 You cannot switch off libcue since this would leave libarcsdec unable to parse
 any TOC data, rendering it effectively useless.

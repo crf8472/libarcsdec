@@ -10,7 +10,7 @@ cmake_policy (SET CMP0048 NEW )
 cmake_policy (SET CMP0088 NEW )
 
 
-project (libarcsdec VERSION 0.1.0 LANGUAGES CXX )
+project (libarcsdec VERSION 0.1.1 LANGUAGES CXX )
 
 get_directory_property (HAS_PARENT PARENT_DIRECTORY )
 
@@ -21,7 +21,7 @@ set (PROJECT_BRIEF_DESC "Audio decoder and TOC parser adapters for libarcstk" )
 
 set (PROJECT_URL "https://github.com/crf8472/${PROJECT_NAME}" )
 
-set (PROJECT_VERSION_SUFFIX "alpha.6" )
+set (PROJECT_VERSION_SUFFIX "alpha.1" )
 
 set (PROJECT_DEFAULT_BUILD_TYPE "Release" )
 
@@ -397,9 +397,9 @@ if (WITH_SUBMODULES )
 
 else()
 
-	find_package (libarcstk 0.1.0 REQUIRED )
+	find_package (libarcstk 0.2.0 REQUIRED )
 
-	list (APPEND PKG_REQUIRE_ARRAY "libarcstk >= 0.1.0" )
+	list (APPEND PKG_REQUIRE_ARRAY "libarcstk >= 0.2.0" )
 endif (WITH_SUBMODULES )
 
 
