@@ -60,7 +60,7 @@
 	int yyerror (const char *s);
 
 	// Forward declarations
-	namespace arcsdec { namespace v_1_0_0 { namespace details {
+	namespace arcsdec { inline namespace v_1_0_0 { namespace details {
 	namespace cuesheet {
 
 		class Driver;
@@ -81,9 +81,14 @@
 /* Goes to source file _before_ cuesheet.tab.hpp is included */
 %code top
 {
-	#pragma GCC diagnostic push
+	//  for clang++
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Winline-namespace-reopened-noninline"
 
+	//  for g++
+	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Weffc++"
+
 
 	#include <cstdlib> // for atoi
 	#include <string>  // for string
@@ -375,9 +380,10 @@ time
 
 
 #pragma GCC diagnostic pop
+#pragma clang diagnostic pop
 
 /* Bison expects us to provide implementation, otherwise linker complains */
-namespace arcsdec { namespace v_1_0_0 { namespace details {
+namespace arcsdec { inline namespace v_1_0_0 { namespace details {
 namespace cuesheet {
 namespace yycuesheet {
 

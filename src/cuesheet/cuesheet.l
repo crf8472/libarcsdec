@@ -53,8 +53,13 @@
 %{
 // from cuesheet.l
 
-#pragma GCC diagnostic push
+//  for clang++
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Winline-namespace-reopened-noninline"
+#pragma clang diagnostic ignored "-Wunknown-warning-option"
 
+//  for g++
+#pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
 #pragma GCC diagnostic ignored "-Wuseless-cast"
 #pragma GCC diagnostic ignored "-Weffc++"
@@ -188,6 +193,7 @@ SIZE_INFO   { return Parser::make_SIZE_INFO(get().loc());  }
 %%
 
 #pragma GCC diagnostic pop
+#pragma clang diagnostic pop
 
 namespace arcsdec { namespace details {
 namespace cuesheet { namespace yycuesheet {
