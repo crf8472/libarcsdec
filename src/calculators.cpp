@@ -372,11 +372,12 @@ void process_audio_file(const std::string& audiofilename,
 			<< " samples. Fall back to implementation default.";
 
 		// Do nothing, AudioReaderImpl uses its default
+		// TODO Log actual value used
 	}
 
 	CalculationProcessor calculator { calc };
-
 	reader->set_processor(calculator);
+
 	reader->process_file(audiofilename);
 }
 
