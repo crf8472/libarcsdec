@@ -1045,6 +1045,10 @@ std::unique_ptr<AudioSize> WavAudioReaderImpl::do_acquire_size(
 		// Neither Validate Nor Calculate
 
 		this->process_file(audiofilename, false, false, total_pcm_bytes);
+
+		// FIXME This requires a SampleProcessor attached. However, it should be
+		// guaranteed that an AudioReader without a SampleProcessor attached
+		// can provide the AudioSize.
 	}
 	catch (const std::ifstream::failure& f)
 	{
