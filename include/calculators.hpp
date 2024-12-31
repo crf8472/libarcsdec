@@ -310,8 +310,7 @@ public:
  * Note that ARCSCalculator does not perform any lookups in the filesystem. This
  * part is completely delegated to the \link FileReader FileReaders\endlink.
  */
-class ARCSCalculator final : public ReaderAndFormatHolder
-						   , public SelectionPerformer<AudioReader>
+class ARCSCalculator final : public FileReaderProvider<AudioReader>
 {
 public:
 

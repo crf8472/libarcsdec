@@ -415,15 +415,15 @@ std::pair<Checksums, ARId> ARCSCalculator::calculate(
 
 	// Configure Calculation
 
-	auto calc = std::make_unique<Calculation>(type(),
-			make_context(toc, audiofilename));
+	auto calc { std::make_unique<Calculation>(type(),
+			make_context(toc, audiofilename)) };
 
 	if (!calc)
 	{
 		throw std::logic_error("Could not instantiate Calculation object");
 	}
 
-	auto reader = file_reader(audiofilename, this);
+	auto reader { create(audiofilename) };
 
 	process_audio_file(audiofilename, std::move(reader), *calc,
 			BLOCKSIZE::DEFAULT);
@@ -526,7 +526,7 @@ ChecksumSet ARCSCalculator::calculate_track(
 		throw std::logic_error("Could not instantiate Calculation object");
 	}
 
-	auto reader { file_reader(audiofilename, this) };
+	auto reader { create(audiofilename) };
 
 	process_audio_file(audiofilename, std::move(reader), *calc,
 			BLOCKSIZE::DEFAULT);
@@ -570,8 +570,6 @@ ARIdCalculator::ARIdCalculator()
 std::unique_ptr<ARId> ARIdCalculator::calculate(
 		const std::string &metafilename) const
 {
-	//const auto toc { toc_selection_.file_reader(metafilename, this)->parse(
-	//		metafilename) };
 	const auto toc { create(metafilename)->parse(metafilename) };
 
 	if (toc->complete())
@@ -629,8 +627,6 @@ std::unique_ptr<ARId> ARIdCalculator::calculate(const std::string &metafilename,
 		return this->calculate(metafilename);
 	}
 
-	//const auto toc { toc_selection_.file_reader(metafilename, this)->parse(
-	//		metafilename) };
 	const auto toc { create(metafilename)->parse(metafilename) };
 
 	if (toc->complete())
