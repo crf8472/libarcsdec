@@ -772,6 +772,23 @@ WavAudioReaderImpl::WavAudioReaderImpl()
 WavAudioReaderImpl::~WavAudioReaderImpl() noexcept = default;
 
 
+int64_t WavAudioReaderImpl::read_bytes(std::ifstream &in, const int32_t amount,
+			std::vector<char>& bytes, int64_t& byte_count) const
+{
+	try
+	{
+		in.read(&bytes[0], amount);
+	}
+	catch (const std::ifstream::failure& f)
+	{
+		byte_count += in.gcount();
+		throw FileReadException(f.what(), byte_count + 1);
+	}
+	byte_count += amount;
+	return in.gcount();
+}
+
+
 int64_t WavAudioReaderImpl::retrieve_file_size_bytes(
 		const std::string &filename) const
 {
@@ -793,37 +810,32 @@ int64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 		const bool &calculate,
 		int64_t &total_pcm_bytes)
 {
-	if (calculate) { this->signal_startinput(); }
-
-	int64_t total_bytes_read = 0;
-
-	// Read the first bytes and parse them as chunk descriptor.
 	// NOTE: ifstream's exceptions (fail|bad)bit must be activated
 
-	std::vector<char> bytes(WavPartParser::WAV_BYTES_PER_RIFF_HEADER);
+	if (calculate) { this->signal_startinput(); }
 
+	// byte buffer
+	std::vector<char> bytes(WavPartParser::WAV_BYTES_PER_RIFF_HEADER);
+	// total number of bytes to read next
 	std::streamsize bytes_to_read =
 		WavPartParser::WAV_BYTES_PER_RIFF_HEADER * sizeof(bytes[0]);
-	try
-	{
-		in.read(&bytes[0], bytes_to_read);
-	}
-	catch (const std::ifstream::failure& f)
-	{
-		total_bytes_read += in.gcount();
-		throw FileReadException(f.what(), total_bytes_read + 1);
-	}
-	total_bytes_read += bytes_to_read;
-
-
-	// Traverse subchunks, looking for 'fmt ' and 'data' thereafter
-
+	// total number of bytes read so far
+	int64_t total_bytes_read = 0;
+	// parser for subchunk headers
 	WavPartParser parser;
+
+
+	// Parse RIFF chunk descriptor
+
+	this->read_bytes(in, bytes_to_read, bytes, total_bytes_read);
 	audio_handler_->chunk_descriptor(parser.chunk_descriptor(bytes));
 
-	bytes.resize(WavPartParser::WAV_BYTES_PER_SUBCHUNK_HEADER);
+
+	// Traverse subchunks
+	// Ignore every subchunk except 'fmt' and 'data'
 
 	int subchunk_counter = 0;
+	bytes.resize(WavPartParser::WAV_BYTES_PER_SUBCHUNK_HEADER);
 
 	while (not in.eof())
 	{
@@ -831,16 +843,8 @@ int64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 
 		bytes_to_read =
 			WavPartParser::WAV_BYTES_PER_SUBCHUNK_HEADER * sizeof(bytes[0]);
-		try
-		{
-			in.read(&bytes[0], bytes_to_read);
-		}
-		catch (const std::ifstream::failure& f)
-		{
-			total_bytes_read += in.gcount();
-			throw FileReadException(f.what(), total_bytes_read + 1);
-		}
-		total_bytes_read += bytes_to_read;
+		this->read_bytes(in, bytes_to_read, bytes, total_bytes_read);
+
 		++subchunk_counter;
 
 		WavSubchunkHeader subchunk_header = parser.subchunk_header(bytes);
@@ -872,18 +876,9 @@ int64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 			ARCS_LOG(DEBUG1) << "Try to read format subchunk";
 
 			std::vector<char> fmt_bytes(subchunk_header.size * sizeof(char));
-
 			bytes_to_read = subchunk_header.size * sizeof(fmt_bytes[0]);
-			try
-			{
-				in.read(&fmt_bytes[0], bytes_to_read);
-			}
-			catch (const std::ifstream::failure& f)
-			{
-				total_bytes_read += in.gcount();
-				throw FileReadException(f.what(), total_bytes_read + 1);
-			}
-			total_bytes_read += bytes_to_read;
+
+			this->read_bytes(in, bytes_to_read, fmt_bytes, total_bytes_read);
 
 			ARCS_LOG(DEBUG1) << "Format subchunk read successfully";
 
@@ -906,7 +901,7 @@ int64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 			if (calculate)
 			{
 				AudioSize audiosize;
-				audiosize.set_total_pcm_bytes(subchunk_header.size);
+				audiosize.set_total_pcm_bytes(total_pcm_bytes);
 				this->signal_updateaudiosize(audiosize);
 
 				// Read audio bytes in blocks
@@ -1042,7 +1037,7 @@ std::unique_ptr<AudioSize> WavAudioReaderImpl::do_acquire_size(
 
 	try
 	{
-		// Neither Validate Nor Calculate
+		// Neither Validate nor Calculate, do not emit signals
 
 		this->process_file(audiofilename, false, false, total_pcm_bytes);
 	}
@@ -1053,12 +1048,14 @@ std::unique_ptr<AudioSize> WavAudioReaderImpl::do_acquire_size(
 			throw;
 		}
 
-		ARCS_LOG_WARNING << "Acquired context but there was an exception"
-			<< " while reading the audiofile: " << f.what();
+		ARCS_LOG_WARNING << "After byte "
+			<< total_pcm_bytes
+			<< " an exception occured while reading the audiofile: "
+			<< f.what();
 	}
 
 	std::unique_ptr<AudioSize> audiosize = std::make_unique<AudioSize>();
-	audiosize->set_total_pcm_bytes(static_cast<uint64_t>(total_pcm_bytes));
+	audiosize->set_total_pcm_bytes(total_pcm_bytes);
 	return audiosize;
 }
 
@@ -1067,9 +1064,9 @@ void WavAudioReaderImpl::do_process_file(const std::string &audiofilename)
 {
 	int64_t total_pcm_bytes = 0;
 
-	// Validate And Calculate
+	// Validate And Calculate, emit signals
 
-	this->process_file(audiofilename, true, true, total_pcm_bytes);
+	this->process_file(audiofilename, true, true, total_pcm_bytes/* ignore */);
 }
 
 

@@ -938,6 +938,22 @@ private:
 	std::unique_ptr<FileReaderDescriptor> do_descriptor() const final;
 
 	/**
+	 * Read specified amount of bytes from specified stream in specified vector
+	 * and do an exception safe increment of the byte counter.
+	 *
+	 * Parameter byte_count will also be updated in case of an exception.
+	 *
+	 * \param[in]  in         Input stream to read from
+	 * \param[in]  amount     Number of bytes to read from in
+	 * \param[out] bytes      Storage for read bytes
+	 * \param[out] byte_count Byte counter to increment
+	 *
+	 * \return Number of bytes read
+	 */
+	int64_t read_bytes(std::ifstream &in, const int32_t amount,
+			std::vector<char>& bytes, int64_t& byte_count) const;
+
+	/**
 	 * \brief Service method: acquire the physical file size in bytes.
 	 *
 	 * \param[in] filename File to retrieve the physical file size in bytes for
