@@ -62,6 +62,14 @@ using arcstk::ChecksumSet;
  * @{
  */
 
+
+/**
+ * \brief Provide the default FileReaderSelection for the specified ReaderType.
+ */
+template <class ReaderType>
+const FileReaderSelection* default_selection();
+
+
 // Deactivate -Weffc++ for the following two classes
 //
 // -Weffc++ will warn about ReaderAndFormatHolder and SelectionPerformer
@@ -148,12 +156,11 @@ public:
 	/**
 	 * \brief Constructor.
 	 *
-	 * Initializes the instance with
-	 * FileReaderRegistry::default_audio_selection().
+	 * Initializes the instance with the default_selection() for the ReaderType.
 	 */
 	inline SelectionPerformer()
-		: selection_ { FileReaderRegistry::default_audio_selection() }
-		, create_    { /* empty */ }
+		: selection_ { default_selection<ReaderType>() }
+		, create_    { /* default */ }
 	{
 		// empty
 	}
@@ -165,7 +172,7 @@ public:
 	 */
 	inline SelectionPerformer(const FileReaderSelection* selection)
 		: selection_ { selection }
-		, create_    { /* empty */ }
+		, create_    { /* default */ }
 	{
 		// empty
 	}
@@ -208,6 +215,22 @@ public:
 	inline std::unique_ptr<ReaderType> file_reader(const std::string &filename,
 			const ReaderAndFormatHolder* h) const
 	{
+		if (!h)
+		{
+			throw std::runtime_error(
+					"Cannot create reader without ReaderAndFormatHolder");
+		} else
+		{
+			// TODO check formats()
+			// TODO check readers()
+		}
+
+		if (!this->selection())
+		{
+			throw std::runtime_error(
+					"Cannot create reader without FileReaderSelection");
+		}
+
 		return this->create_(filename, *this->selection(), *h->formats(),
 				*h->readers());
 	}
@@ -231,36 +254,12 @@ private:
 
 
 /**
- * \brief Provide the default FileReaderSelection for the specified ReaderType.
- */
-template <typename ReaderType>
-const FileReaderSelection* default_selection()
-{
-	return nullptr; // only full specializations
-}
-
-
-/**
  * \brief Base class for classes that create opaque readers.
  */
-template <typename ReaderType>
+template <class ReaderType>
 class FileReaderProvider : public ReaderAndFormatHolder
 					     , public SelectionPerformer<ReaderType>
 {
-public:
-
-	/**
-	 * \brief Constructor
-	 *
-	 * Instantiates with the default_selection() for the ReaderType.
-	 */
-	inline FileReaderProvider()
-		: ReaderAndFormatHolder {}
-		, SelectionPerformer<ReaderType> { default_selection<ReaderType>() }
-	{
-		// empty
-	}
-
 protected:
 
 	/**
@@ -279,19 +278,12 @@ protected:
 
 /**
  * \brief Format-independent parser for CD TOC metadata files.
+ *
+ * Sets FileReaderRegistry::default_toc_selection() as its default selection.
  */
-class TOCParser final : public ReaderAndFormatHolder,
-						public SelectionPerformer<MetadataParser>
+class TOCParser final : public FileReaderProvider<MetadataParser>
 {
 public:
-
-	/**
-	 * \brief Constructor.
-	 *
-	 * Sets FileReaderRegistry::default_toc_selection() as the default
-	 * selection.
-	 */
-	TOCParser();
 
 	/**
 	 * \brief Parse the metadata file to a TOC object.

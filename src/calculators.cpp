@@ -290,15 +290,6 @@ const FileReaderSelection* default_selection<MetadataParser>()
 // TOCParser
 
 
-TOCParser::TOCParser()
-	: ReaderAndFormatHolder { /* default */ }
-	, SelectionPerformer<MetadataParser>
-			{ FileReaderRegistry::default_toc_selection() }
-{
-	/* empty */
-}
-
-
 std::unique_ptr<TOC> TOCParser::parse(const std::string &metafilename) const
 {
 	if (metafilename.empty())
@@ -310,7 +301,7 @@ std::unique_ptr<TOC> TOCParser::parse(const std::string &metafilename) const
 				"Requested metadata file parser for empty filename.");
 	}
 
-	return file_reader(metafilename, this)->parse(metafilename);
+	return create(metafilename)->parse(metafilename);
 }
 
 
