@@ -19,10 +19,10 @@
 #include <vector>        // for vector
 
 #ifndef __LIBARCSTK_IDENTIFIER_HPP__
-#include <arcstk/identifier.hpp>     // for ARId, TOC, make_arid
+#include <arcstk/identifier.hpp>// for ARId, TOC, make_arid
 #endif
 #ifndef __LIBARCSTK_CALCULATE_HPP__
-#include <arcstk/calculate.hpp>      // for Checksums, SampleInputIterator, ...
+#include <arcstk/calculate.hpp> // for Checksums, SampleInputIterator, ...
 #endif
 #ifndef __LIBARCSTK_LOGGING_HPP__
 #include <arcstk/logging.hpp>   // for ARCS_LOG, _ERROR, _WARNING, _INFO, _DEBUG
@@ -32,7 +32,7 @@
 #include "descriptor.hpp"
 #endif
 #ifndef __LIBARCSDEC_SELECTION_HPP__
-#include "selection.hpp"         // for FileReaders, FileReaderSelector
+#include "selection.hpp"        // for FormatList,FileReaders,FileReaderSelector
 #endif
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__
 #include "audioreader.hpp"      // for AudioReader
@@ -64,20 +64,13 @@ using arcstk::make_context;
 /**
  * \brief SampleProcessor that logs the received signals.
  */
+/*
 class LogProcessor final : public SampleProcessor
 {
 public:
 
-	/**
-	 * \brief Default constructor.
-	 */
 	LogProcessor() = default;
-
-	/**
-	 * \brief Default destructor.
-	 */
 	~LogProcessor() noexcept final = default;
-
 	LogProcessor(const LogProcessor &rhs) noexcept = delete;
 	LogProcessor& operator = (const LogProcessor &rhs) noexcept = delete;
 
@@ -115,6 +108,7 @@ void LogProcessor::do_end_input()
 {
 	ARCS_LOG(DEBUG2) << "LogProcessor received: END INPUT";
 }
+*/
 
 
 /**
@@ -134,7 +128,7 @@ public:
 		, total_sequences_ { 0 }
 		, total_samples_   { 0 }
 	{
-		// empty
+		/* empty */
 	}
 
 	/**
@@ -197,8 +191,6 @@ private:
 void CalculationProcessor::do_start_input()
 {
 	ARCS_LOG(DEBUG2) << "CalculationProcessor received: START INPUT";
-
-	/* empty */
 }
 
 
@@ -225,8 +217,6 @@ void CalculationProcessor::do_update_audiosize(const AudioSize &size)
 void CalculationProcessor::do_end_input()
 {
 	ARCS_LOG(DEBUG2) << "CalculationProcessor received: END INPUT";
-
-	/* empty */
 }
 
 
@@ -249,7 +239,7 @@ ReaderAndFormatHolder::ReaderAndFormatHolder()
 	: formats_      { FileReaderRegistry::formats() }
 	, descriptors_  { FileReaderRegistry::readers() }
 {
-	// empty
+	/* empty */
 }
 
 
@@ -280,15 +270,32 @@ const FileReaders* ReaderAndFormatHolder::readers() const
 }
 
 
+// default_selection()
+
+
+template <>
+const FileReaderSelection* default_selection<AudioReader>()
+{
+	return FileReaderRegistry::default_audio_selection();
+}
+
+
+template <>
+const FileReaderSelection* default_selection<MetadataParser>()
+{
+	return FileReaderRegistry::default_toc_selection();
+}
+
+
 // TOCParser
 
 
 TOCParser::TOCParser()
-	: ReaderAndFormatHolder {}
+	: ReaderAndFormatHolder { /* default */ }
 	, SelectionPerformer<MetadataParser>
 			{ FileReaderRegistry::default_toc_selection() }
 {
-	// empty
+	/* empty */
 }
 
 
@@ -388,14 +395,14 @@ void process_audio_file(const std::string& audiofilename,
 ARCSCalculator::ARCSCalculator(const arcstk::checksum::type type)
 	: type_ { type }
 {
-	// empty
+	/* empty */
 }
 
 
 ARCSCalculator::ARCSCalculator()
 	: ARCSCalculator(arcstk::checksum::type::ARCS2)
 {
-	// empty
+	/* empty */
 }
 
 
@@ -511,15 +518,15 @@ ChecksumSet ARCSCalculator::calculate_track(
 
 	// Configure Calculation
 
-	auto calc = std::make_unique<Calculation>(type(),
-		make_context(skip_front, skip_back, audiofilename));
+	auto calc { std::make_unique<Calculation>(type(),
+		make_context(skip_front, skip_back, audiofilename)) };
 
 	if (!calc)
 	{
 		throw std::logic_error("Could not instantiate Calculation object");
 	}
 
-	auto reader = file_reader(audiofilename, this);
+	auto reader { file_reader(audiofilename, this) };
 
 	process_audio_file(audiofilename, std::move(reader), *calc,
 			BLOCKSIZE::DEFAULT);
@@ -541,22 +548,31 @@ ChecksumSet ARCSCalculator::calculate_track(
 }
 
 
+// AudioInfo
+
+
+std::unique_ptr<AudioSize> AudioInfo::size(const std::string &filename) const
+{
+	return create(filename)->acquire_size(filename);
+}
+
+
 // ARIdCalculator
 
 
 ARIdCalculator::ARIdCalculator()
-	: audio_selection_ { /* empty */ }
-	, toc_selection_   { FileReaderRegistry::default_toc_selection() }
+	: audio_ { /* default */ }
 {
-	// empty
+	/* empty */
 }
 
 
 std::unique_ptr<ARId> ARIdCalculator::calculate(
 		const std::string &metafilename) const
 {
-	const auto toc { toc_selection_.file_reader(metafilename, this)->parse(
-			metafilename) };
+	//const auto toc { toc_selection_.file_reader(metafilename, this)->parse(
+	//		metafilename) };
+	const auto toc { create(metafilename)->parse(metafilename) };
 
 	if (toc->complete())
 	{
@@ -592,7 +608,7 @@ std::unique_ptr<ARId> ARIdCalculator::calculate(
 
 	// Use path from metafile (if any) as search path for the audio file
 
-	auto pos = metafilename.find_last_of("/\\"); // XXX Is this really portable?
+	auto pos { metafilename.find_last_of("/\\") }; // XXX Really portable?
 
 	if (pos != std::string::npos)
 	{
@@ -613,8 +629,9 @@ std::unique_ptr<ARId> ARIdCalculator::calculate(const std::string &metafilename,
 		return this->calculate(metafilename);
 	}
 
-	const auto toc { toc_selection_.file_reader(metafilename, this)->parse(
-			metafilename) };
+	//const auto toc { toc_selection_.file_reader(metafilename, this)->parse(
+	//		metafilename) };
+	const auto toc { create(metafilename)->parse(metafilename) };
 
 	if (toc->complete())
 	{
@@ -624,32 +641,6 @@ std::unique_ptr<ARId> ARIdCalculator::calculate(const std::string &metafilename,
 	// If TOC is incomplete, analyze audio file passed
 
 	return this->calculate(*toc, audiofilename);
-}
-
-
-void ARIdCalculator::set_audio_selection(
-		const FileReaderSelection *selection)
-{
-	audio_selection_.set_selection(selection);
-}
-
-
-const FileReaderSelection* ARIdCalculator::audio_selection() const
-{
-	return audio_selection_.selection();
-}
-
-
-void ARIdCalculator::set_toc_selection(
-		const FileReaderSelection *selection)
-{
-	toc_selection_.set_selection(selection);
-}
-
-
-const FileReaderSelection* ARIdCalculator::toc_selection() const
-{
-	return toc_selection_.selection();
 }
 
 
@@ -684,6 +675,7 @@ std::unique_ptr<ARId> ARIdCalculator::calculate(const TOC &toc,
 	// The builder has to check its input values either way when it is
 	// requested to start processing.
 
+	/*
 	auto reader { audio_selection_.file_reader(audiofilename, this) };
 
 	LogProcessor proc; // only logging, but required by SampleProvider
@@ -691,6 +683,21 @@ std::unique_ptr<ARId> ARIdCalculator::calculate(const TOC &toc,
 
 	const auto audiosize { reader->acquire_size(audiofilename) };
 	return make_arid(toc, audiosize->leadout_frame());
+	*/
+
+	return make_arid(toc, audio_.size(audiofilename)->leadout_frame());
+}
+
+
+const AudioInfo* ARIdCalculator::audio() const
+{
+	return &audio_;
+}
+
+
+void ARIdCalculator::set_audio(const AudioInfo& audio)
+{
+	audio_ = audio;
 }
 
 } // namespace v_1_0_0

@@ -199,11 +199,11 @@ public:
 	}
 
 	/**
-	 * \brief Create an AudioReader capable of reading \c filename.
+	 * \brief Create a FileReader capable of reading \c filename.
 	 *
 	 * \param[in] filename The file to read
 	 *
-	 * \return An AudioReader for the input file
+	 * \return A FileReader for the input file
 	 */
 	inline std::unique_ptr<ReaderType> file_reader(const std::string &filename,
 			const ReaderAndFormatHolder* h) const
@@ -228,6 +228,53 @@ private:
 
 // Re-activate -Weffc++ for all what follows
 #pragma GCC diagnostic pop
+
+
+/**
+ * \brief Provide the default FileReaderSelection for the specified ReaderType.
+ */
+template <typename ReaderType>
+const FileReaderSelection* default_selection()
+{
+	return nullptr; // only full specializations
+}
+
+
+/**
+ * \brief Base class for classes that create opaque readers.
+ */
+template <typename ReaderType>
+class FileReaderProvider : public ReaderAndFormatHolder
+					     , public SelectionPerformer<ReaderType>
+{
+public:
+
+	/**
+	 * \brief Constructor
+	 *
+	 * Instantiates with the default_selection() for the ReaderType.
+	 */
+	inline FileReaderProvider()
+		: ReaderAndFormatHolder {}
+		, SelectionPerformer<ReaderType> { default_selection<ReaderType>() }
+	{
+		// empty
+	}
+
+protected:
+
+	/**
+	 * \brief Create a FileReader capable of reading \c filename.
+	 *
+	 * \param[in] filename The file to read
+	 *
+	 * \return A FileReader for the input file
+	 */
+	inline std::unique_ptr<ReaderType> create(const std::string &filename) const
+	{
+		return this->file_reader(filename, this);
+	}
+};
 
 
 /**
@@ -358,6 +405,7 @@ public:
 	 * \return The checksum::type to calculate
 	 */
 	arcstk::checksum::type type() const;
+	// TODO Should be a set of types, e.g. arcstk::ChecksumTypeSet
 
 private:
 
@@ -379,9 +427,31 @@ private:
 
 
 /**
- * \brief Calculate AccurateRip ID of an album.
+ * \brief Format-independent parser for audio metadata.
  */
-class ARIdCalculator final : public ReaderAndFormatHolder
+class AudioInfo final : public FileReaderProvider<AudioReader>
+{
+public:
+
+	/**
+	 * \brief Parse the size of the audio data from the audio file.
+	 *
+	 * \param[in] audiofilename Name of the audiodatafile
+	 *
+	 * \return The size of the audio data
+	 */
+	std::unique_ptr<arcstk::AudioSize> size(const std::string &audiofilename)
+		const;
+};
+
+
+/**
+ * \brief Calculate AccurateRip ID of an album.
+ *
+ * When instantiated, the default_selection() for AudioReaders is active. To
+ * modify this behaviour, replace the default AudioInfo by a custom one.
+ */
+class ARIdCalculator final : public FileReaderProvider<MetadataParser>
 {
 public:
 
@@ -411,32 +481,18 @@ public:
 			const std::string &audiofilename) const;
 
 	/**
-	 * \brief Set the audioreader selection for this instance.
+	 * \brief AudioInfo used by this instance.
 	 *
-	 * \param[in] selection The audioreader selection to use
+	 * \return AudioInfo used by this instance
 	 */
-	void set_audio_selection(const FileReaderSelection *selection);
+	const AudioInfo* audio() const;
 
 	/**
-	 * \brief Get the audioreader selection used by this instance.
+	 * \brief Set the AudioInfo used by this instance.
 	 *
-	 * \return The audioreader selection used by this instance
+	 * \param[in] audio AudioInfo to be used by this instance
 	 */
-	const FileReaderSelection* audio_selection() const;
-
-	/**
-	 * \brief Set the metadata parser selection for this instance.
-	 *
-	 * \param[in] selection The metadata parser selection to use
-	 */
-	void set_toc_selection(const FileReaderSelection *selection);
-
-	/**
-	 * \brief Get the metadata parser selection used by this instance.
-	 *
-	 * \return The metadata parser selection used by this instance
-	 */
-	const FileReaderSelection* toc_selection() const;
+	void set_audio(const AudioInfo& audio);
 
 private:
 
@@ -453,14 +509,9 @@ private:
 			const std::string &audiofilename) const;
 
 	/**
-	 * \brief Internal selection for AudioReaders.
+	 * \brief Internal worker to determine the AudioSize if required.
 	 */
-	SelectionPerformer<AudioReader> audio_selection_;
-
-	/**
-	 * \brief Internal selection for MetadataParsers.
-	 */
-	SelectionPerformer<MetadataParser> toc_selection_;
+	AudioInfo audio_;
 };
 
 /// @}
