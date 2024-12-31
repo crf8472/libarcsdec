@@ -86,6 +86,29 @@ TEST_CASE ( "SelectionPerformer", "[selectionperformer]")
 }
 
 
+TEST_CASE ( "AudioInfo", "[calculators]")
+{
+	using arcsdec::AudioInfo;
+	using arcsdec::FileReaderRegistry;
+
+	AudioInfo i;
+
+	SECTION ("Initial set of FileReaders is present and complete")
+	{
+		CHECK ( i.readers() == FileReaderRegistry::readers() );
+		CHECK ( not i.readers()->empty() );
+		CHECK ( 7 >= i.readers()->size() );
+	}
+
+	SECTION( "Get size of wav file correctly" )
+	{
+		const auto leadout { i.size("test01.wav")->total_samples() };
+
+		CHECK ( leadout == 1025 );
+	}
+}
+
+
 TEST_CASE ( "TOCParser", "[calculators]" )
 {
 	using arcsdec::TOCParser;
@@ -102,7 +125,7 @@ TEST_CASE ( "TOCParser", "[calculators]" )
 
 	SECTION( "Parse CueSheet file correctly" )
 	{
-		const auto toc = p.parse("cuesheet/ok01.cue");
+		const auto toc { p.parse("cuesheet/ok01.cue") };
 
 		CHECK ( toc->total_tracks() == 2 );
 		CHECK ( toc->offset(1)      == 150 );
