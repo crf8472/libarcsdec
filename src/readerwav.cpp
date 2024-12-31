@@ -793,7 +793,7 @@ int64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 		const bool &calculate,
 		int64_t &total_pcm_bytes)
 {
-	this->signal_startinput();
+	if (calculate) { this->signal_startinput(); }
 
 	int64_t total_bytes_read = 0;
 
@@ -965,7 +965,7 @@ int64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 		ARCS_LOG(DEBUG1) << "(Ignore subchunk)";
 	} // while
 
-	this->signal_endinput();
+	if (calculate) { this->signal_endinput(); }
 
 	return total_bytes_read;
 }
