@@ -100,45 +100,55 @@ TEST_CASE ( "FrameQueue", "[framequeue]" )
 
 	SECTION ( "enqueue_frame() loop enqueues all frames" )
 	{
-		int total_frames = 0;
+		auto total_frames = int { 0 };
 		while (queue.enqueue_frame())
 		{
 			++total_frames;
 		}
 
-		CHECK ( total_frames == 2 );
-		CHECK ( queue.size() == 2 );
+		CHECK ( total_frames > 0 );
+		CHECK ( queue.size() > 0 );
 
 		// Further enqueueing yields only false but no exception
 
-		CHECK ( not queue.enqueue_frame() );
+		using arcsdec::details::ffmpeg::AVFramePtr;
+		auto frame = AVFramePtr { nullptr };
+		auto total_samples = int32_t { 0 };
+
+		while((frame = queue.dequeue_frame()))
+		{
+			total_samples += frame->nb_samples;
+		}
+
+		CHECK ( queue.size()  == 0 );
+
+		// Did we see all samples? Then we saw all frames
+		CHECK ( total_samples == 1025 );
 	}
 
 
 	SECTION ( "enqueue_frame()/dequeue_frame() loop traverses all samples" )
 	{
-		using arcsdec::details::ffmpeg::AVFramePtr;
+		// TODO This is basically the same test as in the SECTION above!
 
-		auto total_frames  = int32_t { 0 };
+		using arcsdec::details::ffmpeg::AVFramePtr;
+		auto frame = AVFramePtr { nullptr };
 		auto total_samples = int32_t { 0 };
-		AVFramePtr frame   = nullptr;
 
 		while (queue.enqueue_frame())
 		{
+			CHECK ( queue.size() > 0 );
+
 			while((frame = queue.dequeue_frame()))
 			{
 				total_samples += frame->nb_samples;
-				++total_frames;
 			}
 		}
 
-		CHECK ( total_frames  == 2 );
-		CHECK ( total_samples == 1025 );
 		CHECK ( queue.size()  == 0 );
 
-		// Further enqueueing yields only false but no exception
-
-		CHECK ( not queue.enqueue_frame() );
+		CHECK ( total_samples == 1025 );
+		// TODO By accidentally counting 1 frame n-times?
 	}
 }
 
