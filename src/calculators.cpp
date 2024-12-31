@@ -362,15 +362,15 @@ void process_audio_file(const std::string& audiofilename,
 
 	} else
 	{
-		// buffer size is illegal
+		// Buffer size is illegal.
+		// Do nothing, AudioReaderImpl uses its default.
 
 		ARCS_LOG_WARNING << "Specified buffer size of " << buffer_size
-			<< " is not within the legal range of "
+			<< " bytes is not within the legal range of "
 			<< BLOCKSIZE::MIN << " - " << BLOCKSIZE::MAX
-			<< " samples. Fall back to implementation default.";
-
-		// Do nothing, AudioReaderImpl uses its default
-		// TODO Log actual value used
+			<< " samples. Fall back to AudioReader's implementation default: "
+			<< reader->samples_per_read()
+			<< " bytes";
 	}
 
 	CalculationProcessor calculator { calc };
@@ -661,16 +661,6 @@ std::unique_ptr<ARId> ARIdCalculator::calculate(const TOC &toc,
 
 	// The builder has to check its input values either way when it is
 	// requested to start processing.
-
-	/*
-	auto reader { audio_selection_.file_reader(audiofilename, this) };
-
-	LogProcessor proc; // only logging, but required by SampleProvider
-	reader->set_processor(proc);
-
-	const auto audiosize { reader->acquire_size(audiofilename) };
-	return make_arid(toc, audiosize->leadout_frame());
-	*/
 
 	return make_arid(toc, audio_.size(audiofilename)->leadout_frame());
 }
