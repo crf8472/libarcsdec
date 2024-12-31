@@ -65,6 +65,8 @@ using arcstk::ChecksumSet;
 
 /**
  * \brief Provide the default FileReaderSelection for the specified ReaderType.
+ *
+ * \return The default FileReaderSelection.
  */
 template <class ReaderType>
 const FileReaderSelection* default_selection();
@@ -162,7 +164,7 @@ public:
 		: selection_ { default_selection<ReaderType>() }
 		, create_    { /* default */ }
 	{
-		// empty
+		/* empty */
 	}
 
 	/**
@@ -174,7 +176,7 @@ public:
 		: selection_ { selection }
 		, create_    { /* default */ }
 	{
-		// empty
+		/* empty */
 	}
 
 	/**
@@ -182,7 +184,7 @@ public:
 	 */
 	inline virtual ~SelectionPerformer() noexcept
 	{
-		// empty
+		/* empty */
 	}
 
 	/**
@@ -209,30 +211,15 @@ public:
 	 * \brief Create a FileReader capable of reading \c filename.
 	 *
 	 * \param[in] filename The file to read
+	 * \param[in] f        Available FileReader and FileFormat types
 	 *
 	 * \return A FileReader for the input file
 	 */
 	inline std::unique_ptr<ReaderType> file_reader(const std::string &filename,
-			const ReaderAndFormatHolder* h) const
+			const ReaderAndFormatHolder* f) const
 	{
-		if (!h)
-		{
-			throw std::runtime_error(
-					"Cannot create reader without ReaderAndFormatHolder");
-		} else
-		{
-			// TODO check formats()
-			// TODO check readers()
-		}
-
-		if (!this->selection())
-		{
-			throw std::runtime_error(
-					"Cannot create reader without FileReaderSelection");
-		}
-
-		return this->create_(filename, *this->selection(), *h->formats(),
-				*h->readers());
+		return this->create_(filename, *this->selection(), *f->formats(),
+				*f->readers());
 	}
 
 private:
@@ -255,6 +242,9 @@ private:
 
 /**
  * \brief Base class for classes that create opaque readers.
+ *
+ * A subclass must specify the ReaderType and can then easily use create()
+ * to create an appropriate FileReader by just specifying the filename.
  */
 template <class ReaderType>
 class FileReaderProvider : public ReaderAndFormatHolder
@@ -278,8 +268,6 @@ protected:
 
 /**
  * \brief Format-independent parser for CD TOC metadata files.
- *
- * Sets FileReaderRegistry::default_toc_selection() as its default selection.
  */
 class TOCParser final : public FileReaderProvider<MetadataParser>
 {
