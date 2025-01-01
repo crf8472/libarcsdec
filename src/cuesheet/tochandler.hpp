@@ -11,8 +11,8 @@
 #include "handler.hpp"
 #endif
 
-#include <string>
-#include <vector>
+#include <string>  // for string
+#include <vector>  // for vector
 
 
 namespace arcsdec
@@ -37,6 +37,8 @@ class TOCHandlerState
 
 	std::vector<int32_t> lengths_{};
 
+	std::vector<std::string> filenames_{};
+
 public:
 
 	void set_track(const int t);
@@ -47,6 +49,8 @@ public:
 
 	void append_length(const int32_t frames);
 
+	void append_filename(const std::string& filename);
+
 	int track() const;
 
 	int32_t pregap() const;
@@ -56,6 +60,8 @@ public:
 	std::vector<int32_t> offsets() const;
 
 	std::vector<int32_t> lengths() const;
+
+	std::vector<std::string> filenames() const;
 };
 
 
@@ -105,6 +111,8 @@ public:
 	std::vector<int32_t> offsets() const;
 
 	std::vector<int32_t> lengths() const;
+
+	std::vector<std::string> filenames() const;
 };
 
 } // namespace cuesheet
