@@ -1,4 +1,4 @@
 [submodule "libs/libarcstk"]
 	path = libs/libarcstk
-	url = https://github.com/crf8472/libarcstk.git
-	branch = main
+	url = https://tristero:8418/hohenadel/libarcstk.git
+	branch = calc2
