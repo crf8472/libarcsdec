@@ -44,6 +44,7 @@ class AudioReader;
 class MetadataParser;
 
 using arcstk::TOC;
+using arcstk::Algorithm;
 using arcstk::ARId;
 using arcstk::Checksums;
 using arcstk::ChecksumSet;
@@ -258,6 +259,12 @@ public:
 
 
 /**
+ * \brief Set of checksum types.
+ */
+using ChecksumTypeset = std::unordered_set<arcstk::checksum::type>;
+
+
+/**
  * \brief Calculate ARCSs for input audio files.
  *
  * Note that ARCSCalculator does not perform any lookups in the filesystem. This
@@ -273,7 +280,7 @@ public:
 	 *
 	 * \param[in] type The Checksum type to calculate.
 	 */
-	ARCSCalculator(const arcstk::checksum::type type);
+	explicit ARCSCalculator(const ChecksumTypeset& type);
 
 	/**
 	 * \brief Constructor.
@@ -350,14 +357,14 @@ public:
 	 *
 	 * \param[in] type The checksum::type to calculate
 	 */
-	void set_type(const arcstk::checksum::type type);
+	void set_types(const ChecksumTypeset& type);
 
 	/**
-	 * \brief Return checksum::type calculated by this instance.
+	 * \brief Return checksum::types calculated by this instance.
 	 *
-	 * \return The checksum::type to calculate
+	 * \return The set of checksum::types to calculate
 	 */
-	arcstk::checksum::type type() const;
+	ChecksumTypeset types() const;
 
 private:
 
@@ -374,7 +381,7 @@ private:
 	/**
 	 * \brief Internal checksum type.
 	 */
-	arcstk::checksum::type type_;
+	ChecksumTypeset types_;
 };
 
 

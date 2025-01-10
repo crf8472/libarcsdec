@@ -102,7 +102,6 @@ set (PROJECT_INSTALL_INCLUDES_SUBDIR "include/arcsdec" )
 
 add_custom_command (
 	OUTPUT  ${PROJECT_LOG_DIR}
-	PRE_BUILD
 	COMMAND ${CMAKE_COMMAND}
 	ARGS    -E make_directory ${PROJECT_LOG_DIR} )
 
@@ -112,7 +111,6 @@ add_custom_target (libarcsdec_create_log_dir DEPENDS ${PROJECT_LOG_DIR} )
 
 add_custom_command (
 	OUTPUT  ${PROJECT_BINARY_DIR}/include
-	PRE_BUILD
 	COMMAND ${CMAKE_COMMAND}
 	ARGS    -E make_directory ${PROJECT_BINARY_DIR}/include )
 
