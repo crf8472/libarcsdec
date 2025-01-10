@@ -51,6 +51,7 @@ inline namespace v_1_0_0
 {
 
 using arcstk::TOC;
+using arcstk::Algorithm;
 using arcstk::ARId;
 using arcstk::AudioSize;
 using arcstk::Calculation;
@@ -58,7 +59,6 @@ using arcstk::Checksums;
 using arcstk::ChecksumSet;
 using arcstk::SampleInputIterator;
 using arcstk::make_arid;
-using arcstk::make_context;
 
 
 /**
@@ -218,7 +218,7 @@ void CalculationProcessor::do_update_audiosize(const AudioSize &size)
 {
 	ARCS_LOG(DEBUG2) << "CalculationProcessor received: UPDATE AUDIOSIZE";
 
-	calculation_->update_audiosize(size);
+	calculation_->update(size);
 }
 
 
@@ -357,7 +357,7 @@ void process_audio_file(const std::string& audiofilename,
 
 	if (BLOCKSIZE::MIN <= buffer_size and buffer_size <= BLOCKSIZE::MAX)
 	{
-		ARCS_LOG(DEBUG1) << "Sample read chunk size: "
+		ARCS_LOG(DEBUG1) << "Chunk size for reading samples: "
 			<< std::to_string(buffer_size) << " bytes";
 
 		reader->set_samples_per_read(buffer_size);
@@ -385,15 +385,16 @@ void process_audio_file(const std::string& audiofilename,
 // ARCSCalculator
 
 
-ARCSCalculator::ARCSCalculator(const arcstk::checksum::type type)
-	: type_ { type }
+ARCSCalculator::ARCSCalculator(const ChecksumTypeset& typeset)
+	: types_ { typeset }
 {
 	// empty
 }
 
 
 ARCSCalculator::ARCSCalculator()
-	: ARCSCalculator(arcstk::checksum::type::ARCS2)
+	: ARCSCalculator({arcstk::checksum::type::ARCS1,
+			arcstk::checksum::type::ARCS2})
 {
 	// empty
 }
@@ -408,13 +409,40 @@ std::pair<Checksums, ARId> ARCSCalculator::calculate(
 
 	// Configure Calculation
 
-	auto calc = std::make_unique<Calculation>(type(),
-			make_context(toc, audiofilename));
+	/*
+	auto partitioner = arcstk::make_partitioner(toc);
+	auto algorithms  = arcstk::get_algorithms(types());
+	auto calculation = arcstk::make_calculation(&partitioner, &algorithms);
+	*/
 
+	//auto calc = std::make_unique<Calculation>(type(),
+	//		make_context(toc, audiofilename));
+
+	auto algorithms = arcstk::get_algorithms(types());
+
+	if (algorithms.empty())
+	{
+		throw std::runtime_error(
+				"Could not find algorithms for requested types");
+	}
+
+	auto calculations = std::vector<Calculation>{};
+
+	for (auto& algorithm : algorithms)
+	{
+		calculations.emplace_back(std::move(algorithm), toc);
+	}
+
+	auto calc { calculations.begin() };
+
+	/*
 	if (!calc)
 	{
 		throw std::logic_error("Could not instantiate Calculation object");
 	}
+	*/
+
+	//
 
 	auto reader = file_reader(audiofilename, this);
 
@@ -491,15 +519,15 @@ ChecksumSet ARCSCalculator::calculate(
 }
 
 
-void ARCSCalculator::set_type(const arcstk::checksum::type type)
+void ARCSCalculator::set_types(const ChecksumTypeset& typeset)
 {
-	type_ = type;
+	types_ = typeset;
 }
 
 
-arcstk::checksum::type ARCSCalculator::type() const
+ChecksumTypeset ARCSCalculator::types() const
 {
-	return type_;
+	return types_;
 }
 
 
