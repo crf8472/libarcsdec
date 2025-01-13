@@ -594,7 +594,7 @@ std::vector<Calculation> init_calculations(const Types& types, const TOC& toc);
 
 std::vector<Calculation> init_calculations(const Types& types, const TOC& toc)
 {
-	const auto settings { arcstk::Settings::Context::ALBUM };
+	const auto settings { arcstk::Context::ALBUM };
 	const auto size { AudioSize { toc.leadout(), AudioSize::UNIT::FRAMES } };
 	const auto offsets { arcstk::toc::get_offsets(toc) };
 
@@ -803,15 +803,16 @@ ChecksumSet ARCSCalculator::calculate_track(
 
 	// FIXME Repair this
 	using arcstk::Settings;
-	auto settings = Settings { Settings::Context::NONE };
+	using arcstk::Context;
+	auto settings = Settings { Context::NONE };
 	const auto flags = skip_front + 2 * skip_back;
 	settings = flags == 3
-			? Settings::Context::ALBUM
+			? Context::ALBUM
 			: flags == 2
-				? Settings::Context::LAST_TRACK
+				? Context::LAST_TRACK
 				: flags == 1
-					? Settings::Context::FIRST_TRACK
-					: Settings::Context::NONE;
+					? Context::FIRST_TRACK
+					: Context::NONE;
 
 	auto algorithms { get_algorithms_or_throw(types()) };
 	const AudioInfo info;
