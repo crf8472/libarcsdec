@@ -813,9 +813,8 @@ ChecksumSet ARCSCalculator::calculate_track(
 					? Settings::Context::FIRST_TRACK
 					: Settings::Context::NONE;
 
-	auto algorithms { get_algorithms(types()) };
+	auto algorithms { get_algorithms_or_throw(types()) };
 	const AudioInfo info;
-
 
 	auto calculations { init_calculations(settings, algorithms,
 			*info.size(audiofilename), {}) };
