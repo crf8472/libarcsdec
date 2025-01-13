@@ -115,7 +115,7 @@ void LogProcessor::do_end_input()
 
 
 /**
- * \brief Provide a SampleProcessor that updates a Calculation.
+ * \brief SampleProcessor that updates a Calculation.
  */
 class CalculationProcessor final : public SampleProcessor
 {
@@ -250,6 +250,9 @@ int64_t CalculationProcessor::samples_processed() const
 }
 
 
+/**
+ * \brief SampleProcessor that updates multiple Calculation instances.
+ */
 class MultiCalculationProcessor final : public SampleProcessor
 {
 public:
@@ -270,7 +273,7 @@ private:
 	void do_end_input() final;
 
 	/**
-	 * \brief Internal pointer to the calculation to wrap.
+	 * \brief Internal pointer to the processors to wrap.
 	 */
 	std::vector<CalculationProcessor> processors_;
 };
@@ -293,22 +296,28 @@ void MultiCalculationProcessor::do_start_input()
 {
 	ARCS_LOG(DEBUG2) << "MultiCalculationProcessor received: START INPUT";
 
-	for (auto& p : processors_)
-	{
-		p.start_input();
-	}
+	using std::begin;
+	using std::end;
+	std::for_each(begin(processors_), end(processors_),
+			[](SampleProcessor& p)
+			{
+				p.start_input();
+			});
 }
 
 
-void MultiCalculationProcessor::do_append_samples(SampleInputIterator begin,
-		SampleInputIterator end)
+void MultiCalculationProcessor::do_append_samples(SampleInputIterator start,
+		SampleInputIterator stop)
 {
 	ARCS_LOG(DEBUG2) << "MultiCalculationProcessor received: APPEND SAMPLES";
 
-	for (auto& p : processors_)
-	{
-		p.append_samples(begin, end);
-	}
+	using std::begin;
+	using std::end;
+	std::for_each(begin(processors_), end(processors_),
+			[&start,&stop](SampleProcessor& p)
+			{
+				p.append_samples(start, stop);
+			});
 }
 
 
@@ -316,10 +325,13 @@ void MultiCalculationProcessor::do_update_audiosize(const AudioSize &size)
 {
 	ARCS_LOG(DEBUG2) << "MultiCalculationProcessor received: UPDATE AUDIOSIZE";
 
-	for (auto& p : processors_)
-	{
-		p.update_audiosize(size);
-	}
+	using std::begin;
+	using std::end;
+	std::for_each(begin(processors_), end(processors_),
+			[&size](SampleProcessor& p)
+			{
+				p.update_audiosize(size);
+			});
 }
 
 
@@ -327,10 +339,13 @@ void MultiCalculationProcessor::do_end_input()
 {
 	ARCS_LOG(DEBUG2) << "MultiCalculationProcessor received: END INPUT";
 
-	for (auto& p : processors_)
-	{
-		p.end_input();
-	}
+	using std::begin;
+	using std::end;
+	std::for_each(begin(processors_), end(processors_),
+			[](SampleProcessor& p)
+			{
+				p.end_input();
+			});
 }
 
 
@@ -505,19 +520,24 @@ Algorithms get_algorithms(const Types& types);
 
 Algorithms get_algorithms(const Types& types)
 {
+	using arcstk::checksum::type;
+
 	Algorithms a;
+
+	// TODO Manual logic does not scale. OK only for the current 3 algorithms.
 
 	if (types.empty()/* default */ || types.size() > 1/* all known types*/)
 	{
 		a.insert(std::make_unique<arcstk::AccurateRipV1V2>());
 	} else
 	{
-		// Manually check for the requested type
-		// TODO Manual check does not scale. OK only for the current 3 algorithms.
-		if (*types.begin() == arcstk::checksum::type::ARCS1)
-			{ a.insert(std::make_unique<arcstk::AccurateRipV1>()); }
-		else
-			{ a.insert(std::make_unique<arcstk::AccurateRipV2>()); }
+		if (type::ARCS1 == *types.begin())
+		{
+			a.insert(std::make_unique<arcstk::AccurateRipV1>());
+		} else
+		{
+			a.insert(std::make_unique<arcstk::AccurateRipV2>());
+		}
 	}
 
 	return a;
@@ -571,11 +591,11 @@ std::vector<Calculation> init_calculations(const arcstk::Settings& settings,
 	auto calculations = std::vector<Calculation>();
 	calculations.reserve(algorithms.size());
 
-	for (const auto& algo : algorithms)
+	for (const auto& algorithm : algorithms)
 	{
-		// We cannot move an object out of a set, so we have to copy
-		calculations.emplace_back(settings, algo->clone(), size, offsets);
-	} // TODO Reimplement this using std::transform
+		// We cannot move an object out of a set, so we have to clone
+		calculations.emplace_back(settings, algorithm->clone(), size, offsets);
+	}
 
 	return calculations;
 }
@@ -615,8 +635,8 @@ Checksums harvest_result(const std::vector<Calculation>& calculations);
 
 Checksums harvest_result(const std::vector<Calculation>& calculations)
 {
-	const auto size = calculations[0].result().size();
-	auto tracks = std::vector<ChecksumSet>(size, ChecksumSet{0});
+	const auto size { calculations[0].result().size() };
+	auto tracks { std::vector<ChecksumSet>(size, ChecksumSet{0}) };
 
 	using std::begin;
 	using std::cbegin;
@@ -642,7 +662,7 @@ Checksums harvest_result(const std::vector<Calculation>& calculations)
 
 	// Convert to Checksums
 
-	Checksums result;
+	auto result = Checksums{};
 	std::for_each(begin(tracks), end(tracks),
 		[&result](const ChecksumSet& s) { result.append(s); });
 
