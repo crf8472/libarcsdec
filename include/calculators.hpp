@@ -63,6 +63,16 @@ using arcstk::ChecksumSet;
  * @{
  */
 
+
+/**
+ * \brief Provide the default FileReaderSelection for the specified ReaderType.
+ *
+ * \return The default FileReaderSelection.
+ */
+template <class ReaderType>
+const FileReaderSelection* default_selection();
+
+
 // Deactivate -Weffc++ for the following two classes
 //
 // -Weffc++ will warn about ReaderAndFormatHolder and SelectionPerformer
@@ -149,14 +159,13 @@ public:
 	/**
 	 * \brief Constructor.
 	 *
-	 * Initializes the instance with
-	 * FileReaderRegistry::default_audio_selection().
+	 * Initializes the instance with the default_selection() for the ReaderType.
 	 */
 	inline SelectionPerformer()
-		: selection_ { FileReaderRegistry::default_audio_selection() }
-		, create_    { /* empty */ }
+		: selection_ { default_selection<ReaderType>() }
+		, create_    { /* default */ }
 	{
-		// empty
+		/* empty */
 	}
 
 	/**
@@ -166,9 +175,9 @@ public:
 	 */
 	inline SelectionPerformer(const FileReaderSelection* selection)
 		: selection_ { selection }
-		, create_    { /* empty */ }
+		, create_    { /* default */ }
 	{
-		// empty
+		/* empty */
 	}
 
 	/**
@@ -176,7 +185,7 @@ public:
 	 */
 	inline virtual ~SelectionPerformer() noexcept
 	{
-		// empty
+		/* empty */
 	}
 
 	/**
@@ -200,17 +209,18 @@ public:
 	}
 
 	/**
-	 * \brief Create an AudioReader capable of reading \c filename.
+	 * \brief Create a FileReader capable of reading \c filename.
 	 *
 	 * \param[in] filename The file to read
+	 * \param[in] f        Available FileReader and FileFormat types
 	 *
-	 * \return An AudioReader for the input file
+	 * \return A FileReader for the input file
 	 */
 	inline std::unique_ptr<ReaderType> file_reader(const std::string &filename,
-			const ReaderAndFormatHolder* h) const
+			const ReaderAndFormatHolder* f) const
 	{
-		return this->create_(filename, *this->selection(), *h->formats(),
-				*h->readers());
+		return this->create_(filename, *this->selection(), *f->formats(),
+				*f->readers());
 	}
 
 private:
@@ -232,20 +242,37 @@ private:
 
 
 /**
- * \brief Format-independent parser for CD TOC metadata files.
+ * \brief Base class for classes that create opaque readers.
+ *
+ * A subclass must specify the ReaderType and can then easily use create()
+ * to create an appropriate FileReader by just specifying the filename.
  */
-class TOCParser final : public ReaderAndFormatHolder,
-						public SelectionPerformer<MetadataParser>
+template <class ReaderType>
+class FileReaderProvider : public ReaderAndFormatHolder
+					     , public SelectionPerformer<ReaderType>
 {
-public:
+protected:
 
 	/**
-	 * \brief Constructor.
+	 * \brief Create a FileReader capable of reading \c filename.
 	 *
-	 * Sets FileReaderRegistry::default_toc_selection() as the default
-	 * selection.
+	 * \param[in] filename The file to read
+	 *
+	 * \return A FileReader for the input file
 	 */
-	TOCParser();
+	inline std::unique_ptr<ReaderType> create(const std::string &filename) const
+	{
+		return this->file_reader(filename, this);
+	}
+};
+
+
+/**
+ * \brief Format-independent parser for CD TOC metadata files.
+ */
+class TOCParser final : public FileReaderProvider<MetadataParser>
+{
+public:
 
 	/**
 	 * \brief Parse the metadata file to a TOC object.
@@ -270,8 +297,7 @@ using ChecksumTypeset = std::unordered_set<arcstk::checksum::type>;
  * Note that ARCSCalculator does not perform any lookups in the filesystem. This
  * part is completely delegated to the \link FileReader FileReaders\endlink.
  */
-class ARCSCalculator final : public ReaderAndFormatHolder
-						   , public SelectionPerformer<AudioReader>
+class ARCSCalculator final : public FileReaderProvider<AudioReader>
 {
 public:
 
@@ -386,9 +412,31 @@ private:
 
 
 /**
- * \brief Calculate AccurateRip ID of an album.
+ * \brief Format-independent parser for audio metadata.
  */
-class ARIdCalculator final : public ReaderAndFormatHolder
+class AudioInfo final : public FileReaderProvider<AudioReader>
+{
+public:
+
+	/**
+	 * \brief Parse the size of the audio data from the audio file.
+	 *
+	 * \param[in] audiofilename Name of the audiodatafile
+	 *
+	 * \return The size of the audio data
+	 */
+	std::unique_ptr<arcstk::AudioSize> size(const std::string &audiofilename)
+		const;
+};
+
+
+/**
+ * \brief Calculate AccurateRip ID of an album.
+ *
+ * When instantiated, the default_selection() for AudioReaders is active. To
+ * modify this behaviour, replace the default AudioInfo by a custom one.
+ */
+class ARIdCalculator final : public FileReaderProvider<MetadataParser>
 {
 public:
 
@@ -418,32 +466,18 @@ public:
 			const std::string &audiofilename) const;
 
 	/**
-	 * \brief Set the audioreader selection for this instance.
+	 * \brief AudioInfo used by this instance.
 	 *
-	 * \param[in] selection The audioreader selection to use
+	 * \return AudioInfo used by this instance
 	 */
-	void set_audio_selection(const FileReaderSelection *selection);
+	const AudioInfo* audio() const;
 
 	/**
-	 * \brief Get the audioreader selection used by this instance.
+	 * \brief Set the AudioInfo used by this instance.
 	 *
-	 * \return The audioreader selection used by this instance
+	 * \param[in] audio AudioInfo to be used by this instance
 	 */
-	const FileReaderSelection* audio_selection() const;
-
-	/**
-	 * \brief Set the metadata parser selection for this instance.
-	 *
-	 * \param[in] selection The metadata parser selection to use
-	 */
-	void set_toc_selection(const FileReaderSelection *selection);
-
-	/**
-	 * \brief Get the metadata parser selection used by this instance.
-	 *
-	 * \return The metadata parser selection used by this instance
-	 */
-	const FileReaderSelection* toc_selection() const;
+	void set_audio(const AudioInfo& audio);
 
 private:
 
@@ -460,14 +494,9 @@ private:
 			const std::string &audiofilename) const;
 
 	/**
-	 * \brief Internal selection for AudioReaders.
+	 * \brief Internal worker to determine the AudioSize if required.
 	 */
-	SelectionPerformer<AudioReader> audio_selection_;
-
-	/**
-	 * \brief Internal selection for MetadataParsers.
-	 */
-	SelectionPerformer<MetadataParser> toc_selection_;
+	AudioInfo audio_;
 };
 
 /// @}

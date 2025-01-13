@@ -45,6 +45,11 @@ void TOCHandlerState::append_length(const int32_t frames)
 	lengths_.emplace_back(frames);
 }
 
+void TOCHandlerState::append_filename(const std::string& filename)
+{
+	filenames_.emplace_back(filename);
+}
+
 int TOCHandlerState::track() const
 {
 	return track_;
@@ -68,6 +73,11 @@ std::vector<int32_t> TOCHandlerState::offsets() const
 std::vector<int32_t> TOCHandlerState::lengths() const
 {
 	return lengths_;
+}
+
+std::vector<std::string> TOCHandlerState::filenames() const
+{
+	return filenames_;
 }
 
 
@@ -100,9 +110,9 @@ void TOCHandler::do_cdtextfile(const std::string& /*name*/)
 }
 
 
-void TOCHandler::do_file(const std::string& /*name*/, const FILE_FORMAT& /*t*/)
+void TOCHandler::do_file(const std::string& name, const FILE_FORMAT& /*t*/)
 {
-	// empty
+	state_.append_filename(name);
 }
 
 
@@ -195,6 +205,12 @@ std::vector<int32_t> TOCHandler::offsets() const
 std::vector<int32_t> TOCHandler::lengths() const
 {
 	return state_.lengths();
+}
+
+
+std::vector<std::string> TOCHandler::filenames() const
+{
+	return state_.filenames();
 }
 
 } // namespace cuesheet

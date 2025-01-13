@@ -100,6 +100,15 @@ using arcsdec::details::cuesheet::yycuesheet::Parser;
 using arcsdec::details::cuesheet::yycuesheet::location;
 using arcsdec::details::cuesheet::yycuesheet::position;
 
+// remove quotes from quoted string
+std::string remove_quotes(const std::string& s)
+{
+	if (s.length() < 2)  { return s; };
+	if (s.length() == 2) { return std::string{}; };
+
+	return s.substr(1, s.length() - 2);
+}
+
 // end cuesheet.l
 %}
 
@@ -178,7 +187,7 @@ SIZE_INFO   { return Parser::make_SIZE_INFO(get().loc());  }
 <REM>[^\n]* { BEGIN(INITIAL); /* REM: discard rest of line */  }
 
 
-{QSTRING1}|{QSTRING2} { return Parser::make_STRING(YYText(), get().loc()); }
+{QSTRING1}|{QSTRING2} { return Parser::make_STRING(remove_quotes(YYText()), get().loc()); }
 
 :			{ return Parser::make_COLON(get().loc()); }
 

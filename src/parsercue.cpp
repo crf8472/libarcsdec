@@ -82,7 +82,7 @@ std::unique_ptr<TOC> CuesheetParserImpl::do_parse(const std::string &filename)
 	}
 
 	return make_toc(handler.total_tracks(), handler.offsets(),
-			handler.lengths());
+			handler.lengths(), handler.filenames());
 }
 
 std::unique_ptr<FileReaderDescriptor> CuesheetParserImpl::do_descriptor() const
