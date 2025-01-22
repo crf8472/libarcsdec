@@ -528,15 +528,15 @@ Algorithms get_algorithms(const Types& types)
 
 	if (types.empty()/* default */ || types.size() > 1/* all known types*/)
 	{
-		a.insert(std::make_unique<arcstk::AccurateRipV1V2>());
+		a.insert(std::make_unique<arcstk::accuraterip::V1and2>());
 	} else
 	{
 		if (type::ARCS1 == *types.begin())
 		{
-			a.insert(std::make_unique<arcstk::AccurateRipV1>());
+			a.insert(std::make_unique<arcstk::accuraterip::V1>());
 		} else
 		{
-			a.insert(std::make_unique<arcstk::AccurateRipV2>());
+			a.insert(std::make_unique<arcstk::accuraterip::V2>());
 		}
 	}
 
@@ -576,17 +576,17 @@ Algorithms get_algorithms_or_throw(const Types& types)
  * \param[in] settings   Settings for each Calculation
  * \param[in] algorithms Algorithms to initialize Calculations for
  * \param[in] size       Sample amount to process
- * \param[in] offsets    Offset points
+ * \param[in] points     Offset points (counted as samples)
  *
  * \return Initialized Calculation instances
  */
 std::vector<Calculation> init_calculations(const arcstk::Settings& settings,
 		const Algorithms& algorithms, const AudioSize& size,
-		const std::vector<int32_t>& offsets);
+		const std::vector<int32_t>& points);
 
 std::vector<Calculation> init_calculations(const arcstk::Settings& settings,
 		const Algorithms& algorithms, const AudioSize& size,
-		const std::vector<int32_t>& offsets)
+		const std::vector<int32_t>& points)
 {
 	auto calculations = std::vector<Calculation>();
 	calculations.reserve(algorithms.size());
@@ -594,7 +594,7 @@ std::vector<Calculation> init_calculations(const arcstk::Settings& settings,
 	for (const auto& algorithm : algorithms)
 	{
 		// We cannot move an object out of a set, so we have to clone
-		calculations.emplace_back(settings, algorithm->clone(), size, offsets);
+		calculations.emplace_back(settings, algorithm->clone(), size, points);
 	}
 
 	return calculations;
@@ -602,24 +602,42 @@ std::vector<Calculation> init_calculations(const arcstk::Settings& settings,
 
 
 /**
- * \brief Convenience wrapper for init_calculations() to use with a TOC.
+ * \brief Convenience wrapper for init_calculations() to use with TOC info.
  *
- * \param[in] types Set of types
+ * \param[in] types   Set of requested types
+ * \param[in] size    Size of the audio input
+ * \param[in] points  Track offset samples
  *
  * \return Duplicate-free set of Algorithm instances
  *
  * \throws If the resulting set of Algorithm instances would be empty
  */
-std::vector<Calculation> init_calculations(const Types& types, const TOC& toc);
+std::vector<Calculation> init_calculations(const Types& types,
+		const AudioSize& size, const std::vector<int32_t>& points);
 
-std::vector<Calculation> init_calculations(const Types& types, const TOC& toc)
+std::vector<Calculation> init_calculations(const Types& types,
+		const AudioSize& size, const std::vector<int32_t>& points)
 {
-	const auto settings { arcstk::Context::ALBUM };
-	const auto size { AudioSize { toc.leadout(), AudioSize::UNIT::FRAMES } };
-	const auto offsets { arcstk::toc::get_offsets(toc) };
+	return init_calculations({ arcstk::Context::ALBUM },
+			get_algorithms_or_throw(types), size, points);
+}
 
-	return init_calculations(settings, get_algorithms_or_throw(types), size,
-			offsets);
+
+std::vector<int32_t> offsets_as_samples(const TOC& toc);
+
+std::vector<int32_t> offsets_as_samples(const TOC& toc)
+{
+	// Transform offsets to sample points
+	auto points { arcstk::toc::get_offsets(toc) };
+	using std::begin;
+	using std::end;
+	using arcstk::CDDA;
+	std::transform(cbegin(points), cend(points), begin(points),
+			[](const int32_t f){ return f * CDDA::SAMPLES_PER_FRAME; } );
+	// TODO duplicate of arcstk::details::get_offset_sample_indices
+	// TODO use arcstk::details::frames2samples
+
+	return points;
 }
 
 
@@ -681,8 +699,8 @@ ARCSCalculator::ARCSCalculator(const ChecksumTypeset& typeset)
 
 
 ARCSCalculator::ARCSCalculator()
-	: ARCSCalculator({arcstk::checksum::type::ARCS1,
-			arcstk::checksum::type::ARCS2})
+	: ARCSCalculator(
+			{ arcstk::checksum::type::ARCS1, arcstk::checksum::type::ARCS2 })
 {
 	/* empty */
 }
@@ -701,7 +719,18 @@ std::pair<Checksums, ARId> ARCSCalculator::calculate(
 
 	// Configure Calculation
 
-	auto calculations { init_calculations(types(), toc) };
+	auto size = AudioSize{};
+	if (!toc.complete())
+	{
+		size = *reader->acquire_size(audiofilename);
+	} else
+	{
+		size = AudioSize { toc.leadout(), AudioSize::UNIT::FRAMES };
+	}
+
+	const auto points = offsets_as_samples(toc);
+
+	auto calculations { init_calculations(types(), size, points) };
 
 	if (calculations.empty())
 	{
@@ -835,10 +864,9 @@ ChecksumSet ARCSCalculator::calculate_track(
 					: Context::NONE;
 
 	auto algorithms { get_algorithms_or_throw(types()) };
-	const AudioInfo info;
 
 	auto calculations { init_calculations(settings, algorithms,
-			*info.size(audiofilename), {}) };
+			*reader->acquire_size(audiofilename), {}) };
 
 	if (calculations.empty())
 	{

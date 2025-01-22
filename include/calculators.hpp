@@ -377,6 +377,7 @@ public:
 	 */
 	ChecksumSet calculate(const std::string &audiofilename,
 		const bool &skip_front, const bool &skip_back);
+	// NOTE This is not really useful except for testing
 
 	/**
 	 * \brief Set checksum::type for the instance to calculate.
