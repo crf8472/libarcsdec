@@ -667,13 +667,13 @@ Checksums harvest_result(const std::vector<Calculation>& calculations)
 		{
 			auto checksums { c.result() };
 
-			std::transform(cbegin(checksums), cend(checksums), cbegin(tracks),
+			std::transform(cbegin(checksums), cend(checksums), begin(tracks),
 				begin(tracks),
-				[](const ChecksumSet& s, const ChecksumSet& t) -> ChecksumSet
+				[](const ChecksumSet& s, ChecksumSet& t) -> ChecksumSet
 				{
-					ChecksumSet set = t; // TODO Change API, avoid copy!
-					set.merge(s);
-					return set;
+					t.merge(s);
+					t.set_length(s.length());
+					return t;
 				}
 			);
 		});
