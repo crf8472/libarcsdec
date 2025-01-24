@@ -444,6 +444,7 @@ std::unique_ptr<AudioSize> AudioReaderImpl::acquire_size(
 
 void AudioReaderImpl::process_file(const std::string &filename)
 {
+	ARCS_LOG_DEBUG << "Process audio file " << filename;
 	this->do_process_file(filename);
 }
 
@@ -628,14 +629,18 @@ std::size_t AudioReader::Impl::samples_per_read() const
 std::unique_ptr<AudioSize> AudioReader::Impl::acquire_size(
 		const std::string &filename) const
 {
-	ARCS_LOG_DEBUG << "Try to acquire audio file size of '" << filename << "'";
+	ARCS_LOG_DEBUG << "Acquire total number of samples in file '"
+		<< filename << "'";
 
 	auto audiosize = readerimpl_->acquire_size(filename);
 
+	using std::to_string;
 	ARCS_LOG_DEBUG << "Audio file size of '" << filename
-		<< "' successfully acquired (== "
-		<< std::to_string(audiosize->leadout_frame())
-		<< " LBA frames)";
+		<< "' successfully acquired: "
+		<< to_string(audiosize->leadout_frame())
+		<< " LBA frames == "
+		<< to_string(audiosize->total_samples())
+		<< " PCM stereo samples";
 
 	return audiosize;
 }
@@ -643,7 +648,7 @@ std::unique_ptr<AudioSize> AudioReader::Impl::acquire_size(
 
 void AudioReader::Impl::process_file(const std::string &filename)
 {
-	ARCS_LOG_DEBUG << "Try to process audio file '" << filename << "'";
+	ARCS_LOG_DEBUG << "Start to process audio file '" << filename << "'";
 
 	readerimpl_->process_file(filename);
 
