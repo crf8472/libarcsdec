@@ -710,6 +710,8 @@ std::pair<Checksums, ARId> ARCSCalculator::calculate(
 		const std::string &audiofilename,
 		const TOC &toc)
 {
+	using arcstk::make_arid;
+
 	ARCS_LOG_DEBUG << "Calculate by TOC and single audiofilename: "
 		<< audiofilename;
 
@@ -720,12 +722,16 @@ std::pair<Checksums, ARId> ARCSCalculator::calculate(
 	// Configure Calculation
 
 	auto size = AudioSize{};
+	auto id   = std::unique_ptr<ARId>{};
+
 	if (!toc.complete())
 	{
 		size = *reader->acquire_size(audiofilename);
+		id   = make_arid(toc, size.total_frames());
 	} else
 	{
 		size = AudioSize { toc.leadout(), AudioSize::UNIT::FRAMES };
+		id   = make_arid(toc);
 	}
 
 	const auto points = offsets_as_samples(toc);
@@ -755,7 +761,7 @@ std::pair<Checksums, ARId> ARCSCalculator::calculate(
 
 	// Result handling
 
-	return std::make_pair(harvest_result(calculations), *arcstk::make_arid(toc));
+	return std::make_pair(harvest_result(calculations), *id);
 }
 
 
@@ -1022,6 +1028,11 @@ std::unique_ptr<ARId> ARIdCalculator::calculate(const TOC &toc,
 	// the process of reading the audio file. (We cannot deduce it from the
 	// mere file size.) However, we do not intend to actually read the audio
 	// samples.
+
+	if (toc.complete())
+	{
+		return make_arid(toc);
+	}
 
 	return make_arid(toc, audio_.size(audiofilename)->leadout_frame());
 }
