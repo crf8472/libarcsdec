@@ -401,7 +401,7 @@ WavAudioHandler::WavAudioHandler(std::unique_ptr<WAV_CDDA_t> valid)
 }
 
 
-int64_t WavAudioHandler::physical_file_size()
+int64_t WavAudioHandler::physical_file_size() const
 {
 	return phys_file_size_;
 }
@@ -410,7 +410,7 @@ int64_t WavAudioHandler::physical_file_size()
 void WavAudioHandler::start_file(const std::string &filename,
 		const int64_t &phys_file_size)
 {
-	ARCS_LOG_DEBUG << "Start validating WAV file: " << filename;
+	ARCS_LOG_DEBUG << "Start reading WAV file: " << filename;
 
 	phys_file_size_ = phys_file_size;
 }
@@ -418,7 +418,7 @@ void WavAudioHandler::start_file(const std::string &filename,
 
 void WavAudioHandler::end_file()
 {
-	ARCS_LOG_DEBUG << "Completed validation of WAV file";
+	ARCS_LOG_DEBUG << "Completed reading of WAV file";
 }
 
 
@@ -439,13 +439,15 @@ void WavAudioHandler::start_subchunk(
 void WavAudioHandler::chunk_descriptor(
 	const WavChunkDescriptor &descriptor)
 {
-	ARCS_LOG(DEBUG1) << "Try to validate RIFF/WAV Header";
-
-	if (not this->has_config(C_RESPECT_HEADER))
+	if (!this->has_option(C_RESPECT_HEADER))
 	{
+		ARCS_LOG(DEBUG1) << "Skip validation of RIFF/WAV Header";
+
 		this->set_state(S_VALIDATED_HEADER);
 		return;
 	}
+
+	ARCS_LOG(DEBUG1) << "Try to validate RIFF/WAV Header";
 
 	if (not this->assert_equals_u("Test: RIFF Header present?",
 		descriptor.id, valid_->chunk_id(),
@@ -483,6 +485,14 @@ void WavAudioHandler::chunk_descriptor(
 void WavAudioHandler::subchunk_format(
 		const WavFormatSubchunk &format_subchunk)
 {
+	if (!this->has_option(C_RESPECT_FORMAT))
+	{
+		ARCS_LOG(DEBUG1) << "Skip validation of format subchunk";
+
+		this->set_state(S_VALIDATED_FORMAT);
+		return;
+	}
+
 	ARCS_LOG(DEBUG1) << "Try to validate format subchunk";
 
 	if (not this->assert_equals_u("Test: id is 'fmt '?",
@@ -537,6 +547,14 @@ void WavAudioHandler::subchunk_format(
 
 void WavAudioHandler::subchunk_data(const uint32_t &subchunk_size)
 {
+	if (!this->has_option(C_RESPECT_DATA))
+	{
+		ARCS_LOG(DEBUG1) << "Skip validation of data subchunk";
+
+		this->set_state(S_VALIDATED_DATA);
+		return;
+	}
+
 	ARCS_LOG(DEBUG1) << "Try to validate data subchunk";
 
 	if (not this->assert_true("Test: format subchunk before data subchunk?",
@@ -566,19 +584,19 @@ void WavAudioHandler::subchunk_data(const uint32_t &subchunk_size)
 }
 
 
-bool WavAudioHandler::has_state(const STATE &state)
+bool WavAudioHandler::has_state(const STATE &state) const
 {
 	return state_ & state;
 }
 
 
-bool WavAudioHandler::requests_all_subchunks()
+bool WavAudioHandler::requests_all_subchunks() const
 {
 	return config_ & C_RESPECT_TRAILING;
 }
 
 
-const WAV_CDDA_t& WavAudioHandler::validator()
+const WAV_CDDA_t& WavAudioHandler::validator() const
 {
 	return *valid_;
 }
@@ -596,13 +614,25 @@ void WavAudioHandler::unset_state(const STATE &state)
 }
 
 
-bool WavAudioHandler::has_config(const CONFIG &option)
+uint32_t WavAudioHandler::config() const
+{
+	return config_;
+}
+
+
+void WavAudioHandler::set_config(const CONFIG &config)
+{
+	config_ = config;
+}
+
+
+bool WavAudioHandler::has_option(const CONFIG &option) const
 {
 	return config_ & option;
 }
 
 
-void WavAudioHandler::set_config(const CONFIG &option)
+void WavAudioHandler::set_option(const CONFIG &option)
 {
 	config_ |= option;
 }
@@ -896,6 +926,9 @@ int64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 
 			total_pcm_bytes = subchunk_header.size; // remind: output parameter
 
+			ARCS_LOG(DEBUG1) << "Total number of audio bytes: "
+				<< total_pcm_bytes;
+
 			audio_handler_->subchunk_data(subchunk_header.size);
 
 			if (calculate)
@@ -939,7 +972,7 @@ int64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 				{
 					ARCS_LOG_INFO << "Ignored "
 						<< std::to_string(remainder)
-						<< " bytes of unparsed data behind data subchunk."
+						<< " bytes of unparsed data behind data subchunk "
 						<< "(processed: "
 						<< std::to_string(total_bytes_read)
 						<< " bytes, file size: "
@@ -1035,6 +1068,8 @@ std::unique_ptr<AudioSize> WavAudioReaderImpl::do_acquire_size(
 {
 	int64_t total_pcm_bytes = 0;
 
+	auto backup_config { audio_handler_->config() };
+
 	try
 	{
 		// Neither Validate nor Calculate, do not emit signals
@@ -1047,6 +1082,8 @@ std::unique_ptr<AudioSize> WavAudioReaderImpl::do_acquire_size(
 	}
 	catch (const std::ifstream::failure& f)
 	{
+		audio_handler_->set_config(static_cast<CONFIG>(backup_config));
+
 		if (total_pcm_bytes == 0)
 		{
 			throw;
@@ -1058,8 +1095,10 @@ std::unique_ptr<AudioSize> WavAudioReaderImpl::do_acquire_size(
 			<< f.what();
 	}
 
-	std::unique_ptr<AudioSize> audiosize = std::make_unique<AudioSize>();
-	audiosize->set_total_pcm_bytes(total_pcm_bytes);
+	audio_handler_->set_config(static_cast<CONFIG>(backup_config));
+
+	std::unique_ptr<AudioSize> audiosize {
+		std::make_unique<AudioSize>(total_pcm_bytes, AudioSize::UNIT::BYTES) };
 	return audiosize;
 }
 
@@ -1070,7 +1109,11 @@ void WavAudioReaderImpl::do_process_file(const std::string &audiofilename)
 
 	// Validate And Calculate, emit signals
 
+	auto backup_config { audio_handler_->config() };
+
 	this->process_file(audiofilename, true, true, total_pcm_bytes/* ignore */);
+
+	audio_handler_->set_config(static_cast<CONFIG>(backup_config));
 }
 
 

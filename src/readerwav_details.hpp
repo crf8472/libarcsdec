@@ -642,7 +642,7 @@ public:
 	 *
 	 * \return The physical file size
 	 */
-	int64_t physical_file_size();
+	int64_t physical_file_size() const;
 
 	/**
 	 * \brief Handler method: Called by AudioReaderImpl on start of the reading
@@ -696,12 +696,16 @@ public:
 	 */
 	void subchunk_data(const uint32_t &subchunk_size);
 
+	uint32_t config() const;
+
+	void set_config(const CONFIG &option);
+
 	/**
 	 * \brief Set a configuration option.
 	 *
 	 * \param[in] option The option to set
 	 */
-	void set_config(const CONFIG &option);
+	void set_option(const CONFIG &option);
 
 	/**
 	 * \brief Check for a configuration option.
@@ -710,7 +714,7 @@ public:
 	 *
 	 * \return TRUE iff the option is set, otherwise false
 	 */
-	bool has_config(const CONFIG &option);
+	bool has_option(const CONFIG &option) const;
 
 	/**
 	 * \brief Returns TRUE iff WavAudioHandler expects to see also the optional
@@ -720,14 +724,14 @@ public:
 	 *
 	 * \return TRUE if WavAudioHandler excpects trailing subchunks
 	 */
-	bool requests_all_subchunks();
+	bool requests_all_subchunks() const;
 
 	/**
 	 * \brief Return the internal validation object.
 	 *
 	 * \return Internal validation object.
 	 */
-	const WAV_CDDA_t& validator();
+	const WAV_CDDA_t& validator() const;
 
 protected:
 
@@ -738,7 +742,7 @@ protected:
 	 *
 	 * \return TRUE iff the state is actual, otherwise false
 	 */
-	bool has_state(const STATE &state);
+	bool has_state(const STATE &state) const;
 
 	/**
 	 * \brief Set a specific state.
