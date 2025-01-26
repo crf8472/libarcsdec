@@ -17,6 +17,7 @@
 #include <unordered_set> // for unordered_set
 #include <utility>       // for pair, move, make_pair
 #include <vector>        // for vector
+#include <iostream>
 
 #ifndef __LIBARCSTK_ALGORITHMS_HPP__
 #include <arcstk/algorithms.hpp>// for AccurateRipV1V2...
@@ -63,6 +64,7 @@ using arcstk::AudioSize;
 using arcstk::Calculation;
 using arcstk::Checksums;
 using arcstk::ChecksumSet;
+using arcstk::Points;
 using arcstk::SampleInputIterator;
 using arcstk::make_arid;
 
@@ -734,6 +736,7 @@ std::pair<Checksums, ARId> ARCSCalculator::calculate(
 	auto size = AudioSize{};
 	auto id   = std::unique_ptr<ARId>{};
 
+	// TODO Really??
 	if (!toc.complete())
 	{
 		size = *reader->acquire_size(audiofilename);

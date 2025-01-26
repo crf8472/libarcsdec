@@ -128,8 +128,8 @@ TEST_CASE ( "ToCParser", "[calculators]" )
 		const auto toc { p.parse("cuesheet/ok01.cue") };
 
 		CHECK ( toc->total_tracks() == 2 );
-		CHECK ( toc->offsets().at(1).total_frames() ==   150 );
-		CHECK ( toc->offsets().at(2).total_frames() == 25072 );
+		CHECK ( toc->offsets().at(0).total_frames() ==   150 );
+		CHECK ( toc->offsets().at(1).total_frames() == 25072 );
 	}
 }
 
