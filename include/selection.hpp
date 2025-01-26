@@ -55,7 +55,7 @@ inline namespace v_1_0_0
  *
  * Class FileReaderRegistry holds the set of available FileReaderDescriptors as
  * well as the set of supported \link Format Formats\endlink. It also defines
- * default selections for Metadata/TOC formats as well as audio formats.
+ * default selections for Metadata/ToC formats as well as audio formats.
  *
  * @{
  */
@@ -506,7 +506,7 @@ public:
 	/**
 	 * \brief Default selection for \link AudioReader AudioReaders\endlink.
 	 *
-	 * This is used to initialize TOCParser and the Calculators with the same
+	 * This is used to initialize ToCParser and the Calculators with the same
 	 * default selection setup for audio readers.
 	 *
 	 * \return The default selector for determining an AudioReader
@@ -517,8 +517,8 @@ public:
 	 * \brief Default selection for
 	 * \link MetadataParser MetatdataParsers\endlink.
 	 *
-	 * This is used to initialize TOCParser and the Calculators with the same
-	 * default selection setup for TOCs.
+	 * This is used to initialize ToCParser and the Calculators with the same
+	 * default selection setup for ToCs.
 	 *
 	 * \return The default selector for determining a MetadataParser
 	 */

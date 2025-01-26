@@ -24,10 +24,6 @@
 #include "metaparser.hpp"        // for MetaparserImpl
 #endif
 
-#ifndef __LIBARCSTK_IDENTIFIER_HPP__
-#include <arcstk/identifier.hpp> // for TOC
-#endif
-
 namespace arcsdec
 {
 inline namespace v_1_0_0
@@ -41,7 +37,7 @@ namespace details
 namespace cuesheet
 {
 
-using arcstk::TOC;
+using arcstk::ToC;
 
 
 /**
@@ -79,7 +75,7 @@ private:
 	 */
 	//Cuesheet parse_worker(const std::string &filename) const;
 
-	std::unique_ptr<TOC> do_parse(const std::string &filename) final;
+	std::unique_ptr<ToC> do_parse(const std::string &filename) final;
 
 	std::unique_ptr<FileReaderDescriptor> do_descriptor() const final;
 };

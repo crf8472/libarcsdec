@@ -28,8 +28,8 @@ extern "C" {
 #ifndef __LIBARCSTK_IDENTIFIER_HPP__
 #include <arcstk/identifier.hpp>     // for CDDA
 #endif
-#ifndef __LIBARCSTK_CALCULATE_HPP__
-#include <arcstk/calculate.hpp>      // for AudioSize
+#ifndef __LIBARCSTK_METADATA_HPP__
+#include <arcstk/metadata.hpp>       // for AudioSize
 #endif
 #ifndef __LIBARCSTK_SAMPLES_HPP__
 #include <arcstk/samples.hpp>        // for InterleavedSamples

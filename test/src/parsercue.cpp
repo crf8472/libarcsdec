@@ -106,10 +106,10 @@ TEST_CASE ("DescriptorCuesheet", "[parsercue]" )
 TEST_CASE ("cuesheet", "[yycuesheet]" )
 {
 	using arcsdec::details::cuesheet::Driver;
-	using arcsdec::details::cuesheet::TOCHandler;
+	using arcsdec::details::cuesheet::ToCHandler;
 
 	Driver driver;
-	TOCHandler handler;
+	ToCHandler handler;
 
 	driver.set_handler(handler);
 

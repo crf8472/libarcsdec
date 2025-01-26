@@ -13,7 +13,10 @@
 #include <vector>   // for vector
 
 #ifndef __LIBARCSTK_IDENTIFIER_HPP__
-#include <arcstk/identifier.hpp>   // for ARId, TOC
+#include <arcstk/identifier.hpp>   // for ARId
+#endif
+#ifndef __LIBARCSTK_METADATA_HPP__
+#include <arcstk/metadata.hpp>     // for ToC
 #endif
 #ifndef __LIBARCSTK_CALCULATE_HPP__
 #include <arcstk/calculate.hpp>    // for Checksums, ChecksumSet
@@ -43,7 +46,7 @@ inline namespace v_1_0_0
 class AudioReader;
 class MetadataParser;
 
-using arcstk::TOC;
+using arcstk::ToC;
 using arcstk::Algorithm;
 using arcstk::ARId;
 using arcstk::Checksums;
@@ -57,8 +60,8 @@ using arcstk::ChecksumSet;
  *
  * ARIdCalculator is a calculator for the AccurateRip id of a given medium
  * description. ARCSCalculator is a calculator for the ARCSs for each audio
- * track of a given file. TOCParser is a format independent parser for
- * TOC files.
+ * track of a given file. ToCParser is a format independent parser for
+ * ToC files.
  *
  * @{
  */
@@ -268,20 +271,20 @@ protected:
 
 
 /**
- * \brief Format-independent parser for CD TOC metadata files.
+ * \brief Format-independent parser for CD ToC metadata files.
  */
-class TOCParser final : public FileReaderProvider<MetadataParser>
+class ToCParser final : public FileReaderProvider<MetadataParser>
 {
 public:
 
 	/**
-	 * \brief Parse the metadata file to a TOC object.
+	 * \brief Parse the metadata file to a ToC object.
 	 *
 	 * \param[in] metafilename Name of the metadatafile
 	 *
-	 * \return The parsed TOC
+	 * \return The parsed ToC
 	 */
-	std::unique_ptr<TOC> parse(const std::string &metafilename) const;
+	std::unique_ptr<ToC> parse(const std::string &metafilename) const;
 };
 
 
@@ -316,23 +319,23 @@ public:
 	ARCSCalculator();
 
 	/**
-	 * \brief Calculate ARCS values for an audio file, using the given TOC.
+	 * \brief Calculate ARCS values for an audio file, using the given ToC.
 	 *
-	 * The TOC is supposed to contain the offsets of all tracks represented
+	 * The ToC is supposed to contain the offsets of all tracks represented
 	 * in the audio file. It is not required to be <tt>complete()</tt>.
 	 *
-	 * Any audio file names in the TOC are ignored in favor of \c audiofilename.
+	 * Any audio file names in the ToC are ignored in favor of \c audiofilename.
 	 *
 	 * The result will contain ARCS v1 and v2 for all tracks specified in the
-	 * TOC.
+	 * ToC.
 	 *
 	 * \param[in] audiofilename Name of the audiofile
 	 * \param[in] toc           Offsets for the audiofile
 	 *
-	 * \return AccurateRip checksums of all tracks specified in the TOC
+	 * \return AccurateRip checksums of all tracks specified in the ToC
 	 */
 	std::pair<Checksums, ARId> calculate(const std::string &audiofilename,
-			const TOC &toc);
+			const ToC &toc);
 
 	/**
 	 * \brief Calculate ARCSs for audio files.
@@ -483,15 +486,15 @@ public:
 private:
 
 	/**
-	 * \brief Worker: calculate ID from TOC while taking leadout from audio
+	 * \brief Worker: calculate ID from ToC while taking leadout from audio
 	 * file.
 	 *
-	 * \param[in] toc           TOC of the image
+	 * \param[in] toc           ToC of the image
 	 * \param[in] audiofilename Name of the image audiofile
 	 *
 	 * \return The AccurateRip id for this medium
 	 */
-	std::unique_ptr<ARId> calculate(const TOC &toc,
+	std::unique_ptr<ARId> calculate(const ToC &toc,
 			const std::string &audiofilename) const;
 
 	/**

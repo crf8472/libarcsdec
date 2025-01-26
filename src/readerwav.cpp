@@ -36,8 +36,11 @@ extern "C" {
 #ifndef __LIBARCSTK_IDENTIFIER_HPP__
 #include <arcstk/identifier.hpp> // for CDDA
 #endif
+#ifndef __LIBARCSTK_METADATA_HPP__
+#include <arcstk/metadata.hpp>  // for AudioSize
+#endif
 #ifndef __LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp> // for ARCS_LOG, _ERROR, _WARNING, _INFO, _DEBUG
+#include <arcstk/logging.hpp>   // for ARCS_LOG, _ERROR, _WARNING, _INFO, _DEBUG
 #endif
 
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__

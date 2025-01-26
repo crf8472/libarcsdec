@@ -24,8 +24,8 @@ extern "C" {
 #include <string>    // for string
 #include <vector>    // for vector
 
-#ifndef __LIBARCSTK_IDENTIFIER_HPP__
-#include <arcstk/identifier.hpp>  // for TOC, make_toc, InvalidMetadataException
+#ifndef __LIBARCSTK_METADATA_HPP__
+#include <arcstk/metadata.hpp>    // for ToC, make_toc
 #endif
 #ifndef __LIBARCSTK_LOGGING_HPP__
 #include <arcstk/logging.hpp>
@@ -61,9 +61,9 @@ namespace details
 namespace libcue
 {
 
-using arcstk::TOC;
+using arcstk::ToC;
 using arcstk::make_toc;
-using arcstk::InvalidMetadataException;
+// using arcstk::InvalidMetadataException;
 
 
 // FreeCd
@@ -202,7 +202,8 @@ CueInfo CueOpenFile::info() const
 			std::ostringstream msg;
 			msg << "Offset for track " << i
 				<< " is not expected to be negative: " << trk_offset;
-			throw InvalidMetadataException(msg.str());
+			//throw InvalidMetadataException(msg.str());
+			throw std::invalid_argument(msg.str());
 		}
 
 		trk_length = ::track_get_length(trk);
@@ -213,7 +214,8 @@ CueInfo CueOpenFile::info() const
 			std::ostringstream msg;
 			msg << "Length for track " << i
 				<< " is not expected to be negative: " << trk_length;
-			throw InvalidMetadataException(msg.str());
+			//throw InvalidMetadataException(msg.str());
+			throw std::invalid_argument(msg.str());
 		}
 
 		std::string audiofilename(::track_get_filename(trk));
@@ -267,15 +269,19 @@ CueInfo CueParserImpl::parse_worker(const std::string &filename) const
 }
 
 
-std::unique_ptr<TOC> CueParserImpl::do_parse(const std::string &filename)
+std::unique_ptr<ToC> CueParserImpl::do_parse(const std::string &filename)
 {
 	const auto cue_info = this->parse_worker(filename);
 
+	/*
 	return make_toc(
 			std::get<0>(cue_info),  // track count
 			std::get<1>(cue_info),  // offsets
 			std::get<2>(cue_info),  // lengths
 			std::get<3>(cue_info)); // filenames
+	*/
+	return make_toc(std::get<1>(cue_info),  // offsets
+					std::get<3>(cue_info)); // filenames
 }
 
 

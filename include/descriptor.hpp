@@ -104,7 +104,7 @@ using ci_string = std::basic_string<char, ci_char_traits>;
  * or both of these input informations is in the responsibility of the caller.
  * This is a base mechanism for checking a file for a certain format and codec.
  *
- * A FileReader is an abstract base for either reading metadata/TOC files or
+ * A FileReader is an abstract base for either reading metadata/ToC files or
  * audio files. Any concrete FileReader implements a reading capability for at
  * least one Format and at least one Codec. The FileReader interface defines
  * only the capability to return a FileReaderDescriptor. (The definition of

@@ -22,10 +22,13 @@
 #include <arcstk/algorithms.hpp>// for AccurateRipV1V2...
 #endif
 #ifndef __LIBARCSTK_IDENTIFIER_HPP__
-#include <arcstk/identifier.hpp>// for ARId, TOC, make_arid
+#include <arcstk/identifier.hpp>// for ARId, make_arid
+#endif
+#ifndef __LIBARCSTK_METADATA_HPP__
+#include <arcstk/metadata.hpp>    // for ToC
 #endif
 #ifndef __LIBARCSTK_CALCULATE_HPP__
-#include <arcstk/calculate.hpp> // for Checksums, SampleInputIterator, ...
+#include <arcstk/calculate.hpp> // for Checksums, SampleInputIterator, Points...
 #endif
 #ifndef __LIBARCSTK_LOGGING_HPP__
 #include <arcstk/logging.hpp>   // for ARCS_LOG, _ERROR, _WARNING, _INFO, _DEBUG
@@ -53,7 +56,7 @@ namespace arcsdec
 inline namespace v_1_0_0
 {
 
-using arcstk::TOC;
+using arcstk::ToC;
 using arcstk::Algorithm;
 using arcstk::ARId;
 using arcstk::AudioSize;
@@ -404,15 +407,15 @@ const FileReaderSelection* default_selection<MetadataParser>()
 }
 
 
-// TOCParser
+// ToCParser
 
 
-std::unique_ptr<TOC> TOCParser::parse(const std::string &metafilename) const
+std::unique_ptr<ToC> ToCParser::parse(const std::string &metafilename) const
 {
 	if (metafilename.empty())
 	{
 		ARCS_LOG_ERROR <<
-			"TOC info was requested but metadata filename was empty";
+			"ToC info was requested but metadata filename was empty";
 
 		throw FileReadException(
 				"Requested metadata file parser for empty filename.");
@@ -507,7 +510,7 @@ using Algorithms = std::unordered_set<std::unique_ptr<Algorithm>>;
  * order.
  */
 using Types      = std::unordered_set<arcstk::checksum::type>;
-
+// TODO duplicate of ChecksumtypeSet
 
 /**
  * \brief Acquire the algorithms for calculating a set of types.
@@ -582,11 +585,11 @@ Algorithms get_algorithms_or_throw(const Types& types)
  */
 std::vector<Calculation> init_calculations(const arcstk::Settings& settings,
 		const Algorithms& algorithms, const AudioSize& size,
-		const std::vector<int32_t>& points);
+		const Points& points);
 
 std::vector<Calculation> init_calculations(const arcstk::Settings& settings,
 		const Algorithms& algorithms, const AudioSize& size,
-		const std::vector<int32_t>& points)
+		const Points& points)
 {
 	auto calculations = std::vector<Calculation>();
 	calculations.reserve(algorithms.size());
@@ -602,7 +605,7 @@ std::vector<Calculation> init_calculations(const arcstk::Settings& settings,
 
 
 /**
- * \brief Convenience wrapper for init_calculations() to use with TOC info.
+ * \brief Convenience wrapper for init_calculations() to use with ToC info.
  *
  * \param[in] types   Set of requested types
  * \param[in] size    Size of the audio input
@@ -613,27 +616,34 @@ std::vector<Calculation> init_calculations(const arcstk::Settings& settings,
  * \throws If the resulting set of Algorithm instances would be empty
  */
 std::vector<Calculation> init_calculations(const Types& types,
-		const AudioSize& size, const std::vector<int32_t>& points);
+		const AudioSize& size, const Points& points);
 
 std::vector<Calculation> init_calculations(const Types& types,
-		const AudioSize& size, const std::vector<int32_t>& points)
+		const AudioSize& size, const Points& points)
 {
 	return init_calculations({ arcstk::Context::ALBUM },
 			get_algorithms_or_throw(types), size, points);
 }
 
 
-std::vector<int32_t> offsets_as_samples(const TOC& toc);
+// TODO Remove that
+std::vector<int32_t> offsets_as_samples(const ToC& toc);
 
-std::vector<int32_t> offsets_as_samples(const TOC& toc)
+std::vector<int32_t> offsets_as_samples(const ToC& toc)
 {
 	// Transform offsets to sample points
-	auto points { arcstk::toc::get_offsets(toc) };
+	//auto points { arcstk::toc::get_offsets(toc) };
+	auto offsets { toc.offsets() };
+	auto points = std::vector<int32_t>{};
+	using std::cbegin;
+	using std::cend;
 	using std::begin;
-	using std::end;
-	using arcstk::CDDA;
-	std::transform(cbegin(points), cend(points), begin(points),
-			[](const int32_t f){ return f * CDDA::SAMPLES_PER_FRAME; } );
+	std::transform(cbegin(offsets), cend(offsets), begin(points),
+			[](const AudioSize& a)
+			{
+				return a.total_frames();
+			}
+	);
 	// TODO duplicate of arcstk::details::get_offset_sample_indices
 	// TODO use arcstk::details::frames2samples
 
@@ -708,11 +718,11 @@ ARCSCalculator::ARCSCalculator()
 
 std::pair<Checksums, ARId> ARCSCalculator::calculate(
 		const std::string &audiofilename,
-		const TOC &toc)
+		const ToC &toc)
 {
 	using arcstk::make_arid;
 
-	ARCS_LOG_DEBUG << "Calculate by TOC and single audiofilename: "
+	ARCS_LOG_DEBUG << "Calculate by ToC and single audiofilename: "
 		<< audiofilename;
 
 	// Acquire reader
@@ -727,16 +737,14 @@ std::pair<Checksums, ARId> ARCSCalculator::calculate(
 	if (!toc.complete())
 	{
 		size = *reader->acquire_size(audiofilename);
-		id   = make_arid(toc, size.total_frames());
+		id   = make_arid(toc, size);
 	} else
 	{
-		size = AudioSize { toc.leadout(), AudioSize::UNIT::FRAMES };
+		size = toc.leadout();
 		id   = make_arid(toc);
 	}
 
-	const auto points = offsets_as_samples(toc);
-
-	auto calculations { init_calculations(types(), size, points) };
+	auto calculations { init_calculations(types(), size, toc.offsets()) };
 
 	if (calculations.empty())
 	{
@@ -936,22 +944,22 @@ std::unique_ptr<ARId> ARIdCalculator::calculate(
 
 	if (toc->complete())
 	{
-		return make_arid(toc);
+		return make_arid(*toc);
 	}
 
 	ARCS_LOG_INFO <<
-		"Incomplete TOC and no audio file provided."
-		" Try to find audio file references in TOC.";
+		"Incomplete ToC and no audio file provided."
+		" Try to find audio file references in ToC.";
 
-	// Check whether TOC references exactly one audio file.
+	// Check whether ToC references exactly one audio file.
 	// (Other cases are currently unsupported.)
 
-	const auto audiofilenames { arcstk::toc::get_filenames(toc) };
+	const auto audiofilenames { toc->filenames() };
 
 	if (audiofilenames.empty())
 	{
-		throw std::runtime_error("Incomplete TOC, no audio file provided "
-				"and TOC does not seem to reference any audio file.");
+		throw std::runtime_error("Incomplete ToC, no audio file provided "
+				"and ToC does not seem to reference any audio file.");
 	}
 
 	const std::unordered_set<std::string> name_set(
@@ -959,8 +967,8 @@ std::unique_ptr<ARId> ARIdCalculator::calculate(
 
 	if (name_set.size() != 1)
 	{
-		throw std::runtime_error("Incomplete TOC, no audio file provided "
-				"and TOC does not reference exactly one audio file.");
+		throw std::runtime_error("Incomplete ToC, no audio file provided "
+				"and ToC does not reference exactly one audio file.");
 	}
 
 	auto audiofile { *name_set.begin() };
@@ -993,32 +1001,32 @@ std::unique_ptr<ARId> ARIdCalculator::calculate(const std::string &metafilename,
 
 	if (toc->complete())
 	{
-		return make_arid(toc);
+		return make_arid(*toc);
 	}
 
-	// If TOC is incomplete, analyze audio file passed
+	// If ToC is incomplete, analyze audio file passed
 
 	return this->calculate(*toc, audiofilename);
 }
 
 
-std::unique_ptr<ARId> ARIdCalculator::calculate(const TOC &toc,
+std::unique_ptr<ARId> ARIdCalculator::calculate(const ToC &toc,
 		const std::string &audiofilename) const
 {
 	// A complete multitrack configuration of the Calculation requires
 	// two informations:
 	// 1.) the LBA offset of each track
-	//	=> which are known at this point by inspecting the TOC
+	//	=> which are known at this point by inspecting the ToC
 	// 2.) at least one of the following four:
 	//	a) the LBA track offset of the leadout frame
 	//	b) the total number of 16bit samples in <audiofilename>
 	//	c) the total number of bytes in <audiofilename> representing samples
 	//	d) the length of the last track
-	//	=> which may or may not be represented in the TOC
+	//	=> which may or may not be represented in the ToC
 
-	// A TOC is the result of parsing a TOC providing file. Not all TOC
+	// A ToC is the result of parsing a ToC providing file. Not all ToC
 	// providing file formats contain sufficient information to calculate
-	// the leadout (simple CueSheets for example do not). Therefore, TOCs
+	// the leadout (simple CueSheets for example do not). Therefore, ToCs
 	// are accepted to be incomplete up to this point.
 
 	// However, this means we additionally have to inspect the audio file to get
@@ -1034,7 +1042,7 @@ std::unique_ptr<ARId> ARIdCalculator::calculate(const TOC &toc,
 		return make_arid(toc);
 	}
 
-	return make_arid(toc, audio_.size(audiofilename)->leadout_frame());
+	return make_arid(toc, *audio_.size(audiofilename));
 }
 
 

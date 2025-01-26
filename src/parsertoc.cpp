@@ -21,8 +21,8 @@
 #include <string>    // for string
 #include <vector>    // for vector
 
-#ifndef __LIBARCSTK_IDENTIFIER_HPP__
-#include <arcstk/identifier.hpp>  // for TOC, make_toc, InvalidMetadataException
+#ifndef __LIBARCSTK_METADATA_HPP__
+#include <arcstk/metadata.hpp>    // for ToC, make_toc
 #endif
 #ifndef __LIBARCSTK_LOGGING_HPP__
 #include <arcstk/logging.hpp>
@@ -50,9 +50,9 @@ namespace cdrdao
 // cdio/device.h: cdio_open_cdrdao
 
 
-std::unique_ptr<TOC> TocParserImpl::do_parse(const std::string &filename)
+std::unique_ptr<ToC> TocParserImpl::do_parse(const std::string &filename)
 {
-	// TODO Return a TOC
+	// TODO Return a ToC
 	return nullptr;
 }
 

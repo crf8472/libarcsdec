@@ -109,12 +109,12 @@ TEST_CASE ( "AudioInfo", "[calculators]")
 }
 
 
-TEST_CASE ( "TOCParser", "[calculators]" )
+TEST_CASE ( "ToCParser", "[calculators]" )
 {
-	using arcsdec::TOCParser;
+	using arcsdec::ToCParser;
 	using arcsdec::FileReaderRegistry;
 
-	TOCParser p;
+	ToCParser p;
 
 	SECTION ("Initial set of FileReaders is present and complete")
 	{
@@ -128,8 +128,8 @@ TEST_CASE ( "TOCParser", "[calculators]" )
 		const auto toc { p.parse("cuesheet/ok01.cue") };
 
 		CHECK ( toc->total_tracks() == 2 );
-		CHECK ( toc->offset(1)      == 150 );
-		CHECK ( toc->offset(2)      == 25072 );
+		CHECK ( toc->offsets().at(1).total_frames() ==   150 );
+		CHECK ( toc->offsets().at(2).total_frames() == 25072 );
 	}
 }
 

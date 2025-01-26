@@ -28,8 +28,8 @@ extern "C" {
 #include "metaparser.hpp"        // for MetaparserImpl
 #endif
 
-#ifndef __LIBARCSTK_IDENTIFIER_HPP__
-#include <arcstk/identifier.hpp> // for TOC
+#ifndef __LIBARCSTK_METADATA_HPP__
+#include <arcstk/metadata.hpp>   // for ToC
 #endif
 
 namespace arcsdec
@@ -41,7 +41,7 @@ namespace details
 namespace libcue
 {
 
-using arcstk::TOC;
+using arcstk::ToC;
 
 
 /**
@@ -117,9 +117,9 @@ public:
 	CueOpenFile& operator = (CueOpenFile &&file) noexcept;
 
 	/**
-	 * \brief Returns all TOC information from the file.
+	 * \brief Returns all ToC information from the file.
 	 *
-	 * \return CueInfo representing the TOC information
+	 * \return CueInfo representing the ToC information
 	 */
 	CueInfo info() const;
 
@@ -150,7 +150,7 @@ private:
 	 */
 	CueInfo parse_worker(const std::string &filename) const;
 
-	std::unique_ptr<TOC> do_parse(const std::string &filename) override;
+	std::unique_ptr<ToC> do_parse(const std::string &filename) override;
 
 	std::unique_ptr<FileReaderDescriptor> do_descriptor() const override;
 };

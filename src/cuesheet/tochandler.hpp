@@ -4,7 +4,7 @@
 /**
  * \file
  *
- * \brief Public header for a handler that constructs a TOC.
+ * \brief Public header for a handler that constructs a ToC.
  */
 
 #ifndef __LIBARCSDEC_CUESHEET_HANDLER_HPP__
@@ -25,9 +25,9 @@ namespace cuesheet
 {
 
 /**
- * \brief State of a TOCHandler
+ * \brief State of a ToCHandler
  */
-class TOCHandlerState
+class ToCHandlerState
 {
 	int track_ = 0;
 
@@ -66,11 +66,11 @@ public:
 
 
 /**
- * \brief Handler that collects data required for building a TOC.
+ * \brief Handler that collects data required for building a ToC.
  */
-class TOCHandler final : public Handler
+class ToCHandler final : public Handler
 {
-	TOCHandlerState state_;
+	ToCHandlerState state_;
 
 	// Handler
 
@@ -104,7 +104,7 @@ class TOCHandler final : public Handler
 
 public:
 
-	TOCHandler();
+	ToCHandler();
 
 	int total_tracks() const;
 

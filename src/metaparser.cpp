@@ -32,7 +32,7 @@ MetadataParserImpl::MetadataParserImpl() = default;
 MetadataParserImpl::~MetadataParserImpl() noexcept = default;
 
 
-std::unique_ptr<TOC> MetadataParserImpl::parse(const std::string &filename)
+std::unique_ptr<ToC> MetadataParserImpl::parse(const std::string &filename)
 {
 	return this->do_parse(filename);
 }
@@ -61,7 +61,7 @@ MetadataParser& MetadataParser::operator = (MetadataParser &&) noexcept
 = default;
 
 
-std::unique_ptr<TOC> MetadataParser::parse(const std::string &filename)
+std::unique_ptr<ToC> MetadataParser::parse(const std::string &filename)
 {
 	ARCS_LOG_DEBUG << "Try to read metadata file '" << filename << "'";
 

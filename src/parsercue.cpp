@@ -21,8 +21,8 @@
 #include <string>    // for string
 #include <vector>    // for vector
 
-#ifndef __LIBARCSTK_IDENTIFIER_HPP__
-#include <arcstk/identifier.hpp>  // for TOC, make_toc, InvalidMetadataException
+#ifndef __LIBARCSTK_METADATA_HPP__
+#include <arcstk/metadata.hpp>    // for ToC, make_toc
 #endif
 #ifndef __LIBARCSTK_LOGGING_HPP__
 #include <arcstk/logging.hpp>
@@ -51,16 +51,16 @@ namespace details
 namespace cuesheet
 {
 
-using arcstk::TOC;
+using arcstk::ToC;
 using arcstk::make_toc;
-using arcstk::InvalidMetadataException;
+//using arcstk::InvalidMetadataException;
 
 
-std::unique_ptr<TOC> CuesheetParserImpl::do_parse(const std::string &filename)
+std::unique_ptr<ToC> CuesheetParserImpl::do_parse(const std::string &filename)
 {
 	Driver driver;
 											//
-	TOCHandler handler;
+	ToCHandler handler;
 	driver.set_handler(handler);
 
 	std::ifstream file;
@@ -77,12 +77,14 @@ std::unique_ptr<TOC> CuesheetParserImpl::do_parse(const std::string &filename)
 
 	if (driver.parse() != 0)
 	{
-		throw InvalidMetadataException(
+		//throw InvalidMetadataException(
+		throw std::invalid_argument(
 				std::string { "Faild to parse file " } + filename);
 	}
 
-	return make_toc(handler.total_tracks(), handler.offsets(),
-			handler.lengths(), handler.filenames());
+	//return make_toc(handler.total_tracks(), handler.offsets(),
+	//		handler.lengths(), handler.filenames());
+	return make_toc(handler.offsets(), handler.filenames());
 }
 
 std::unique_ptr<FileReaderDescriptor> CuesheetParserImpl::do_descriptor() const

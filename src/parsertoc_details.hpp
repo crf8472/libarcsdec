@@ -27,9 +27,9 @@
 #include "metaparser.hpp"        // for MetaparserImpl
 #endif
 
-#ifndef __LIBARCSTK_IDENTIFIER_HPP__
-#include <arcstk/identifier.hpp> // for TOC
-#endif
+// #ifndef __LIBARCSTK_METADATA_HPP__
+// #include <arcstk/metadata.hpp>   // for ToC
+// #endif
 
 namespace arcsdec
 {
@@ -40,7 +40,7 @@ namespace details
 namespace cdrdao
 {
 
-using arcstk::TOC;
+using arcstk::ToC;
 
 
 /**
@@ -61,7 +61,7 @@ public:
 
 private:
 
-	std::unique_ptr<TOC> do_parse(const std::string &filename) override;
+	std::unique_ptr<ToC> do_parse(const std::string &filename) override;
 
 	std::unique_ptr<FileReaderDescriptor> do_descriptor() const override;
 };
