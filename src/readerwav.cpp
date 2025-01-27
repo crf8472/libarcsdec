@@ -31,13 +31,10 @@ extern "C" {
 #include <vector>     // for vector
 
 #ifndef __LIBARCSTK_CALCULATE_HPP__
-#include <arcstk/calculate.hpp> // for AudioSize, SampleInputIterator
-#endif
-#ifndef __LIBARCSTK_IDENTIFIER_HPP__
-#include <arcstk/identifier.hpp> // for CDDA
+#include <arcstk/calculate.hpp> // for SampleInputIterator
 #endif
 #ifndef __LIBARCSTK_METADATA_HPP__
-#include <arcstk/metadata.hpp>  // for AudioSize
+#include <arcstk/metadata.hpp>  // for AudioSize, CDDA
 #endif
 #ifndef __LIBARCSTK_LOGGING_HPP__
 #include <arcstk/logging.hpp>   // for ARCS_LOG, _ERROR, _WARNING, _INFO, _DEBUG
@@ -1101,7 +1098,7 @@ std::unique_ptr<AudioSize> WavAudioReaderImpl::do_acquire_size(
 	audio_handler_->set_config(static_cast<CONFIG>(backup_config));
 
 	std::unique_ptr<AudioSize> audiosize {
-		std::make_unique<AudioSize>(total_pcm_bytes, AudioSize::UNIT::BYTES) };
+		std::make_unique<AudioSize>(total_pcm_bytes, arcstk::UNIT::BYTES) };
 	return audiosize;
 }
 
