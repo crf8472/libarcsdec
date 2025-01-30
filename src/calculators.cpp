@@ -643,7 +643,7 @@ std::vector<int32_t> offsets_as_samples(const ToC& toc)
 	std::transform(cbegin(offsets), cend(offsets), begin(points),
 			[](const AudioSize& a)
 			{
-				return a.total_frames();
+				return a.frames();
 			}
 	);
 	// TODO duplicate of arcstk::details::get_offset_sample_indices

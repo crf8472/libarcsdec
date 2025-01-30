@@ -154,7 +154,7 @@ void FlacAudioReaderImpl::metadata_callback(
 
 			// Inform calculator instance about sample count
 
-			size.set_total_samples(metadata->data.stream_info.total_samples);
+			size.set_samples(metadata->data.stream_info.total_samples);
 			this->signal_updateaudiosize(size);
 
 			// Streaminfo could already have been validated explicitly
@@ -229,13 +229,13 @@ std::unique_ptr<AudioSize> FlacAudioReaderImpl::do_acquire_size(
 
 	const auto total_samples = streaminfo.get_total_samples();
 	static const auto MAX_AUDIOSIZE =
-		std::numeric_limits<decltype(audiosize->total_samples())>::max();
+		std::numeric_limits<decltype(audiosize->samples())>::max();
 	if (total_samples > MAX_AUDIOSIZE)
 	{
 		ARCS_LOG_ERROR << "Total samples in FLAC stream " << total_samples
 			<< " exceed the maximum value of " << 0xFFFFFFFF;
 	}
-	audiosize->set_total_samples(total_samples);
+	audiosize->set_samples(total_samples);
 
 	return audiosize;
 }

@@ -637,9 +637,9 @@ std::unique_ptr<AudioSize> AudioReader::Impl::acquire_size(
 	using std::to_string;
 	ARCS_LOG_DEBUG << "Audio file size of '" << filename
 		<< "' successfully acquired: "
-		<< to_string(audiosize->leadout_frame())
+		<< to_string(audiosize->frames())
 		<< " LBA frames == "
-		<< to_string(audiosize->total_samples())
+		<< to_string(audiosize->samples())
 		<< " PCM stereo samples";
 
 	return audiosize;
@@ -718,10 +718,10 @@ std::unique_ptr<AudioSize> AudioReader::acquire_size(
 {
 	auto size = impl_->acquire_size(filename);
 
-	if (size->total_samples() > MAX_SAMPLES_TO_READ)
+	if (size->samples() > MAX_SAMPLES_TO_READ)
 	{
 		ARCS_LOG_WARNING << "File seems to contain "
-			<< size->total_samples()
+			<< size->samples()
 			<< " but redbook defines a maximum of "
 			<< MAX_SAMPLES_TO_READ
 			<< ". File does not seem to be a compact disc image";

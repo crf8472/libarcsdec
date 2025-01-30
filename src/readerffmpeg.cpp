@@ -1060,7 +1060,7 @@ int64_t FFmpegAudioStream::traverse_samples()
 	// Update audiosize
 
 	AudioSize updated_size;
-	updated_size.set_total_samples(total_samples);
+	updated_size.set_samples(total_samples);
 
 	update_audiosize_(updated_size);
 
@@ -1096,7 +1096,7 @@ std::unique_ptr<AudioSize> FFmpegAudioReaderImpl::do_acquire_size(
 
 	FFmpegAudioStreamLoader loader;
 	auto audiofile = loader.load(filename);
-	audiosize->set_total_samples(audiofile->total_samples_declared());
+	audiosize->set_samples(audiofile->total_samples_declared());
 
 	return audiosize;
 }
@@ -1147,7 +1147,7 @@ void FFmpegAudioReaderImpl::do_process_file(const std::string &filename)
 
 	{
 		AudioSize size;
-		size.set_total_samples(total_samples_expected);
+		size.set_samples(total_samples_expected);
 		this->signal_updateaudiosize(size);
 	}
 
@@ -1233,8 +1233,12 @@ void FFmpegAudioReaderImpl::pass_frame(AVFramePtr frame)
 template<enum ::AVSampleFormat F>
 void FFmpegAudioReaderImpl::pass_samples(AVFramePtr frame)
 {
-	auto sequence = sequence_for<F>(frame);
-	this->signal_appendsamples(sequence.begin(), sequence.end());
+	const auto sequence = sequence_for<F>(frame);
+
+	using std::cbegin;
+	using std::cend;
+
+	this->signal_appendsamples(cbegin(sequence), cend(sequence));
 }
 
 

@@ -934,7 +934,7 @@ int64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 			if (calculate)
 			{
 				AudioSize audiosize;
-				audiosize.set_total_pcm_bytes(total_pcm_bytes);
+				audiosize.set_bytes(total_pcm_bytes);
 				this->signal_updateaudiosize(audiosize);
 
 				// Read audio bytes in blocks

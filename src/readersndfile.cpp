@@ -145,7 +145,7 @@ void LibsndfileAudioReaderImpl::do_process_file(const std::string &filename)
 		{
 			// This is allowed only for the last block
 
-			auto expected_total { audiosize.total_samples() - sample_count };
+			auto expected_total { audiosize.samples() - sample_count };
 
 			if (expected_total != ints_in_block / CDDA::NUMBER_OF_CHANNELS)
 			{
