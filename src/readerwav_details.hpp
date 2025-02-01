@@ -257,14 +257,14 @@ public:
 	 *
 	 * \return 0x52494646
 	 */
-	uint32_t chunk_id() const override;
+	uint32_t chunk_id() const final;
 
 	/**
 	 * \brief Expected chunk descriptor format is "WAVE".
 	 *
 	 * \return 0x57415645
 	 */
-	uint32_t format() const override;
+	uint32_t format() const final;
 
 	/**
 	 * \brief Expected RIFF/WAV-compliant format subchunk id is "fmt " (with a
@@ -272,14 +272,14 @@ public:
 	 *
 	 * \return 0x666d7420
 	 */
-	uint32_t fmt_subchunk_id() const override;
+	uint32_t fmt_subchunk_id() const final;
 
 	/**
 	 * \brief Expected format subchunk size is 16 bytes.
 	 *
 	 * \return 16
 	 */
-	uint32_t fmt_subchunk_size() const override;
+	uint32_t fmt_subchunk_size() const final;
 
 	/**
 	 * \brief Expected format identifier is 0x0001, indicating PCM sample
@@ -287,21 +287,21 @@ public:
 	 *
 	 * \return 1
 	 */
-	uint16_t wFormatTag() const override;
+	uint16_t wFormatTag() const final;
 
 	/**
 	 * \brief Expected CDDA-compliant number of channels is 2 (== stereo).
 	 *
 	 * \return 2
 	 */
-	uint16_t wChannels() const override;
+	uint16_t wChannels() const final;
 
 	/**
 	 * \brief Expected CDDA-compliant number of samples per second is 44100.
 	 *
 	 * \return 44100
 	 */
-	uint32_t dwSamplesPerSec() const override;
+	uint32_t dwSamplesPerSec() const final;
 
 	/**
 	 * \brief Expected CDDA-compliant average number of bytes per second is
@@ -310,7 +310,7 @@ public:
 	 *
 	 * \return 176400
 	 */
-	uint32_t dwAvgBytesPerSec() const override;
+	uint32_t dwAvgBytesPerSec() const final;
 
 	/**
 	 * \brief Expected CDDA-compliant number of bytes per sample block is 4
@@ -318,21 +318,21 @@ public:
 	 *
 	 * \return 4
 	 */
-	uint16_t wBlockAlign() const override;
+	uint16_t wBlockAlign() const final;
 
 	/**
 	 * \brief Expected CDDA-compliant number of bits per sample is 16.
 	 *
 	 * \return 16
 	 */
-	uint16_t wBitsPerSample() const override;
+	uint16_t wBitsPerSample() const final;
 
 	/**
 	 * \brief Expected RIFF/WAV-compliant data subchunk id is "data".
 	 *
 	 * \return 0x64617461
 	 */
-	uint32_t data_subchunk_id() const override;
+	uint32_t data_subchunk_id() const final;
 
 	/**
 	 * \brief Canoncial RIFF/WAVE header for PCM encoding.
@@ -792,6 +792,55 @@ private:
 
 
 /**
+ * \brief File reader implementation for files in RIFF/WAVE (PCM) format, i.e.
+ * containing 44.100 Hz/16 bit Stereo PCM samples in its data chunk.
+ *
+ * This class provides the PCM sample data as a succession of blocks
+ * of 32 bit PCM samples to its Calculation. The first block starts with the
+ * very first PCM sample in the data chunk, i.e. in a compliant CDDA WAV file
+ * the 4 bytes following byte 0x2C. The format subchunk is validated to conform
+ * to CDDA.
+ */
+class WavAudioReaderImpl final : public AudioReaderImpl
+{
+
+public:
+
+	/**
+	 * \brief Standard constructor.
+	 */
+	WavAudioReaderImpl();
+
+	/**
+	 * \brief Virtual destructor.
+	 */
+	virtual ~WavAudioReaderImpl() noexcept final;
+
+	/**
+	 * \brief Register a validation handler.
+	 *
+	 * \param[in] hndlr The validating handler to set
+	 */
+	void register_audio_handler(std::unique_ptr<WavAudioHandler> hndlr);
+
+
+private:
+
+	std::unique_ptr<AudioSize> do_acquire_size(const std::string &filename)
+		final;
+
+	void do_process_file(const std::string &filename) final;
+
+	std::unique_ptr<FileReaderDescriptor> do_descriptor() const final;
+
+	/**
+	 * \brief Validator handler instance.
+	 */
+	std::unique_ptr<WavAudioHandler> audio_handler_;
+};
+
+
+/**
  * \brief Implements pull reading PCM samples from a std::ifstream.
  *
  * This is the block reading policy for the RIFF/WAV (PCM) format.
@@ -898,117 +947,74 @@ private:
 		consume_;
 };
 
+/**
+ * \brief Service method: acquire the physical file size in bytes.
+ *
+ * \param[in] filename File to retrieve the physical file size in bytes for
+ *
+ * \return The physical file size in bytes
+ */
+int64_t wav_retrieve_file_size_bytes(const std::string &filename);
 
 /**
- * \brief File reader implementation for files in RIFF/WAVE (PCM) format, i.e.
- * containing 44.100 Hz/16 bit Stereo PCM samples in its data chunk.
+ * Read specified amount of bytes from specified stream in specified vector
+ * and do an exception safe increment of the byte counter.
  *
- * This class provides the PCM sample data as a succession of blocks
- * of 32 bit PCM samples to its Calculation. The first block starts with the
- * very first PCM sample in the data chunk, i.e. in a compliant CDDA WAV file
- * the 4 bytes following byte 0x2C. The format subchunk is validated to conform
- * to CDDA.
+ * Parameter byte_count will also be updated in case of an exception.
+ *
+ * \param[in]  in         Input stream to read from
+ * \param[in]  amount     Number of bytes to read from in
+ * \param[out] bytes      Storage for read bytes
+ * \param[out] byte_count Byte counter to increment
+ *
+ * \return Number of bytes read
  */
-class WavAudioReaderImpl final : public AudioReaderImpl
-{
+int64_t wav_read_bytes(std::ifstream &in, const int32_t amount,
+		std::vector<char>& bytes, int64_t& byte_count);
 
-public:
+/**
+ * \brief Worker method for process_file(): Read WAV file and optionally
+ * validate it for WAV and CDDA compliance.
+ *
+ * \param[in]  in         The ifstream to read from
+ * \param[in]  calculate  Flag to control if actual calculation is performed
+ * \param[out] total_pcm_bytes Number of total bytes representing PCM
+ * samples
+ *
+ * \return Number of actually read bytes
+ *
+ * \throw FileReadException If any problem occurred during reading from in
+ * \throw InvalidAudioException In case of unexpected data
+ */
+int64_t wav_process_file_worker(std::ifstream &in,
+		const std::size_t samples_per_read,
+		AudioReaderImpl* audio_reader,
+		WavAudioHandler& audio_handler,
+		const bool &calculate,
+		int64_t &total_pcm_bytes);
 
-	/**
-	 * \brief Standard constructor.
-	 */
-	WavAudioReaderImpl();
-
-	/**
-	 * \brief Virtual destructor.
-	 */
-	virtual ~WavAudioReaderImpl() noexcept final;
-
-	/**
-	 * \brief Register a validation handler.
-	 *
-	 * \param[in] hndlr The validating handler to set
-	 */
-	void register_audio_handler(std::unique_ptr<WavAudioHandler> hndlr);
-
-
-private:
-
-	std::unique_ptr<AudioSize> do_acquire_size(const std::string &filename)
-		final;
-
-	void do_process_file(const std::string &filename) final;
-
-	std::unique_ptr<FileReaderDescriptor> do_descriptor() const final;
-
-	/**
-	 * Read specified amount of bytes from specified stream in specified vector
-	 * and do an exception safe increment of the byte counter.
-	 *
-	 * Parameter byte_count will also be updated in case of an exception.
-	 *
-	 * \param[in]  in         Input stream to read from
-	 * \param[in]  amount     Number of bytes to read from in
-	 * \param[out] bytes      Storage for read bytes
-	 * \param[out] byte_count Byte counter to increment
-	 *
-	 * \return Number of bytes read
-	 */
-	int64_t read_bytes(std::ifstream &in, const int32_t amount,
-			std::vector<char>& bytes, int64_t& byte_count) const;
-
-	/**
-	 * \brief Service method: acquire the physical file size in bytes.
-	 *
-	 * \param[in] filename File to retrieve the physical file size in bytes for
-	 *
-	 * \return The physical file size in bytes
-	 */
-	int64_t retrieve_file_size_bytes(const std::string &filename) const;
-
-	/**
-	 * \brief Worker method for process_file(): Read WAV file and optionally
-	 * validate it for WAV and CDDA compliance.
-	 *
-	 * \param[in]  in         The ifstream to read from
-	 * \param[in]  calculate  Flag to control if actual calculation is performed
-	 * \param[out] total_pcm_bytes Number of total bytes representing PCM
-	 * samples
-	 *
-	 * \return Number of actually read bytes
-	 *
-	 * \throw FileReadException If any problem occurred during reading from in
-	 * \throw InvalidAudioException In case of unexpected data
-	 */
-	int64_t process_file_worker(std::ifstream &in,
-			const bool &calculate,
-			int64_t &total_pcm_bytes);
-
-	/**
-	 * \brief Read the WAV file and optionally validate it. This method provides
-	 * the implementation of WavAudioReader::process_file().
-	 *
-	 * \param[in]  filename   The file to read from
-	 * \param[in]  validate   Flag to control if actual validation is performed
-	 * \param[in]  calculate  Flag to control if actual calculation is performed
-	 * \param[out] total_pcm_bytes Number of total bytes representing PCM
-	 * samples
-	 *
-	 * \return TRUE iff the file could be completely processed, otherwise FALSE
-	 *
-	 * \throw FileReadException If any problem occurred during reading from in
-	 * \throw InvalidAudioException In case of unexpected data
-	 */
-	void process_file(const std::string &filename,
-			const bool &validate,
-			const bool &calculate,
-			int64_t &total_pcm_bytes);
-
-	/**
-	 * \brief Validator handler instance.
-	 */
-	std::unique_ptr<WavAudioHandler> audio_handler_;
-};
+/**
+ * \brief Read the WAV file and optionally validate it. This method provides
+ * the implementation of WavAudioReader::process_file().
+ *
+ * \param[in]  filename   The file to read from
+ * \param[in]  validate   Flag to control if actual validation is performed
+ * \param[in]  calculate  Flag to control if actual calculation is performed
+ * \param[out] total_pcm_bytes Number of total bytes representing PCM
+ * samples
+ *
+ * \return TRUE iff the file could be completely processed, otherwise FALSE
+ *
+ * \throw FileReadException If any problem occurred during reading from in
+ * \throw InvalidAudioException In case of unexpected data
+ */
+void wav_process_file(const std::string &filename,
+		const std::size_t samples_per_read,
+		AudioReaderImpl* audio_reader,
+		WavAudioHandler& audio_handler,
+		const bool &validate,
+		const bool &calculate,
+		int64_t &total_pcm_bytes);
 
 /// @}
 

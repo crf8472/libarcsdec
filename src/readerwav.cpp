@@ -653,6 +653,86 @@ AudioValidator::codec_set_type WavAudioHandler::do_codecs() const
 }
 
 
+// WavAudioReaderImpl
+
+
+WavAudioReaderImpl::WavAudioReaderImpl()
+	: audio_handler_()
+{
+	// empty
+}
+
+
+WavAudioReaderImpl::~WavAudioReaderImpl() noexcept = default;
+
+
+std::unique_ptr<AudioSize> WavAudioReaderImpl::do_acquire_size(
+	const std::string &audiofilename)
+{
+	auto backup_config { audio_handler_->config() };
+
+	int64_t total_pcm_bytes = 0;
+
+	try
+	{
+		// Neither Validate nor Calculate, do not emit signals
+
+		wav_process_file(audiofilename, samples_per_read(),
+				this, *audio_handler_,
+				false, false, total_pcm_bytes);
+	}
+	catch (const std::ifstream::failure& f)
+	{
+		audio_handler_->set_config(static_cast<CONFIG>(backup_config));
+
+		if (total_pcm_bytes == 0)
+		{
+			throw;
+		}
+
+		ARCS_LOG_WARNING << "After byte "
+			<< total_pcm_bytes
+			<< " an exception occured while reading the audiofile: "
+			<< f.what();
+	}
+
+	audio_handler_->set_config(static_cast<CONFIG>(backup_config));
+
+	std::unique_ptr<AudioSize> audiosize {
+		std::make_unique<AudioSize>(total_pcm_bytes, arcstk::UNIT::BYTES) };
+	return audiosize;
+}
+
+
+void WavAudioReaderImpl::do_process_file(const std::string &audiofilename)
+{
+	int64_t total_pcm_bytes = 0;
+
+	// Validate And Calculate, emit signals
+
+	auto backup_config { audio_handler_->config() };
+
+	wav_process_file(audiofilename, samples_per_read(), this, *audio_handler_,
+			true, true, total_pcm_bytes/* ignore */);
+
+	audio_handler_->set_config(static_cast<CONFIG>(backup_config));
+}
+
+
+std::unique_ptr<FileReaderDescriptor> WavAudioReaderImpl::do_descriptor()
+	const
+{
+	return std::make_unique<DescriptorWavPCM>();
+}
+
+
+void WavAudioReaderImpl::register_audio_handler(
+		std::unique_ptr<WavAudioHandler> hndlr)
+{
+	audio_handler_ = std::move(hndlr);
+}
+
+
 // PCMBlockReader
 
 
@@ -789,38 +869,10 @@ int64_t PCMBlockReader::read_blocks(std::ifstream &in,
 }
 
 
-// WavAudioReaderImpl
+//
 
 
-WavAudioReaderImpl::WavAudioReaderImpl()
-	: audio_handler_()
-{
-	// empty
-}
-
-
-WavAudioReaderImpl::~WavAudioReaderImpl() noexcept = default;
-
-
-int64_t WavAudioReaderImpl::read_bytes(std::ifstream &in, const int32_t amount,
-			std::vector<char>& bytes, int64_t& byte_count) const
-{
-	try
-	{
-		in.read(&bytes[0], amount);
-	}
-	catch (const std::ifstream::failure& f)
-	{
-		byte_count += in.gcount();
-		throw FileReadException(f.what(), byte_count + 1);
-	}
-	byte_count += amount;
-	return in.gcount();
-}
-
-
-int64_t WavAudioReaderImpl::retrieve_file_size_bytes(
-		const std::string &filename) const
+int64_t wav_retrieve_file_size_bytes(const std::string &filename)
 {
 	// TODO C-style stuff: Use C++17's std::filesystem in the future
 	struct ::stat stat_buf;
@@ -836,13 +888,33 @@ int64_t WavAudioReaderImpl::retrieve_file_size_bytes(
 }
 
 
-int64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
-		const bool &calculate,
-		int64_t &total_pcm_bytes)
+int64_t wav_read_bytes(std::ifstream& in, const int32_t amount,
+			std::vector<char>& bytes, int64_t& byte_count)
+{
+	try
+	{
+		in.read(&bytes[0], amount);
+	}
+	catch (const std::ifstream::failure& f)
+	{
+		byte_count += in.gcount();
+		throw FileReadException(f.what(), byte_count + 1);
+	}
+	byte_count += amount;
+	return in.gcount();
+}
+
+
+int64_t wav_process_file_worker(std::ifstream& in,
+		const std::size_t samples_per_read,
+		AudioReaderImpl* audio_reader,
+		WavAudioHandler& audio_handler,
+		const bool& calculate,
+		int64_t& total_pcm_bytes)
 {
 	// NOTE: ifstream's exceptions (fail|bad)bit must be activated
 
-	if (calculate) { this->signal_startinput(); }
+	if (calculate) { audio_reader->signal_startinput(); }
 
 	// byte buffer
 	std::vector<char> bytes(WavPartParser::WAV_BYTES_PER_RIFF_HEADER);
@@ -857,8 +929,8 @@ int64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 
 	// Parse RIFF chunk descriptor
 
-	this->read_bytes(in, bytes_to_read, bytes, total_bytes_read);
-	audio_handler_->chunk_descriptor(parser.chunk_descriptor(bytes));
+	wav_read_bytes(in, bytes_to_read, bytes, total_bytes_read);
+	audio_handler.chunk_descriptor(parser.chunk_descriptor(bytes));
 
 
 	// Traverse subchunks
@@ -873,7 +945,7 @@ int64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 
 		bytes_to_read =
 			WavPartParser::WAV_BYTES_PER_SUBCHUNK_HEADER * sizeof(bytes[0]);
-		this->read_bytes(in, bytes_to_read, bytes, total_bytes_read);
+		wav_read_bytes(in, bytes_to_read, bytes, total_bytes_read);
 
 		++subchunk_counter;
 
@@ -885,9 +957,9 @@ int64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 			<< std::to_string(subchunk_header.size)
 			<< " bytes";
 
-		audio_handler_->start_subchunk(subchunk_header);
+		audio_handler.start_subchunk(subchunk_header);
 
-		const auto& valid = audio_handler_->validator();
+		const auto& valid = audio_handler.validator();
 
 		// Subchunk: 'fmt '
 
@@ -908,11 +980,11 @@ int64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 			std::vector<char> fmt_bytes(subchunk_header.size * sizeof(char));
 			bytes_to_read = subchunk_header.size * sizeof(fmt_bytes[0]);
 
-			this->read_bytes(in, bytes_to_read, fmt_bytes, total_bytes_read);
+			wav_read_bytes(in, bytes_to_read, fmt_bytes, total_bytes_read);
 
 			ARCS_LOG(DEBUG1) << "Format subchunk read successfully";
 
-			audio_handler_->subchunk_format(
+			audio_handler.subchunk_format(
 				parser.format_subchunk(subchunk_header, fmt_bytes));
 
 			continue;
@@ -929,20 +1001,21 @@ int64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 			ARCS_LOG(DEBUG1) << "Total number of audio bytes: "
 				<< total_pcm_bytes;
 
-			audio_handler_->subchunk_data(subchunk_header.size);
+			audio_handler.subchunk_data(subchunk_header.size);
 
 			if (calculate)
 			{
 				AudioSize audiosize;
 				audiosize.set_bytes(total_pcm_bytes);
-				this->signal_updateaudiosize(audiosize);
+				audio_reader->signal_updateaudiosize(audiosize);
 
 				// Read audio bytes in blocks
 
-				PCMBlockReader reader(this->samples_per_read());
+				PCMBlockReader reader(samples_per_read);
 
 				reader.register_block_consumer(
-					std::bind(&WavAudioReaderImpl::signal_appendsamples, this,
+					std::bind(&WavAudioReaderImpl::signal_appendsamples,
+						audio_reader,
 						std::placeholders::_1, std::placeholders::_2)
 					);
 
@@ -961,12 +1034,12 @@ int64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 				}
 			}
 
-			if (not audio_handler_->requests_all_subchunks())
+			if (not audio_handler.requests_all_subchunks())
 			{
 				ARCS_LOG_DEBUG << "Stop reading after data subchunk";
 
 				auto remainder =
-					audio_handler_->physical_file_size() - total_bytes_read;
+					audio_handler.physical_file_size() - total_bytes_read;
 
 				if (remainder > 0)
 				{
@@ -976,7 +1049,7 @@ int64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 						<< "(processed: "
 						<< std::to_string(total_bytes_read)
 						<< " bytes, file size: "
-						<< std::to_string(audio_handler_->physical_file_size())
+						<< std::to_string(audio_handler.physical_file_size())
 						<< " bytes)";
 				}
 
@@ -993,13 +1066,16 @@ int64_t WavAudioReaderImpl::process_file_worker(std::ifstream &in,
 		ARCS_LOG(DEBUG1) << "(Ignore subchunk)";
 	} // while
 
-	if (calculate) { this->signal_endinput(); }
+	if (calculate) { audio_reader->signal_endinput(); }
 
 	return total_bytes_read;
 }
 
 
-void WavAudioReaderImpl::process_file(const std::string &filename,
+void wav_process_file(const std::string &filename,
+		const std::size_t samples_per_read,
+		AudioReaderImpl* audio_reader,
+		WavAudioHandler& audio_handler,
 		const bool &validate,
 		const bool &calculate,
 		int64_t &total_pcm_bytes)
@@ -1010,21 +1086,23 @@ void WavAudioReaderImpl::process_file(const std::string &filename,
 		return;
 	}
 
-	if (not audio_handler_)
+	/*
+	if (not audio_handler)
 	{
 		ARCS_LOG_ERROR << "No audio handler configured, return";
 		return;
 	}
+	*/
 
 	if (not validate)
 	{
 		// If no Validation is Requested, Turn off all Tests for any
 		// Canonical File Part
 
-		audio_handler_->set_config(C_EMPTY_CONFIG);
+		audio_handler.set_config(C_EMPTY_CONFIG);
 	}
 
-	audio_handler_->start_file(filename, retrieve_file_size_bytes(filename));
+	audio_handler.start_file(filename, wav_retrieve_file_size_bytes(filename));
 
 	std::ifstream in;
 
@@ -1044,11 +1122,12 @@ void WavAudioReaderImpl::process_file(const std::string &filename,
 	}
 
 	const int64_t bytes_read =
-		this->process_file_worker(in, calculate, total_pcm_bytes);
+		wav_process_file_worker(in, samples_per_read, audio_reader,
+				audio_handler, calculate, total_pcm_bytes);
 
 	ARCS_LOG_DEBUG << "Read " << bytes_read << " bytes from audio file";
 
-	audio_handler_->end_file();
+	audio_handler.end_file();
 
 	try
 	{
@@ -1062,154 +1141,8 @@ void WavAudioReaderImpl::process_file(const std::string &filename,
 	ARCS_LOG(DEBUG1) << "Audio file closed.";
 }
 
-
-std::unique_ptr<AudioSize> WavAudioReaderImpl::do_acquire_size(
-	const std::string &audiofilename)
-{
-	int64_t total_pcm_bytes = 0;
-
-	auto backup_config { audio_handler_->config() };
-
-	try
-	{
-		// Neither Validate nor Calculate, do not emit signals
-
-		this->process_file(audiofilename, false, false, total_pcm_bytes);
-
-		// FIXME This requires a SampleProcessor attached. However, it should be
-		// guaranteed that an AudioReader without a SampleProcessor attached
-		// can provide the AudioSize.
-	}
-	catch (const std::ifstream::failure& f)
-	{
-		audio_handler_->set_config(static_cast<CONFIG>(backup_config));
-
-		if (total_pcm_bytes == 0)
-		{
-			throw;
-		}
-
-		ARCS_LOG_WARNING << "After byte "
-			<< total_pcm_bytes
-			<< " an exception occured while reading the audiofile: "
-			<< f.what();
-	}
-
-	audio_handler_->set_config(static_cast<CONFIG>(backup_config));
-
-	std::unique_ptr<AudioSize> audiosize {
-		std::make_unique<AudioSize>(total_pcm_bytes, arcstk::UNIT::BYTES) };
-	return audiosize;
-}
-
-
-void WavAudioReaderImpl::do_process_file(const std::string &audiofilename)
-{
-	int64_t total_pcm_bytes = 0;
-
-	// Validate And Calculate, emit signals
-
-	auto backup_config { audio_handler_->config() };
-
-	this->process_file(audiofilename, true, true, total_pcm_bytes/* ignore */);
-
-	audio_handler_->set_config(static_cast<CONFIG>(backup_config));
-}
-
-
-std::unique_ptr<FileReaderDescriptor> WavAudioReaderImpl::do_descriptor()
-	const
-{
-	return std::make_unique<DescriptorWavPCM>();
-}
-
-
-void WavAudioReaderImpl::register_audio_handler(
-		std::unique_ptr<WavAudioHandler> hndlr)
-{
-	audio_handler_ = std::move(hndlr);
-}
-
 } // namespace wave
 } // namespace details
-
-
-// FormatWavPCM
-
-
-//bool FormatWavPCM::do_bytes(const ByteSequence &bytes,
-//		const uint64_t &offset) const
-//{
-//	using details::wave::RIFFWAV_PCM_CDDA_t;
-//
-//	// No test bytes? => fail
-//	if (bytes.empty())
-//	{
-//		ARCS_LOG(DEBUG1) << "Test bytes empty, no match";
-//		return false;
-//	}
-//
-//	// Test Bytes Beyond Canonical Part? => accept
-//	if (offset >= RIFFWAV_PCM_CDDA_t::header().size())
-//	{
-//		ARCS_LOG(DEBUG1) <<
-//			"Test bytes accepted since they are beyond WAV header";
-//		return true;
-//	}
-//
-//	// determine start pointers
-//
-//	auto in_current  = bytes.begin();
-//	auto ref_current = RIFFWAV_PCM_CDDA_t::header().begin() + offset;
-//
-//	// determine end pointers
-//
-//	const auto ref_bytes    = RIFFWAV_PCM_CDDA_t::header().size() - offset;
-//	const bool longer_input = bytes.size() > ref_bytes;
-//
-//	const auto in_stop  = longer_input
-//		? bytes.begin() + static_cast<int>(ref_bytes) + 1 /* past-the-end */
-//		: bytes.end();
-//
-//	const auto ref_stop = longer_input
-//		? RIFFWAV_PCM_CDDA_t::header().end()
-//		: ref_current + bytes.size() + 1 /* past-the-end */;
-//
-//	do
-//	{
-//		const auto m = std::mismatch(in_current, in_stop, ref_current);
-//
-//		// Reached the end? => Success
-//		if (m.first == in_stop or m.second == ref_stop)
-//		{
-//			break;
-//		}
-//
-//		// Is it an actual mismatch (i.e. on a non-wildcard byte)?
-//		if (m.second != ref_stop
-//				and *m.second != RIFFWAV_PCM_CDDA_t::any_byte())
-//		{
-//			return false;
-//		}
-//
-//		// Mismatch was on a "wildcard byte", so skip all following bytes until
-//		// the wildcard sequence ends.
-//
-//		in_current  = m.first;
-//		ref_current = m.second;
-//
-//		// Skip all input bytes referring to 'any_byte' in the reference bytes
-//		while (in_current != in_stop and ref_current != ref_stop
-//				and *ref_current == RIFFWAV_PCM_CDDA_t::any_byte())
-//		{
-//			++in_current;
-//			++ref_current;
-//		}
-//
-//	} while (in_current != in_stop and ref_current != ref_stop);
-//
-//	return true;
-//}
 
 
 // DescriptorWavPCM
