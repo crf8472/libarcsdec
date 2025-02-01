@@ -694,7 +694,7 @@ Checksums harvest_result(const std::vector<Calculation>& calculations)
 
 	auto result = Checksums{};
 	std::for_each(begin(tracks), end(tracks),
-		[&result](const ChecksumSet& s) { result.append(s); });
+		[&result](const ChecksumSet& s) { result.push_back(s); });
 
 	return result;
 }
@@ -802,7 +802,7 @@ Checksums ARCSCalculator::calculate(
 			(single_file ? last_track_with_skip : false))
 	};
 
-	checksums.append(track);
+	checksums.push_back(track);
 
 	// Avoid calculating a single track track twice
 
@@ -817,7 +817,7 @@ Checksums ARCSCalculator::calculate(
 	{
 		track = this->calculate_track(audiofilenames[i], false, false);
 
-		checksums.append(track);
+		checksums.push_back(track);
 	}
 
 	// Calculate last track
@@ -825,7 +825,7 @@ Checksums ARCSCalculator::calculate(
 	track = this->calculate_track(audiofilenames.back(), false,
 			last_track_with_skip);
 
-	checksums.append(track);
+	checksums.push_back(track);
 
 	return checksums;
 }
