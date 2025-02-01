@@ -467,11 +467,11 @@ void log_completeness_check(const Calculation &calc)
  */
 void process_audio_file(const std::string& audiofilename,
 		std::unique_ptr<AudioReader> reader, SampleProcessor& processor,
-		const std::size_t buffer_size);
+		const int64_t buffer_size);
 
 void process_audio_file(const std::string& audiofilename,
 		std::unique_ptr<AudioReader> reader, SampleProcessor& processor,
-		const std::size_t buffer_size)
+		const int64_t buffer_size)
 {
 	// Configure AudioReader and process file
 

@@ -133,14 +133,14 @@ public:
 	 *
 	 * \param[in] samples_per_read Number of samples to read/buffer at once.
 	 */
-	void set_samples_per_read(const std::size_t samples_per_read);
+	void set_samples_per_read(const int64_t samples_per_read);
 
 	/**
 	 * \brief Return the number of samples to read in one read operation.
 	 *
 	 * \return Number of samples per read operation.
 	 */
-	std::size_t samples_per_read() const;
+	int64_t samples_per_read() const;
 
 	/**
 	 * \brief Create a descriptor for this AudioReader implementation.
@@ -221,7 +221,7 @@ private:
 	/**
 	 * \brief Buffer size as total number of PCM 32 bit samples.
 	 */
-	std::size_t samples_per_read_;
+	int64_t samples_per_read_;
 };
 
 
@@ -267,14 +267,14 @@ public:
 	 *
 	 * \param[in] samples_per_read The number of 32 bit PCM samples per read
 	 */
-	void set_samples_per_read(const std::size_t samples_per_read);
+	void set_samples_per_read(const int64_t samples_per_read);
 
 	/**
 	 * \brief Return the number of samples to read in one read operation.
 	 *
 	 * \return Number of samples per read operation.
 	 */
-	std::size_t samples_per_read() const;
+	int64_t samples_per_read() const;
 
 	/**
 	 * \brief Register a SampleProcessor instance to pass the read samples to.
@@ -487,10 +487,10 @@ protected:
 	 * \return TRUE if value is equal to proper_value, otherwise FALSE
 	 */
 	bool assert_equals(
-		const std::string &label,
+		const std::string& label,
 		int value,
 		int proper_value,
-		const std::string error_msg);
+		const std::string& error_msg);
 
 	/**
 	 * \brief Returns TRUE iff value == proper_value.
@@ -507,10 +507,10 @@ protected:
 	 * \return TRUE if value is equal to proper_value, otherwise FALSE
 	 */
 	bool assert_equals_u(
-		const std::string &label,
+		const std::string& label,
 		uint32_t value,
 		uint32_t proper_value,
-		const std::string error_msg);
+		const std::string& error_msg);
 
 	/**
 	 * \brief Returns TRUE iff value >= proper_value.
@@ -527,10 +527,10 @@ protected:
 	 * \return TRUE if value is not smaller than proper_value, otherwise FALSE
 	 */
 	bool assert_at_least(
-		const std::string &label,
+		const std::string& label,
 		int value,
 		int proper_value,
-		const std::string error_msg);
+		const std::string& error_msg);
 
 	/**
 	 * \brief Returns TRUE iff value <= proper_value.
@@ -547,10 +547,10 @@ protected:
 	 * \return TRUE if value is not bigger than proper_value, otherwise FALSE
 	 */
 	bool assert_at_most(
-		const std::string &label,
+		const std::string& label,
 		int value,
 		int proper_value,
-		const std::string error_msg);
+		const std::string& error_msg);
 
 	/**
 	 * \brief Returns TRUE iff value is true.
@@ -565,9 +565,9 @@ protected:
 	 * \return TRUE if value is TRUE, otherwise FALSE
 	 */
 	bool assert_true(
-		const std::string &label,
+		const std::string& label,
 		bool value,
-		const std::string error_msg);
+		const std::string& error_msg);
 
 	/**
 	 * \brief Logs every error on the error stack with ARCS_LOG_ERROR.

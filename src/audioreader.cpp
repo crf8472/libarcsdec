@@ -268,10 +268,10 @@ const AudioValidator::error_list_type&
 
 
 bool AudioValidator::assert_equals(
-		const std::string &label,
+		const std::string& label,
 		int value,
 		int proper_value,
-		const std::string error_msg)
+		const std::string& error_msg)
 {
 	ARCS_LOG(DEBUG1) << label
 		<< "  ["
@@ -280,11 +280,13 @@ bool AudioValidator::assert_equals(
 
 	if (value != proper_value)
 	{
+		using std::to_string;
+
 		std::ostringstream msg;
 
 		msg << error_msg;
-		msg << ". Expected " << std::to_string(proper_value)
-			<< " but is " << std::to_string(value);
+		msg << ". Expected " << to_string(proper_value)
+			<< " but is "    << to_string(value);
 
 		errors_.push_back(msg.str());
 		return false;
@@ -295,10 +297,10 @@ bool AudioValidator::assert_equals(
 
 
 bool AudioValidator::assert_equals_u(
-		const std::string &label,
+		const std::string& label,
 		uint32_t value,
 		uint32_t proper_value,
-		const std::string error_msg)
+		const std::string& error_msg)
 {
 	ARCS_LOG(DEBUG1) << label
 		<< "  ["
@@ -307,11 +309,13 @@ bool AudioValidator::assert_equals_u(
 
 	if (value != proper_value)
 	{
+		using std::to_string;
+
 		std::ostringstream msg;
 
 		msg << error_msg;
-		msg << ". Expected " << std::to_string(proper_value)
-			<< " but is " << std::to_string(value);
+		msg << ". Expected " << to_string(proper_value)
+			<< " but is "    << to_string(value);
 
 		errors_.push_back(msg.str());
 		return false;
@@ -322,10 +326,10 @@ bool AudioValidator::assert_equals_u(
 
 
 bool AudioValidator::assert_at_least(
-		const std::string &label,
+		const std::string& label,
 		int value,
 		int proper_value,
-		const std::string error_msg)
+		const std::string& error_msg)
 {
 	ARCS_LOG(DEBUG1) << label
 		<< "  ["
@@ -334,11 +338,13 @@ bool AudioValidator::assert_at_least(
 
 	if (value < proper_value)
 	{
+		using std::to_string;
+
 		std::ostringstream msg;
 
 		msg << error_msg;
-		msg << ". Expected at least " << std::to_string(proper_value)
-			<< " but is only " << std::to_string(value);
+		msg << ". Expected at least " << to_string(proper_value)
+			<< " but is only "        << to_string(value);
 
 		errors_.push_back(msg.str());
 		return false;
@@ -349,10 +355,10 @@ bool AudioValidator::assert_at_least(
 
 
 bool AudioValidator::assert_at_most(
-		const std::string &label,
+		const std::string& label,
 		int value,
 		int proper_value,
-		const std::string error_msg)
+		const std::string& error_msg)
 {
 	ARCS_LOG(DEBUG1) << label
 		<< "  ["
@@ -361,11 +367,13 @@ bool AudioValidator::assert_at_most(
 
 	if (value > proper_value)
 	{
+		using std::to_string;
+
 		std::ostringstream msg;
 
 		msg << error_msg;
-		msg << ". Expected at most " << std::to_string(proper_value)
-			<< " but is in fact " << std::to_string(value);
+		msg << ". Expected at most " << to_string(proper_value)
+			<< " but is in fact "    << to_string(value);
 
 		errors_.push_back(msg.str());
 		return false;
@@ -376,9 +384,9 @@ bool AudioValidator::assert_at_most(
 
 
 bool AudioValidator::assert_true(
-		const std::string &label,
+		const std::string& label,
 		bool value,
-		const std::string error_msg)
+		const std::string& error_msg)
 {
 	ARCS_LOG(DEBUG1) << label << "  [" << (value ? "yes" : "no") << "]";
 
@@ -449,13 +457,13 @@ void AudioReaderImpl::process_file(const std::string &filename)
 }
 
 
-void AudioReaderImpl::set_samples_per_read(const std::size_t samples_per_read)
+void AudioReaderImpl::set_samples_per_read(const int64_t samples_per_read)
 {
 	samples_per_read_ = samples_per_read;
 }
 
 
-std::size_t AudioReaderImpl::samples_per_read() const
+int64_t AudioReaderImpl::samples_per_read() const
 {
 	return samples_per_read_;
 }
@@ -550,14 +558,14 @@ public:
 	 *
 	 * The default is BLOCKSIZE::DEFAULT.
 	 */
-	void set_samples_per_read(const std::size_t samples_per_read);
+	void set_samples_per_read(const int64_t samples_per_read);
 
 	/**
 	 * Return the number of samples to read in one read operation.
 	 *
 	 * \return Number of samples per read operation.
 	 */
-	std::size_t samples_per_read() const;
+	int64_t samples_per_read() const;
 
 	/**
 	 *
@@ -614,13 +622,13 @@ AudioReader::Impl::Impl(std::unique_ptr<AudioReaderImpl> readerimpl)
 }
 
 
-void AudioReader::Impl::set_samples_per_read(const std::size_t samples_per_read)
+void AudioReader::Impl::set_samples_per_read(const int64_t samples_per_read)
 {
 	readerimpl_->set_samples_per_read(samples_per_read);
 }
 
 
-std::size_t AudioReader::Impl::samples_per_read() const
+int64_t AudioReader::Impl::samples_per_read() const
 {
 	return readerimpl_->samples_per_read();
 }
@@ -701,13 +709,13 @@ AudioReader& AudioReader::operator = (AudioReader &&) noexcept = default;
 AudioReader::~AudioReader() noexcept = default;
 
 
-void AudioReader::set_samples_per_read(const std::size_t samples_per_read)
+void AudioReader::set_samples_per_read(const int64_t samples_per_read)
 {
 	impl_->set_samples_per_read(samples_per_read);
 }
 
 
-std::size_t AudioReader::samples_per_read() const
+int64_t AudioReader::samples_per_read() const
 {
 	return impl_->samples_per_read();
 }

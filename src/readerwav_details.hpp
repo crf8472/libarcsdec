@@ -427,7 +427,7 @@ public:
 	 * \param id   Id of the subchunk header
 	 * \param size Size in bytes of the subchunk
 	 */
-	WavSubchunkHeader(uint32_t id, uint32_t size);
+	WavSubchunkHeader(uint32_t id, int64_t size);
 
 	/**
 	 * \brief Virtual default destructor.
@@ -442,7 +442,7 @@ public:
 	/**
 	 * \brief Size in bytes of the subchunk.
 	 */
-	const uint32_t size;
+	const int64_t size;
 
 	/**
 	 * \brief The subchunk id as a human-readable string.
@@ -491,7 +491,7 @@ public:
 	/**
 	 * \brief Parsed size of this format subchunk.
 	 */
-	const std::size_t size;
+	const int64_t size;
 
 	/**
 	 * \brief Parsed format identifier.
@@ -525,65 +525,25 @@ public:
 };
 
 
-/**
- * \brief Parses byte sequences as syntactic elements of a WAV file, e.g. chunk
- * descriptor, subchunk headers and the entire format subchunk.
- */
-class WavPartParser
+struct WAV
 {
-
-public:
-
-	/**
-	 * \brief Virtual default destructor.
-	 */
-	virtual ~WavPartParser() noexcept;
-
 	/**
 	 * \brief Specified size in bytes of a compliant RIFF/RIFX header
 	 * (4 bytes 'RIFF' + 4 bytes Filesize + 4 bytes 'WAVE').
 	 */
-	static constexpr uint8_t WAV_BYTES_PER_RIFF_HEADER     = 12;
+	static constexpr uint8_t BYTES_PER_RIFF_HEADER     = 12;
 
 	/**
 	 * \brief Specified ize in bytes of a compliant subchunk header
 	 * (4 bytes ChunkID + 4 bytes ChunkSize).
 	 */
-	static constexpr uint8_t WAV_BYTES_PER_SUBCHUNK_HEADER = 8;
+	static constexpr uint8_t BYTES_PER_SUBCHUNK_HEADER = 8;
 
 	/**
 	 * \brief Expected size in bytes of the fmt subchunk.
 	 */
-	static constexpr uint8_t WAV_BYTES_IN_FMT_SUBCHUNK     = 16;
+	static constexpr uint8_t BYTES_IN_FMT_SUBCHUNK     = 16;
 
-	/**
-	 * \brief Construct a chunk descriptor from the given byte vector.
-	 *
-	 * \param[in] bytes The parsed bytes
-	 *
-	 * \return WavChunkDescriptor representing the parsed bytes
-	 */
-	WavChunkDescriptor chunk_descriptor(const std::vector<char> &bytes);
-
-	/**
-	 * \brief Construct a subchunk header from the given byte vector.
-	 *
-	 * \param[in] bytes The parsed bytes
-	 *
-	 * \return WavSubchunkHeader representing the parsed bytes
-	 */
-	WavSubchunkHeader subchunk_header(const std::vector<char> &bytes);
-
-	/**
-	 * \brief Construct a format subchunk from the given byte vector.
-	 *
-	 * \param[in] header The subchunk header
-	 * \param[in] bytes  The parsed bytes
-	 *
-	 * \return WavFormatSubchunk representing the parsed bytes
-	 */
-	WavFormatSubchunk format_subchunk(const WavSubchunkHeader &header,
-			const std::vector<char> &bytes);
 };
 
 
@@ -623,9 +583,9 @@ private:
 		S_INITIAL           =    0,
 		S_STARTED_FORMAT    =    1,
 		S_STARTED_DATA      =    2,
-		S_VALIDATED_HEADER  =    4,
-		S_VALIDATED_FORMAT  =    8,
-		S_VALIDATED_DATA    =   16
+		S_COMPLETED_HEADER  =    4,
+		S_COMPLETED_FORMAT  =    8,
+		S_COMPLETED_DATA    =   16
 	};
 
 public:
@@ -841,111 +801,56 @@ private:
 
 
 /**
- * \brief Implements pull reading PCM samples from a std::ifstream.
+ * \brief Construct a chunk descriptor from the given byte vector.
  *
- * This is the block reading policy for the RIFF/WAV (PCM) format.
+ * \param[in] bytes Input bytes
+ *
+ * \return WavChunkDescriptor representing the parsed bytes
  */
-class PCMBlockReader final
-{
+WavChunkDescriptor wav_parse_chunk_descriptor(const std::vector<char>& bytes);
 
-public:
 
-	/**
-	 * \brief Constructs a PCMBlockReader with buffer of size samples_per_block.
-	 *
-	 * \param[in] samples_per_block Number of 32 bit PCM samples in one block
-	 */
-	explicit PCMBlockReader(const int32_t /*TODO std::size_t*/ samples_per_block);
+/**
+ * \brief Construct a subchunk header from the given byte vector.
+ *
+ * \param[in] bytes Input bytes
+ *
+ * \return WavSubchunkHeader representing the parsed bytes
+ */
+WavSubchunkHeader wav_parse_subchunk_header(const std::vector<char>& bytes);
 
-	// make class non-copyable (1/2)
-	PCMBlockReader(const PCMBlockReader &) = delete;
 
-	// TODO Move constructor
+/**
+ * \brief Create WavFormatSubchunk instance from input bytes..
+ *
+ * \param[in] header Subchunk header
+ * \param[in] bytes  Subchunk bytes to interpret
+ *
+ * \return WavFormatSubchunk instance
+ */
+WavFormatSubchunk wav_format_subchunk(
+	const WavSubchunkHeader& header, const std::vector<char>& bytes);
 
-	/**
-	 * \brief Set the maximal number of samples a block can contain.
-	 *
-	 * \param[in] samples_per_block
-	 *     The number of 32 bit PCM samples in one block
-	 */
-	void set_samples_per_block(const int32_t samples_per_block);
 
-	/**
-	 * \brief Return the maximal number of samples a block can contain.
-	 *
-	 * \return The number of 32 bit PCM samples that the block can store
-	 */
-	int32_t samples_per_block() const;
+/**
+ * \brief Read blocks from the stream until the end of the stream.
+ *
+ * The number of actual bytes read is returned and will be equal to
+ * total_pcm_bytes on success.
+ *
+ * \param[in] in Stream of bytes to read from
+ * \param[in] total_pcm_bytes Total number of 32 bit PCM samples in the
+ * stream
+ *
+ * \throw FileReadException On any read error
+ *
+ * \return The actual number of bytes read
+ */
+int64_t wav_read_pcm_data(std::ifstream& in,
+		const int64_t samples_per_read,
+		AudioReaderImpl* audio_reader,
+		const int64_t& total_pcm_bytes);
 
-	/**
-	 * \brief Returns the minimum block size of this instance
-	 *
-	 * \return Minimum number of samples per block
-	 */
-	int32_t min_samples_per_block() const;
-
-	/**
-	 * \brief Returns the maximum block size of this instance
-	 *
-	 * \return Maximum number of samples per block
-	 */
-	int32_t max_samples_per_block() const;
-
-	/**
-	 * \brief Registers a consuming method for blocks.
-	 *
-	 * \param[in] func The functor to be registered as block consumer.
-	 */
-	void register_block_consumer(const std::function<void(
-				SampleInputIterator begin, SampleInputIterator end)>
-			&func);
-
-	/**
-	 * \brief Read blocks from the stream until the end of the stream.
-	 *
-	 * The number of actual bytes read is returned and will be equal to
-	 * total_pcm_bytes on success.
-	 *
-	 * \param[in] in Stream of bytes to read from
-	 * \param[in] total_pcm_bytes Total number of 32 bit PCM samples in the
-	 * stream
-	 *
-	 * \throw FileReadException On any read error
-	 *
-	 * \return The actual number of bytes read
-	 */
-	int64_t read_blocks(std::ifstream &in, const int64_t &total_pcm_bytes);
-
-	// make class non-copyable (2/2)
-	PCMBlockReader& operator = (const PCMBlockReader &) = delete;
-
-	// TODO Move assignment
-
-private:
-
-	/**
-	 * \brief Clip the parameter to be between the values of
-	 * min_samples_per_block() and max_samples_per_block().
-	 *
-	 * \param[in] samples_per_block Requested number of samples per block
-	 *
-	 * \return Valid number of samples per block
-	 */
-	int32_t clip_samples_per_block(const int32_t samples_per_block) const;
-
-	/**
-	 * \brief Number of 32bit PCM samples per block
-	 */
-	int32_t samples_per_block_;
-
-	/**
-	 * \brief Registered callback method to consume a block.
-	 *
-	 * Called by block_complete().
-	 */
-	std::function<void(SampleInputIterator begin, SampleInputIterator end)>
-		consume_;
-};
 
 /**
  * \brief Service method: acquire the physical file size in bytes.
@@ -987,7 +892,7 @@ int64_t wav_read_bytes(std::ifstream &in, const int32_t amount,
  * \throw InvalidAudioException In case of unexpected data
  */
 int64_t wav_process_file_worker(std::ifstream &in,
-		const std::size_t samples_per_read,
+		const int64_t samples_per_read,
 		AudioReaderImpl* audio_reader,
 		WavAudioHandler& audio_handler,
 		const bool &calculate,
@@ -1009,7 +914,7 @@ int64_t wav_process_file_worker(std::ifstream &in,
  * \throw InvalidAudioException In case of unexpected data
  */
 void wav_process_file(const std::string &filename,
-		const std::size_t samples_per_read,
+		const int64_t samples_per_read,
 		AudioReaderImpl* audio_reader,
 		WavAudioHandler& audio_handler,
 		const bool &validate,
