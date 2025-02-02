@@ -407,7 +407,7 @@ public:
 	 * \return TRUE if the sample size equals CDDAValidator::bits_per_sample()
 	 * otherwise FALSE
 	 */
-	bool bits_per_sample(const int bits_per_sample);
+	void validate_bits_per_sample(const int bits_per_sample);
 
 	/**
 	 * \brief CDDA validation of the sampling rate (must be 44.100).
@@ -422,7 +422,7 @@ public:
 	 * \return TRUE if the sampling rate equals
 	 * CDDAValidator::samples_per_second() otherwise FALSE
 	 */
-	bool samples_per_second(const int samples_per_second);
+	void validate_samples_per_second(const int samples_per_second);
 
 	/**
 	 * \brief CDDA validation for stereo (must be 2).
@@ -436,7 +436,7 @@ public:
 	 * \return TRUE if num_channels is equal to CDDAValidator::num_channels()
 	 * otherwise FALSE
 	 */
-	bool num_channels(const int num_channels);
+	void validate_num_channels(const int num_channels);
 
 	/**
 	 * \brief Add an error to the internal error list.
@@ -471,6 +471,13 @@ protected:
 	AudioValidator(AudioValidator &&) noexcept = default;
 	AudioValidator& operator = (AudioValidator &&) noexcept
 		= default;
+
+	/**
+	 * \brief Call on_failure() iff condition is TRUE.
+	 *
+	 * \param[in] condition Condition to check for TRUE
+	 */
+	void fail_if(const bool condition);
 
 	/**
 	 * \brief Returns TRUE iff value == proper_value.

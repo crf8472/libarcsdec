@@ -200,45 +200,27 @@ AudioValidator::codec_set_type AudioValidator::codecs() const
 }
 
 
-bool AudioValidator::bits_per_sample(const int bits_per_sample)
+void AudioValidator::validate_bits_per_sample(const int bits_per_sample)
 {
-	if (not this->assert_true("Test (CDDA): Bits per sample",
+	fail_if(not this->assert_true("Test (CDDA): Bits per sample",
 			CDDAValidator::bits_per_sample(bits_per_sample),
-			"Number of bits per sample does not conform to CDDA"))
-	{
-		this->on_failure();
-		return false;
-	}
-
-	return true;
+			"Number of bits per sample does not conform to CDDA"));
 }
 
 
-bool AudioValidator::samples_per_second(const int sps)
+void AudioValidator::validate_samples_per_second(const int sps)
 {
-	if (not this->assert_true("Test (CDDA): Sample Rate",
+	fail_if(not this->assert_true("Test (CDDA): Sample Rate",
 			CDDAValidator::samples_per_second(sps),
-			"Number of samples per second does not conform to CDDA"))
-	{
-		this->on_failure();
-		return false;
-	}
-
-	return true;
+			"Number of samples per second does not conform to CDDA"));
 }
 
 
-bool AudioValidator::num_channels(const int num_channels)
+void AudioValidator::validate_num_channels(const int num_channels)
 {
-	if (not this->assert_true("Test (CDDA): Channels",
+	fail_if(not this->assert_true("Test (CDDA): Channels",
 			CDDAValidator::num_channels(num_channels),
-			"Number of channels does not conform to CDDA"))
-	{
-		this->on_failure();
-		return false;
-	}
-
-	return true;
+			"Number of channels does not conform to CDDA"));
 }
 
 
@@ -264,6 +246,15 @@ const AudioValidator::error_list_type&
 	AudioValidator::get_errors() const
 {
 	return errors_;
+}
+
+
+void AudioValidator::fail_if(const bool condition)
+{
+	if (condition)
+	{
+		this->on_failure();
+	}
 }
 
 
@@ -421,7 +412,7 @@ void AudioValidator::log_error_stack() const
 
 void DefaultValidator::on_failure()
 {
-	throw InvalidAudioException(this->last_error());
+	throw InvalidAudioException(last_error());
 }
 
 
