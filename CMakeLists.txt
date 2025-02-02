@@ -395,9 +395,9 @@ if (WITH_SUBMODULES )
 
 else()
 
-	find_package (libarcstk 0.2.0 REQUIRED )
+	find_package (libarcstk 0.3.0 REQUIRED )
 
-	list (APPEND PKG_REQUIRE_ARRAY "libarcstk >= 0.2.0" )
+	list (APPEND PKG_REQUIRE_ARRAY "libarcstk >= 0.3.0" )
 endif (WITH_SUBMODULES )
 
 
