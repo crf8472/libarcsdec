@@ -443,15 +443,6 @@ public:
 	 * \brief Size in bytes of the subchunk.
 	 */
 	const int64_t size;
-
-	/**
-	 * \brief The subchunk id as a human-readable string.
-	 *
-	 * This is convenient for output in log messages.
-	 *
-	 * \return Subchunk id as a string
-	 */
-	std::string name() const;
 };
 
 
@@ -469,7 +460,7 @@ public:
 	 * \brief Constructor.
 	 */
 	WavFormatSubchunk(
-			const WavSubchunkHeader &header,
+			const WavSubchunkHeader& header,
 			int wFormatTag,
 			int wChannels,
 			int64_t dwSamplesPerSec,
@@ -548,11 +539,70 @@ struct WAV
 
 
 /**
- * \brief Config flags of the audio handler.
+ * \brief Validator for WAV files.
+ */
+class WavValidator final : public DefaultValidator
+{
+	codec_set_type do_codecs() const final;
+
+	/**
+	 * \brief Configuration: Reference values for validation.
+	 */
+	std::unique_ptr<WAV_CDDA_t> valid_;
+
+public:
+
+	/**
+	 * \brief Constructor.
+	 */
+	WavValidator();
+
+	/**
+	 * \brief Callback function: Called when chunk descriptor is encountered.
+	 *
+	 * \param[in] chunk_descriptor The WavChunkDescriptor as parsed
+	 * \param[in] file_size        The physical file size from the filesystem
+	 *
+	 * \throws InvalidAudioException if audio processing failed
+	 */
+	void chunk_descriptor(const WavChunkDescriptor& chunk_descriptor,
+		const int64_t file_size);
+
+	/**
+	 * \brief Callback function: Called by AudioReaderImpl when format subchunk
+	 * is encountered.
+	 *
+	 * \param[in] format_subchunk The WavFormatSubchunk as parsed
+	 *
+	 * \throws InvalidAudioException if audio processing failed
+	 */
+	void subchunk_format(const WavFormatSubchunk& format_subchunk);
+
+	/**
+	 * \brief Callback function: Called by AudioReaderImpl when data subchunk is
+	 * encountered.
+	 *
+	 * \param[in] subchunk_size The size of the data subchunk as parsed
+	 *
+	 * \throws InvalidAudioException if audio processing failed
+	 */
+	void subchunk_data(const uint32_t& subchunk_size);
+
+	/**
+	 * \brief Return the actual validation reference.
+	 *
+	 * \return Reference values for validation
+	 */
+	const WAV_CDDA_t* wav_cdda() const;
+};
+
+
+/**
+ * \brief Config flags for WavAudioHandler.
  */
 enum CONFIG : uint32_t
 {
-	C_EMPTY_CONFIG      =    0,
+	C_DO_NOTHING        =    0,
 	C_RESPECT_HEADER    =    1,
 	C_RESPECT_FORMAT    =    2,
 	C_RESPECT_DATA      =    4,
@@ -563,14 +613,14 @@ enum CONFIG : uint32_t
 /**
  * \brief Event handler for interpreting and validating WAV files.
  *
- * The handler implements the actual behaviour for the data the FileReaderImpl
+ * The handler implements the actual behaviour for the data the AudioReaderImpl
  * provides while reading.
  *
  * Validation checks for basic WAV format compliance and for presence of CDDA
  * audio format. This handler class uses an instance of WAV_CDDA_t to perform
  * the actual checks against the expected format.
  */
-class WavAudioHandler final : public DefaultValidator
+class WavAudioHandler final
 {
 private:
 
@@ -595,7 +645,7 @@ public:
 	 *
 	 * \param[in] valid_values An object representing the valid reference values
 	 */
-	explicit WavAudioHandler(std::unique_ptr<WAV_CDDA_t> valid_values);
+	WavAudioHandler();
 
 	/**
 	 * \brief Return phyiscal file size.
@@ -611,7 +661,7 @@ public:
 	 * \param[in] filename Name of the audio file started to parse
 	 * \param[in] phys_file_size Recognized physical file size
 	 */
-	void start_file(const std::string &filename, const int64_t &phys_file_size);
+	void start_file(const std::string& filename, const int64_t& phys_file_size);
 
 	/**
 	 * \brief Handler method: Called by AudioReaderImpl on EOF.
@@ -624,7 +674,7 @@ public:
 	 *
 	 * \param[in] subchunk_header The WavSubchunkHeader as parsed
 	 */
-	void start_subchunk(const WavSubchunkHeader &subchunk_header);
+	void start_subchunk(const WavSubchunkHeader& subchunk_header);
 
 	/**
 	 * \brief Handler method: Called by AudioReaderImpl when chunk descriptor is
@@ -634,7 +684,7 @@ public:
 	 *
 	 * \throws InvalidAudioException if audio processing failed
 	 */
-	void chunk_descriptor(const WavChunkDescriptor &chunk_descriptor);
+	void chunk_descriptor(const WavChunkDescriptor& chunk_descriptor);
 
 	/**
 	 * \brief Handler method: Called by AudioReaderImpl when format subchunk is
@@ -644,7 +694,7 @@ public:
 	 *
 	 * \throws InvalidAudioException if audio processing failed
 	 */
-	void subchunk_format(const WavFormatSubchunk &format_subchunk);
+	void subchunk_format(const WavFormatSubchunk& format_subchunk);
 
 	/**
 	 * \brief Handler method: Called by AudioReaderImpl when data subchunk is
@@ -654,18 +704,28 @@ public:
 	 *
 	 * \throws InvalidAudioException if audio processing failed
 	 */
-	void subchunk_data(const uint32_t &subchunk_size);
+	void subchunk_data(const uint32_t& subchunk_size);
 
+	/**
+	 * \brief Current configuration.
+	 *
+	 * \return Current configuration flags
+	 */
 	uint32_t config() const;
 
-	void set_config(const CONFIG &option);
+	/**
+	 * \brief Set the current configuration.
+	 *
+	 * \param[in] option Configuration option
+	 */
+	void set_config(const CONFIG& config);
 
 	/**
 	 * \brief Set a configuration option.
 	 *
 	 * \param[in] option The option to set
 	 */
-	void set_option(const CONFIG &option);
+	void set_option(const CONFIG& option);
 
 	/**
 	 * \brief Check for a configuration option.
@@ -674,7 +734,7 @@ public:
 	 *
 	 * \return TRUE iff the option is set, otherwise false
 	 */
-	bool has_option(const CONFIG &option) const;
+	bool has_option(const CONFIG& option) const;
 
 	/**
 	 * \brief Returns TRUE iff WavAudioHandler expects to see also the optional
@@ -691,7 +751,7 @@ public:
 	 *
 	 * \return Internal validation object.
 	 */
-	const WAV_CDDA_t& validator() const;
+	const WavValidator* validator() const;
 
 protected:
 
@@ -702,14 +762,14 @@ protected:
 	 *
 	 * \return TRUE iff the state is actual, otherwise false
 	 */
-	bool has_state(const STATE &state) const;
+	bool has_state(const STATE& state) const;
 
 	/**
 	 * \brief Set a specific state.
 	 *
 	 * \param[in] state The state to set
 	 */
-	void set_state(const STATE &state);
+	void set_state(const STATE& state);
 
 	/**
 	 * \brief Unset a specific state.
@@ -719,11 +779,9 @@ protected:
 	 *
 	 * \param[in] state The state to unset
 	 */
-	void unset_state(const STATE &state);
+	void unset_state(const STATE& state);
 
 private:
-
-	codec_set_type do_codecs() const override;
 
 	/**
 	 * \brief Configuration: physical file size in bytes as passed from the
@@ -735,11 +793,6 @@ private:
 	int64_t phys_file_size_;
 
 	/**
-	 * \brief Configuration: Reference values for validation.
-	 */
-	std::unique_ptr<WAV_CDDA_t> valid_;
-
-	/**
 	 * \brief Configuration: configuration flags.
 	 */
 	uint32_t config_;
@@ -748,6 +801,11 @@ private:
 	 * \brief State: state flags.
 	 */
 	uint32_t state_;
+
+	/**
+	 * \brief Validator for WAV chunks.
+	 */
+	WavValidator validator_;
 };
 
 
@@ -767,9 +825,16 @@ class WavAudioReaderImpl final : public AudioReaderImpl
 public:
 
 	/**
-	 * \brief Standard constructor.
+	 * \brief Constructor.
 	 */
 	WavAudioReaderImpl();
+
+	/**
+	 * \brief Constructor.
+	 *
+	 * \param[in] hndlr WavAudioHandler to set
+	 */
+	explicit WavAudioReaderImpl(std::unique_ptr<WavAudioHandler> hndlr);
 
 	/**
 	 * \brief Virtual destructor.
@@ -777,19 +842,24 @@ public:
 	virtual ~WavAudioReaderImpl() noexcept final;
 
 	/**
-	 * \brief Register a validation handler.
-	 *
-	 * \param[in] hndlr The validating handler to set
+	 * \brief Get the current WavAudioHandler.
 	 */
-	void register_audio_handler(std::unique_ptr<WavAudioHandler> hndlr);
+	const WavAudioHandler* audio_handler() const;
+
+	/**
+	 * \brief Set a WavAudioHandler.
+	 *
+	 * \param[in] hndlr The WavAudioHandler to set
+	 */
+	void set_audio_handler(std::unique_ptr<WavAudioHandler> hndlr);
 
 
 private:
 
-	std::unique_ptr<AudioSize> do_acquire_size(const std::string &filename)
+	std::unique_ptr<AudioSize> do_acquire_size(const std::string& filename)
 		final;
 
-	void do_process_file(const std::string &filename) final;
+	void do_process_file(const std::string& filename) final;
 
 	std::unique_ptr<FileReaderDescriptor> do_descriptor() const final;
 
@@ -798,6 +868,18 @@ private:
 	 */
 	std::unique_ptr<WavAudioHandler> audio_handler_;
 };
+
+
+/**
+ * \brief The subchunk id as a human-readable string.
+ *
+ * This is convenient for output in log messages.
+ *
+ * \param[in] id Id of the subchunk
+ *
+ * \return Subchunk id as a string
+ */
+std::string subchunk_name(const uint32_t id);
 
 
 /**
@@ -831,35 +913,25 @@ WavSubchunkHeader wav_parse_subchunk_header(const std::vector<char>& bytes);
 WavFormatSubchunk wav_format_subchunk(
 	const WavSubchunkHeader& header, const std::vector<char>& bytes);
 
-
 /**
  * \brief Read blocks from the stream until the end of the stream.
  *
  * The number of actual bytes read is returned and will be equal to
  * total_pcm_bytes on success.
  *
- * \param[in] in Stream of bytes to read from
- * \param[in] total_pcm_bytes Total number of 32 bit PCM samples in the
- * stream
+ * \param[in]  in               The ifstream to read from
+ * \param[in]  samples_per_read Block size in samples
+ * \param[in]  audio_reader     Optional audio reader
+ * \param[out] total_pcm_bytes  Number of total bytes representing PCM samples
  *
  * \throw FileReadException On any read error
  *
  * \return The actual number of bytes read
  */
 int64_t wav_read_pcm_data(std::ifstream& in,
-		const int64_t samples_per_read,
-		AudioReaderImpl* audio_reader,
-		const int64_t& total_pcm_bytes);
-
-
-/**
- * \brief Service method: acquire the physical file size in bytes.
- *
- * \param[in] filename File to retrieve the physical file size in bytes for
- *
- * \return The physical file size in bytes
- */
-int64_t wav_retrieve_file_size_bytes(const std::string &filename);
+		const int64_t    samples_per_read,
+		AudioReaderImpl& audio_reader,
+		const int64_t&   total_pcm_bytes);
 
 /**
  * Read specified amount of bytes from specified stream in specified vector
@@ -874,52 +946,57 @@ int64_t wav_retrieve_file_size_bytes(const std::string &filename);
  *
  * \return Number of bytes read
  */
-int64_t wav_read_bytes(std::ifstream &in, const int32_t amount,
+int64_t wav_read_bytes(std::ifstream& in, const int32_t amount,
 		std::vector<char>& bytes, int64_t& byte_count);
 
 /**
- * \brief Worker method for process_file(): Read WAV file and optionally
- * validate it for WAV and CDDA compliance.
+ * \brief Worker method for wav_process_file(): Read WAV file and optionally
+ * use a handler on it.
  *
- * \param[in]  in         The ifstream to read from
- * \param[in]  calculate  Flag to control if actual calculation is performed
- * \param[out] total_pcm_bytes Number of total bytes representing PCM
- * samples
+ * \param[in]  in               The ifstream to read from
+ * \param[in]  samples_per_read Block size in samples
+ * \param[in]  audio_handler    Optional audio handler
+ * \param[in]  audio_reader     Optional audio reader
+ * \param[out] total_pcm_bytes  Number of total bytes representing PCM samples
  *
  * \return Number of actually read bytes
  *
  * \throw FileReadException If any problem occurred during reading from in
  * \throw InvalidAudioException In case of unexpected data
  */
-int64_t wav_process_file_worker(std::ifstream &in,
-		const int64_t samples_per_read,
+int64_t wav_process_file_worker(std::ifstream& in,
+		const int64_t    samples_per_read,
+		WavAudioHandler* audio_handler,
 		AudioReaderImpl* audio_reader,
-		WavAudioHandler& audio_handler,
-		const bool &calculate,
-		int64_t &total_pcm_bytes);
+		int64_t&         total_pcm_bytes);
 
 /**
- * \brief Read the WAV file and optionally validate it. This method provides
- * the implementation of WavAudioReader::process_file().
+ * \brief Read the WAV file and optionally use a handler on it. This function
+ * provides the implementation of WavAudioReader::process_file().
  *
- * \param[in]  filename   The file to read from
- * \param[in]  validate   Flag to control if actual validation is performed
- * \param[in]  calculate  Flag to control if actual calculation is performed
- * \param[out] total_pcm_bytes Number of total bytes representing PCM
- * samples
- *
- * \return TRUE iff the file could be completely processed, otherwise FALSE
+ * \param[in]  filename         The file to read from
+ * \param[in]  samples_per_read Block size in samples
+ * \param[in]  audio_handler    Optional audio handler
+ * \param[in]  audio_reader     Optional audio reader
+ * \param[out] total_pcm_bytes  Number of total bytes representing PCM samples
  *
  * \throw FileReadException If any problem occurred during reading from in
  * \throw InvalidAudioException In case of unexpected data
  */
-void wav_process_file(const std::string &filename,
-		const int64_t samples_per_read,
+void wav_process_file(const std::string& filename,
+		const int64_t    samples_per_read,
+		WavAudioHandler* audio_handler,
 		AudioReaderImpl* audio_reader,
-		WavAudioHandler& audio_handler,
-		const bool &validate,
-		const bool &calculate,
-		int64_t &total_pcm_bytes);
+		int64_t&         total_pcm_bytes);
+
+/**
+ * \brief Acquire the physical file size in bytes.
+ *
+ * \param[in] filename File to retrieve the physical file size in bytes for
+ *
+ * \return The physical file size in bytes
+ */
+int64_t retrieve_file_size_bytes(const std::string& filename);
 
 /// @}
 
