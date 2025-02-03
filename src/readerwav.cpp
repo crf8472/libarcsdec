@@ -835,6 +835,8 @@ int64_t wav_read_pcm_data(std::ifstream& in,
 int64_t wav_read_bytes(std::ifstream& in, const int32_t amount,
 			std::vector<char>& bytes, int64_t& byte_count)
 {
+	ARCS_LOG(DEBUG1) << "Read " << amount << " bytes from wav file";
+
 	try
 	{
 		in.read(&bytes[0], amount);
@@ -882,6 +884,9 @@ int64_t wav_process_file_worker(std::ifstream& in,
 	if (audio_handler)
 	{
 		audio_handler->chunk_descriptor(wav_parse_chunk_descriptor(bytes));
+	} else
+	{
+		ARCS_LOG(DEBUG1) << "Skip RIFF/RIFX header";
 	}
 
 
@@ -981,7 +986,7 @@ int64_t wav_process_file_worker(std::ifstream& in,
 					throw InvalidAudioException(msg.str());
 				}
 
-				// Read audio bytes in blocks
+				// Read audio bytes in blocks and emit AudioReader signals
 
 				const auto block_bytes_read = wav_read_pcm_data(in,
 						samples_per_read, *audio_reader,
@@ -1001,23 +1006,27 @@ int64_t wav_process_file_worker(std::ifstream& in,
 				}
 			}
 
-			if (audio_handler && !audio_handler->requests_all_subchunks())
+			if (!audio_handler || !audio_handler->requests_all_subchunks())
 			{
-				ARCS_LOG_DEBUG << "Stop reading after data subchunk";
+				ARCS_LOG_DEBUG << "Stop reading after data subchunk, ignore "
+					<< "all bytes after position " << total_bytes_read;
 
-				auto remainder {
-					audio_handler->physical_file_size() - total_bytes_read };
-
-				if (remainder > 0)
+				if (audio_handler)
 				{
-					ARCS_LOG_INFO << "Ignored "
-						<< to_string(remainder)
-						<< " bytes of unparsed data behind data subchunk "
-						<< "(processed: "
-						<< to_string(total_bytes_read)
-						<< " bytes, file size: "
-						<< to_string(audio_handler->physical_file_size())
-						<< " bytes)";
+					auto remainder {
+						audio_handler->physical_file_size() - total_bytes_read };
+
+					if (remainder > 0)
+					{
+						ARCS_LOG_INFO << "Ignored "
+							<< to_string(remainder)
+							<< " bytes of unparsed data behind data subchunk "
+							<< "(processed: "
+							<< to_string(total_bytes_read)
+							<< " bytes, file size: "
+							<< to_string(audio_handler->physical_file_size())
+							<< " bytes)";
+					}
 				}
 
 				break;
@@ -1112,7 +1121,7 @@ int64_t retrieve_file_size_bytes(const std::string& filename)
 
 	// if __cplusplus >= 201703L
 
-	//using namespace fs = std::filesystem;
+	// using namespace fs = std::filesystem;
 
 	// from: https://en.cppreference.com/w/cpp/filesystem/file_size
 
