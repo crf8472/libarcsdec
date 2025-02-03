@@ -19,7 +19,7 @@
 #include <arcstk/metadata.hpp>     // for ToC
 #endif
 #ifndef __LIBARCSTK_CALCULATE_HPP__
-#include <arcstk/calculate.hpp>    // for Checksums, ChecksumSet
+#include <arcstk/calculate.hpp>    // for Checksums, ChecksumSet,...
 #endif
 
 #ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
@@ -51,6 +51,7 @@ using arcstk::Algorithm;
 using arcstk::ARId;
 using arcstk::Checksums;
 using arcstk::ChecksumSet;
+using arcstk::ChecksumtypeSet;
 
 
 /**
@@ -219,7 +220,7 @@ public:
 	 *
 	 * \return A FileReader for the input file
 	 */
-	inline std::unique_ptr<ReaderType> file_reader(const std::string &filename,
+	inline std::unique_ptr<ReaderType> file_reader(const std::string& filename,
 			const ReaderAndFormatHolder* f) const
 	{
 		return this->create_(filename, *this->selection(), *f->formats(),
@@ -263,7 +264,7 @@ protected:
 	 *
 	 * \return A FileReader for the input file
 	 */
-	inline std::unique_ptr<ReaderType> create(const std::string &filename) const
+	inline std::unique_ptr<ReaderType> create(const std::string& filename) const
 	{
 		return this->file_reader(filename, this);
 	}
@@ -284,14 +285,8 @@ public:
 	 *
 	 * \return The parsed ToC
 	 */
-	std::unique_ptr<ToC> parse(const std::string &metafilename) const;
+	std::unique_ptr<ToC> parse(const std::string& metafilename) const;
 };
-
-
-/**
- * \brief Set of checksum types.
- */
-using ChecksumTypeset = std::unordered_set<arcstk::checksum::type>;
 
 
 /**
@@ -309,7 +304,7 @@ public:
 	 *
 	 * \param[in] type The Checksum type to calculate.
 	 */
-	explicit ARCSCalculator(const ChecksumTypeset& type);
+	explicit ARCSCalculator(const ChecksumtypeSet& type);
 
 	/**
 	 * \brief Constructor.
@@ -334,8 +329,8 @@ public:
 	 *
 	 * \return AccurateRip checksums of all tracks specified in the ToC
 	 */
-	std::pair<Checksums, ARId> calculate(const std::string &audiofilename,
-			const ToC &toc);
+	std::pair<Checksums, ARId> calculate(const std::string& audiofilename,
+			const ToC& toc);
 
 	/**
 	 * \brief Calculate ARCSs for audio files.
@@ -357,29 +352,26 @@ public:
 	 *
 	 * \return AccurateRip checksums of the input files
 	 */
-	Checksums calculate(const std::vector<std::string> &audiofilenames,
-			const bool &first_file_with_skip,
-			const bool &last_file_with_skip);
+	Checksums calculate(const std::vector<std::string>& audiofilenames,
+			const bool& first_file_with_skip,
+			const bool& last_file_with_skip);
 
 	/**
 	 * \brief Calculate a single ARCS for an audio file.
 	 *
-	 * The flags \c skip_front and \c skip_back control whether the track is
-	 * processed as first or last track of an album. If \c skip_front is set to
-	 * <tt>TRUE</tt>, the track is processed as first track of an album, meaning
-	 * the first 2939 samples are skipped in the calculation according to the
-	 * ARCS checksum definition. If \c skip_back is set to <tt>TRUE</tt>, the
-	 * track is processed as the last track of an album, meaning that the last
-	 * 5 frames of the input are skipped in the calculation.
+	 * The flags \c is_first_track and \c is_last_track control whether the
+	 * track is processed as first or last track of an album. Since the
+	 * AccurateRip algorithms process the first and last file in a special way,
+	 * it is required to flag them accordingly.
 	 *
-	 * \param[in] audiofilename  Name  of the audiofile
-	 * \param[in] skip_front     Skip front samples of first track
-	 * \param[in] skip_back      Skip back samples of last track
+	 * \param[in] audiofilename		Name of the audiofile
+	 * \param[in] is_first_track	Iff TRUE, file is treated as first track
+	 * \param[in] is_last_track		Iff TRUE, file is treated as last track
 	 *
 	 * \return The AccurateRip checksum of this track
 	 */
-	ChecksumSet calculate(const std::string &audiofilename,
-		const bool &skip_front, const bool &skip_back);
+	ChecksumSet calculate(const std::string& audiofilename,
+		const bool& is_first_track, const bool& is_last_track);
 	// NOTE This is not really useful except for testing
 
 	/**
@@ -387,31 +379,43 @@ public:
 	 *
 	 * \param[in] type The checksum::type to calculate
 	 */
-	void set_types(const ChecksumTypeset& type);
+	void set_types(const ChecksumtypeSet& type);
 
 	/**
 	 * \brief Return checksum::types calculated by this instance.
 	 *
 	 * \return The set of checksum::types to calculate
 	 */
-	ChecksumTypeset types() const;
+	ChecksumtypeSet types() const;
 
 private:
 
 	/**
 	 * \brief Worker method: calculating the ARCS of a single audiofile.
 	 *
-	 * \param[in] audiofilename Name of the audiofile
+	 * \param[in] audiofilename		Name of the audiofile
+	 * \param[in] is_first_track	Iff TRUE, file is treated as first track
+	 * \param[in] is_last_track		Iff TRUE, file is treated as last track
 	 *
 	 * \return The AccurateRip checksum of this track
 	 */
-	ChecksumSet calculate_track(const std::string &audiofilename,
-		const bool &skip_front, const bool &skip_back);
+	ChecksumSet calculate_track(const std::string& audiofilename,
+		const bool& is_first_track, const bool& is_last_track);
+
+	/**
+	 * \brief Convert the flags for first and last track to a Context.
+	 *
+	 * \param[in] first_file_is_first_track Treat first file as track 1
+	 * \param[in] last_file_is_last_track   Treat last file as last track
+	 */
+	arcstk::Context to_context(
+		const bool& first_file_is_first_track,
+		const bool& last_file_is_last_track);
 
 	/**
 	 * \brief Internal checksum type.
 	 */
-	ChecksumTypeset types_;
+	ChecksumtypeSet types_;
 };
 
 
@@ -429,7 +433,7 @@ public:
 	 *
 	 * \return The size of the audio data
 	 */
-	std::unique_ptr<arcstk::AudioSize> size(const std::string &audiofilename)
+	std::unique_ptr<arcstk::AudioSize> size(const std::string& audiofilename)
 		const;
 };
 
@@ -456,7 +460,7 @@ public:
 	 *
 	 * \return The AccurateRip id for this medium
 	 */
-	std::unique_ptr<ARId> calculate(const std::string &metafilename) const;
+	std::unique_ptr<ARId> calculate(const std::string& metafilename) const;
 
 	/**
 	 * \brief Calculate ARId using the specified metadata and audio files.
@@ -466,8 +470,8 @@ public:
 	 *
 	 * \return The AccurateRip id for this medium
 	 */
-	std::unique_ptr<ARId> calculate(const std::string &metafilename,
-			const std::string &audiofilename) const;
+	std::unique_ptr<ARId> calculate(const std::string& metafilename,
+			const std::string& audiofilename) const;
 
 	/**
 	 * \brief AudioInfo used by this instance.
@@ -494,8 +498,8 @@ private:
 	 *
 	 * \return The AccurateRip id for this medium
 	 */
-	std::unique_ptr<ARId> calculate(const ToC &toc,
-			const std::string &audiofilename) const;
+	std::unique_ptr<ARId> calculate(const ToC& toc,
+			const std::string& audiofilename) const;
 
 	/**
 	 * \brief Internal worker to determine the AudioSize if required.
