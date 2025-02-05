@@ -807,7 +807,7 @@ Context ARCSCalculator::to_context(
 	const bool& is_first_track,
 	const bool& is_last_track)
 {
-	auto context = Context { Context::NONE };
+	auto context = Context { Context::TRACK };
 
 	const auto flags = is_first_track + 2 * is_last_track;
 	switch (flags)
@@ -815,7 +815,7 @@ Context ARCSCalculator::to_context(
 		case 3: context = Context::ALBUM;       break;
 		case 2: context = Context::LAST_TRACK;  break;
 		case 1: context = Context::FIRST_TRACK; break;
-		case 0: context = Context::NONE;        break;
+		case 0: context = Context::TRACK;        break;
 		default: ;
 	}
 
@@ -827,7 +827,7 @@ Context ARCSCalculator::to_context(
 	// 			? Context::LAST_TRACK
 	// 			: flags == 1 // first_file_is_first_track only
 	// 				? Context::FIRST_TRACK
-	// 				: Context::NONE; // no first or last track
+	// 				: Context::TRACK; // no first or last track
 }
 
 
