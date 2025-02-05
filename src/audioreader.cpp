@@ -16,11 +16,11 @@
 #include <string>        // for string, to_string
 #include <utility>       // for move
 
-#ifndef __LIBARCSTK_IDENTIFIER_HPP__
-#include <arcstk/identifier.hpp> // for CDDA
+#ifndef __LIBARCSTK_METADATA_HPP__
+#include <arcstk/metadata.hpp> // for CDDA
 #endif
 #ifndef __LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp> // for ARCS_LOG, _ERROR, _WARNING, _DEBUG
+#include <arcstk/logging.hpp>  // for ARCS_LOG, _ERROR, _WARNING, _DEBUG
 #endif
 
 
