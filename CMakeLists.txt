@@ -685,7 +685,8 @@ if (NOT SKIP_INSTALL_ALL )
 
 		## Support pkgconfig
 
-		string (REPLACE ";" ", " PKG_REQUIRE "${PKG_REQUIRE_ARRAY}" )
+		string (REPLACE lib ""   PKG_BIND_NAME "${PROJECT_NAME}" )
+		string (REPLACE ";" ", " PKG_REQUIRE   "${PKG_REQUIRE_ARRAY}" )
 
 		configure_file (
 			"${CMAKE_CURRENT_SOURCE_DIR}/libarcsdec.pc.in"
@@ -694,6 +695,7 @@ if (NOT SKIP_INSTALL_ALL )
 		)
 
 		unset (PKG_REQUIRE )
+		unset (PKG_BIND_NAME )
 
 		install (FILES "${PROJECT_BUILD_SOURCE_DIR}/libarcsdec.pc"
 			DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig" )
