@@ -4,12 +4,12 @@
 
 ## Building libarcsdec on Linux and \*BSD
 
-Libarcsdec is written in C++14. It was developed mainly (but not exclusively)
-for Linux. It's runtime dependencies are configurable and may depend on the
-required codec or container format support. With ffmpeg available, libarcsdec
-supports virtually every lossless codec and any container format. It was not
-tested whether libarcsdec builds out-of-the-box on BSDs but don't expect major
-issues.
+Libarcsdec is compiled as C++17, originally written in C++14. It was developed
+mainly (but not exclusively) for Linux. It's runtime dependencies are
+configurable and may depend on the required codec or container format support.
+With ffmpeg available, libarcsdec supports virtually every lossless codec and
+any container format. It was not tested whether libarcsdec builds out-of-the-box
+on BSDs but don't expect major issues.
 
 
 ## Buildtime dependencies
@@ -17,16 +17,16 @@ issues.
 
 ### Mandatory Buildtime Dependencies
 
-- C++-14-compliant-compiler with C++ standard library
-- ``cmake`` >= 3.9.6
+- C++-17-compliant-compiler with C++ standard library
+- ``cmake`` >= 3.10
 - ``make`` or some other build tool compatible to cmake (the examples suppose
   ``make`` nonetheless)
 - [libarcstk][6] -- dependency of libarcsdec
-- [libcue][5] >= 2.0.0 -- parse CUE sheets
 
 
 ### Optional Buildtime Dependencies
 
+- [libcue][5] >= 2.0.0 -- parse CUE sheets
 - flac (with [FLAC++][7]) >= 1.3.1 -- decode FLAC audio (in FLAC container files)
 - [libwavpack][8] >= 5 -- decode WavePack audio (in wv container files)
 - [ffmpeg][9] >= 3.1 -- decode virtually any codec in virtually any container

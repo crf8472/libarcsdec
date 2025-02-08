@@ -2,7 +2,13 @@
 
 CXX     := g++
 ## Replace 'g++' with 'clang++' if you like to use clang
-CFLAGS  := -std=c++14 -Wall -Wextra -pedantic
+CFLAGS  := -std=c++17 -Wall -Wextra -pedantic
+LDFLAGS := "-Wl,--disable-new-dtags,-rpath,../../build/"
+## We force to use libarcsdec.so from build tree. Check this with
+## $ ldd albumcalc | grep arcs
+## or
+## $ readelf -d albumcalc | head -20
+## and look for the value of RPATH.
 
 PROJECT := albumcalc
 

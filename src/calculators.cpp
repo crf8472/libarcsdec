@@ -524,6 +524,7 @@ Checksums merge_results(const std::vector<Calculation>& calculations)
 	using std::begin;
 	using std::cbegin;
 	using std::cend;
+	using std::end;
 
 	// Aggregate results in vector 'tracks'
 
@@ -532,9 +533,9 @@ Checksums merge_results(const std::vector<Calculation>& calculations)
 		{
 			auto checksums { c.result() };
 
-			std::transform(cbegin(checksums), cend(checksums), begin(tracks),
+			std::transform(begin(checksums), end(checksums), begin(tracks),
 				begin(tracks),
-				[](const ChecksumSet& s, ChecksumSet& t) -> ChecksumSet
+				[](ChecksumSet& s, ChecksumSet& t) -> ChecksumSet
 				{
 					t.merge(s);
 					t.set_length(s.length());
