@@ -115,6 +115,7 @@ std::string remove_quotes(const std::string& s)
 WHITESPACE      [ \t\r]+
 DIGITS          [[:digit:]]+
 GLYPHS          [[:graph:]]+
+CTRLCHARS       [[:cntrl:]]+
 QSTRING1        \'([^\'\n]|\\\')*\'
 QSTRING2        \"([^\"\n]|\\\")*\"
 REM             REM[[:blank:]]+
@@ -192,6 +193,8 @@ SIZE_INFO   { return Parser::make_SIZE_INFO(get().loc());  }
 :			{ return Parser::make_COLON(get().loc()); }
 
 <INITIAL>{GLYPHS}     { return Parser::make_STRING(YYText(), get().loc()); }
+
+<INITIAL>{CTRLCHARS}  { /* ignore things like "ISRC ^\W" and other junk */ }
 
 <*>\n        { BEGIN(INITIAL); /* acts as delimiter */ }
 
