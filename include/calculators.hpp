@@ -46,12 +46,15 @@ inline namespace v_1_0_0
 class AudioReader;
 class MetadataParser;
 
-using arcstk::ToC;
-using arcstk::Algorithm;
 using arcstk::ARId;
-using arcstk::Checksums;
+using arcstk::Algorithm;
+using arcstk::AudioSize;
 using arcstk::ChecksumSet;
+using arcstk::Checksums;
 using arcstk::ChecksumtypeSet;
+using arcstk::Points;
+using arcstk::Settings;
+using arcstk::ToC;
 
 
 /**
@@ -401,6 +404,14 @@ private:
 	 */
 	ChecksumSet calculate_track(const std::string& audiofilename,
 		const bool& is_first_track, const bool& is_last_track);
+
+	/**
+	 * \brief Worker for initializing and performing calculations.
+	 */
+	Checksums perform_worker(const std::string& audiofilename,
+			std::unique_ptr<AudioReader> reader,
+			const Settings& settings, const ChecksumtypeSet& types,
+			const AudioSize& leadout, const Points& offsets);
 
 	/**
 	 * \brief Convert the flags for first and last track to a Context.

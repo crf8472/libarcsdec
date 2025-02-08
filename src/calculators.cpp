@@ -431,58 +431,10 @@ std::unique_ptr<ToC> ToCParser::parse(const std::string& metafilename) const
 }
 
 
-// log_completeness_check
+// calculate_details.hpp
 
-void log_completeness_check(const Calculation& calc)
-{
-	if (not calc.complete())
-	{
-		ARCS_LOG_ERROR << "Calculation not complete after last input sample: "
-			<< "Expected total samples: " << calc.samples_expected()
-			<< " "
-			<< "Processed total samples: " << calc.samples_processed();
-	}
 
-	if (calc.samples_todo() < 0)
-	{
-		ARCS_LOG_WARNING << "More samples than expected. "
-			<< "Expected: " << calc.samples_expected()
-			<< " "
-			<< "Processed: " << calc.samples_processed();
-	}
-}
-
-void process_audio_file(const std::string& audiofilename,
-		std::unique_ptr<AudioReader> reader, SampleProcessor& processor,
-		const int64_t buffer_size)
-{
-	using std::to_string;
-
-	// Configure AudioReader and process file
-
-	if (BLOCKSIZE::MIN <= buffer_size and buffer_size <= BLOCKSIZE::MAX)
-	{
-		ARCS_LOG(DEBUG1) << "Chunk size for reading samples: "
-			<< to_string(buffer_size) << " bytes";
-
-		reader->set_samples_per_read(buffer_size);
-
-	} else
-	{
-		// Buffer size is illegal.
-		// Do nothing, AudioReaderImpl uses its default.
-
-		ARCS_LOG_WARNING << "Specified buffer size of " << buffer_size
-			<< " bytes is not within the legal range of "
-			<< BLOCKSIZE::MIN << " - " << BLOCKSIZE::MAX
-			<< " samples. Fall back to default: "
-			<< reader->samples_per_read()
-			<< " bytes";
-	}
-
-	reader->set_processor(processor);
-	reader->process_file(audiofilename);
-}
+// get_algorithms
 
 
 Algorithms get_algorithms(const ChecksumtypeSet& types)
@@ -492,8 +444,14 @@ Algorithms get_algorithms(const ChecksumtypeSet& types)
 
 	Algorithms algorithms;
 
-	// TODO Manual logic does not scale. OK for now since there are only
-	// 3 algorithms in libarcstk.
+	// TODO Improve selection logic.
+
+	// Manual logic does not scale. OK for now since there are only
+	// 3 algorithms in libarcstk 0.3. libarcstk should have an API function that
+	// gives a preferred algorithm for a checksum type. If we add a type like
+	// checksum::type::ARCS1and2 we could do this as a bijection like
+	// get_algorithm_for_type() without having to consider the entire set of
+	// requested types like it is done here.
 
 	if (types.empty()/* default */ || types.size() > 1/* all known types*/)
 	{
@@ -517,6 +475,9 @@ Algorithms get_algorithms(const ChecksumtypeSet& types)
 }
 
 
+// get_algorithms_or_throw
+
+
 Algorithms get_algorithms_or_throw(const ChecksumtypeSet& types)
 {
 	auto algorithms { get_algorithms(types) };
@@ -531,6 +492,8 @@ Algorithms get_algorithms_or_throw(const ChecksumtypeSet& types)
 	return algorithms;
 }
 
+
+// init_calculations
 
 
 std::vector<Calculation> init_calculations(const arcstk::Settings& settings,
@@ -548,6 +511,9 @@ std::vector<Calculation> init_calculations(const arcstk::Settings& settings,
 
 	return calculations;
 }
+
+
+// merge_results
 
 
 Checksums merge_results(const std::vector<Calculation>& calculations)
@@ -587,6 +553,45 @@ Checksums merge_results(const std::vector<Calculation>& calculations)
 }
 
 
+// process_audio_file
+
+
+void process_audio_file(const std::string& audiofilename,
+		std::unique_ptr<AudioReader> reader, SampleProcessor& processor,
+		const int64_t buffer_size)
+{
+	using std::to_string;
+
+	// Configure AudioReader and process file
+
+	if (BLOCKSIZE::MIN <= buffer_size and buffer_size <= BLOCKSIZE::MAX)
+	{
+		ARCS_LOG(DEBUG1) << "Chunk size for reading samples: "
+			<< to_string(buffer_size) << " bytes";
+
+		reader->set_samples_per_read(buffer_size);
+
+	} else
+	{
+		// Buffer size is illegal.
+		// Do nothing, AudioReaderImpl uses its default.
+
+		ARCS_LOG_WARNING << "Specified buffer size of " << buffer_size
+			<< " bytes is not within the legal range of "
+			<< BLOCKSIZE::MIN << " - " << BLOCKSIZE::MAX
+			<< " samples. Fall back to default: "
+			<< reader->samples_per_read()
+			<< " bytes";
+	}
+
+	reader->set_processor(processor);
+	reader->process_file(audiofilename);
+}
+
+
+// calculate.hpp
+
+
 // ARCSCalculator
 
 
@@ -623,7 +628,6 @@ std::pair<Checksums, ARId> ARCSCalculator::calculate(
 	auto size = AudioSize{};
 	auto id   = std::unique_ptr<ARId>{};
 
-	// TODO Really??
 	if (!toc.complete())
 	{
 		size = *reader->acquire_size(audiofilename);
@@ -634,36 +638,12 @@ std::pair<Checksums, ARId> ARCSCalculator::calculate(
 		id   = make_arid(toc);
 	}
 
-	const auto s = Settings { Context::ALBUM };
+	const auto track_checksums {
+		perform_worker(audiofilename, std::move(reader),
+				Context::ALBUM, types(), size, toc.offsets())
+	};
 
-	auto algorithms { get_algorithms_or_throw(types()) };
-
-	auto calculations { init_calculations(s, algorithms, size, toc.offsets()) };
-
-	if (calculations.empty())
-	{
-		throw std::logic_error("Could not instantiate Calculation objects");
-	}
-
-	MultiCalculationProcessor proc{};
-	for (auto& c : calculations)
-	{
-		proc.add(c);
-	}
-
-	// Run
-
-	process_audio_file(audiofilename, std::move(reader), proc,
-			BLOCKSIZE::DEFAULT);
-
-	for (auto& c : calculations)
-	{
-		log_completeness_check(c);
-	}
-
-	// Result handling
-
-	return std::make_pair(merge_results(calculations), *id);
+	return std::make_pair(track_checksums, *id);
 }
 
 
@@ -763,16 +743,39 @@ ChecksumSet ARCSCalculator::calculate_track(
 
 	auto size { *reader->acquire_size(audiofilename) };
 
-	auto algorithms { get_algorithms_or_throw(types()) };
+	const auto checksums {
+		perform_worker(audiofilename, std::move(reader), context, types(),
+				size, {/* no offsets */})
+	};
 
-	auto calculations { init_calculations(context, algorithms, size, {}) };
+	if (checksums.size() == 0)
+	{
+		ARCS_LOG_ERROR << "Calculation lead to no result, return null";
+
+		return ChecksumSet { 0 };
+	}
+
+	return checksums[0];
+}
+
+
+Checksums ARCSCalculator::perform_worker(const std::string& audiofilename,
+		std::unique_ptr<AudioReader> reader,
+		const Settings& settings, const ChecksumtypeSet& types,
+		const AudioSize& leadout, const Points& offsets)
+{
+	auto algorithms   { get_algorithms_or_throw(types) };
+
+	auto calculations {
+		init_calculations(settings, algorithms, leadout, offsets) };
 
 	if (calculations.empty())
 	{
-		throw std::logic_error("Could not instantiate Calculation objects");
+		throw std::runtime_error("Could not instantiate Calculation objects");
 	}
 
 	MultiCalculationProcessor proc{};
+
 	for (auto& c : calculations)
 	{
 		proc.add(c);
@@ -785,21 +788,25 @@ ChecksumSet ARCSCalculator::calculate_track(
 
 	for (auto& c : calculations)
 	{
-		log_completeness_check(c);
+		if (not c.complete())
+		{
+			ARCS_LOG_ERROR << "Calculation not complete "
+				"after last input sample: "
+				<< "Expected total samples: " << c.samples_expected()
+				<< " "
+				<< "Processed total samples: " << c.samples_processed();
+		}
+
+		if (c.samples_todo() < 0)
+		{
+			ARCS_LOG_WARNING << "More samples than expected. "
+				<< "Expected: " << c.samples_expected()
+				<< " "
+				<< "Processed: " << c.samples_processed();
+		}
 	}
 
-	// Sanity-check result
-
-	const auto track_checksums { merge_results(calculations) };
-
-	if (track_checksums.size() == 0)
-	{
-		ARCS_LOG_ERROR << "Calculation lead to no result, return null";
-
-		return ChecksumSet { 0 };
-	}
-
-	return track_checksums[0];
+	return merge_results(calculations);
 }
 
 

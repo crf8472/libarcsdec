@@ -47,33 +47,6 @@ using Algorithms = std::unordered_set<std::unique_ptr<Algorithm>>;
 
 
 /**
- * \brief Aggregate of Calculation objects..
- */
-class Calculations final
-{
-	std::vector<Calculation> calculations_;
-
-	ChecksumtypeSet types_;
-
-	ToCData toc_;
-
-public:
-
-	Calculations(const Settings& s);
-
-	void set_request_types(const ChecksumtypeSet& t);
-
-	void set_metadata(const AudioSize& size, const Points& points);
-
-	Checksums perform();
-
-private:
-
-	// init_calculations()
-	// harvest_results()
-};
-
-/**
  * \brief Acquire the algorithms for calculating a set of types.
  *
  * \param[in] types Set of types
@@ -116,15 +89,6 @@ std::vector<Calculation> init_calculations(const arcstk::Settings& settings,
  * \return Aggregated results from all input Calculation instances
  */
 Checksums merge_results(const std::vector<Calculation>& calculations);
-
-//
-
-/**
- * \brief Worker: check samples_todo() and warn if < 0 and error if > 0
- *
- * \param[in] calc Calculation to check
- */
-void log_completeness_check(const Calculation &calc);
 
 /**
  * \brief Worker: process an audio file via specified SampleProcessor.
