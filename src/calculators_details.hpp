@@ -91,6 +91,18 @@ std::vector<Calculation> init_calculations(const arcstk::Settings& settings,
 Checksums merge_results(const std::vector<Calculation>& calculations);
 
 /**
+ * \brief Derive an audiofile from a ToC.
+ *
+ * Iff the ToC contains exactly one audiofilename, this name is the result. Iff
+ * the ToC contains multiple filenames that are identical, this name is the
+ * result. Iff the ToC contains either no filename or multiple filenames that
+ * are different, the function throws.
+ *
+ * \param[in] toc The ToC to inspect for audiofile name
+ */
+std::string audiofilename(const ToC& toc);
+
+/**
  * \brief Worker: process an audio file via specified SampleProcessor.
  *
  * The \c buffer_size is specified as number of 32 bit PCM samples. It is
@@ -98,12 +110,12 @@ Checksums merge_results(const std::vector<Calculation>& calculations);
  *
  * \param[in] audiofilename  Name of the audiofile
  * \param[in] reader         Audio reader
+ * \param[in] buffer_size    Read buffer size in number of samples
  * \param[in] processor      The SampleProcessor to use
- * \param[in] buffer_size    Buffer size in number of samples
  */
 void process_audio_file(const std::string& audiofilename,
-		std::unique_ptr<AudioReader> reader, SampleProcessor& processor,
-		const int64_t buffer_size);
+		std::unique_ptr<AudioReader> reader, const int64_t buffer_size,
+		SampleProcessor& processor);
 
 } // namespace v_1_0_0
 } // namespace arcsdec

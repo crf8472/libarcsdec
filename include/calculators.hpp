@@ -367,15 +367,35 @@ public:
 	 * AccurateRip algorithms process the first and last file in a special way,
 	 * it is required to flag them accordingly.
 	 *
-	 * \param[in] audiofilename		Name of the audiofile
-	 * \param[in] is_first_track	Iff TRUE, file is treated as first track
-	 * \param[in] is_last_track		Iff TRUE, file is treated as last track
+	 * \param[in] audiofilename     Name of the audiofile
+	 * \param[in] is_first_track    Iff TRUE, file is treated as first track
+	 * \param[in] is_last_track     Iff TRUE, file is treated as last track
 	 *
 	 * \return The AccurateRip checksum of this track
 	 */
 	ChecksumSet calculate(const std::string& audiofilename,
 		const bool& is_first_track, const bool& is_last_track);
 	// NOTE This is not really useful except for testing
+
+	/**
+	 * \brief Calculate Checksums of a single audiofile.
+	 *
+	 * \param[in] audiofilename Name of audio file to process
+	 * \param[in] settings      Settings for calculations
+	 * \param[in] types         Requested checksum types
+	 * \param[in,out] leadout   Leadout
+	 * \param[in] offsets       Offsets
+	 */
+	Checksums calculate(const std::string& audiofilename,
+			const Settings& settings, const ChecksumtypeSet& types,
+			std::unique_ptr<AudioSize>& leadout, const Points& offsets);
+
+	/**
+	 * \brief Return checksum::types calculated by this instance.
+	 *
+	 * \return The set of checksum::types to calculate
+	 */
+	ChecksumtypeSet types() const;
 
 	/**
 	 * \brief Set checksum::type for the instance to calculate.
@@ -385,33 +405,24 @@ public:
 	void set_types(const ChecksumtypeSet& type);
 
 	/**
-	 * \brief Return checksum::types calculated by this instance.
+	 * \brief Size of the read buffer.
 	 *
-	 * \return The set of checksum::types to calculate
+	 * \return Preferred size of the read buffer
 	 */
-	ChecksumtypeSet types() const;
+	int64_t read_buffer_size() const;
+
+	/**
+	 * \brief Set the preferred size of the read buffer.
+	 *
+	 * This determines the number of samples to read in one read operation.
+	 *
+	 * The Audioreader is not forced to respect it, but it is a strong hint.
+	 *
+	 * \param[in] total_samples Number of PCM 32 bit samples to read at once
+	 */
+	void set_read_buffer_size(const int64_t total_samples); // TODO AudioSize?
 
 private:
-
-	/**
-	 * \brief Worker method: calculating the ARCS of a single audiofile.
-	 *
-	 * \param[in] audiofilename		Name of the audiofile
-	 * \param[in] is_first_track	Iff TRUE, file is treated as first track
-	 * \param[in] is_last_track		Iff TRUE, file is treated as last track
-	 *
-	 * \return The AccurateRip checksum of this track
-	 */
-	ChecksumSet calculate_track(const std::string& audiofilename,
-		const bool& is_first_track, const bool& is_last_track);
-
-	/**
-	 * \brief Worker for initializing and performing calculations.
-	 */
-	Checksums perform_worker(const std::string& audiofilename,
-			std::unique_ptr<AudioReader> reader,
-			const Settings& settings, const ChecksumtypeSet& types,
-			const AudioSize& leadout, const Points& offsets);
 
 	/**
 	 * \brief Convert the flags for first and last track to a Context.
@@ -421,12 +432,17 @@ private:
 	 */
 	arcstk::Context to_context(
 		const bool& first_file_is_first_track,
-		const bool& last_file_is_last_track);
+		const bool& last_file_is_last_track) const;
 
 	/**
 	 * \brief Internal checksum type.
 	 */
 	ChecksumtypeSet types_;
+
+	/**
+	 * \brief Size of the read buffer (in number of samples).
+	 */
+	int64_t read_buffer_size_;
 };
 
 

@@ -538,6 +538,7 @@ Checksums merge_results(const std::vector<Calculation>& calculations)
 				{
 					t.merge(s);
 					t.set_length(s.length());
+					// FIXME Supposing lengths all-equal is an error
 					return t;
 				}
 			);
@@ -553,12 +554,44 @@ Checksums merge_results(const std::vector<Calculation>& calculations)
 }
 
 
+// audiofile
+
+
+std::string audiofilename(const ToC& toc)
+{
+	// Check whether ToC references exactly one audio file.
+	// (Other cases are currently unsupported.)
+
+	const auto audiofilenames { toc.filenames() };
+
+	if (audiofilenames.empty())
+	{
+		throw std::runtime_error(
+				"ToC does not seem to reference any audio file.");
+	}
+
+	using std::cbegin;
+	using std::cend;
+
+	const std::unordered_set<std::string> name_set(
+			cbegin(audiofilenames), cend(audiofilenames));
+
+	if (name_set.size() != 1)
+	{
+		throw std::runtime_error(
+				"ToC does not reference exactly one audio file.");
+	}
+
+	return *cbegin(name_set);
+}
+
+
 // process_audio_file
 
 
 void process_audio_file(const std::string& audiofilename,
-		std::unique_ptr<AudioReader> reader, SampleProcessor& processor,
-		const int64_t buffer_size)
+		std::unique_ptr<AudioReader> reader, const int64_t buffer_size,
+		SampleProcessor& processor)
 {
 	using std::to_string;
 
@@ -596,7 +629,8 @@ void process_audio_file(const std::string& audiofilename,
 
 
 ARCSCalculator::ARCSCalculator(const ChecksumtypeSet& typeset)
-	: types_ { typeset }
+	: types_             { typeset }
+	, read_buffer_size_  { BLOCKSIZE::DEFAULT }
 {
 	/* empty */
 }
@@ -614,34 +648,48 @@ std::pair<Checksums, ARId> ARCSCalculator::calculate(
 		const std::string& audiofilename,
 		const ToC& toc)
 {
+	ARCS_LOG_DEBUG << "Calculate by ToC and single audiofilename";
+
 	using arcstk::make_arid;
 
-	ARCS_LOG_DEBUG << "Calculate by ToC and single audiofilename: "
-		<< audiofilename;
+	auto size { std::make_unique<AudioSize>() };
+	*size = toc.leadout(); // maybe zero
 
-	// Acquire reader
+	// A Calculation requires two informations about the input audio data:
+	//
+	// 1.) the LBA offset of each track
+	//	=>	which are either known at this point by inspecting the ToC or by
+	//		knowing that the audiofile represents a single track.
+	//
+	// 2.) the size of the audio input, which requires to know at least one of
+	// the following four:
+	//	a) the LBA track offset of the leadout frame
+	//	b) the total number of 16bit samples in <audiofilename>
+	//	c) the total number of bytes in <audiofilename> representing samples
+	//	d) the length of the last track
+	//	=>	which may or may not be represented in the ToC
 
-	auto reader { create(audiofilename) };
+	// Not all ToC providing file formats contain sufficient information to
+	// calculate the leadout - simple CueSheets for example do not. Therefore,
+	// ToCs are accepted to be incomplete up to this point. They may contain
+	// only the offstes but not the leadout.
 
-	// Configure Calculation
+	// However, this means we additionally have to inspect the audio file to get
+	// the missing information.
 
-	auto size = AudioSize{};
-	auto id   = std::unique_ptr<ARId>{};
-
-	if (!toc.complete())
-	{
-		size = *reader->acquire_size(audiofilename);
-		id   = make_arid(toc, size);
-	} else
-	{
-		size = toc.leadout();
-		id   = make_arid(toc);
-	}
+	// The total PCM byte count is exclusively known to the AudioReader in
+	// the process of reading the audio file. (We cannot deduce it from the
+	// mere file size.) However, we do not intend to actually read the audio
+	// samples. Hence, to know the leadout, we actually have to create an
+	// AudioReader, open the file and get the information. Since this is an
+	// expensive operation, we want to keep the reader.
 
 	const auto track_checksums {
-		perform_worker(audiofilename, std::move(reader),
-				Context::ALBUM, types(), size, toc.offsets())
+		calculate(audiofilename, Context::ALBUM, types(),
+				size/*get leadout passed here*/, toc.offsets())
 	};
+
+	const auto id = !toc.complete() ? make_arid(toc, *size) : make_arid(toc);
 
 	return std::make_pair(track_checksums, *id);
 }
@@ -668,7 +716,7 @@ Checksums ARCSCalculator::calculate(
 
 		// Apply back skipping request on first file only if it's also the last
 
-		this->calculate_track(audiofilenames.front(), first_file_is_first_track,
+		calculate(audiofilenames.front(), first_file_is_first_track,
 			(single_file ? last_file_is_last_track : false))
 	};
 
@@ -686,15 +734,14 @@ Checksums ARCSCalculator::calculate(
 
 	for (uint16_t i = 1; i < audiofilenames.size() - 1; ++i)
 	{
-		track = this->calculate_track(audiofilenames[i], false, false);
+		track = calculate(audiofilenames[i], false, false);
 
 		checksums.push_back(track);
 	}
 
 	// Calculate last track
 
-	track = this->calculate_track(audiofilenames.back(), false,
-			last_file_is_last_track);
+	track = calculate(audiofilenames.back(), false, last_file_is_last_track);
 
 	checksums.push_back(track);
 
@@ -710,48 +757,17 @@ ChecksumSet ARCSCalculator::calculate(
 	ARCS_LOG_DEBUG <<
 		"Calculate by single audiofilename and flags for 1st and last track";
 
-	return this->calculate_track(audiofilename, is_first_track, is_last_track);
-}
-
-
-void ARCSCalculator::set_types(const ChecksumtypeSet& typeset)
-{
-	types_ = typeset;
-}
-
-
-ChecksumtypeSet ARCSCalculator::types() const
-{
-	return types_;
-}
-
-
-ChecksumSet ARCSCalculator::calculate_track(
-	const std::string& audiofilename,
-	const bool& is_first_track,
-	const bool& is_last_track)
-{
-	ARCS_LOG_DEBUG << "Calculate track from file: " << audiofilename;
-
-	// Acquire reader
-
-	auto reader { create(audiofilename) };
-
-	// Configure Calculation
-
 	const auto context { to_context(is_first_track, is_last_track) };
 
-	auto size { *reader->acquire_size(audiofilename) };
+	auto ignore_size { std::make_unique<AudioSize>() };
 
 	const auto checksums {
-		perform_worker(audiofilename, std::move(reader), context, types(),
-				size, {/* no offsets */})
+		calculate(audiofilename, context,
+				types(), ignore_size, {/*no offsets*/})
 	};
 
-	if (checksums.size() == 0)
+	if (checksums.empty())
 	{
-		ARCS_LOG_ERROR << "Calculation lead to no result, return null";
-
 		return ChecksumSet { 0 };
 	}
 
@@ -759,34 +775,44 @@ ChecksumSet ARCSCalculator::calculate_track(
 }
 
 
-Checksums ARCSCalculator::perform_worker(const std::string& audiofilename,
-		std::unique_ptr<AudioReader> reader,
+Checksums ARCSCalculator::calculate(const std::string& audiofilename,
 		const Settings& settings, const ChecksumtypeSet& types,
-		const AudioSize& leadout, const Points& offsets)
+		std::unique_ptr<AudioSize>& leadout, const Points& offsets)
 {
-	auto algorithms   { get_algorithms_or_throw(types) };
+	ARCS_LOG_DEBUG <<
+		"Calculate by single audiofilename and complete input data";
+
+	// Put it all together
+
+	const auto algorithms { get_algorithms_or_throw(types) };
+
+	auto reader { create(audiofilename) };
+
+	if (leadout->zero())
+	{
+		leadout = reader->acquire_size(audiofilename); // output param
+	}
 
 	auto calculations {
-		init_calculations(settings, algorithms, leadout, offsets) };
-
-	if (calculations.empty())
-	{
-		throw std::runtime_error("Could not instantiate Calculation objects");
-	}
-
-	MultiCalculationProcessor proc{};
-
-	for (auto& c : calculations)
-	{
-		proc.add(c);
-	}
+		init_calculations(settings, algorithms, *leadout, offsets) };
 
 	// Run
 
-	process_audio_file(audiofilename, std::move(reader), proc,
-			BLOCKSIZE::DEFAULT);
+	{
+		MultiCalculationProcessor processor{};
 
-	for (auto& c : calculations)
+		for (auto& c : calculations)
+		{
+			processor.add(c);
+		}
+
+		process_audio_file(audiofilename, std::move(reader), read_buffer_size(),
+				processor);
+	}
+
+	// Check results
+
+	for (const auto& c : calculations)
 	{
 		if (not c.complete())
 		{
@@ -806,13 +832,44 @@ Checksums ARCSCalculator::perform_worker(const std::string& audiofilename,
 		}
 	}
 
-	return merge_results(calculations);
+	const auto checksums { merge_results(calculations) };
+
+	if (checksums.size() == 0)
+	{
+		ARCS_LOG_ERROR << "Calculations lead to no result, return empty set";
+	}
+
+	return checksums;
+}
+
+
+void ARCSCalculator::set_types(const ChecksumtypeSet& typeset)
+{
+	types_ = typeset;
+}
+
+
+ChecksumtypeSet ARCSCalculator::types() const
+{
+	return types_;
+}
+
+
+void ARCSCalculator::set_read_buffer_size(const int64_t total_samples)
+{
+	read_buffer_size_ = total_samples;
+}
+
+
+int64_t ARCSCalculator::read_buffer_size() const
+{
+	return read_buffer_size_;
 }
 
 
 Context ARCSCalculator::to_context(
 	const bool& is_first_track,
-	const bool& is_last_track)
+	const bool& is_last_track) const
 {
 	auto context = Context { Context::TRACK };
 
@@ -822,19 +879,11 @@ Context ARCSCalculator::to_context(
 		case 3: context = Context::ALBUM;       break;
 		case 2: context = Context::LAST_TRACK;  break;
 		case 1: context = Context::FIRST_TRACK; break;
-		case 0: context = Context::TRACK;        break;
+		case 0: context = Context::TRACK;       break;
 		default: ;
 	}
 
 	return context;
-
-	// return flags == 3 // first_file_is_first_track && last_file_is_last_track
-	// 		? Context::ALBUM
-	// 		: flags == 2 // last_file_is_last_track only
-	// 			? Context::LAST_TRACK
-	// 			: flags == 1 // first_file_is_first_track only
-	// 				? Context::FIRST_TRACK
-	// 				: Context::TRACK; // no first or last track
 }
 
 
@@ -867,48 +916,35 @@ std::unique_ptr<ARId> ARIdCalculator::calculate(
 		return make_arid(*toc);
 	}
 
-	ARCS_LOG_INFO <<
-		"Incomplete ToC and no audio file provided."
+	// As in ARCSCalculator::calculate(), we have the offsets but not the
+	// leadout. We thus have to inspect the actual audio input. Since we only
+	// know the name of the toc file, the name of the audio file must be derived
+	// from this information.
+
+	ARCS_LOG_INFO << "Incomplete ToC and no audio file provided."
 		" Try to find audio file references in ToC.";
 
-	// Check whether ToC references exactly one audio file.
-	// (Other cases are currently unsupported.)
+	auto audiofile = audiofilename(*toc);
 
-	const auto audiofilenames { toc->filenames() };
-
-	if (audiofilenames.empty())
-	{
-		throw std::runtime_error("Incomplete ToC, no audio file provided "
-				"and ToC does not seem to reference any audio file.");
-	}
-
-	using std::cbegin;
-	using std::cend;
-
-	const std::unordered_set<std::string> name_set(
-			cbegin(audiofilenames), cend(audiofilenames));
-
-	if (name_set.size() != 1)
-	{
-		throw std::runtime_error("Incomplete ToC, no audio file provided "
-				"and ToC does not reference exactly one audio file.");
-	}
-
-	auto audiofile { *cbegin(name_set) };
 	ARCS_LOG_INFO << "Found audiofile: " << audiofile << ", try loading";
 
 	// Use path from metafile (if any) as search path for the audio file
 
+	// TODO use C++17 std::filesystem
 	auto pos { metafilename.find_last_of("/\\") }; // XXX Really portable?
 
 	if (pos != std::string::npos)
 	{
 		// If pos+1 would be illegal, Parser would already have Thrown
-		audiofile = metafilename.substr(0, pos + 1).append(audiofile);
+		auto path = metafilename.substr(0, pos + 1);
+
+		audiofile = path.append(audiofile);
+
+		ARCS_LOG_INFO << "Use path of metadata file: " << audiofile;
 	}
 
 	// Single Audio File Guaranteed
-	return this->calculate(*toc, audiofile);
+	return calculate(*toc, audiofile);
 }
 
 
@@ -917,55 +953,24 @@ std::unique_ptr<ARId> ARIdCalculator::calculate(const std::string& metafilename,
 {
 	if (audiofilename.empty())
 	{
-		return this->calculate(metafilename);
+		return calculate(metafilename);
 	}
 
 	const auto toc { create(metafilename)->parse(metafilename) };
 
-	if (toc->complete())
-	{
-		return make_arid(*toc);
-	}
-
-	// If ToC is incomplete, analyze audio file passed
-
-	return this->calculate(*toc, audiofilename);
+	return calculate(*toc, audiofilename);
 }
 
 
 std::unique_ptr<ARId> ARIdCalculator::calculate(const ToC& toc,
 		const std::string& audiofilename) const
 {
-	// A complete multitrack configuration of the Calculation requires
-	// two informations:
-	// 1.) the LBA offset of each track
-	//	=> which are known at this point by inspecting the ToC
-	// 2.) at least one of the following four:
-	//	a) the LBA track offset of the leadout frame
-	//	b) the total number of 16bit samples in <audiofilename>
-	//	c) the total number of bytes in <audiofilename> representing samples
-	//	d) the length of the last track
-	//	=> which may or may not be represented in the ToC
-
-	// A ToC is the result of parsing a ToC providing file. Not all ToC
-	// providing file formats contain sufficient information to calculate
-	// the leadout (simple CueSheets for example do not). Therefore, ToCs
-	// are accepted to be incomplete up to this point.
-
-	// However, this means we additionally have to inspect the audio file to get
-	// the missing information.
-
-	// The total PCM byte count is exclusively known to the AudioReader in
-	// the process of reading the audio file. (We cannot deduce it from the
-	// mere file size.) However, we do not intend to actually read the audio
-	// samples.
-
 	if (toc.complete())
 	{
 		return make_arid(toc);
 	}
 
-	return make_arid(toc, *audio_.size(audiofilename));
+	return make_arid(toc, *audio()->size(audiofilename));
 }
 
 
