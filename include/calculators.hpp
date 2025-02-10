@@ -481,16 +481,7 @@ public:
 	ARIdCalculator();
 
 	/**
-	 * \brief Calculate ARId using the specified metadata file.
-	 *
-	 * \param[in] metafilename Name of the metadata file
-	 *
-	 * \return The AccurateRip id for this medium
-	 */
-	std::unique_ptr<ARId> calculate(const std::string& metafilename) const;
-
-	/**
-	 * \brief Calculate ARId using the specified metadata and audio files.
+	 * \brief Calculate ARId using the specified metadata and audio file.
 	 *
 	 * \param[in] metafilename  Name of the metadata file
 	 * \param[in] audiofilename Name of the audiofile
@@ -498,6 +489,20 @@ public:
 	 * \return The AccurateRip id for this medium
 	 */
 	std::unique_ptr<ARId> calculate(const std::string& metafilename,
+			const std::string& audiofilename) const;
+
+	/**
+	 * \brief Calculate ARId from ToC while taking leadout from audio file.
+	 *
+	 * Iff the ToC is complete(), the audiofilename parameter is completely
+	 * ignored.
+	 *
+	 * \param[in] toc           ToC of the audio data
+	 * \param[in] audiofilename Name of the audiofile
+	 *
+	 * \return The AccurateRip id for this medium
+	 */
+	std::unique_ptr<ARId> calculate(const ToC& toc,
 			const std::string& audiofilename) const;
 
 	/**
@@ -515,18 +520,6 @@ public:
 	void set_audio(const AudioInfo& audio);
 
 private:
-
-	/**
-	 * \brief Worker: calculate ID from ToC while taking leadout from audio
-	 * file.
-	 *
-	 * \param[in] toc           ToC of the image
-	 * \param[in] audiofilename Name of the image audiofile
-	 *
-	 * \return The AccurateRip id for this medium
-	 */
-	std::unique_ptr<ARId> calculate(const ToC& toc,
-			const std::string& audiofilename) const;
 
 	/**
 	 * \brief Internal worker to determine the AudioSize if required.
