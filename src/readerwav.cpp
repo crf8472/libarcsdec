@@ -1117,19 +1117,24 @@ void wav_process_file(const std::string& filename,
 
 int64_t retrieve_file_size_bytes(const std::string& filename)
 {
-	// commented out: some sketch for c++17
+#if __cplusplus >= 201703L
 
-	// if __cplusplus >= 201703L
+	namespace fs = std::filesystem;
+	using std::to_string;
 
-	// using namespace fs = std::filesystem;
+	const auto path = fs::path { filename };
+	const auto file_size { fs::file_size(path) };
 
-	// from: https://en.cppreference.com/w/cpp/filesystem/file_size
+	ARCS_LOG(DEBUG3) << "File size in bytes: " << file_size;
 
-	// fs::path example = filename;
-    // fs::path p = fs::current_path() / filename;
-	// return fs::file_size(p);
+	if (file_size > std::numeric_limits<int64_t>::max())
+	{
+		throw std::runtime_error("File is too big: " + to_string(file_size));
+	}
 
-	// else
+	return static_cast<int64_t>(file_size);
+
+#else
 
 	struct ::stat stat_buf;
 	{
@@ -1139,9 +1144,12 @@ int64_t retrieve_file_size_bytes(const std::string& filename)
 		// Avoid Warning about Unused Variable rc (ugly, but, well...)
 		static_cast<void>(rc);
 	}
+
+	ARCS_LOG(DEBUG3) << "File size in bytes: " << stat_buf.st_size;
+
 	return stat_buf.st_size;
 
-	// endif
+#endif
 }
 
 } // namespace wave
