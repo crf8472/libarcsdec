@@ -19,7 +19,6 @@
 #include <unordered_set> // for unordered_set
 #include <utility>       // for pair, move, make_pair
 #include <vector>        // for vector
-#include <iostream>
 
 #ifndef __LIBARCSTK_ALGORITHMS_HPP__
 #include <arcstk/algorithms.hpp>// for AccurateRipV1V2...
@@ -558,7 +557,7 @@ Checksums merge_results(const std::vector<Calculation>& calculations)
 // audiofile
 
 
-std::string audiofilename(const ToC& toc)
+std::string get_audiofilename(const ToC& toc)
 {
 	// Check whether ToC references exactly one audio file.
 	// (Other cases are currently unsupported.)
@@ -907,56 +906,9 @@ ARIdCalculator::ARIdCalculator()
 }
 
 
-std::unique_ptr<ARId> ARIdCalculator::calculate(
-		const std::string& metafilename) const
-{
-	const auto toc { create(metafilename)->parse(metafilename) };
-
-	if (toc->complete())
-	{
-		return make_arid(*toc);
-	}
-
-	// As in ARCSCalculator::calculate(), we have the offsets but not the
-	// leadout. We thus have to inspect the actual audio input. Since we only
-	// know the name of the toc file, the name of the audio file must be derived
-	// from this information.
-
-	ARCS_LOG_INFO << "Incomplete ToC and no audio file provided."
-		" Try to find audio file references in ToC.";
-
-	auto audiofile = audiofilename(*toc);
-
-	ARCS_LOG_INFO << "Found audiofile: " << audiofile << ", try loading";
-
-	// Use path from metafile (if any) as search path for the audio file
-
-	// TODO use C++17 std::filesystem
-	auto pos { metafilename.find_last_of("/\\") }; // XXX Really portable?
-
-	if (pos != std::string::npos)
-	{
-		// If pos+1 would be illegal, Parser would already have Thrown
-		auto path = metafilename.substr(0, pos + 1);
-
-		audiofile = path.append(audiofile);
-
-		ARCS_LOG_INFO << "Use path of metadata file: " << audiofile;
-	}
-
-	// Single Audio File Guaranteed
-	return calculate(*toc, audiofile);
-}
-
-
 std::unique_ptr<ARId> ARIdCalculator::calculate(const std::string& metafilename,
 		const std::string& audiofilename) const
 {
-	if (audiofilename.empty())
-	{
-		return calculate(metafilename);
-	}
-
 	const auto toc { create(metafilename)->parse(metafilename) };
 
 	return calculate(*toc, audiofilename);
