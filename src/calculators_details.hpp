@@ -6,6 +6,10 @@
  * \brief Implementation details of calculators.hpp
  */
 
+#ifndef __LIBARCSDEC_SAMPLEPROC_HPP__
+#include "sampleproc.hpp"       // for SampleProcessor
+#endif
+
 #ifndef __LIBARCSTK_METADATA_HPP__
 #include <arcstk/metadata.hpp>  // for ToC
 #endif
@@ -22,21 +26,20 @@ namespace arcsdec
 inline namespace v_1_0_0
 {
 
-using arcstk::ToC;
+class AudioReader;
+
 using arcstk::Algorithm;
 using arcstk::AudioSize;
 using arcstk::Calculation;
-using arcstk::Checksums;
 using arcstk::ChecksumSet;
+using arcstk::Checksums;
 using arcstk::ChecksumtypeSet;
 using arcstk::Context;
 using arcstk::Points;
 using arcstk::SampleInputIterator;
 using arcstk::Settings;
+using arcstk::ToC;
 using arcstk::ToCData;
-
-class AudioReader;
-class SampleProcessor;
 
 
 /**
@@ -116,6 +119,107 @@ std::string get_audiofilename(const ToC& toc);
 void process_audio_file(const std::string& audiofilename,
 		std::unique_ptr<AudioReader> reader, const int64_t buffer_size,
 		SampleProcessor& processor);
+
+
+/**
+ * \brief SampleProcessor that updates a Calculation.
+ */
+class CalculationProcessor final : public SampleProcessor
+{
+public:
+
+	/**
+	 * \brief Converting constructor for Calculation instances.
+	 *
+	 * \param[in] calculation The Calculation to use
+	 */
+	CalculationProcessor(Calculation& calculation);
+
+	/**
+	 * \brief Default destructor.
+	 */
+	~CalculationProcessor() noexcept final;
+
+	// not copy-constructible, not copy-assignable
+
+	explicit CalculationProcessor(const CalculationProcessor& rhs) noexcept
+		= delete;
+
+	CalculationProcessor& operator = (const CalculationProcessor& rhs) noexcept
+		= delete;
+
+	explicit CalculationProcessor(CalculationProcessor&& rhs) noexcept;
+
+	CalculationProcessor& operator = (CalculationProcessor&& rhs) noexcept;
+
+	/**
+	 * \brief Number of sample sequence that this instance has processed.
+	 *
+	 * This value is identical to how often append_samples() was called.
+	 *
+	 * \return Number of sequences processed
+	 */
+	int64_t sequences_processed() const;
+
+	/**
+	 * \brief Number of PCM 32 bit samples processed.
+	 *
+	 * \return Number of samples processed
+	 */
+	int64_t samples_processed() const;
+
+private:
+
+	void do_start_input() final;
+
+	void do_append_samples(SampleInputIterator begin, SampleInputIterator end)
+		final;
+
+	void do_update_audiosize(const AudioSize& size) final;
+
+	void do_end_input() final;
+
+	/**
+	 * \brief Internal pointer to the calculation to wrap.
+	 */
+	Calculation* calculation_;
+
+	/**
+	 * \brief Sequence counter.
+	 *
+	 * Counts the calls of SampleProcessor::append_samples.
+	 */
+	int64_t total_sequences_;
+};
+
+
+/**
+ * \brief SampleProcessor that updates multiple Calculation instances.
+ */
+class MultiCalculationProcessor final : public SampleProcessor
+{
+public:
+
+	MultiCalculationProcessor();
+
+	void add(Calculation& c);
+
+private:
+
+	void do_start_input() final;
+
+	void do_append_samples(SampleInputIterator begin, SampleInputIterator end)
+		final;
+
+	void do_update_audiosize(const AudioSize& size) final;
+
+	void do_end_input() final;
+
+	/**
+	 * \brief Internal pointer to the processors to wrap.
+	 */
+	std::vector<CalculationProcessor> processors_;
+};
 
 } // namespace v_1_0_0
 } // namespace arcsdec

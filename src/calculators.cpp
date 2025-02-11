@@ -11,31 +11,6 @@
 #include "calculators_details.hpp"
 #endif
 
-#include <cstdint>       // for uint16_t, int64_t
-#include <iterator>      // for distance
-#include <memory>        // for unique_ptr, make_unique
-#include <stdexcept>     // for logic_error, runtime_error
-#include <string>        // for string, to_string
-#include <unordered_set> // for unordered_set
-#include <utility>       // for pair, move, make_pair
-#include <vector>        // for vector
-
-#ifndef __LIBARCSTK_ALGORITHMS_HPP__
-#include <arcstk/algorithms.hpp>// for AccurateRipV1V2...
-#endif
-#ifndef __LIBARCSTK_IDENTIFIER_HPP__
-#include <arcstk/identifier.hpp>// for ARId, make_arid
-#endif
-#ifndef __LIBARCSTK_METADATA_HPP__
-#include <arcstk/metadata.hpp>    // for ToC
-#endif
-#ifndef __LIBARCSTK_CALCULATE_HPP__
-#include <arcstk/calculate.hpp> // for Checksums, SampleInputIterator, Points...
-#endif
-#ifndef __LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp>   // for ARCS_LOG, _ERROR, _WARNING, _INFO, _DEBUG
-#endif
-
 #ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
 #include "descriptor.hpp"
 #endif
@@ -52,382 +27,48 @@
 #include "sampleproc.hpp"       // for SampleProcessor, BLOCKSIZE
 #endif
 
+#ifndef __LIBARCSTK_ALGORITHMS_HPP__
+#include <arcstk/algorithms.hpp>// for AccurateRipV1V2...
+#endif
+#ifndef __LIBARCSTK_IDENTIFIER_HPP__
+#include <arcstk/identifier.hpp>// for ARId, make_arid
+#endif
+#ifndef __LIBARCSTK_METADATA_HPP__
+#include <arcstk/metadata.hpp>  // for ToC
+#endif
+#ifndef __LIBARCSTK_CALCULATE_HPP__
+#include <arcstk/calculate.hpp> // for Checksums, SampleInputIterator, Points...
+#endif
+#ifndef __LIBARCSTK_LOGGING_HPP__
+#include <arcstk/logging.hpp>   // for ARCS_LOG, _ERROR, _WARNING, _INFO, _DEBUG
+#endif
+
+#include <cstdint>       // for uint16_t, int64_t
+#include <iterator>      // for distance
+#include <memory>        // for unique_ptr, make_unique
+#include <stdexcept>     // for logic_error, runtime_error
+#include <string>        // for string, to_string
+#include <unordered_set> // for unordered_set
+#include <utility>       // for pair, move, make_pair
+#include <vector>        // for vector
+
 
 namespace arcsdec
 {
 inline namespace v_1_0_0
 {
 
-using arcstk::ToC;
-using arcstk::Algorithm;
 using arcstk::ARId;
 using arcstk::AudioSize;
 using arcstk::Calculation;
-using arcstk::Checksums;
 using arcstk::ChecksumSet;
+using arcstk::Checksums;
 using arcstk::Context;
 using arcstk::Points;
 using arcstk::SampleInputIterator;
 using arcstk::Settings;
+using arcstk::ToC;
 using arcstk::make_arid;
-
-
-/**
- * \brief SampleProcessor that logs the received signals.
- */
-/*
-class LogProcessor final : public SampleProcessor
-{
-public:
-
-	LogProcessor() = default;
-	~LogProcessor() noexcept final = default;
-	LogProcessor(const LogProcessor& rhs) noexcept = delete;
-	LogProcessor& operator = (const LogProcessor& rhs) noexcept = delete;
-
-private:
-
-	void do_start_input() final;
-
-	void do_append_samples(SampleInputIterator, SampleInputIterator) final;
-
-	void do_update_audiosize(const AudioSize& ) final;
-
-	void do_end_input() final;
-};
-
-
-void LogProcessor::do_start_input()
-{
-	ARCS_LOG(DEBUG2) << "LogProcessor received: START INPUT";
-}
-
-
-void LogProcessor::do_append_samples(SampleInputIterator, SampleInputIterator)
-{
-	ARCS_LOG(DEBUG2) << "LogProcessor received: APPEND SAMPLES";
-}
-
-
-void LogProcessor::do_update_audiosize(const AudioSize& )
-{
-	ARCS_LOG(DEBUG2) << "LogProcessor received: UPDATE AUDIOSIZE";
-}
-
-
-void LogProcessor::do_end_input()
-{
-	ARCS_LOG(DEBUG2) << "LogProcessor received: END INPUT";
-}
-*/
-
-
-/**
- * \brief SampleProcessor that updates a Calculation.
- */
-class CalculationProcessor final : public SampleProcessor
-{
-public:
-
-	/**
-	 * \brief Converting constructor for Calculation instances.
-	 *
-	 * \param[in] calculation The Calculation to use
-	 */
-	CalculationProcessor(Calculation& calculation)
-		: calculation_ (&calculation)
-		, total_sequences_ { 0 }
-	{
-		/* empty */
-	}
-
-	/**
-	 * \brief Default destructor.
-	 */
-	~CalculationProcessor() noexcept final = default;
-
-	// not copy-constructible, not copy-assignable
-	explicit CalculationProcessor(const CalculationProcessor& rhs) noexcept
-		= delete;
-	CalculationProcessor& operator = (const CalculationProcessor& rhs) noexcept
-		= delete;
-
-	explicit CalculationProcessor(CalculationProcessor&& rhs) noexcept;
-	CalculationProcessor& operator = (CalculationProcessor&& rhs) noexcept;
-
-	/**
-	 * \brief Number of sample sequence that this instance has processed.
-	 *
-	 * This value is identical to how often append_samples() was called.
-	 *
-	 * \return Number of sequences processed
-	 */
-	int64_t sequences_processed() const;
-
-	/**
-	 * \brief Number of PCM 32 bit samples processed.
-	 *
-	 * \return Number of samples processed
-	 */
-	int64_t samples_processed() const;
-
-private:
-
-	void do_start_input() final;
-
-	void do_append_samples(SampleInputIterator begin, SampleInputIterator end)
-		final;
-
-	void do_update_audiosize(const AudioSize& size) final;
-
-	void do_end_input() final;
-
-	/**
-	 * \brief Internal pointer to the calculation to wrap.
-	 */
-	Calculation* calculation_;
-
-	/**
-	 * \brief Sequence counter.
-	 *
-	 * Counts the calls of SampleProcessor::append_samples.
-	 */
-	int64_t total_sequences_;
-};
-
-
-CalculationProcessor::CalculationProcessor(CalculationProcessor&& rhs) noexcept
-	: calculation_     { std::move(rhs.calculation_)     }
-	, total_sequences_ { std::move(rhs.total_sequences_) }
-{
-	// empty
-}
-
-
-CalculationProcessor& CalculationProcessor::operator = (
-		CalculationProcessor&& rhs) noexcept
-{
-	calculation_     = std::move(rhs.calculation_);
-	total_sequences_ = std::move(rhs.total_sequences_);
-	return *this;
-}
-
-
-void CalculationProcessor::do_start_input()
-{
-	ARCS_LOG(DEBUG2) << "CalculationProcessor received: START INPUT";
-}
-
-
-void CalculationProcessor::do_append_samples(SampleInputIterator begin,
-		SampleInputIterator end)
-{
-	ARCS_LOG(DEBUG2) << "CalculationProcessor received: APPEND SAMPLES";
-
-	++total_sequences_;
-	// Commented out: arcstk::Calculation does this
-	//total_samples_ += std::distance(begin, end);
-
-	calculation_->update(begin, end);
-}
-
-
-void CalculationProcessor::do_update_audiosize(const AudioSize& size)
-{
-	ARCS_LOG(DEBUG2) << "CalculationProcessor received: UPDATE AUDIOSIZE";
-
-	calculation_->update(size);
-}
-
-
-void CalculationProcessor::do_end_input()
-{
-	ARCS_LOG(DEBUG2) << "CalculationProcessor received: END INPUT";
-}
-
-
-int64_t CalculationProcessor::sequences_processed() const
-{
-	return total_sequences_;
-}
-
-
-int64_t CalculationProcessor::samples_processed() const
-{
-	return calculation_->samples_processed();
-}
-
-
-/**
- * \brief SampleProcessor that updates multiple Calculation instances.
- */
-class MultiCalculationProcessor final : public SampleProcessor
-{
-public:
-
-	MultiCalculationProcessor();
-
-	void add(Calculation& c);
-
-private:
-
-	void do_start_input() final;
-
-	void do_append_samples(SampleInputIterator begin, SampleInputIterator end)
-		final;
-
-	void do_update_audiosize(const AudioSize& size) final;
-
-	void do_end_input() final;
-
-	/**
-	 * \brief Internal pointer to the processors to wrap.
-	 */
-	std::vector<CalculationProcessor> processors_;
-};
-
-
-MultiCalculationProcessor::MultiCalculationProcessor()
-	: processors_ { /* default */ }
-{
-	// empty
-}
-
-
-void MultiCalculationProcessor::add(Calculation& c)
-{
-	processors_.emplace_back(c);
-}
-
-
-void MultiCalculationProcessor::do_start_input()
-{
-	ARCS_LOG(DEBUG2) << "MultiCalculationProcessor received: START INPUT";
-
-	using std::begin;
-	using std::end;
-	std::for_each(begin(processors_), end(processors_),
-			[](SampleProcessor& p)
-			{
-				p.start_input();
-			});
-}
-
-
-void MultiCalculationProcessor::do_append_samples(SampleInputIterator start,
-		SampleInputIterator stop)
-{
-	ARCS_LOG(DEBUG2) << "MultiCalculationProcessor received: APPEND SAMPLES";
-
-	using std::begin;
-	using std::end;
-	std::for_each(begin(processors_), end(processors_),
-			[&start,&stop](SampleProcessor& p)
-			{
-				p.append_samples(start, stop);
-			});
-}
-
-
-void MultiCalculationProcessor::do_update_audiosize(const AudioSize& size)
-{
-	ARCS_LOG(DEBUG2) << "MultiCalculationProcessor received: UPDATE AUDIOSIZE";
-
-	using std::begin;
-	using std::end;
-	std::for_each(begin(processors_), end(processors_),
-			[&size](SampleProcessor& p)
-			{
-				p.update_audiosize(size);
-			});
-}
-
-
-void MultiCalculationProcessor::do_end_input()
-{
-	ARCS_LOG(DEBUG2) << "MultiCalculationProcessor received: END INPUT";
-
-	using std::begin;
-	using std::end;
-	std::for_each(begin(processors_), end(processors_),
-			[](SampleProcessor& p)
-			{
-				p.end_input();
-			});
-}
-
-
-// ReaderAndFormatHolder
-
-
-ReaderAndFormatHolder::ReaderAndFormatHolder()
-	: formats_      { FileReaderRegistry::formats() }
-	, descriptors_  { FileReaderRegistry::readers() }
-{
-	/* empty */
-}
-
-
-ReaderAndFormatHolder::~ReaderAndFormatHolder() noexcept = default;
-
-
-void ReaderAndFormatHolder::set_formats(const FormatList *formats)
-{
-	formats_ = formats;
-}
-
-
-const FormatList* ReaderAndFormatHolder::formats() const
-{
-	return formats_;
-}
-
-
-void ReaderAndFormatHolder::set_readers(const FileReaders *descriptors)
-{
-	descriptors_ = descriptors;
-}
-
-
-const FileReaders* ReaderAndFormatHolder::readers() const
-{
-	return descriptors_;
-}
-
-
-// default_selection()
-
-
-template <>
-const FileReaderSelection* default_selection<AudioReader>()
-{
-	return FileReaderRegistry::default_audio_selection();
-}
-
-
-template <>
-const FileReaderSelection* default_selection<MetadataParser>()
-{
-	return FileReaderRegistry::default_toc_selection();
-}
-
-
-// ToCParser
-
-
-std::unique_ptr<ToC> ToCParser::parse(const std::string& metafilename) const
-{
-	if (metafilename.empty())
-	{
-		ARCS_LOG_ERROR <<
-			"ToC info was requested but metadata filename was empty";
-
-		throw FileReadException(
-				"Requested metadata file parser for empty filename.");
-	}
-
-	return create(metafilename)->parse(metafilename);
-}
 
 
 // calculate_details.hpp
@@ -622,7 +263,240 @@ void process_audio_file(const std::string& audiofilename,
 }
 
 
+// CalculationProcessor
+
+
+CalculationProcessor::CalculationProcessor(Calculation& calculation)
+	: calculation_     { &calculation }
+	, total_sequences_ { 0 }
+{
+	/* empty */
+}
+
+
+CalculationProcessor::~CalculationProcessor() noexcept = default;
+
+
+CalculationProcessor::CalculationProcessor(CalculationProcessor&& rhs) noexcept
+	: calculation_     { std::move(rhs.calculation_)     }
+	, total_sequences_ { std::move(rhs.total_sequences_) }
+{
+	// empty
+}
+
+
+CalculationProcessor& CalculationProcessor::operator = (
+		CalculationProcessor&& rhs) noexcept
+{
+	calculation_     = std::move(rhs.calculation_);
+	total_sequences_ = std::move(rhs.total_sequences_);
+	return *this;
+}
+
+
+void CalculationProcessor::do_start_input()
+{
+	ARCS_LOG(DEBUG2) << "CalculationProcessor received: START INPUT";
+}
+
+
+void CalculationProcessor::do_append_samples(SampleInputIterator begin,
+		SampleInputIterator end)
+{
+	ARCS_LOG(DEBUG2) << "CalculationProcessor received: APPEND SAMPLES";
+
+	++total_sequences_;
+
+	calculation_->update(begin, end);
+}
+
+
+void CalculationProcessor::do_update_audiosize(const AudioSize& size)
+{
+	ARCS_LOG(DEBUG2) << "CalculationProcessor received: UPDATE AUDIOSIZE";
+
+	calculation_->update(size);
+}
+
+
+void CalculationProcessor::do_end_input()
+{
+	ARCS_LOG(DEBUG2) << "CalculationProcessor received: END INPUT";
+}
+
+
+int64_t CalculationProcessor::sequences_processed() const
+{
+	return total_sequences_;
+}
+
+
+int64_t CalculationProcessor::samples_processed() const
+{
+	return calculation_->samples_processed();
+}
+
+
+// MultiCalculationProcessor
+
+
+MultiCalculationProcessor::MultiCalculationProcessor()
+	: processors_ { /* default */ }
+{
+	// empty
+}
+
+
+void MultiCalculationProcessor::add(Calculation& c)
+{
+	processors_.emplace_back(c);
+}
+
+
+void MultiCalculationProcessor::do_start_input()
+{
+	ARCS_LOG(DEBUG2) << "MultiCalculationProcessor received: START INPUT";
+
+	using std::begin;
+	using std::end;
+
+	std::for_each(begin(processors_), end(processors_),
+			[](SampleProcessor& p)
+			{
+				p.start_input();
+			});
+}
+
+
+void MultiCalculationProcessor::do_append_samples(SampleInputIterator start,
+		SampleInputIterator stop)
+{
+	ARCS_LOG(DEBUG2) << "MultiCalculationProcessor received: APPEND SAMPLES";
+
+	using std::begin;
+	using std::end;
+
+	std::for_each(begin(processors_), end(processors_),
+			[&start,&stop](SampleProcessor& p)
+			{
+				p.append_samples(start, stop);
+			});
+}
+
+
+void MultiCalculationProcessor::do_update_audiosize(const AudioSize& size)
+{
+	ARCS_LOG(DEBUG2) << "MultiCalculationProcessor received: UPDATE AUDIOSIZE";
+
+	using std::begin;
+	using std::end;
+
+	std::for_each(begin(processors_), end(processors_),
+			[&size](SampleProcessor& p)
+			{
+				p.update_audiosize(size);
+			});
+}
+
+
+void MultiCalculationProcessor::do_end_input()
+{
+	ARCS_LOG(DEBUG2) << "MultiCalculationProcessor received: END INPUT";
+
+	using std::begin;
+	using std::end;
+
+	std::for_each(begin(processors_), end(processors_),
+			[](SampleProcessor& p)
+			{
+				p.end_input();
+			});
+}
+
+
 // calculate.hpp
+
+
+// default_selection()
+
+
+template <>
+const FileReaderSelection* default_selection<AudioReader>()
+{
+	return FileReaderRegistry::default_audio_selection();
+}
+
+
+template <>
+const FileReaderSelection* default_selection<MetadataParser>()
+{
+	return FileReaderRegistry::default_toc_selection();
+}
+
+
+// ReaderAndFormatHolder
+
+
+ReaderAndFormatHolder::ReaderAndFormatHolder()
+	: formats_      { FileReaderRegistry::formats() }
+	, descriptors_  { FileReaderRegistry::readers() }
+{
+	/* empty */
+}
+
+
+ReaderAndFormatHolder::~ReaderAndFormatHolder() noexcept = default;
+
+
+void ReaderAndFormatHolder::set_formats(const FormatList* formats)
+{
+	formats_ = formats;
+}
+
+
+const FormatList* ReaderAndFormatHolder::formats() const
+{
+	return formats_;
+}
+
+
+void ReaderAndFormatHolder::set_readers(const FileReaders* descriptors)
+{
+	descriptors_ = descriptors;
+}
+
+
+const FileReaders* ReaderAndFormatHolder::readers() const
+{
+	return descriptors_;
+}
+
+
+// ToCParser
+
+
+std::unique_ptr<ToC> ToCParser::parse(const std::string& metafilename) const
+{
+	if (metafilename.empty())
+	{
+		ARCS_LOG_ERROR <<
+			"ToC info was requested but metadata filename was empty";
+
+		throw FileReadException(
+				"Requested metadata file parser for empty filename.");
+	}
+
+	return create(metafilename)->parse(metafilename);
+}
+
+
+// AudioInfo
+
+
+std::unique_ptr<AudioSize> AudioInfo::size(const std::string& filename) const
+{
+	return create(filename)->acquire_size(filename);
+}
 
 
 // ARCSCalculator
@@ -697,8 +571,8 @@ std::pair<Checksums, ARId> ARCSCalculator::calculate(
 
 Checksums ARCSCalculator::calculate(
 	const std::vector<std::string>& audiofilenames,
-	const bool& first_file_is_first_track,
-	const bool& last_file_is_last_track)
+	const bool first_file_is_first_track,
+	const bool last_file_is_last_track)
 {
 	ARCS_LOG_DEBUG <<
 		"Calculate by audiofilenames and flags for 1st and last track";
@@ -751,8 +625,8 @@ Checksums ARCSCalculator::calculate(
 
 ChecksumSet ARCSCalculator::calculate(
 	const std::string& audiofilename,
-	const bool& is_first_track,
-	const bool& is_last_track)
+	const bool is_first_track,
+	const bool is_last_track)
 {
 	ARCS_LOG_DEBUG <<
 		"Calculate by single audiofilename and flags for 1st and last track";
@@ -868,12 +742,12 @@ int64_t ARCSCalculator::read_buffer_size() const
 
 
 Context ARCSCalculator::to_context(
-	const bool& is_first_track,
-	const bool& is_last_track) const
+	const bool is_first_track,
+	const bool is_last_track) const
 {
 	auto context = Context { Context::TRACK };
 
-	const auto flags = is_first_track + 2 * is_last_track;
+	const auto flags { is_first_track + 2 * is_last_track };
 	switch (flags)
 	{
 		case 3: context = Context::ALBUM;       break;
@@ -884,15 +758,6 @@ Context ARCSCalculator::to_context(
 	}
 
 	return context;
-}
-
-
-// AudioInfo
-
-
-std::unique_ptr<AudioSize> AudioInfo::size(const std::string& filename) const
-{
-	return create(filename)->acquire_size(filename);
 }
 
 

@@ -7,27 +7,24 @@
  * \brief A high-level API for calculating ARCSs and IDs.
  */
 
-#include <memory>   // for unique_ptr
-#include <string>   // for string
-#include <utility>  // for pair
-#include <vector>   // for vector
+#ifndef __LIBARCSDEC_SELECTION_HPP__
+#include "selection.hpp"           // for CreateReader, FileReaders, FormatList,
+#endif                             // FileReaderSelector
 
+#ifndef __LIBARCSTK_CALCULATE_HPP__
+#include <arcstk/calculate.hpp>    // for Checksums, ChecksumSet,...
+#endif
 #ifndef __LIBARCSTK_IDENTIFIER_HPP__
 #include <arcstk/identifier.hpp>   // for ARId
 #endif
 #ifndef __LIBARCSTK_METADATA_HPP__
 #include <arcstk/metadata.hpp>     // for ToC
 #endif
-#ifndef __LIBARCSTK_CALCULATE_HPP__
-#include <arcstk/calculate.hpp>    // for Checksums, ChecksumSet,...
-#endif
 
-#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
-#include "descriptor.hpp"          // for FileReaderDescriptor
-#endif
-#ifndef __LIBARCSDEC_SELECTION_HPP__
-#include "selection.hpp"           // for CreateReader, FileReaders, FormatList,
-#endif                             // FileReaderSelector
+#include <memory>   // for unique_ptr
+#include <string>   // for string
+#include <utility>  // for pair
+#include <vector>   // for vector
 
 
 /**
@@ -70,7 +67,6 @@ using arcstk::ToC;
  * @{
  */
 
-
 /**
  * \brief Provide the default FileReaderSelection for the specified ReaderType.
  *
@@ -108,14 +104,15 @@ public:
 	/**
 	 * \brief Pure virtual default descriptor.
 	 */
-	virtual ~ReaderAndFormatHolder() noexcept = 0;
+	virtual ~ReaderAndFormatHolder() noexcept
+	= 0;
 
 	/**
 	 * \brief Set the list of formats supported by this instance.
 	 *
 	 * \param[in] formats The list of supported formats.
 	 */
-	void set_formats(const FormatList *formats);
+	void set_formats(const FormatList* formats);
 
 	/**
 	 * \brief List of formats supported by this instance.
@@ -129,7 +126,7 @@ public:
 	 *
 	 * \param[in] readers The set of available FileReaderDescriptors to use
 	 */
-	void set_readers(const FileReaders *readers);
+	void set_readers(const FileReaders* readers);
 
 	/**
 	 * \brief Get the FileReaders used by this instance.
@@ -143,12 +140,13 @@ private:
 	/**
 	 * \brief Internal list of supported formats
 	 */
-	const FormatList *formats_;
+	const FormatList* formats_;
 
 	/**
-	 * \brief Internal list of available \link FileReaderDescriptor FileReaderDescriptors\endlink
+	 * \brief Internal list of available
+	 * \link FileReaderDescriptor FileReaderDescriptors\endlink
 	 */
-	const FileReaders *descriptors_;
+	const FileReaders* descriptors_;
 };
 
 
@@ -166,10 +164,10 @@ public:
 	/**
 	 * \brief Constructor.
 	 *
-	 * Initializes the instance with the default_selection() for the ReaderType.
+	 * \param[in] selection The selection to use
 	 */
-	inline SelectionPerformer()
-		: selection_ { default_selection<ReaderType>() }
+	explicit SelectionPerformer(const FileReaderSelection* selection)
+		: selection_ { selection }
 		, create_    { /* default */ }
 	{
 		/* empty */
@@ -178,11 +176,10 @@ public:
 	/**
 	 * \brief Constructor.
 	 *
-	 * \param[in] selection The selection to use
+	 * Initializes the instance with the default_selection() for the ReaderType.
 	 */
-	inline SelectionPerformer(const FileReaderSelection* selection)
-		: selection_ { selection }
-		, create_    { /* default */ }
+	SelectionPerformer()
+		: SelectionPerformer(default_selection<ReaderType>())
 	{
 		/* empty */
 	}
@@ -190,17 +187,14 @@ public:
 	/**
 	 * \brief Virtual default destructor.
 	 */
-	inline virtual ~SelectionPerformer() noexcept
-	{
-		/* empty */
-	}
+	virtual ~SelectionPerformer() noexcept = default;
 
 	/**
 	 * \brief Set the selection to be used for selecting AudioReaders.
 	 *
 	 * \param[in] selection Selection for AudioReaders
 	 */
-	inline void set_selection(const FileReaderSelection *selection)
+	void set_selection(const FileReaderSelection* selection)
 	{
 		selection_ = selection;
 	}
@@ -210,7 +204,7 @@ public:
 	 *
 	 * \return Selection for AudioReaders
 	 */
-	inline const FileReaderSelection* selection() const
+	const FileReaderSelection* selection() const
 	{
 		return selection_;
 	}
@@ -223,7 +217,7 @@ public:
 	 *
 	 * \return A FileReader for the input file
 	 */
-	inline std::unique_ptr<ReaderType> file_reader(const std::string& filename,
+	std::unique_ptr<ReaderType> file_reader(const std::string& filename,
 			const ReaderAndFormatHolder* f) const
 	{
 		return this->create_(filename, *this->selection(), *f->formats(),
@@ -235,7 +229,7 @@ private:
 	/**
 	 * \brief Internal selection for \link FileReaders FileReaders\endlink
 	 */
-	const FileReaderSelection *selection_;
+	const FileReaderSelection* selection_;
 
 	/**
 	 * \brief Internal FileReader creator.
@@ -256,7 +250,7 @@ private:
  */
 template <class ReaderType>
 class FileReaderProvider : public ReaderAndFormatHolder
-					     , public SelectionPerformer<ReaderType>
+						 , public SelectionPerformer<ReaderType>
 {
 protected:
 
@@ -267,10 +261,29 @@ protected:
 	 *
 	 * \return A FileReader for the input file
 	 */
-	inline std::unique_ptr<ReaderType> create(const std::string& filename) const
+	std::unique_ptr<ReaderType> create(const std::string& filename) const
 	{
 		return this->file_reader(filename, this);
 	}
+};
+
+
+/**
+ * \brief Format-independent parser for audio metadata.
+ */
+class AudioInfo final : public FileReaderProvider<AudioReader>
+{
+public:
+
+	/**
+	 * \brief Parse the size of the audio data from the audio file.
+	 *
+	 * \param[in] audiofilename Name of the audiodatafile
+	 *
+	 * \return The size of the audio data
+	 */
+	std::unique_ptr<arcstk::AudioSize> size(const std::string& audiofilename)
+		const;
 };
 
 
@@ -356,8 +369,8 @@ public:
 	 * \return AccurateRip checksums of the input files
 	 */
 	Checksums calculate(const std::vector<std::string>& audiofilenames,
-			const bool& first_file_with_skip,
-			const bool& last_file_with_skip);
+			const bool first_file_with_skip,
+			const bool last_file_with_skip);
 
 	/**
 	 * \brief Calculate a single ARCS for an audio file.
@@ -374,7 +387,7 @@ public:
 	 * \return The AccurateRip checksum of this track
 	 */
 	ChecksumSet calculate(const std::string& audiofilename,
-		const bool& is_first_track, const bool& is_last_track);
+		const bool is_first_track, const bool is_last_track);
 	// NOTE This is not really useful except for testing
 
 	/**
@@ -429,10 +442,12 @@ private:
 	 *
 	 * \param[in] first_file_is_first_track Treat first file as track 1
 	 * \param[in] last_file_is_last_track   Treat last file as last track
+	 *
+	 * \return Context equivalent to the input flags
 	 */
 	arcstk::Context to_context(
-		const bool& first_file_is_first_track,
-		const bool& last_file_is_last_track) const;
+		const bool first_file_is_first_track,
+		const bool last_file_is_last_track) const;
 
 	/**
 	 * \brief Internal checksum type.
@@ -443,25 +458,6 @@ private:
 	 * \brief Size of the read buffer (in number of samples).
 	 */
 	int64_t read_buffer_size_;
-};
-
-
-/**
- * \brief Format-independent parser for audio metadata.
- */
-class AudioInfo final : public FileReaderProvider<AudioReader>
-{
-public:
-
-	/**
-	 * \brief Parse the size of the audio data from the audio file.
-	 *
-	 * \param[in] audiofilename Name of the audiodatafile
-	 *
-	 * \return The size of the audio data
-	 */
-	std::unique_ptr<arcstk::AudioSize> size(const std::string& audiofilename)
-		const;
 };
 
 
