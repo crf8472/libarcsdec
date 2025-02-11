@@ -100,7 +100,7 @@ public:
 	 * \param[in] error Error code
 	 * \param[in] name  Name of function that returned the error code
 	 */
-	FFmpegException(const int error, const std::string &name);
+	FFmpegException(const int error, const std::string& name);
 
 	/**
 	 * \brief The original error code.
@@ -411,7 +411,7 @@ class WrappingPolicy<S, true, AVFramePtr, SequenceType>
 
 public:
 
-	static SequenceType create(const details::ffmpeg::AVFramePtr &f)
+	static SequenceType create(const details::ffmpeg::AVFramePtr& f)
 	{
 		if (!f) { return SequenceType {}; }
 
@@ -419,8 +419,8 @@ public:
 			TotalBytesPerPlane::get(f.get()) };
 	}
 
-	static void wrap(const details::ffmpeg::AVFramePtr &f,
-			SequenceType &sequence)
+	static void wrap(const details::ffmpeg::AVFramePtr& f,
+			SequenceType& sequence)
 	{
 		sequence.wrap_byte_buffer(ByteBuffer(f.get(), 0),
 				ByteBuffer(f.get(), 1),
@@ -437,7 +437,7 @@ class WrappingPolicy<S, false, details::ffmpeg::AVFramePtr, SequenceType>
 
 public:
 
-	static SequenceType create(const details::ffmpeg::AVFramePtr &f)
+	static SequenceType create(const details::ffmpeg::AVFramePtr& f)
 	{
 		if (!f) { return SequenceType {}; }
 
@@ -445,8 +445,8 @@ public:
 			TotalBytesPerPlane::get(f.get()) };
 	}
 
-	static void wrap(const details::ffmpeg::AVFramePtr &f,
-			SequenceType &sequence)
+	static void wrap(const details::ffmpeg::AVFramePtr& f,
+			SequenceType& sequence)
 	{
 		sequence.wrap_byte_buffer(ByteBuffer(f.get(), 0),
 				TotalBytesPerPlane::get(f.get()));
@@ -542,7 +542,7 @@ struct SequenceInstance
 template <::AVSampleFormat F,
 	typename S =
 		typename SampleType<SampleSize<F>::value, IsSigned<F>::value>::type>
-auto sequence_for(const AVFramePtr &frame)
+auto sequence_for(const AVFramePtr& frame)
 	-> SampleSequence<S, IsPlanar<F>::value>
 {
 	auto sequence = SequenceInstance<S, IsPlanar<F>::value>::create();
@@ -706,7 +706,7 @@ private:
 	 *
 	 * \return \c TRUE on success, \c FALSE if decoder needs more input
 	 */
-	bool decode_packet(::AVPacket *packet);
+	bool decode_packet(::AVPacket* packet);
 
 	/**
 	 * \brief Returns the index of the stream to be decoded.
@@ -752,12 +752,12 @@ private:
 	/**
 	 * \brief Internal decoder.
 	 */
-	::AVCodecContext *cctx_;
+	::AVCodecContext* cctx_;
 
 	/**
 	 * \brief Internal file format context.
 	 */
-	::AVFormatContext *fctx_;
+	::AVFormatContext* fctx_;
 
 	/**
 	 * \brief Capacity in number of ::AVPacket instances.
@@ -782,14 +782,14 @@ public:
 	 *
 	 * \throws FFmpegException If the file could not be opened
 	 */
-	static AVFormatContextPtr format_context(const std::string &filename);
+	static AVFormatContextPtr format_context(const std::string& filename);
 
 	/**
 	 * \brief Acquire stream index of the audio stream.
 	 *
 	 * \throws FFmpegException If the file could not be opened
 	 */
-	static int audio_stream(::AVFormatContext *fctx);
+	static int audio_stream(::AVFormatContext* fctx);
 
 	/**
 	 * \brief Create a decoder for the specified audio stream.
@@ -803,7 +803,7 @@ public:
 	 * \throws runtime_error    If no decoder could be found for the stream
 	 * \throws FFmpegException  If the decoder could not be opened
 	 */
-	static AVCodecContextPtr audio_decoder(::AVFormatContext *fctx,
+	static AVCodecContextPtr audio_decoder(::AVFormatContext* fctx,
 			const int stream_idx);
 
 	/**
@@ -925,7 +925,7 @@ public:
 	 *
 	 * \param[in] filename Filename
 	 */
-	std::unique_ptr<FFmpegAudioStream> load(const std::string &filename) const;
+	std::unique_ptr<FFmpegAudioStream> load(const std::string& filename) const;
 };
 
 
@@ -945,16 +945,16 @@ public:
 class FFmpegAudioStream final
 {
 	friend std::unique_ptr<FFmpegAudioStream> FFmpegAudioStreamLoader::load(
-			const std::string &filename) const;
+			const std::string& filename) const;
 
 public:
 
 	// make class non-copyable
-	FFmpegAudioStream (const FFmpegAudioStream &file) = delete;
-	FFmpegAudioStream& operator = (const FFmpegAudioStream &file) = delete;
+	FFmpegAudioStream (const FFmpegAudioStream& file) = delete;
+	FFmpegAudioStream& operator = (const FFmpegAudioStream& file) = delete;
 
-	FFmpegAudioStream (FFmpegAudioStream &&file) = default;
-	FFmpegAudioStream& operator = (FFmpegAudioStream &&file) = default;
+	FFmpegAudioStream (FFmpegAudioStream&& file) = default;
+	FFmpegAudioStream& operator = (FFmpegAudioStream&& file) = default;
 
 	/**
 	 * \brief Return the sample format of this file.
@@ -1032,7 +1032,7 @@ public:
 	 * \param[in] func The update_audiosize() method to use while reading
 	 */
 	void register_update_audiosize(
-			std::function<void(const AudioSize &size)> func);
+			std::function<void(const AudioSize& size)> func);
 
 	/**
 	 * \brief Register the end_input() method.
@@ -1094,7 +1094,7 @@ private:
 	/**
 	 * \brief Callback for notifying outside world about the correct AudioSize.
 	 */
-	std::function<void(const AudioSize &size)> update_audiosize_;
+	std::function<void(const AudioSize& size)> update_audiosize_;
 
 	/**
 	 * \brief Callback for ending input.
@@ -1134,10 +1134,10 @@ private:
 
 	// AudioReaderImpl
 
-	std::unique_ptr<AudioSize> do_acquire_size(const std::string &filename)
+	std::unique_ptr<AudioSize> do_acquire_size(const std::string& filename)
 		final;
 
-	void do_process_file(const std::string &filename) final;
+	void do_process_file(const std::string& filename) final;
 
 	std::unique_ptr<FileReaderDescriptor> do_descriptor() const final;
 

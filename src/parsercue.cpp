@@ -56,7 +56,7 @@ using arcstk::make_toc;
 //using arcstk::InvalidMetadataException;
 
 
-std::unique_ptr<ToC> CuesheetParserImpl::do_parse(const std::string &filename)
+std::unique_ptr<ToC> CuesheetParserImpl::do_parse(const std::string& filename)
 {
 	Driver driver;
 											//

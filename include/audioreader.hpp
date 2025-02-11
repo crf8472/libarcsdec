@@ -113,7 +113,7 @@ public:
 	 *
 	 * \throw FileReadException If the file could not be read
 	 */
-	std::unique_ptr<AudioSize> acquire_size(const std::string &filename);
+	std::unique_ptr<AudioSize> acquire_size(const std::string& filename);
 
 	/**
 	 * \brief Provides implementation for process_file() of some AudioReader.
@@ -124,7 +124,7 @@ public:
 	 *
 	 * \throw FileReadException If the file could not be read
 	 */
-	void process_file(const std::string &filename);
+	void process_file(const std::string& filename);
 
 	/**
 	 * \brief Set the number of samples to read in one read operation.
@@ -152,16 +152,16 @@ public:
 protected:
 
 	// Avoid -Weffc++ firing
-	AudioReaderImpl(const AudioReaderImpl &) = delete;
-	AudioReaderImpl& operator = (const AudioReaderImpl &) = delete;
+	AudioReaderImpl(const AudioReaderImpl&) = delete;
+	AudioReaderImpl& operator = (const AudioReaderImpl&) = delete;
 
-	AudioReaderImpl(AudioReaderImpl &&) noexcept;
-	AudioReaderImpl& operator = (AudioReaderImpl &&) noexcept;
+	AudioReaderImpl(AudioReaderImpl&&) noexcept;
+	AudioReaderImpl& operator = (AudioReaderImpl&&) noexcept;
 
 	/**
 	 * \brief Default implementation of attach_processor().
 	 */
-	void attach_processor_impl(SampleProcessor &processor);
+	void attach_processor_impl(SampleProcessor& processor);
 
 	/**
 	 * \brief Use the internal SampleProcessor.
@@ -177,11 +177,11 @@ private:
 	void do_signal_appendsamples(SampleInputIterator begin,
 			SampleInputIterator end) override;
 
-	void do_signal_updateaudiosize(const AudioSize &size) override;
+	void do_signal_updateaudiosize(const AudioSize& size) override;
 
 	void do_signal_endinput() override;
 
-	void do_attach_processor(SampleProcessor &processor) override;
+	void do_attach_processor(SampleProcessor& processor) override;
 
 	const SampleProcessor* do_processor() const override;
 
@@ -195,7 +195,7 @@ private:
 	 * \throw FileReadException If the file could not be read
 	 */
 	virtual std::unique_ptr<AudioSize> do_acquire_size(
-		const std::string &filename)
+		const std::string& filename)
 	= 0;
 
 	/**
@@ -207,7 +207,7 @@ private:
 	 *
 	 * \throw FileReadException If the file could not be read
 	 */
-	virtual void do_process_file(const std::string &filename)
+	virtual void do_process_file(const std::string& filename)
 	= 0;
 
 	virtual std::unique_ptr<FileReaderDescriptor> do_descriptor() const
@@ -243,7 +243,7 @@ public:
 	 * \param[in] impl AudioReader implementation to use
 	 * \param[in] proc SampleProcessor to use
 	 */
-	AudioReader(std::unique_ptr<AudioReaderImpl> impl, SampleProcessor &proc);
+	AudioReader(std::unique_ptr<AudioReaderImpl> impl, SampleProcessor& proc);
 
 	/**
 	 * \brief Constructor with a concrete implementation
@@ -252,8 +252,8 @@ public:
 	 */
 	explicit AudioReader(std::unique_ptr<AudioReaderImpl> impl);
 
-	AudioReader(AudioReader &&) noexcept;
-	AudioReader& operator = (AudioReader &&) noexcept;
+	AudioReader(AudioReader&&) noexcept;
+	AudioReader& operator = (AudioReader&&) noexcept;
 
 	/**
 	 * \brief Default destructor.
@@ -281,7 +281,7 @@ public:
 	 *
 	 * \param[in] processor SampleProcessor to use
 	 */
-	void set_processor(SampleProcessor &processor);
+	void set_processor(SampleProcessor& processor);
 
 	/**
 	 * \brief Acquire the AudioSize of a file.
@@ -294,7 +294,7 @@ public:
 	 *
 	 * \throw FileReadException If the file could not be read
 	 */
-	std::unique_ptr<AudioSize> acquire_size(const std::string &filename) const;
+	std::unique_ptr<AudioSize> acquire_size(const std::string& filename) const;
 
 	/**
 	 * \brief Process the file and return ARCSs v1 and v2 for all tracks.
@@ -305,7 +305,7 @@ public:
 	 *
 	 * \throw FileReadException If the file could not be read
 	 */
-	void process_file(const std::string &filename);
+	void process_file(const std::string& filename);
 
 private:
 
@@ -332,7 +332,7 @@ public:
 	 *
 	 * \param[in] what_arg What argument
 	 */
-	explicit InvalidAudioException(const std::string &what_arg);
+	explicit InvalidAudioException(const std::string& what_arg);
 
 	/**
 	 * \brief Constructor.
@@ -443,7 +443,7 @@ public:
 	 *
 	 * \param[in] msg The error message to be added to the error list
 	 */
-	void error(const std::string &msg);
+	void error(const std::string& msg);
 
 	/**
 	 * \brief Returns the last error that occurred.
@@ -468,8 +468,8 @@ public:
 
 protected:
 
-	AudioValidator(AudioValidator &&) noexcept = default;
-	AudioValidator& operator = (AudioValidator &&) noexcept
+	AudioValidator(AudioValidator&&) noexcept = default;
+	AudioValidator& operator = (AudioValidator&&) noexcept
 		= default;
 
 	/**
@@ -633,7 +633,7 @@ struct CDDAValidator final
 	 * \return TRUE iff the number of bits per sample is 16 (conforming to CDDA)
 	 * otherwise FALSE
 	 */
-	static bool bits_per_sample(const int &bits_per_sample);
+	static bool bits_per_sample(const int& bits_per_sample);
 
 	/**
 	 * \brief Return TRUE iff the number of channels conforms to CDDA.
@@ -643,7 +643,7 @@ struct CDDAValidator final
 	 * \return TRUE iff the number of channels is 2 (conforming to CDDA)
 	 * otherwise FALSE
 	 */
-	static bool num_channels(const int &num_channels);
+	static bool num_channels(const int& num_channels);
 
 	/**
 	 * \brief Return TRUE if the sample rate conforms to CDDA.
@@ -653,7 +653,7 @@ struct CDDAValidator final
 	 * \return TRUE iff the number of samples per second is 44100
 	 * (conforming to CDDA) otherwise FALSE
 	 */
-	static bool samples_per_second(const int &samples_per_second);
+	static bool samples_per_second(const int& samples_per_second);
 };
 
 
@@ -674,7 +674,7 @@ struct LittleEndianBytes final
 	 *
 	 * \return The bytes as 16 bit (signed) integer
 	 */
-	static int16_t to_int16(const char &b1, const char &b2);
+	static int16_t to_int16(const char& b1, const char& b2);
 
 	/**
 	 * \brief Service method: Interpret 2 bytes as a 16 bit unsigned integer
@@ -688,7 +688,7 @@ struct LittleEndianBytes final
 	 *
 	 * \return The bytes as 16 bit unsigned integer
 	 */
-	static uint16_t to_uint16(const char &b1, const char &b2);
+	static uint16_t to_uint16(const char& b1, const char& b2);
 
 	/**
 	 * \brief Service method: Interpret 4 bytes as a 32 bit (signed) integer
@@ -706,10 +706,10 @@ struct LittleEndianBytes final
 	 *
 	 * \return The bytes as 32 bit (signed) integer
 	 */
-	static int32_t to_int32(const char &b1,
-			const char &b2,
-			const char &b3,
-			const char &b4);
+	static int32_t to_int32(const char& b1,
+			const char& b2,
+			const char& b3,
+			const char& b4);
 
 	/**
 	 * \brief Service method: Interpret 4 bytes as a 32 bit unsigned integer
@@ -727,10 +727,10 @@ struct LittleEndianBytes final
 	 *
 	 * \return The bytes as 32 bit unsigned integer
 	 */
-	static uint32_t to_uint32(const char &b1,
-			const char &b2,
-			const char &b3,
-			const char &b4);
+	static uint32_t to_uint32(const char& b1,
+			const char& b2,
+			const char& b3,
+			const char& b4);
 };
 
 
@@ -755,10 +755,10 @@ struct BigEndianBytes final
 	 *
 	 * \return The bytes as 32 bit (signed) integer
 	 */
-	static int32_t to_int32(const char &b1,
-			const char &b2,
-			const char &b3,
-			const char &b4);
+	static int32_t to_int32(const char& b1,
+			const char& b2,
+			const char& b3,
+			const char& b4);
 
 	/**
 	 * \brief Service method: Interpret 4 bytes as a 32 bit unsigned integer
@@ -776,10 +776,10 @@ struct BigEndianBytes final
 	 *
 	 * \return The bytes as 32 bit unsigned integer
 	 */
-	static uint32_t to_uint32(const char &b1,
-			const char &b2,
-			const char &b3,
-			const char &b4);
+	static uint32_t to_uint32(const char& b1,
+			const char& b2,
+			const char& b3,
+			const char& b4);
 };
 
 /// @}

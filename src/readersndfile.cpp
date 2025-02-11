@@ -68,7 +68,7 @@ LibsndfileAudioReaderImpl::~LibsndfileAudioReaderImpl() noexcept = default;
 
 
 std::unique_ptr<AudioSize> LibsndfileAudioReaderImpl::do_acquire_size(
-	const std::string &filename)
+	const std::string& filename)
 {
 	SndfileHandle audiofile(filename);
 
@@ -80,7 +80,7 @@ std::unique_ptr<AudioSize> LibsndfileAudioReaderImpl::do_acquire_size(
 }
 
 
-void LibsndfileAudioReaderImpl::do_process_file(const std::string &filename)
+void LibsndfileAudioReaderImpl::do_process_file(const std::string& filename)
 {
 	SndfileHandle audiofile(filename, SFM_READ);
 

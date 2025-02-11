@@ -71,7 +71,7 @@ using ContextPtr = std::unique_ptr<::WavpackContext, Free_WavpackContext>;
  */
 struct Make_ContextPtr final
 {
-	ContextPtr operator()(const std::string &filename) const;
+	ContextPtr operator()(const std::string& filename) const;
 };
 
 
@@ -89,8 +89,8 @@ public:
 	 * \param[in] name  Name of function that returned the unexpected value
 	 * \param[in] error_msg Error message from libwavpack
 	 */
-	LibwavpackException(const std::string &value, const std::string &name,
-			const std::string &error_msg);
+	LibwavpackException(const std::string& value, const std::string& name,
+			const std::string& error_msg);
 
 	char const * what() const noexcept override;
 
@@ -179,7 +179,7 @@ public:
 	 *
 	 * \throw FileReadException If file could not be opened
 	 */
-	explicit WavpackOpenFile(const std::string &filename);
+	explicit WavpackOpenFile(const std::string& filename);
 
 	/**
 	 * \brief Virtual default destructor.
@@ -292,7 +292,7 @@ public:
 	 * \throw invalid_argument If buffer.size() < (pcm_samples_to_read * 2)
 	 */
 	int64_t read_pcm_samples(const int64_t pcm_samples_to_read,
-		std::vector<int32_t> &buffer) const;
+		std::vector<int32_t>& buffer) const;
 
 private:
 
@@ -309,14 +309,14 @@ private:
 	 *
 	 * Implemented empty. This class is non-copyable.
 	 */
-	WavpackOpenFile(const WavpackOpenFile &file) = delete;
+	WavpackOpenFile(const WavpackOpenFile& file) = delete;
 
 	/**
 	 * \brief Private copy assignment operator.
 	 *
 	 * Implemented empty. This class is non-copyable.
 	 */
-	WavpackOpenFile& operator = (WavpackOpenFile &file) = delete;
+	WavpackOpenFile& operator = (WavpackOpenFile& file) = delete;
 };
 
 
@@ -346,7 +346,7 @@ public:
 	 *
 	 * \return TRUE if validation succeeded, otherwise FALSE
 	 */
-	bool validate_format(const WavpackOpenFile &file);
+	bool validate_format(const WavpackOpenFile& file);
 
 	/**
 	 * \brief Validate properties expressed by the mode of the wavpack file.
@@ -355,7 +355,7 @@ public:
 	 *
 	 * \return TRUE if validation succeeded, otherwise FALSE
 	 */
-	bool validate_mode(const WavpackOpenFile &file);
+	bool validate_mode(const WavpackOpenFile& file);
 
 	/**
 	 * \brief Validate audio content of the wavpack file for CDDA conformity.
@@ -364,7 +364,7 @@ public:
 	 *
 	 * \return TRUE if validation succeeded, otherwise FALSE
 	 */
-	bool validate_cdda(const WavpackOpenFile &file);
+	bool validate_cdda(const WavpackOpenFile& file);
 
 	/**
 	 * \brief Validate the wavpack version of the wavpack file.
@@ -373,7 +373,7 @@ public:
 	 *
 	 * \return TRUE if validation succeeded, otherwise FALSE
 	 */
-	bool validate_version(const WavpackOpenFile &file);
+	bool validate_version(const WavpackOpenFile& file);
 
 private:
 
@@ -402,10 +402,10 @@ public:
 
 private:
 
-	std::unique_ptr<AudioSize> do_acquire_size(const std::string &filename)
+	std::unique_ptr<AudioSize> do_acquire_size(const std::string& filename)
 		final;
 
-	void do_process_file(const std::string &filename) final;
+	void do_process_file(const std::string& filename) final;
 
 	std::unique_ptr<FileReaderDescriptor> do_descriptor() const final;
 
@@ -416,7 +416,7 @@ private:
 	 *
 	 * \return TRUE iff validation succeeded, otherwise FALSE
 	 */
-	bool perform_validations(const WavpackOpenFile &file);
+	bool perform_validations(const WavpackOpenFile& file);
 
 	/**
 	 * \brief Validating handler of this instance.

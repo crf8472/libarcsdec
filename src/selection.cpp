@@ -65,12 +65,12 @@ public:
 	/**
 	 * \brief Determine file type.
 	 */
-	std::pair<Format, Codec> type(const FormatList *formats) const;
+	std::pair<Format, Codec> type(const FormatList* formats) const;
 
 	/**
 	 * \brief Determines the format of a specified file.
 	 */
-	std::unique_ptr<Matcher> format(const FormatList *formats) const;
+	std::unique_ptr<Matcher> format(const FormatList* formats) const;
 
 	/**
 	 * \brief Determines the Codec of a specified file.
@@ -131,7 +131,7 @@ FileType::FileType(const std::string& filename)
 }
 
 
-std::pair<Format, Codec> FileType::type(const FormatList *formats) const
+std::pair<Format, Codec> FileType::type(const FormatList* formats) const
 {
 	const auto format_d = format(formats);
 
@@ -154,7 +154,7 @@ std::pair<Format, Codec> FileType::type(const FormatList *formats) const
 
 
 std::unique_ptr<Matcher> FileType::format(
-		const FormatList *formats) const
+		const FormatList* formats) const
 {
 	ARCS_LOG_DEBUG << "Try to recognize file format: " << filename();
 
@@ -239,7 +239,7 @@ DescriptorPreference::~DescriptorPreference() noexcept = default;
 DescriptorPreference::type DescriptorPreference::preference(
 		const Format format,
 		const Codec codec,
-		const FileReaderDescriptor &desc) const
+		const FileReaderDescriptor& desc) const
 {
 	return this->do_preference(format, codec, desc);
 }
@@ -250,7 +250,7 @@ DescriptorPreference::type DescriptorPreference::preference(
 
 DescriptorPreference::type DefaultPreference::do_preference(
 		const Format format, const Codec codec,
-		const FileReaderDescriptor &desc) const
+		const FileReaderDescriptor& desc) const
 {
 	constexpr static unsigned PENALTY_FOR_NONSPECIFICNESS = 2;
 
@@ -270,7 +270,7 @@ DescriptorPreference::type DefaultPreference::do_preference(
 
 
 DescriptorPreference::type MinPreference::do_preference(
-		const Format, const Codec, const FileReaderDescriptor &) const
+		const Format, const Codec, const FileReaderDescriptor&) const
 {
 	return MIN_PREFERENCE;
 }
@@ -282,7 +282,7 @@ DescriptorPreference::type MinPreference::do_preference(
 FormatPreference::type FormatPreference::do_preference(
 		const Format format,
 		const Codec /* codec */,
-		const FileReaderDescriptor &desc) const
+		const FileReaderDescriptor& desc) const
 {
 	if (!desc.accepts(format))
 	{
@@ -301,8 +301,8 @@ FileReaderSelector::~FileReaderSelector() noexcept = default;
 
 
 std::unique_ptr<FileReaderDescriptor> FileReaderSelector::select(
-		const Format format, const Codec codec, const FileReaders &readers,
-		const DescriptorPreference &strategy) const
+		const Format format, const Codec codec, const FileReaders& readers,
+		const DescriptorPreference& strategy) const
 {
 	ARCS_LOG_DEBUG << "Try to select a FileReader for filetype "
 		<< name(format) << "/" << name(codec);
@@ -333,7 +333,7 @@ std::unique_ptr<FileReaderDescriptor> FileReaderSelector::select(
 
 std::unique_ptr<FileReaderDescriptor> DefaultSelector::do_select(
 		const Format format, const Codec codec, const FileReaders& readers,
-		const DescriptorPreference &p) const
+		const DescriptorPreference& p) const
 {
 	FileReaderDescriptor* result    = nullptr;
 	DescriptorPreference::type pref = DescriptorPreference::MIN_PREFERENCE;
@@ -372,7 +372,7 @@ std::unique_ptr<FileReaderDescriptor> DefaultSelector::do_select(
 // IdSelector
 
 
-IdSelector::IdSelector(const std::string &reader_id)
+IdSelector::IdSelector(const std::string& reader_id)
 	: reader_id_ { reader_id }
 {
 	// empty
@@ -387,8 +387,8 @@ std::string IdSelector::reader_id() const
 
 std::unique_ptr<FileReaderDescriptor> IdSelector::do_select(
 		const Format /* format */, const Codec /* codec */,
-		const FileReaders &descs,
-		const DescriptorPreference &/* p */) const
+		const FileReaders& descs,
+		const DescriptorPreference& /* p */) const
 {
 	ARCS_LOG(DEBUG1) << "Try to select descriptor with id '"
 		<< reader_id() << "'";
@@ -405,7 +405,7 @@ FileReaderSelection::~FileReaderSelection() noexcept = default;
 
 
 std::unique_ptr<FileReaderDescriptor> FileReaderSelection::get(
-		const Format format, const Codec codec, const FileReaders &descs) const
+		const Format format, const Codec codec, const FileReaders& descs) const
 {
 	return this->do_get(format, codec, descs);
 }
@@ -444,7 +444,7 @@ bool FileReaderRegistry::has_format(const Format f)
 
 
 std::unique_ptr<FileReaderDescriptor> FileReaderRegistry::reader(
-		const std::string &id)
+		const std::string& id)
 {
 	auto p = readers_->find(id);
 	return p != readers_->end() ? p->second->clone() : nullptr;
@@ -520,10 +520,10 @@ std::unique_ptr<FileReaderDescriptor> FileReaderRegistry::call_maker(
 namespace details {
 
 std::unique_ptr<FileReaderDescriptor> select_descriptor(
-		const std::string &filename,
-		const FileReaderSelection &selection,
-		const FormatList &formats,
-		const FileReaders &readers)
+		const std::string& filename,
+		const FileReaderSelection& selection,
+		const FormatList& formats,
+		const FileReaders& readers)
 {
 	if (filename.empty())
 	{
@@ -545,10 +545,10 @@ std::unique_ptr<FileReaderDescriptor> select_descriptor(
 
 
 std::unique_ptr<FileReader> select_reader(
-		const std::string &filename,
-		const FileReaderSelection &selection,
-		const FormatList &formats,
-		const FileReaders &readers)
+		const std::string& filename,
+		const FileReaderSelection& selection,
+		const FormatList& formats,
+		const FileReaders& readers)
 {
 	auto d = select_descriptor(filename, selection, formats, readers);
 	return d ? d->create_reader() : nullptr;

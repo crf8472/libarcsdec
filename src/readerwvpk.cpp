@@ -81,10 +81,10 @@ void Free_WavpackContext::operator()(::WavpackContext* ctx) const
 }
 
 
-ContextPtr Make_ContextPtr::operator()(const std::string &filename) const
+ContextPtr Make_ContextPtr::operator()(const std::string& filename) const
 {
 	int   flags = OPEN_WVC | OPEN_NO_CHECKSUM ;
-	char *error = nullptr;
+	char* error = nullptr;
 
 	ContextPtr ctxp {::WavpackOpenFileInput(filename.c_str(), error, flags, 0)};
 
@@ -110,8 +110,8 @@ ContextPtr Make_ContextPtr::operator()(const std::string &filename) const
 // LibwavpackException
 
 
-LibwavpackException::LibwavpackException(const std::string &value,
-		const std::string &name, const std::string &error_msg)
+LibwavpackException::LibwavpackException(const std::string& value,
+		const std::string& name, const std::string& error_msg)
 	: msg_ {}
 {
 	std::ostringstream msg;
@@ -146,9 +146,9 @@ public:
 	 *
 	 * \param[in] filename The filename to open
 	 */
-	Impl(const std::string &filename);
+	Impl(const std::string& filename);
 
-	Impl(const Impl &impl) = delete;
+	Impl(const Impl& impl) = delete;
 
 	/**
 	 * \brief Destructor
@@ -251,10 +251,10 @@ public:
 	 * \return Number of 32 bit PCM samples actually read
 	 */
 	int64_t read_pcm_samples(const int64_t pcm_samples_to_read,
-		std::vector<int32_t> &buffer) const;
+		std::vector<int32_t>& buffer) const;
 
 	// Delete copy assignment operator
-	WavpackOpenFile::Impl& operator = (WavpackOpenFile::Impl &file) = delete;
+	WavpackOpenFile::Impl& operator = (WavpackOpenFile::Impl& file) = delete;
 
 
 private:
@@ -305,7 +305,7 @@ int WAVPACK_CDDA_t::at_most_version() const
 // WavpackOpenFile
 
 
-WavpackOpenFile::Impl::Impl(const std::string &filename)
+WavpackOpenFile::Impl::Impl(const std::string& filename)
 	: context_ { nullptr }
 {
 	static const Make_ContextPtr make_context;
@@ -450,7 +450,7 @@ bool WavpackOpenFile::Impl::needs_channel_reorder() const
 
 int64_t WavpackOpenFile::Impl::read_pcm_samples(
 		const int64_t pcm_samples_to_read,
-		std::vector<int32_t> &buffer) const
+		std::vector<int32_t>& buffer) const
 {
 	const auto samples_to_read =
 		static_cast<uint64_t>(pcm_samples_to_read * CDDA::NUMBER_OF_CHANNELS);
@@ -480,7 +480,7 @@ int64_t WavpackOpenFile::Impl::read_pcm_samples(
 // WavpackOpenFile
 
 
-WavpackOpenFile::WavpackOpenFile(const std::string &filename)
+WavpackOpenFile::WavpackOpenFile(const std::string& filename)
 	: impl_ { std::make_unique<WavpackOpenFile::Impl>(filename) }
 {
 	// empty
@@ -557,7 +557,7 @@ bool WavpackOpenFile::needs_channel_reorder() const
 
 
 int64_t WavpackOpenFile::read_pcm_samples(const int64_t pcm_samples_to_read,
-		std::vector<int32_t> &buffer) const
+		std::vector<int32_t>& buffer) const
 {
 	return impl_->read_pcm_samples(pcm_samples_to_read, buffer);
 }
@@ -579,7 +579,7 @@ WavpackValidatingHandler::WavpackValidatingHandler(
 WavpackValidatingHandler::~WavpackValidatingHandler() noexcept = default;
 
 
-bool WavpackValidatingHandler::validate_format(const WavpackOpenFile &file)
+bool WavpackValidatingHandler::validate_format(const WavpackOpenFile& file)
 {
 	if (not this->assert_true("Test: WAV file format",
 		file.has_wav_format() == valid_->wav_format_only(),
@@ -593,7 +593,7 @@ bool WavpackValidatingHandler::validate_format(const WavpackOpenFile &file)
 }
 
 
-bool WavpackValidatingHandler::validate_mode(const WavpackOpenFile &file)
+bool WavpackValidatingHandler::validate_mode(const WavpackOpenFile& file)
 {
 	if (not this->assert_true("Test: Lossless compression",
 		file.is_lossless() == valid_->lossless(),
@@ -615,7 +615,7 @@ bool WavpackValidatingHandler::validate_mode(const WavpackOpenFile &file)
 }
 
 
-bool WavpackValidatingHandler::validate_cdda(const WavpackOpenFile &file)
+bool WavpackValidatingHandler::validate_cdda(const WavpackOpenFile& file)
 {
 	if (not this->assert_true("Test: Bits per sample",
 		CDDAValidator::bits_per_sample(file.bits_per_sample()),
@@ -661,7 +661,7 @@ bool WavpackValidatingHandler::validate_cdda(const WavpackOpenFile &file)
 }
 
 
-bool WavpackValidatingHandler::validate_version(const WavpackOpenFile &file)
+bool WavpackValidatingHandler::validate_version(const WavpackOpenFile& file)
 {
 	if (not this->assert_at_least("Test: Wavpack least version supported",
 		file.version(), valid_->at_least_version(),
@@ -693,7 +693,7 @@ AudioValidator::codec_set_type WavpackValidatingHandler::do_codecs() const
 
 
 std::unique_ptr<AudioSize> WavpackAudioReaderImpl::do_acquire_size(
-	const std::string &filename)
+	const std::string& filename)
 {
 	std::unique_ptr<AudioSize> audiosize = std::make_unique<AudioSize>();
 
@@ -705,7 +705,7 @@ std::unique_ptr<AudioSize> WavpackAudioReaderImpl::do_acquire_size(
 }
 
 
-void WavpackAudioReaderImpl::do_process_file(const std::string &filename)
+void WavpackAudioReaderImpl::do_process_file(const std::string& filename)
 {
 	this->signal_startinput();
 
@@ -813,7 +813,7 @@ void WavpackAudioReaderImpl::register_validate_handler(
 }
 
 
-bool WavpackAudioReaderImpl::perform_validations(const WavpackOpenFile &file)
+bool WavpackAudioReaderImpl::perform_validations(const WavpackOpenFile& file)
 {
 	return  validate_handler_->validate_format(file)
 		and validate_handler_->validate_mode(file)

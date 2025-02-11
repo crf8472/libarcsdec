@@ -67,12 +67,12 @@ public:
 	FlacMetadataHandler() = default;
 
 	// class is non-copyable
-	FlacMetadataHandler(const FlacMetadataHandler &) = delete;
-	FlacMetadataHandler& operator = (const FlacMetadataHandler &) = delete;
+	FlacMetadataHandler(const FlacMetadataHandler&) = delete;
+	FlacMetadataHandler& operator = (const FlacMetadataHandler&) = delete;
 
 	// class is movable
-	FlacMetadataHandler(FlacMetadataHandler &&) noexcept = default;
-	FlacMetadataHandler& operator = (FlacMetadataHandler &&) noexcept = default;
+	FlacMetadataHandler(FlacMetadataHandler&&) noexcept = default;
+	FlacMetadataHandler& operator = (FlacMetadataHandler&&) noexcept = default;
 
 	/**
 	 * \brief To be called manually by the AudioReaderImpl to trigger
@@ -84,7 +84,7 @@ public:
 	 *
 	 * \return TRUE if metadata indicates CDDA conformity, otherwise FALSE
 	 */
-	bool streaminfo(const FLAC::Metadata::StreamInfo &streaminfo);
+	bool streaminfo(const FLAC::Metadata::StreamInfo& streaminfo);
 
 private:
 
@@ -111,8 +111,8 @@ public:
 	FlacAudioReaderImpl();
 
 	// class is non-copyable
-	FlacAudioReaderImpl(const FlacAudioReaderImpl &) = delete;
-	FlacAudioReaderImpl& operator = (const FlacAudioReaderImpl &) = delete;
+	FlacAudioReaderImpl(const FlacAudioReaderImpl&) = delete;
+	FlacAudioReaderImpl& operator = (const FlacAudioReaderImpl&) = delete;
 
 	/**
 	 * \brief Pass frames to internal handler.
@@ -123,8 +123,8 @@ public:
 	 * \return Decoder status info
 	 */
 	::FLAC__StreamDecoderWriteStatus write_callback(
-			const ::FLAC__Frame *frame,
-			const ::FLAC__int32 *const buffer[]) override;
+			const ::FLAC__Frame* frame,
+			const ::FLAC__int32* const buffer[]) override;
 
 	/**
 	 * \brief Pass metadata by type to internal handler.
@@ -135,7 +135,7 @@ public:
 	 *
 	 * \param[in] metadata The StreamMetadata from FLAC
 	 */
-	void metadata_callback(const ::FLAC__StreamMetadata *metadata) override;
+	void metadata_callback(const ::FLAC__StreamMetadata* metadata) override;
 
 	/**
 	 * \brief Log the decoder's error status.
@@ -153,10 +153,10 @@ public:
 
 private:
 
-	std::unique_ptr<AudioSize> do_acquire_size(const std::string &filename)
+	std::unique_ptr<AudioSize> do_acquire_size(const std::string& filename)
 		final;
 
-	void do_process_file(const std::string &filename) final;
+	void do_process_file(const std::string& filename) final;
 
 	std::unique_ptr<FileReaderDescriptor> do_descriptor() const final;
 

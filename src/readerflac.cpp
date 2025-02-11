@@ -56,7 +56,7 @@ using arcstk::AudioSize;
 
 
 bool FlacMetadataHandler::streaminfo(
-		const FLAC::Metadata::StreamInfo &streaminfo)
+		const FLAC::Metadata::StreamInfo& streaminfo)
 {
 	ARCS_LOG_DEBUG << "Found FLAC streaminfo metadata block";
 
@@ -133,8 +133,8 @@ FlacAudioReaderImpl::FlacAudioReaderImpl()
 
 
 ::FLAC__StreamDecoderWriteStatus FlacAudioReaderImpl::write_callback(
-		const ::FLAC__Frame *frame,
-		const ::FLAC__int32 *const buffer[])
+		const ::FLAC__Frame* frame,
+		const ::FLAC__int32* const buffer[])
 {
 	smplseq_.wrap_int_buffer(buffer[0], buffer[1], frame->header.blocksize);
 	this->signal_appendsamples(smplseq_.begin(), smplseq_.end());
@@ -144,7 +144,7 @@ FlacAudioReaderImpl::FlacAudioReaderImpl()
 
 
 void FlacAudioReaderImpl::metadata_callback(
-		const ::FLAC__StreamMetadata *metadata)
+		const ::FLAC__StreamMetadata* metadata)
 {
 	AudioSize size;
 
@@ -214,7 +214,7 @@ void FlacAudioReaderImpl::error_callback(
 
 
 std::unique_ptr<AudioSize> FlacAudioReaderImpl::do_acquire_size(
-	const std::string &filename)
+	const std::string& filename)
 {
 	::FLAC::Metadata::StreamInfo streaminfo;
 	::FLAC::Metadata::get_streaminfo(filename.c_str(), streaminfo);
@@ -241,7 +241,7 @@ std::unique_ptr<AudioSize> FlacAudioReaderImpl::do_acquire_size(
 }
 
 
-void FlacAudioReaderImpl::do_process_file(const std::string &filename)
+void FlacAudioReaderImpl::do_process_file(const std::string& filename)
 {
 	this->signal_startinput();
 

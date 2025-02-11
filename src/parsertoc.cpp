@@ -50,7 +50,7 @@ namespace cdrdao
 // cdio/device.h: cdio_open_cdrdao
 
 
-std::unique_ptr<ToC> TocParserImpl::do_parse(const std::string &filename)
+std::unique_ptr<ToC> TocParserImpl::do_parse(const std::string& filename)
 {
 	// TODO Return a ToC
 	return nullptr;

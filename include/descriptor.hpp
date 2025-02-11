@@ -235,7 +235,7 @@ struct Comparable
 	 *
 	 * \return TRUE iff not \c lhs == \c rhs, otherwise FALSE
 	 */
-	friend bool operator != (const T &lhs, const T &rhs) noexcept
+	friend bool operator != (const T& lhs, const T& rhs) noexcept
 	{
 		return !(lhs == rhs);
 	}
@@ -244,9 +244,9 @@ struct Comparable
 
 class ByteSeq;
 
-bool operator == (const ByteSeq &lhs, const ByteSeq &rhs);
+bool operator == (const ByteSeq& lhs, const ByteSeq& rhs);
 
-void swap(ByteSeq &lhs, ByteSeq &rhs);
+void swap(ByteSeq& lhs, ByteSeq& rhs);
 
 /**
  * \brief Byte sequence with or without wildcards.
@@ -279,7 +279,7 @@ private:
 
 public:
 
-	friend bool operator == (const ByteSeq &lhs, const ByteSeq &rhs);
+	friend bool operator == (const ByteSeq& lhs, const ByteSeq& rhs);
 
 	/**
 	 * \brief Numerical maximum of the \c byte_type.
@@ -361,9 +361,9 @@ using ByteSequence = ByteSeq;
 
 class Bytes;
 
-bool operator == (const Bytes &lhs, const Bytes &rhs);
+bool operator == (const Bytes& lhs, const Bytes& rhs);
 
-void swap(Bytes &lhs, Bytes &rhs);
+void swap(Bytes& lhs, Bytes& rhs);
 
 
 /**
@@ -375,7 +375,7 @@ class Bytes final : public Comparable<Bytes>
 {
 public:
 
-	friend bool operator == (const Bytes &lhs, const Bytes &rhs);
+	friend bool operator == (const Bytes& lhs, const Bytes& rhs);
 
 	/**
 	 * \brief Wildcard for a single byte.
@@ -395,7 +395,7 @@ public:
 	 * \param[in] offset  0-based offset where \c bytes occured in the file
 	 * \param[in] bytes   Sequence of bytes
 	 */
-	Bytes(const uint32_t offset, const ByteSequence &bytes);
+	Bytes(const uint32_t offset, const ByteSequence& bytes);
 
 	/**
 	 * \brief Match a byte sequence with this instance.
@@ -408,7 +408,7 @@ public:
 	 *
 	 * \return TRUE iff this instance matches \c bytes, otherwise FALSE
 	 */
-	bool match(const Bytes &bytes) const;
+	bool match(const Bytes& bytes) const;
 
 	/**
 	 * \brief Match a byte sequence starting with \c offset with this instance.
@@ -428,7 +428,7 @@ public:
 	 *
 	 * \return TRUE iff this instance matches \c bytes, otherwise FALSE
 	 */
-	bool match(const ByteSequence &bytes, const uint32_t &offset) const;
+	bool match(const ByteSequence& bytes, const uint32_t& offset) const;
 
 	/**
 	 * \brief Match a byte sequence with offset 0 with this instance.
@@ -439,7 +439,7 @@ public:
 	 *
 	 * \return TRUE iff this instance matches \c bytes, otherwise FALSE
 	 */
-	bool match(const ByteSequence &bytes) const;
+	bool match(const ByteSequence& bytes) const;
 
 	/**
 	 * \brief Offset of this instance.
@@ -517,8 +517,8 @@ namespace details
  *
  * \return TRUE if the filename suffix matches one of the internal suffices
  */
-bool ci_match_suffix(const SuffixSet &suffices,
-		const std::string &filename);
+bool ci_match_suffix(const SuffixSet& suffices,
+		const std::string& filename);
 
 
 /**
@@ -533,8 +533,8 @@ bool ci_match_suffix(const SuffixSet &suffices,
  *
  * \return The relevant suffix or the entire filename
  */
-std::string get_suffix(const std::string &filename,
-		const std::string &delimiter);
+std::string get_suffix(const std::string& filename,
+		const std::string& delimiter);
 
 
 /**
@@ -552,8 +552,8 @@ std::string get_suffix(const std::string &filename,
  *
  * \throw InputFormatException On unspecified error
  */
-Bytes read_bytes(const std::string &filename,
-	const uint32_t &offset, const uint32_t &length);
+Bytes read_bytes(const std::string& filename,
+	const uint32_t& offset, const uint32_t& length);
 
 } // namespace details
 
@@ -588,7 +588,7 @@ public:
 	 *
 	 * \return TRUE if \c bytes occur in the target
 	 */
-	bool matches(const Bytes &bytes) const;
+	bool matches(const Bytes& bytes) const;
 
 	/**
 	 * \brief Match filename.
@@ -597,7 +597,7 @@ public:
 	 *
 	 * \return TRUE if \c filename matches what is described by this instance
 	 */
-	bool matches(const std::string &filename) const;
+	bool matches(const std::string& filename) const;
 
 	/**
 	 * \brief Format matched by this matcher.
@@ -632,10 +632,10 @@ private:
 	virtual std::string do_name() const
 	= 0;
 
-	virtual bool do_matches(const Bytes &bytes) const
+	virtual bool do_matches(const Bytes& bytes) const
 	= 0;
 
-	virtual bool do_matches(const std::string &filename) const
+	virtual bool do_matches(const std::string& filename) const
 	= 0;
 
 	virtual Format do_format() const
@@ -667,8 +667,8 @@ class FormatMatcher final : public Matcher
 {
 public:
 
-	friend bool operator == (const FormatMatcher &lhs,
-			const FormatMatcher &rhs)
+	friend bool operator == (const FormatMatcher& lhs,
+			const FormatMatcher& rhs)
 	{
 		return lhs.suffices_ == rhs.suffices_ && lhs.bytes_ == rhs.bytes_
 			&& lhs.codecs_ == rhs.codecs_;
@@ -682,8 +682,8 @@ public:
 	 * \param[in] bytes     A byte sequence accepted by this Format
 	 * \param[in] codecs    Codecs supported for this Format
 	 */
-	FormatMatcher(const SuffixSet &suffices, const Bytes &bytes,
-			const std::set<Codec> &codecs)
+	FormatMatcher(const SuffixSet& suffices, const Bytes& bytes,
+			const std::set<Codec>& codecs)
 		: suffices_ { suffices }
 		, bytes_    { bytes }
 		, codecs_   { codecs }
@@ -696,7 +696,7 @@ public:
 	 * \param[in] suffices  Suffices accepted by this Format
 	 * \param[in] codecs    Codecs supported for this Format
 	 */
-	FormatMatcher(const SuffixSet &suffices, const std::set<Codec> &codecs)
+	FormatMatcher(const SuffixSet& suffices, const std::set<Codec>& codecs)
 		: FormatMatcher(suffices, { /* empty byte sequence */ }, codecs)
 	{ /* empty */ };
 
@@ -720,7 +720,7 @@ private:
 		return bytes_.match(bytes);
 	}
 
-	inline bool do_matches(const std::string &filename) const final
+	inline bool do_matches(const std::string& filename) const final
 	{
 		return details::ci_match_suffix(suffices_, filename);
 	}
@@ -786,7 +786,7 @@ using LibInfo = std::list<LibInfoEntry>;
  *
  * \return A LibInfoEntry that contains the concrete filepath for the library.
  */
-LibInfoEntry libinfo_entry_filepath(const std::string &libname);
+LibInfoEntry libinfo_entry_filepath(const std::string& libname);
 
 
 
@@ -805,7 +805,7 @@ public:
 	 *
 	 * \param[in] what_arg What argument
 	 */
-	explicit InputFormatException(const std::string &what_arg);
+	explicit InputFormatException(const std::string& what_arg);
 };
 
 
@@ -827,7 +827,7 @@ public:
 	 *
 	 * \param[in] what_arg What argument
 	 */
-	explicit FileReadException(const std::string &what_arg);
+	explicit FileReadException(const std::string& what_arg);
 
 	/**
 	 * \brief Constructor.
@@ -837,7 +837,7 @@ public:
 	 * \param[in] what_arg What argument
 	 * \param[in] byte_pos Byte position of the error
 	 */
-	FileReadException(const std::string &what_arg, const int64_t &byte_pos);
+	FileReadException(const std::string& what_arg, const int64_t& byte_pos);
 
 	/**
 	 * \brief Byte position on which the error occurred.
@@ -894,8 +894,8 @@ private:
 };
 
 
-bool operator == (const FileReaderDescriptor &lhs,
-			const FileReaderDescriptor &rhs);
+bool operator == (const FileReaderDescriptor& lhs,
+			const FileReaderDescriptor& rhs);
 
 
 /**
@@ -924,8 +924,8 @@ class FileReaderDescriptor : public Comparable<FileReaderDescriptor>
 {
 public:
 
-	friend bool operator == (const FileReaderDescriptor &lhs,
-			const FileReaderDescriptor &rhs);
+	friend bool operator == (const FileReaderDescriptor& lhs,
+			const FileReaderDescriptor& rhs);
 
 	/**
 	 * \brief Virtual default destructor.

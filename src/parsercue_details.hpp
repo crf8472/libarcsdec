@@ -73,9 +73,9 @@ private:
 	 *
 	 * \throw FileReadException If the file could not be read
 	 */
-	//Cuesheet parse_worker(const std::string &filename) const;
+	//Cuesheet parse_worker(const std::string& filename) const;
 
-	std::unique_ptr<ToC> do_parse(const std::string &filename) final;
+	std::unique_ptr<ToC> do_parse(const std::string& filename) final;
 
 	std::unique_ptr<FileReaderDescriptor> do_descriptor() const final;
 };

@@ -85,7 +85,7 @@ public:
 	 * \throw FileReadException      If the file could not be read
 	 * \throw MetadataParseException If the metadata could not be parsed
 	 */
-	std::unique_ptr<ToC> parse(const std::string &filename);
+	std::unique_ptr<ToC> parse(const std::string& filename);
 
 	/**
 	 * \brief Create a descriptor for this MetadataParser implementation.
@@ -96,8 +96,8 @@ public:
 
 protected:
 
-	MetadataParserImpl(MetadataParserImpl &&) noexcept;
-	MetadataParserImpl& operator = (MetadataParserImpl &&) noexcept;
+	MetadataParserImpl(MetadataParserImpl&&) noexcept;
+	MetadataParserImpl& operator = (MetadataParserImpl&&) noexcept;
 
 private:
 
@@ -111,7 +111,7 @@ private:
 	 * \throw FileReadException      If the file could not be read
 	 * \throw MetadataParseException If the metadata could not be parsed
 	 */
-	virtual std::unique_ptr<ToC> do_parse(const std::string &filename)
+	virtual std::unique_ptr<ToC> do_parse(const std::string& filename)
 	= 0;
 
 	/**
@@ -141,8 +141,8 @@ public:
 	 */
 	MetadataParser(std::unique_ptr<MetadataParserImpl> impl);
 
-	MetadataParser(MetadataParser &&) noexcept;
-	MetadataParser& operator = (MetadataParser &&) noexcept;
+	MetadataParser(MetadataParser&&) noexcept;
+	MetadataParser& operator = (MetadataParser&&) noexcept;
 
 	/**
 	 * \brief Parses a metadata file.
@@ -154,7 +154,7 @@ public:
 	 * \throw FileReadException      If the file could not be read
 	 * \throw MetadataParseException If the metadata could not be parsed
 	 */
-	std::unique_ptr<ToC> parse(const std::string &filename);
+	std::unique_ptr<ToC> parse(const std::string& filename);
 
 private:
 
@@ -179,7 +179,7 @@ public:
 	 *
 	 * \param[in] what_arg What argument
 	 */
-	explicit MetadataParseException(const std::string &what_arg);
+	explicit MetadataParseException(const std::string& what_arg);
 };
 
 
@@ -220,7 +220,7 @@ template <typename S, typename T,
 		 std::enable_if_t<details::signedness<S, T>::value, int> = 0>
 inline auto cast_or_throw(const T value) -> S
 {
-	auto throw_with_message = [](const T val, const std::string &msg)
+	auto throw_with_message = [](const T val, const std::string& msg)
 	{
 		std::ostringstream stream;
 		stream << "Value " << val << " " << msg;

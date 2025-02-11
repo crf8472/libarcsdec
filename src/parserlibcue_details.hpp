@@ -90,7 +90,7 @@ using CdPtr = std::unique_ptr<::Cd, Free_Cd>;
  */
 struct Make_CdPtr final
 {
-	CdPtr operator()(const std::string &filename) const;
+	CdPtr operator()(const std::string& filename) const;
 };
 
 
@@ -111,10 +111,10 @@ public:
 	 * \throw FileReadException      If the CueSheet file could not be read
 	 * \throw MetadataParseException If the Cue data could not be parsed
 	 */
-	explicit CueOpenFile(const std::string &filename);
+	explicit CueOpenFile(const std::string& filename);
 
-	CueOpenFile(CueOpenFile &&file) noexcept;
-	CueOpenFile& operator = (CueOpenFile &&file) noexcept;
+	CueOpenFile(CueOpenFile&& file) noexcept;
+	CueOpenFile& operator = (CueOpenFile&& file) noexcept;
 
 	/**
 	 * \brief Returns all ToC information from the file.
@@ -148,9 +148,9 @@ private:
 	 *
 	 * \throw FileReadException If the file could not be read
 	 */
-	CueInfo parse_worker(const std::string &filename) const;
+	CueInfo parse_worker(const std::string& filename) const;
 
-	std::unique_ptr<ToC> do_parse(const std::string &filename) override;
+	std::unique_ptr<ToC> do_parse(const std::string& filename) override;
 
 	std::unique_ptr<FileReaderDescriptor> do_descriptor() const override;
 };

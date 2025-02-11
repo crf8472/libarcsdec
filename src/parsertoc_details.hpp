@@ -61,7 +61,7 @@ public:
 
 private:
 
-	std::unique_ptr<ToC> do_parse(const std::string &filename) override;
+	std::unique_ptr<ToC> do_parse(const std::string& filename) override;
 
 	std::unique_ptr<FileReaderDescriptor> do_descriptor() const override;
 };

@@ -82,7 +82,7 @@ void Free_Cd::operator()(::Cd* cd) const
 // Make_CdPtr
 
 
-CdPtr Make_CdPtr::operator()(const std::string &filename) const
+CdPtr Make_CdPtr::operator()(const std::string& filename) const
 {
 	CdPtr cd_ptr;
 
@@ -137,13 +137,13 @@ CdPtr Make_CdPtr::operator()(const std::string &filename) const
 // CueOpenFile
 
 
-CueOpenFile::CueOpenFile(CueOpenFile &&file) noexcept = default;
+CueOpenFile::CueOpenFile(CueOpenFile&& file) noexcept = default;
 
 
-CueOpenFile& CueOpenFile::operator = (CueOpenFile &&file) noexcept = default;
+CueOpenFile& CueOpenFile::operator = (CueOpenFile&& file) noexcept = default;
 
 
-CueOpenFile::CueOpenFile(const std::string &filename)
+CueOpenFile::CueOpenFile(const std::string& filename)
 	: cd_info_ { nullptr }
 {
 	static const Make_CdPtr make_cd;
@@ -243,7 +243,7 @@ CueInfo CueOpenFile::info() const
 		{
 			offsets.emplace_back(cast_or_throw<lba_type>(trk_offset));
 			lengths.emplace_back(cast_or_throw<lba_type>(trk_length));
-		} catch (const std::invalid_argument &e)
+		} catch (const std::invalid_argument& e)
 		{
 			std::ostringstream msg;
 			msg << "Track " << i << ": ";
@@ -263,13 +263,13 @@ CueInfo CueOpenFile::info() const
 // CueParserImpl
 
 
-CueInfo CueParserImpl::parse_worker(const std::string &filename) const
+CueInfo CueParserImpl::parse_worker(const std::string& filename) const
 {
 	return CueOpenFile { filename }.info();
 }
 
 
-std::unique_ptr<ToC> CueParserImpl::do_parse(const std::string &filename)
+std::unique_ptr<ToC> CueParserImpl::do_parse(const std::string& filename)
 {
 	const auto cue_info = this->parse_worker(filename);
 

@@ -130,7 +130,7 @@ void arcs_av_log(void* /*v*/, int lvl, const char* msg, va_list /*l*/)
 // FFmpegException
 
 
-FFmpegException::FFmpegException(const int error, const std::string &name)
+FFmpegException::FFmpegException(const int error, const std::string& name)
 	: error_ { error }
 	, msg_   {}
 {
@@ -166,7 +166,7 @@ void Free_AVFormatContext::operator()(::AVFormatContext* fctx) const
 }
 
 
-void operator << (std::ostream &out, const ::AVFormatContext *fctx);
+void operator << (std::ostream& out, const ::AVFormatContext* fctx);
 
 
 // Free_AVCodecContext
@@ -182,7 +182,7 @@ void Free_AVCodecContext::operator()(::AVCodecContext* cctx) const
 }
 
 
-void operator << (std::ostream &out, const ::AVCodecContext *cctx);
+void operator << (std::ostream& out, const ::AVCodecContext* cctx);
 
 
 // Free_AVPacket
@@ -240,7 +240,7 @@ AVFramePtr Make_AVFramePtr::operator()() const
 }
 
 
-void operator << (std::ostream &out, const ::AVStream *stream);
+void operator << (std::ostream& out, const ::AVStream* stream);
 
 
 // FrameQueue
@@ -370,7 +370,7 @@ AVFramePtr FrameQueue::dequeue_frame()
 			{
 				decode_success = decode_packet(current_packet_.get());
 
-			} catch (const FFmpegException &e)
+			} catch (const FFmpegException& e)
 			{
 				if (AVERROR(EAGAIN) == e.error())
 				{
@@ -410,7 +410,7 @@ AVFramePtr FrameQueue::dequeue_frame()
 }
 
 
-bool FrameQueue::decode_packet(::AVPacket *packet)
+bool FrameQueue::decode_packet(::AVPacket* packet)
 {
 	const auto error = ::avcodec_send_packet(decoder(), packet);
 
@@ -495,7 +495,7 @@ AVFramePtr FrameQueue::make_frame()
 // FFmpegFile
 
 
-AVFormatContextPtr FFmpegFile::format_context(const std::string &filename)
+AVFormatContextPtr FFmpegFile::format_context(const std::string& filename)
 {
 	// Open input stream and read header
 
@@ -527,14 +527,14 @@ AVFormatContextPtr FFmpegFile::format_context(const std::string &filename)
 }
 
 
-int FFmpegFile::audio_stream(::AVFormatContext *fctx)
+int FFmpegFile::audio_stream(::AVFormatContext* fctx)
 {
 	auto stream_and_codec = identify_stream(fctx, ::AVMEDIA_TYPE_AUDIO);
 	return stream_and_codec.first;
 }
 
 
-AVCodecContextPtr FFmpegFile::audio_decoder(::AVFormatContext *fctx,
+AVCodecContextPtr FFmpegFile::audio_decoder(::AVFormatContext* fctx,
 		const int stream_idx)
 {
 	if (!fctx)
@@ -605,7 +605,7 @@ AVCodecContextPtr FFmpegFile::audio_decoder(::AVFormatContext *fctx,
 		throw std::invalid_argument(msg.str());
 	}
 
-	const ::AVCodec *codec = nullptr;
+	const ::AVCodec* codec = nullptr;
 
 	if (fctx->audio_codec)
 	{
@@ -758,7 +758,7 @@ bool IsSupported::codec(const ::AVCodecID id)
 // FFmpegValidator
 
 
-bool FFmpegValidator::cdda(::AVCodecContext *cctx)
+bool FFmpegValidator::cdda(::AVCodecContext* cctx)
 {
 	bool is_validated = true;
 
@@ -797,7 +797,7 @@ AudioValidator::codec_set_type FFmpegValidator::do_codecs() const
 
 
 std::unique_ptr<FFmpegAudioStream> FFmpegAudioStreamLoader::load(
-		const std::string &filename) const
+		const std::string& filename) const
 {
 	ARCS_LOG_DEBUG << "Start to analyze audio file with ffmpeg";
 
@@ -941,7 +941,7 @@ void FFmpegAudioStream::register_push_frame(
 
 
 void FFmpegAudioStream::register_update_audiosize(
-		std::function<void(const AudioSize &size)> func)
+		std::function<void(const AudioSize& size)> func)
 {
 	update_audiosize_ = func;
 }
@@ -1089,7 +1089,7 @@ FFmpegAudioReaderImpl::~FFmpegAudioReaderImpl() noexcept = default;
 
 
 std::unique_ptr<AudioSize> FFmpegAudioReaderImpl::do_acquire_size(
-	const std::string &filename)
+	const std::string& filename)
 {
 	std::unique_ptr<AudioSize> audiosize =
 		std::make_unique<AudioSize>();
@@ -1102,7 +1102,7 @@ std::unique_ptr<AudioSize> FFmpegAudioReaderImpl::do_acquire_size(
 }
 
 
-void FFmpegAudioReaderImpl::do_process_file(const std::string &filename)
+void FFmpegAudioReaderImpl::do_process_file(const std::string& filename)
 {
 	// Redirect ffmpeg logging to arcs logging
 
@@ -1248,12 +1248,12 @@ void FFmpegAudioReaderImpl::pass_samples(AVFramePtr frame)
  * \param[in] out  The stream to print
  * \param[in] dict The dictionary to print
  */
-void print_dictionary(std::ostream &out, const ::AVDictionary* dict);
+void print_dictionary(std::ostream& out, const ::AVDictionary* dict);
 
 
-void print_dictionary(std::ostream &out, const ::AVDictionary* dict)
+void print_dictionary(std::ostream& out, const ::AVDictionary* dict)
 {
-	::AVDictionaryEntry *e = nullptr;
+	::AVDictionaryEntry* e = nullptr;
 
 	while ((e = ::av_dict_get(dict, "", e, /*macro*/AV_DICT_IGNORE_SUFFIX)))
 	{
@@ -1262,10 +1262,10 @@ void print_dictionary(std::ostream &out, const ::AVDictionary* dict)
 }
 
 
-void operator << (std::ostream &out, const ::AVDictionary *dict);
+void operator << (std::ostream& out, const ::AVDictionary* dict);
 
 
-void operator << (std::ostream &out, const ::AVDictionary *dict)
+void operator << (std::ostream& out, const ::AVDictionary* dict)
 {
 	print_dictionary(out, dict);
 }
@@ -1276,10 +1276,10 @@ void operator << (std::ostream &out, const ::AVDictionary *dict)
  *
  * \param[in] cctx The ::AVCodecContext to analyze
  */
-void print_codec_info(std::ostream &out, const ::AVCodecContext* cctx);
+void print_codec_info(std::ostream& out, const ::AVCodecContext* cctx);
 
 
-void print_codec_info(std::ostream &out, const ::AVCodecContext *cctx)
+void print_codec_info(std::ostream& out, const ::AVCodecContext* cctx)
 {
 	if (!cctx)
 	{
@@ -1476,7 +1476,7 @@ void print_codec_info(std::ostream &out, const ::AVCodecContext *cctx)
 }
 
 
-void operator << (std::ostream &out, const ::AVCodecContext *cctx)
+void operator << (std::ostream& out, const ::AVCodecContext* cctx)
 {
 	print_codec_info(out, cctx);
 }
@@ -1488,10 +1488,10 @@ void operator << (std::ostream &out, const ::AVCodecContext *cctx)
  * \param[in] out  The ostream to log to
  * \param[in] fctx The ::AVFormatContext to analyze
  */
-void print_format_info(std::ostream &out, const ::AVFormatContext* fctx);
+void print_format_info(std::ostream& out, const ::AVFormatContext* fctx);
 
 
-void print_format_info(std::ostream &out, const ::AVFormatContext *fctx)
+void print_format_info(std::ostream& out, const ::AVFormatContext* fctx)
 {
 	// Commented out, kept as a note:
 	// Output ffmpeg-sytle info
@@ -1509,7 +1509,7 @@ void print_format_info(std::ostream &out, const ::AVFormatContext *fctx)
 }
 
 
-void operator << (std::ostream &out, const ::AVFormatContext *fctx)
+void operator << (std::ostream& out, const ::AVFormatContext* fctx)
 {
 	print_format_info(out, fctx);
 }
@@ -1520,10 +1520,10 @@ void operator << (std::ostream &out, const ::AVFormatContext *fctx)
  *
  * \param[in] stream The ::AVStream to analyze
  */
-void print_stream_info(std::ostream &out, const ::AVStream* stream);
+void print_stream_info(std::ostream& out, const ::AVStream* stream);
 
 
-void print_stream_info(std::ostream &out, const ::AVStream *s)
+void print_stream_info(std::ostream& out, const ::AVStream* s)
 {
 	out << "Stream information:" << std::endl;
 
@@ -1545,7 +1545,7 @@ void print_stream_info(std::ostream &out, const ::AVStream *s)
 }
 
 
-void operator << (std::ostream &out, const ::AVStream *stream)
+void operator << (std::ostream& out, const ::AVStream* stream)
 {
 	print_stream_info(out, stream);
 }

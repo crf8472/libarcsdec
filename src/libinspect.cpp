@@ -34,7 +34,7 @@ inline namespace v_1_0_0
 namespace details
 {
 
-void escape(std::string &input, const char c, const std::string &escape_seq)
+void escape(std::string& input, const char c, const std::string& escape_seq)
 {
 	std::size_t lookHere = 0;
 	std::size_t foundHere;
@@ -48,7 +48,7 @@ void escape(std::string &input, const char c, const std::string &escape_seq)
 }
 
 
-std::regex to_libname_pattern(const std::string &libname)
+std::regex to_libname_pattern(const std::string& libname)
 {
 	auto e_name = libname;
 
@@ -65,8 +65,8 @@ std::regex to_libname_pattern(const std::string &libname)
 }
 
 
-const std::string& first_libname_match(const std::vector<std::string> &list,
-		const std::string &name)
+const std::string& first_libname_match(const std::vector<std::string>& list,
+		const std::string& name)
 {
 	static const auto empty_entry = std::string{};
 
@@ -76,7 +76,7 @@ const std::string& first_libname_match(const std::vector<std::string> &list,
 	using std::end;
 
 	const auto first_match = std::find_if(begin(list), end(list),
-			[pattern](const std::string &lname)
+			[pattern](const std::string& lname)
 			{
 				return std::regex_match(lname, pattern);
 			}
@@ -91,7 +91,7 @@ const std::string& first_libname_match(const std::vector<std::string> &list,
 }
 
 
-std::vector<std::string> runtime_deps(const std::string &object_name)
+std::vector<std::string> runtime_deps(const std::string& object_name)
 {
 	//std::cerr << "Runtime deps of " << object_name << '\n';
 
@@ -189,7 +189,7 @@ const std::vector<std::string>& libarcsdec_deps()
 }
 
 
-const std::string& libfile(const std::string &libname)
+const std::string& libfile(const std::string& libname)
 {
 	return first_libname_match(libarcsdec_deps(), libname);
 }
