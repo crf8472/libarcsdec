@@ -1,16 +1,16 @@
-# Makefile for the example 'albumcalc', part of libarcsdec
+# Makefile for the example 'albumid', part of libarcsdec
 
 CXX     := g++
 ## Replace 'g++' with 'clang++' if you like to use clang
 CFLAGS  := -std=c++17 -Wall -Wextra -pedantic
 LDFLAGS := -Wl,--disable-new-dtags,-rpath,../../build/
 ## We force to use libarcsdec.so from build tree. Check this with
-## $ ldd albumcalc | grep arcs
+## $ ldd albumid | grep arcs
 ## or
-## $ readelf -d albumcalc | head -20
+## $ readelf -d albumid | head -20
 ## and look for the value of RPATH.
 
-PROJECT := albumcalc
+PROJECT := albumid
 
 ## Uncomment exactly ONE of the following blocks:
 

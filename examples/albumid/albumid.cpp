@@ -3,10 +3,13 @@
 // represented by a Cuesheet and a single losslessly encoded audio file.
 //
 
-#ifndef __LIBARCSDEC_CALCULATORS_HPP__ // libarcsdec: ToCParser, ARCSCalculator
+#ifndef __LIBARCSDEC_CALCULATORS_HPP__ // for ToCParser, ARCSCalculator
 #include <arcsdec/calculators.hpp>
 #endif
 
+#ifndef __LIBARCSTK_IDENTIFIER_HPP__   // for ARId
+#include <arcstk/identifier.hpp>
+#endif
 #ifndef __LIBARCSTK_LOGGING_HPP__      // libarcstk: log what you do
 #include <arcstk/logging.hpp>
 #endif
@@ -29,7 +32,7 @@ int main(int argc, char* argv[])
 {
 	if (argc != 3)
 	{
-		std::cout << "Usage: albumcalc <cuesheet> <audiofile>" << std::endl;
+		std::cout << "Usage: albumid <cuesheet> <audiofile>" << '\n';
 		return EXIT_SUCCESS;
 	}
 
@@ -54,42 +57,20 @@ int main(int argc, char* argv[])
 	// to Cuesheets. We require a Cuesheet for this example since at the time of
 	// writing, Cuesheet is the only actual input format implemented. :-)
 	arcsdec::ToCParser parser;
-	auto tocptr { parser.parse(metafilename) };
+	const auto tocptr { parser.parse(metafilename) };
 
 	// Read the audio file and calculate the result.
 	// Note that technical details of the audio input are "abstracted away" by
 	// libarcsdec. ARCSCalculator takes some audio and gives you the ARCSs.
-	arcsdec::ARCSCalculator calculator;
-	const auto [ checksums, arid ] =
-		calculator.calculate(audiofilename, *tocptr);
-
-	// The result is a tuple containing the checksums as well as the ARId.
-	// We print both to the command line. Of course you can use the URL to
-	// request the reference values and then verify them with one of
-	// libarcstk's Matchers or just parse them to plaintext.
+	arcsdec::ARIdCalculator calculator;
+	const auto id { calculator.calculate(*tocptr, audiofilename) };
 
 	// Print the ARId.
-	std::cout << "AccurateRip URL: " << arid.url() << std::endl;
+	using std::string;
+	std::cout << "ID:          " << to_string(*id) << '\n';
+	std::cout << "Filename:    " << id->filename() << '\n';
+	std::cout << "Request-URL: " << id->url()      << '\n';
 
-	// Print the actual checksums.
-	std::cout << "Track  ARCSv1    ARCSv2" << std::endl;
-	int trk_no = 1;
-
-	using arcstk::checksum::type;
-
-	for (const auto& track_values : checksums)
-	{
-		auto arcs1 = track_values.get(type::ARCS1);
-		auto arcs2 = track_values.get(type::ARCS2);
-
-		std::cout << std::dec << " " << std::setw(2) << std::setfill(' ')
-			<< trk_no << "   " << std::hex << std::uppercase
-			<< std::setw(8) << std::setfill('0') << arcs1.value()
-			<< "  "
-			<< std::setw(8) << std::setfill('0') << arcs2.value()
-			<< std::endl;
-
-		++trk_no;
-	}
+	return EXIT_SUCCESS;
 }
 
