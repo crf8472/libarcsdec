@@ -31,7 +31,7 @@ using arcstk::AudioSize;
 /**
  * \brief Symbolic constants for certain block sizes (in PCM 32 bit samples).
  */
-struct BLOCKSIZE
+struct BLOCKSIZE final
 {
 	/**
 	 * \brief Maximum buffer size in number of PCM 32 bit samples.

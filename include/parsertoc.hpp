@@ -37,7 +37,7 @@ inline namespace v_1_0_0
 /**
  * \brief Libcdio-based parser for CDRDAO's .toc files.
  */
-class DescriptorToc : public FileReaderDescriptor
+class DescriptorToc final : public FileReaderDescriptor
 {
 
 public:

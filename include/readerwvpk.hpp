@@ -46,7 +46,7 @@ inline namespace v_1_0_0
  * to CDDA. That is 16 bit, 2 channels, 44100 samples/sec as integer
  * representation exclusively.
  */
-class DescriptorWavpack : public FileReaderDescriptor
+class DescriptorWavpack final : public FileReaderDescriptor
 {
 public:
 

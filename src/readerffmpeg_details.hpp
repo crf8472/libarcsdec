@@ -252,7 +252,7 @@ uint8_t* ByteBuffer(const ::AVFrame* f, const unsigned i)
  * \tparam T         The sample object type to get the bytes per plane from
  */
 template <typename S, bool is_planar, typename T>
-struct BytesPerPlane
+struct BytesPerPlane final
 {
 	/**
 	 * \brief Get number of bytes per plane.
@@ -267,7 +267,7 @@ struct BytesPerPlane
 
 // Specialization for ::AVFrame (planar)
 template <typename S>
-struct BytesPerPlane <S, true, ::AVFrame> // for planar frames
+struct BytesPerPlane <S, true, ::AVFrame> final // for planar frames
 {
 	static std::size_t get(const ::AVFrame* f)
 	{
@@ -278,7 +278,7 @@ struct BytesPerPlane <S, true, ::AVFrame> // for planar frames
 
 // Specialization for ::AVFrame (interleaved)
 template <typename S>
-struct BytesPerPlane <S, false, ::AVFrame> // for interleaved frames
+struct BytesPerPlane <S, false, ::AVFrame> final // for interleaved frames
 {
 	static std::size_t get(const ::AVFrame* f)
 	{
@@ -317,7 +317,7 @@ int NumberOfChannels(const T* p)
 /**
  * \brief Abstract getter for channel order info.
  */
-struct ChannelOrder
+struct ChannelOrder final
 {
 	/**
 	 * Returns \c TRUE iff the channel order is front left + front right,
@@ -394,7 +394,7 @@ struct ChannelOrder
 template <typename S, bool is_planar, typename Container,
 		typename SequenceType = SampleSequence<S, is_planar>>
 		//typename = details::IsSampleType<S>, // TODO SFINAE stuff
-class WrappingPolicy
+class WrappingPolicy final
 {
 	/* empty */
 };
@@ -405,7 +405,7 @@ class WrappingPolicy
 
 // Specialization for wrapping an ::AVFrame into a byte buffer (planar)
 template <typename S, typename SequenceType>
-class WrappingPolicy<S, true, AVFramePtr, SequenceType>
+class WrappingPolicy<S, true, AVFramePtr, SequenceType> final
 {
 	using TotalBytesPerPlane = BytesPerPlane<S, true, ::AVFrame>;
 
@@ -431,7 +431,7 @@ public:
 
 // Specialization for wrapping an ::AVFrame into a byte buffer (interleaved)
 template <typename S, typename SequenceType>
-class WrappingPolicy<S, false, details::ffmpeg::AVFramePtr, SequenceType>
+class WrappingPolicy<S, false, details::ffmpeg::AVFramePtr, SequenceType> final
 {
 	using TotalBytesPerPlane = BytesPerPlane<S, false, ::AVFrame>;
 
@@ -458,16 +458,16 @@ public:
  * \brief Get size-in-bytes of a type denoted by ::AVSampleFormat.
  */
 template <enum ::AVSampleFormat>
-struct SampleSize { /* empty */ };
+struct SampleSize final { /* empty */ };
 
 // legal specializations
-template<> struct SampleSize<::AV_SAMPLE_FMT_S16>
+template<> struct SampleSize<::AV_SAMPLE_FMT_S16> final
 { constexpr static std::size_t value = 2; };
-template<> struct SampleSize<::AV_SAMPLE_FMT_S16P>
+template<> struct SampleSize<::AV_SAMPLE_FMT_S16P> final
 { constexpr static std::size_t value = 2; };
-template<> struct SampleSize<::AV_SAMPLE_FMT_S32>
+template<> struct SampleSize<::AV_SAMPLE_FMT_S32> final
 { constexpr static std::size_t value = 4; };
-template<> struct SampleSize<::AV_SAMPLE_FMT_S32P>
+template<> struct SampleSize<::AV_SAMPLE_FMT_S32P> final
 { constexpr static std::size_t value = 4; };
 
 
@@ -475,26 +475,26 @@ template<> struct SampleSize<::AV_SAMPLE_FMT_S32P>
  * \brief Get signedness of a type denoted by ::AVSampleFormat.
  */
 template <enum ::AVSampleFormat>
-struct IsSigned { /* empty */ };
+struct IsSigned final { /* empty */ };
 
 // specializations
-template<> struct IsSigned<::AV_SAMPLE_FMT_S16>  : std::true_type {/*empty*/};
-template<> struct IsSigned<::AV_SAMPLE_FMT_S16P> : std::true_type {/*empty*/};
-template<> struct IsSigned<::AV_SAMPLE_FMT_S32>  : std::true_type {/*empty*/};
-template<> struct IsSigned<::AV_SAMPLE_FMT_S32P> : std::true_type {/*empty*/};
+template<> struct IsSigned<::AV_SAMPLE_FMT_S16>  final : std::true_type {};
+template<> struct IsSigned<::AV_SAMPLE_FMT_S16P> final : std::true_type {};
+template<> struct IsSigned<::AV_SAMPLE_FMT_S32>  final : std::true_type {};
+template<> struct IsSigned<::AV_SAMPLE_FMT_S32P> final : std::true_type {};
 
 
 /**
  * \brief Get planarity status of a type denoted by ::AVSampleFormat.
  */
 template <enum ::AVSampleFormat>
-struct IsPlanar { /* empty */ };
+struct IsPlanar final { /* empty */ };
 
 // specializations
-template<> struct IsPlanar<::AV_SAMPLE_FMT_S16>  : std::false_type {/*empty*/};
-template<> struct IsPlanar<::AV_SAMPLE_FMT_S16P> : std::true_type  {/*empty*/};
-template<> struct IsPlanar<::AV_SAMPLE_FMT_S32>  : std::false_type {/*empty*/};
-template<> struct IsPlanar<::AV_SAMPLE_FMT_S32P> : std::true_type  {/*empty*/};
+template<> struct IsPlanar<::AV_SAMPLE_FMT_S16>  final : std::false_type {};
+template<> struct IsPlanar<::AV_SAMPLE_FMT_S16P> final : std::true_type  {};
+template<> struct IsPlanar<::AV_SAMPLE_FMT_S32>  final : std::false_type {};
+template<> struct IsPlanar<::AV_SAMPLE_FMT_S32P> final : std::true_type  {};
 
 
 /**
@@ -505,13 +505,13 @@ template<> struct IsPlanar<::AV_SAMPLE_FMT_S32P> : std::true_type  {/*empty*/};
  *                     unsigned type
  */
 template <int S, bool is_signed>
-struct SampleType { /* empty */ };
+struct SampleType final { /* empty */ };
 
 // legal specializations
-template<> struct SampleType<2, true>  { using type =  int16_t; };
-template<> struct SampleType<2, false> { using type = uint16_t; };
-template<> struct SampleType<4, true>  { using type =  int32_t; };
-template<> struct SampleType<4, false> { using type = uint32_t; };
+template<> struct SampleType<2, true>  final { using type =  int16_t; };
+template<> struct SampleType<2, false> final { using type = uint16_t; };
+template<> struct SampleType<4, true>  final { using type =  int32_t; };
+template<> struct SampleType<4, false> final { using type = uint32_t; };
 
 
 /**
@@ -523,7 +523,7 @@ template<> struct SampleType<4, false> { using type = uint32_t; };
  *                   indicates to use an interleaved sequence
  */
 template <typename S, bool is_planar>
-struct SequenceInstance
+struct SequenceInstance final
 {
 	static auto create() -> SampleSequence<S, is_planar>
 	{
@@ -769,7 +769,7 @@ private:
 /**
  * \brief Functions for analyzing a media file with FFmpeg.
  */
-class FFmpegFile
+class FFmpegFile final
 {
 public:
 
@@ -892,7 +892,7 @@ struct IsSupported final
 /**
  * \brief Validator for ::AVCodecContext instances.
  */
-class FFmpegValidator : public DefaultValidator
+class FFmpegValidator final : public DefaultValidator
 {
 public:
 

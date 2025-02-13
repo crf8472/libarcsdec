@@ -243,7 +243,7 @@ private:
 
 
 /**
- * \brief Base class for classes that create opaque readers.
+ * \brief Abstract base class for classes that create opaque readers.
  *
  * A subclass must specify the ReaderType and can then easily use create()
  * to create an appropriate FileReader by just specifying the filename.

@@ -193,7 +193,7 @@ namespace details
  * \tparam T Right type
  */
 template <typename S, typename T>
-struct signedness : public std::integral_constant<bool,
+struct signedness final : public std::integral_constant<bool,
 	(std::is_signed<S>::value && std::is_signed<T>::value)
 	|| (std::is_unsigned<S>::value && std::is_unsigned<T>::value)>
 {

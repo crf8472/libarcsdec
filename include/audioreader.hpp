@@ -344,7 +344,7 @@ public:
 
 
 /**
- * \brief Base class for validation handlers for
+ * \brief Abstract base class for validation handlers for
  * \link AudioReaderImpl AudioReaderImpls\endlink.
  *
  * Implements a class that just provides some assert methods that get a label, a
@@ -607,10 +607,11 @@ private:
 
 
 /**
- * \brief Default implementation of AudioValidator.
+ * \brief Abstract base implementation of AudioValidator.
  *
  * Implements \c on_failure to throw an InvalidAudioException with the message
- * of the last error.
+ * of the last error. The implementation of \c do_codecs() is left to
+ * subclasses.
  */
 class DefaultValidator : public AudioValidator
 {

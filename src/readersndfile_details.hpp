@@ -45,7 +45,7 @@ namespace sndfile
  *
  * \todo To support WAV formats as well as ALAC, FLAC, AIFF/AIFC, RAW
  */
-class LibsndfileAudioReaderImpl : public AudioReaderImpl
+class LibsndfileAudioReaderImpl final : public AudioReaderImpl
 {
 
 public:

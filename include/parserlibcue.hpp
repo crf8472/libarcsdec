@@ -37,7 +37,7 @@ inline namespace v_1_0_0
 /**
  * \brief Libcue-based parser for Cuesheets.
  */
-class DescriptorCue : public FileReaderDescriptor
+class DescriptorCue final : public FileReaderDescriptor
 {
 
 public:

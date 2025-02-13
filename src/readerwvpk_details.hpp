@@ -165,7 +165,7 @@ public:
 /**
  * \brief Represents an opened wavpack audio file.
  */
-class WavpackOpenFile
+class WavpackOpenFile final
 {
 public:
 
@@ -324,7 +324,7 @@ private:
  * \brief A handler to validate wavpack files for whether they can be processed
  * by this WavpackAudioReaderImpl.
  */
-class WavpackValidatingHandler : public DefaultValidator
+class WavpackValidatingHandler final : public DefaultValidator
 {
 public:
 

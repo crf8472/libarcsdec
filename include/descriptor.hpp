@@ -41,7 +41,7 @@ namespace details
  *
  * Thanks to Herb Sutter: http://www.gotw.ca/gotw/029.htm
  */
-struct ci_char_traits : public std::char_traits<char>
+struct ci_char_traits final : public std::char_traits<char>
 {
 	static bool eq(char c1, char c2) { return toupper(c1) == toupper(c2); }
 
@@ -251,7 +251,7 @@ void swap(ByteSeq& lhs, ByteSeq& rhs);
 /**
  * \brief Byte sequence with or without wildcards.
  */
-class ByteSeq : public Comparable<ByteSeq>
+class ByteSeq final : public Comparable<ByteSeq>
 {
 public:
 

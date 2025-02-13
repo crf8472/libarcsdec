@@ -58,7 +58,7 @@ inline namespace v_1_0_0
 /**
  * \brief FFmpeg-based AudioReader for virtually any lossless audio format.
  */
-class DescriptorFFmpeg : public FileReaderDescriptor
+class DescriptorFFmpeg final : public FileReaderDescriptor
 {
 public:
 

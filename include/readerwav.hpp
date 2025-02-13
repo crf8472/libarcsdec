@@ -45,7 +45,7 @@ inline namespace v_1_0_0
  * is 16 bit, 2 channels, 44100 samples/sec as integer representation
  * exclusively.
  */
-class DescriptorWavPCM : public FileReaderDescriptor
+class DescriptorWavPCM final : public FileReaderDescriptor
 {
 public:
 

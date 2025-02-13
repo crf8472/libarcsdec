@@ -50,7 +50,7 @@ inline namespace v_1_0_0
 /**
  * \brief Libsndfile-based reader for some lossless audio input formats.
  */
-class DescriptorSndfile : public FileReaderDescriptor
+class DescriptorSndfile final : public FileReaderDescriptor
 {
 
 public:

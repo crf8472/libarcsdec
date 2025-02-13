@@ -683,7 +683,7 @@ std::unique_ptr<FileReader> select_reader(
  * \see CreateMetadataParser
  */
 template <class ReaderType>
-struct CreateReader
+struct CreateReader final
 {
 	/**
 	 * \brief Default destructor.
