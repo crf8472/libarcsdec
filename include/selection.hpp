@@ -141,7 +141,7 @@ private:
 class DefaultPreference final : public DescriptorPreference
 {
 	type do_preference(const Format format, const Codec codec,
-		const FileReaderDescriptor& desc) const override;
+		const FileReaderDescriptor& desc) const final;
 };
 
 
@@ -156,7 +156,7 @@ class DefaultPreference final : public DescriptorPreference
 class MinPreference final : public DescriptorPreference
 {
 	type do_preference(const Format format, const Codec codec,
-		const FileReaderDescriptor& desc) const override;
+		const FileReaderDescriptor& desc) const final;
 };
 
 
@@ -172,7 +172,7 @@ class MinPreference final : public DescriptorPreference
 class FormatPreference final : public DescriptorPreference
 {
 	type do_preference(const Format format, const Codec codec,
-		const FileReaderDescriptor& desc) const override;
+		const FileReaderDescriptor& desc) const final;
 };
 
 
@@ -242,7 +242,7 @@ private:
 
 	std::unique_ptr<FileReaderDescriptor> do_select(const Format format,
 			const Codec codec, const FileReaders& descs,
-			const DescriptorPreference& pref_model) const override;
+			const DescriptorPreference& pref_model) const final;
 };
 
 
@@ -279,7 +279,7 @@ private:
 
 	std::unique_ptr<FileReaderDescriptor> do_select(const Format format,
 			const Codec codec, const FileReaders& descs,
-			const DescriptorPreference& pref_model) const override;
+			const DescriptorPreference& pref_model) const final;
 };
 
 

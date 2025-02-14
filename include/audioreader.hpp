@@ -258,7 +258,7 @@ public:
 	/**
 	 * \brief Default destructor.
 	 */
-	~AudioReader() noexcept override;
+	~AudioReader() noexcept final;
 
 	/**
 	 * \brief Set the number of samples to read in one read operation.
@@ -316,7 +316,7 @@ private:
 	 */
 	std::unique_ptr<AudioReader::Impl> impl_;
 
-	std::unique_ptr<FileReaderDescriptor> do_descriptor() const override;
+	std::unique_ptr<FileReaderDescriptor> do_descriptor() const final;
 };
 
 
@@ -339,7 +339,7 @@ public:
 	 *
 	 * \param[in] what_arg What argument
 	 */
-	explicit InvalidAudioException(const char *what_arg);
+	explicit InvalidAudioException(const char* what_arg);
 };
 
 

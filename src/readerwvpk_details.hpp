@@ -92,7 +92,7 @@ public:
 	LibwavpackException(const std::string& value, const std::string& name,
 			const std::string& error_msg);
 
-	char const * what() const noexcept override;
+	char const * what() const noexcept final;
 
 private:
 
@@ -337,7 +337,7 @@ public:
 	/**
 	 * \brief Virtual default destructor.
 	 */
-	~WavpackValidatingHandler() noexcept override;
+	~WavpackValidatingHandler() noexcept final;
 
 	/**
 	 * \brief Validate the format of the wavpack file.
@@ -377,7 +377,7 @@ public:
 
 private:
 
-	codec_set_type do_codecs() const override;
+	codec_set_type do_codecs() const final;
 
 	/**
 	 * \brief Configuration: Reference values for validation.

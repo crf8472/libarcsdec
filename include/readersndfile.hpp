@@ -58,29 +58,29 @@ public:
 	/**
 	 * \brief Virtual default destructor.
 	 */
-	~DescriptorSndfile() noexcept override;
+	~DescriptorSndfile() noexcept final;
 
 
 private:
 
-	std::string do_id() const override;
+	std::string do_id() const final;
 
 	/**
 	 * \brief Returns "unknown (handled by sndfile)"
 	 *
 	 * \return "unknown (handled by sndfile)"
 	 */
-	std::string do_name() const override;
+	std::string do_name() const final;
 
-	std::set<Format> define_formats() const override;
+	std::set<Format> define_formats() const final;
 
-	std::set<Codec> define_codecs() const override;
+	std::set<Codec> define_codecs() const final;
 
-	LibInfo do_libraries() const override;
+	LibInfo do_libraries() const final;
 
-	std::unique_ptr<FileReader> do_create_reader() const override;
+	std::unique_ptr<FileReader> do_create_reader() const final;
 
-	std::unique_ptr<FileReaderDescriptor> do_clone() const override;
+	std::unique_ptr<FileReaderDescriptor> do_clone() const final;
 };
 
 /// @}

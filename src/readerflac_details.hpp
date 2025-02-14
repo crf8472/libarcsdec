@@ -88,7 +88,7 @@ public:
 
 private:
 
-	codec_set_type do_codecs() const override;
+	codec_set_type do_codecs() const final;
 };
 
 
@@ -124,7 +124,7 @@ public:
 	 */
 	::FLAC__StreamDecoderWriteStatus write_callback(
 			const ::FLAC__Frame* frame,
-			const ::FLAC__int32* const buffer[]) override;
+			const ::FLAC__int32* const buffer[]) final;
 
 	/**
 	 * \brief Pass metadata by type to internal handler.
@@ -135,14 +135,14 @@ public:
 	 *
 	 * \param[in] metadata The StreamMetadata from FLAC
 	 */
-	void metadata_callback(const ::FLAC__StreamMetadata* metadata) override;
+	void metadata_callback(const ::FLAC__StreamMetadata* metadata) final;
 
 	/**
 	 * \brief Log the decoder's error status.
 	 *
 	 * \param[in] status The StreamDecoderErrorStatus
 	 */
-	void error_callback(::FLAC__StreamDecoderErrorStatus status) override;
+	void error_callback(::FLAC__StreamDecoderErrorStatus status) final;
 
 	/**
 	 * \brief Register a FLACMetadataHandler to this instance.

@@ -163,7 +163,7 @@ private:
 	 */
 	std::unique_ptr<MetadataParserImpl> impl_;
 
-	std::unique_ptr<FileReaderDescriptor> do_descriptor() const override;
+	std::unique_ptr<FileReaderDescriptor> do_descriptor() const final;
 };
 
 

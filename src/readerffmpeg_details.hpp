@@ -109,7 +109,7 @@ public:
 	 */
 	int error() const;
 
-	char const * what() const noexcept override;
+	char const * what() const noexcept final;
 
 private:
 
@@ -905,7 +905,7 @@ public:
 
 private:
 
-	codec_set_type do_codecs() const override;
+	codec_set_type do_codecs() const final;
 };
 
 
