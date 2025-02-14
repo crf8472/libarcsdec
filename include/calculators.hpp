@@ -59,10 +59,34 @@ using arcstk::ToC;
  *
  * \brief Calculators for AccurateRip checksums and IDs.
  *
- * ARIdCalculator is a calculator for the AccurateRip id of a given medium
- * description. ARCSCalculator is a calculator for the ARCSs for each audio
- * track of a given file. ToCParser is a format independent parser for
- * ToC files.
+ * Calculators provide calculation results, thereby processing data provided by
+ * FileReader instances. When passed filenames, calculators determine
+ * autonomously the required FileReader types for reading those files, perform
+ * the read process and their respective calculation task and provide the result
+ * to the caller. The caller is not responsible for any format or codec related
+ * task.
+ *
+ * This module defines four calculators providing different kinds of
+ * information:
+ *
+ * <table>
+ *		<tr>
+ *			<td>ARCSCalculator is a calculator for the ARCSs for each audio
+ *				track of a given audio-/metadata file pair.</td>
+ *		</tr>
+ *		<tr>
+ *			<td>ARIdCalculator is a calculator for the AccurateRip id of a given
+ *				audio-/metadata file pair.</td>
+ *		</tr>
+ *		<tr>
+ *			<td>ToCParser is a format independent parser for metadata files.
+ *			</td>
+ *		</tr>
+ *		<tr>
+ *			<td>AudioInfo is a format independent reader for metadata of audio
+ *			files that currently provides the amount of samples.</td>
+ *		</tr>
+ * <table>
  *
  * @{
  */
