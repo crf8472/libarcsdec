@@ -28,6 +28,9 @@
 #include <arcstk/logging.hpp>
 #endif
 
+#ifndef __LIBARCSDEC_LIBINSPECT_HPP__
+#include "libinspect.hpp"   // for first_libname_match
+#endif
 #ifndef __LIBARCSDEC_METAPARSER_HPP__
 #include "metaparser.hpp"  // for MetadataParseException
 #endif
@@ -135,7 +138,10 @@ std::set<Format> DescriptorCuesheet::define_formats() const
 
 LibInfo DescriptorCuesheet::do_libraries() const
 {
-	return { /* empty */ };
+	//return { /* empty */ };
+	return { { "-genuine-",
+		details::first_libname_match(details::runtime_deps(""), LIBARCSDEC_NAME)
+	} };
 }
 
 

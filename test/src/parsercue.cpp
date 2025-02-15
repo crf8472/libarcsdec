@@ -45,7 +45,7 @@ TEST_CASE ("DescriptorCuesheet", "[parsercue]" )
 	{
 		const auto libs = d.libraries();
 
-		CHECK ( libs.size() == 0 );
+		CHECK ( libs.size() == 1 );
 	}
 
 	SECTION ("Does not match any codecs not accepted by this descriptor")
