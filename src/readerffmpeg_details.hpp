@@ -86,6 +86,30 @@ av_always_inline char* av_err2str(int errnum)
 }
 #endif
 
+extern "C"
+{
+
+/**
+ * \internal
+ * \brief A redirect callback for the ffmpeg log messages.
+ *
+ * Redirects ffmpeg messages leveled as errors, warnings and informations to the
+ * libarcstk logging interface. Messages leveled as debug, trace or other are
+ * discarded. All parameters except \c lvl and \c msg are ignored.
+ *
+ * Since this function will be passed by a function pointer to a C function, it
+ * has to be a static or global function with C linkage to provide a portable
+ * way of setting a C++ function as a callback for a C function.
+ *
+ * \relatesalso FFmpegAudioStream
+ * \relatesalso FFmpegAudioStreamLoader
+ *
+ * \param[in] lvl The loglevel as defined by the ffmpeg API (e.g. AV_LOG_INFO)
+ * \param[in] msg The message to log
+ */
+void arcs_av_log(void* /*v*/, int lvl, const char* msg, va_list /*l*/);
+
+} // extern C
 
 /**
  * \brief Encapsulates error code from the ffmpeg API.
@@ -109,7 +133,7 @@ public:
 	 */
 	int error() const;
 
-	char const * what() const noexcept final;
+	char const* what() const noexcept final;
 
 private:
 

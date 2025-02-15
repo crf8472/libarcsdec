@@ -67,32 +67,16 @@ using arcstk::AudioSize;
 extern "C"
 {
 
-/**
- * \internal
- * \brief A redirect callback for the ffmpeg log messages.
- *
- * Redirects ffmpeg messages leveled as errors, warnings and informations to the
- * libarcstk logging interface. Messages leveled as debug, trace or other are
- * discarded. All parameters except \c lvl and \c msg are ignored.
- *
- * Since this function will be passed by a function pointer to a C function, it
- * has to be a static or global function with C linkage to provide a portable
- * way of setting a C++ function as a callback for a C function.
- *
- * \relatesalso FFmpegAudioStream
- * \relatesalso FFmpegAudioStreamLoader
- *
- * \param[in] lvl The loglevel as defined by the ffmpeg API (e.g. AV_LOG_INFO)
- * \param[in] msg The message to log
- */
-void arcs_av_log(void* /*v*/, int lvl, const char* msg, va_list /*l*/);
-
 void arcs_av_log(void* /*v*/, int lvl, const char* msg, va_list /*l*/)
 {
 	// Remove newline(s) from message text
 
-	std::string text(msg);
-	text.erase(std::remove(text.begin(), text.end(), '\n'), text.end());
+	std::string text { msg };
+
+	using std::begin;
+	using std::end;
+
+	text.erase(std::remove(begin(text), end(text), '\n'), end(text));
 
 	// Log according to the loglevel
 	// (All AV_LOG_* names are macros and have therefore no leading '::'.)
@@ -132,9 +116,9 @@ void arcs_av_log(void* /*v*/, int lvl, const char* msg, va_list /*l*/)
 
 FFmpegException::FFmpegException(const int error, const std::string& name)
 	: error_ { error }
-	, msg_   {}
+	, msg_   {/* empty */}
 {
-	std::ostringstream msg;
+	auto msg = std::ostringstream{};
 	msg << "FFmpeg: Function " << name  << " returned error '"
 		<< av_err2str(error_) << "' ("  << error_ << ")";
 	msg_ = msg.str();
@@ -147,7 +131,7 @@ int FFmpegException::error() const
 }
 
 
-char const * FFmpegException::what() const noexcept
+char const* FFmpegException::what() const noexcept
 {
 	return msg_.c_str();
 }
@@ -200,7 +184,7 @@ void Free_AVPacket::operator()(::AVPacket* packet) const
 
 AVPacketPtr Make_AVPacketPtr::operator()() const
 {
-	auto packet = ::av_packet_alloc();
+	auto packet { ::av_packet_alloc() };
 
 	if (!packet)
 	{
@@ -229,7 +213,7 @@ void Free_AVFrame::operator()(::AVFrame* frame) const
 
 AVFramePtr Make_AVFramePtr::operator()() const
 {
-	::AVFrame* f = ::av_frame_alloc();
+	::AVFrame* f { ::av_frame_alloc() };
 
 	if (!f)
 	{
@@ -267,7 +251,7 @@ void FrameQueue::set_source(::AVFormatContext* fctx, const int stream_index)
 
 std::pair<const ::AVFormatContext*, const int> FrameQueue::source() const
 {
-	return std::make_pair(fctx_, stream_index_);
+	return { fctx_, stream_index_ };
 }
 
 
@@ -301,7 +285,7 @@ std::size_t FrameQueue::fill()
 bool FrameQueue::enqueue_frame()
 {
 	auto error  = int { 0 };
-	auto packet = make_packet();
+	auto packet { make_packet() };
 
 	while (true)
 	{
@@ -345,8 +329,8 @@ bool FrameQueue::enqueue_frame()
 AVFramePtr FrameQueue::dequeue_frame()
 {
 	auto error          = int  { 0 };
-	auto frame          = make_frame();
 	auto decode_success = bool { false };
+	auto frame          { make_frame() };
 
 	while (true)
 	{
@@ -412,7 +396,7 @@ AVFramePtr FrameQueue::dequeue_frame()
 
 bool FrameQueue::decode_packet(::AVPacket* packet)
 {
-	const auto error = ::avcodec_send_packet(decoder(), packet);
+	const auto error { ::avcodec_send_packet(decoder(), packet) };
 
 	if (error < 0)
 	{
@@ -499,12 +483,12 @@ AVFormatContextPtr FFmpegFile::format_context(const std::string& filename)
 {
 	// Open input stream and read header
 
-	::AVFormatContext* fctx = nullptr;
-	::AVInputFormat* detect = nullptr; // TODO Currently unused
-	::AVDictionary* options = nullptr; // TODO Currently unused
+	::AVFormatContext* fctx { nullptr };
+	::AVInputFormat* detect { nullptr }; // TODO Currently unused
+	::AVDictionary* options { nullptr }; // TODO Currently unused
 
-	const auto error_open = ::avformat_open_input(&fctx , filename.c_str(),
-			detect, &options);
+	const auto error_open { ::avformat_open_input(&fctx , filename.c_str(),
+			detect, &options) };
 
 	if (error_open != 0)
 	{
@@ -514,7 +498,7 @@ AVFormatContextPtr FFmpegFile::format_context(const std::string& filename)
 	// Read some packets to acquire information about the streams
 	// (This is useful for formats without a header)
 
-	const auto error_find = ::avformat_find_stream_info(fctx, nullptr);
+	const auto error_find { ::avformat_find_stream_info(fctx, nullptr) };
 
 	if (error_find < 0)
 	{
@@ -529,7 +513,7 @@ AVFormatContextPtr FFmpegFile::format_context(const std::string& filename)
 
 int FFmpegFile::audio_stream(::AVFormatContext* fctx)
 {
-	auto stream_and_codec = identify_stream(fctx, ::AVMEDIA_TYPE_AUDIO);
+	const auto stream_and_codec { identify_stream(fctx, ::AVMEDIA_TYPE_AUDIO) };
 	return stream_and_codec.first;
 }
 
@@ -547,11 +531,11 @@ AVCodecContextPtr FFmpegFile::audio_decoder(::AVFormatContext* fctx,
 		throw std::invalid_argument("Stream index is negative");
 	}
 
-	::AVStream* stream = fctx->streams[stream_idx];
+	::AVStream* stream { fctx->streams[stream_idx] };
 
 	if (!stream)
 	{
-		std::ostringstream msg;
+		auto msg = std::ostringstream{};
 		msg << "Could not find stream for requested index ";
 		msg << stream_idx;
 
@@ -573,6 +557,7 @@ AVCodecContextPtr FFmpegFile::audio_decoder(::AVFormatContext* fctx,
 		{
 			const AVPacketSideData* const sd =
 				&stream->codecpar->coded_side_data[i];
+
 			if (::AV_PKT_DATA_SKIP_SAMPLES == sd->type)
 			{
 				skip = true;
@@ -588,7 +573,7 @@ AVCodecContextPtr FFmpegFile::audio_decoder(::AVFormatContext* fctx,
 		}
 	}
 
-	auto stream_params = stream->codecpar;
+	const auto stream_params { stream->codecpar };
 
 	if (!stream_params)
 	{
@@ -597,7 +582,7 @@ AVCodecContextPtr FFmpegFile::audio_decoder(::AVFormatContext* fctx,
 
 	if (stream_params->codec_type != ::AVMEDIA_TYPE_AUDIO)
 	{
-		std::ostringstream msg;
+		auto msg = std::ostringstream{};
 		msg << "Stream with requested index ";
 		msg << stream_idx;
 		msg << " is not an audio stream";
@@ -605,7 +590,7 @@ AVCodecContextPtr FFmpegFile::audio_decoder(::AVFormatContext* fctx,
 		throw std::invalid_argument(msg.str());
 	}
 
-	const ::AVCodec* codec = nullptr;
+	const ::AVCodec* codec { nullptr };
 
 	if (fctx->audio_codec)
 	{
@@ -621,7 +606,7 @@ AVCodecContextPtr FFmpegFile::audio_decoder(::AVFormatContext* fctx,
 				"avcodec_find_decoder could not determine codec");
 	}
 
-	::AVCodecContext* cctx = ::avcodec_alloc_context3(codec);
+	::AVCodecContext* cctx { ::avcodec_alloc_context3(codec) };
 
 	if (!cctx)
 	{
@@ -629,7 +614,7 @@ AVCodecContextPtr FFmpegFile::audio_decoder(::AVFormatContext* fctx,
 		throw std::bad_alloc();
 	}
 
-	auto ccontext = AVCodecContextPtr(cctx);
+	auto ccontext { AVCodecContextPtr { cctx } };
 
 	if (NumberOfChannels(ccontext.get()) > AV_NUM_DATA_POINTERS)/*macro*/
 	{
@@ -643,15 +628,15 @@ AVCodecContextPtr FFmpegFile::audio_decoder(::AVFormatContext* fctx,
 		// TODO Check frame->extended_data
 	}
 
-	const auto error_pars =
-		::avcodec_parameters_to_context(cctx, stream_params);
+	const auto error_pars {
+		::avcodec_parameters_to_context(cctx, stream_params) };
 
 	if (error_pars < 0) // success: >= 0
 	{
 		throw FFmpegException(error_pars, "avcodec_parameters_to_context");
 	}
 
-	const auto error_open = ::avcodec_open2(cctx, codec, nullptr);
+	const auto error_open { ::avcodec_open2(cctx, codec, nullptr) };
 
 	if (error_open < 0) // success: == 0
 	{
@@ -668,12 +653,12 @@ std::pair<int, const ::AVCodec*> FFmpegFile::identify_stream(
 #if LIBAVFORMAT_VERSION_INT < AV_VERSION_INT(59, 16, 100) //  < ffmpeg 5.0
 	::AVCodec* codec = nullptr;
 #else
-	const ::AVCodec* codec = nullptr;
+	const ::AVCodec* codec { nullptr };
 #endif
 
-	const int stream_index = ::av_find_best_stream(fctx, media_type,
+	const int stream_index { ::av_find_best_stream(fctx, media_type,
 			-1/*no wanted stream*/, -1/*no related stream*/,
-			&codec/*request codec*/, 0/*no flags*/);
+			&codec/*request codec*/, 0/*no flags*/) };
 
 	if (stream_index < 0)
 	{
@@ -687,10 +672,10 @@ std::pair<int, const ::AVCodec*> FFmpegFile::identify_stream(
 
 	if (!codec)
 	{
-		std::ostringstream message;
-		message << "No codec found for audio stream " << stream_index;
+		auto msg = std::ostringstream{};
+		msg << "No codec found for audio stream " << stream_index;
 
-		ARCS_LOG_ERROR << message.str();
+		ARCS_LOG_ERROR << msg.str();
 
 		// This is not a problem since we will try to identify the codec
 		// with create_audio_decoder() and throw a proper exception there.
@@ -760,7 +745,7 @@ bool IsSupported::codec(const ::AVCodecID id)
 
 bool FFmpegValidator::cdda(::AVCodecContext* cctx)
 {
-	bool is_validated = true;
+	bool is_validated { true };
 
 	// TODO Subclass DefaultValidator to use error stack correctly
 
@@ -817,29 +802,29 @@ std::unique_ptr<FFmpegAudioStream> FFmpegAudioStreamLoader::load(
 
 	if (not IsSupported::format(ccontext->sample_fmt))
 	{
-		std::ostringstream message;
-		message << "Sample format not supported: "
+		auto msg = std::ostringstream{};
+		msg << "Sample format not supported: "
 			<< ::av_get_sample_fmt_name(ccontext->sample_fmt);
-		throw InvalidAudioException(message.str());
+		throw InvalidAudioException(msg.str());
 	}
 
 	if (not IsSupported::codec(ccontext->codec->id))
 	{
-		std::ostringstream message;
-		message << "Codec not supported: " << ccontext->codec->long_name;
-		throw InvalidAudioException(message.str());
+		auto msg = std::ostringstream{};
+		msg << "Codec not supported: " << ccontext->codec->long_name;
+		throw InvalidAudioException(msg.str());
 	}
 
 	if (not FFmpegValidator::cdda(ccontext.get()))
 	{
-		std::ostringstream message;
-		message << "CDDA validation failed";
-		throw InvalidAudioException(message.str());
+		auto msg = std::ostringstream{};
+		msg << "CDDA validation failed";
+		throw InvalidAudioException(msg.str());
 	}
 
 
-	const auto total_samples = FFmpegFile::total_samples(ccontext.get(),
-			fcontext->streams[stream_idx]);
+	const auto total_samples { FFmpegFile::total_samples(ccontext.get(),
+			fcontext->streams[stream_idx]) };
 	ARCS_LOG_DEBUG << "Expect " << total_samples << " total samples";
 
 	// We have to update the expected AudioSize before the last block of samples
@@ -861,8 +846,7 @@ std::unique_ptr<FFmpegAudioStream> FFmpegAudioStreamLoader::load(
 
 	// Configure file object with ffmpeg properties
 
-	std::unique_ptr<FFmpegAudioStream> stream(new FFmpegAudioStream());
-	// Cannot use std::make_unique due to private constructor
+	auto stream { std::make_unique<FFmpegAudioStream>(FFmpegAudioStream{}) };
 
 	stream->num_planes_ =
 		::av_sample_fmt_is_planar(ccontext->sample_fmt) ? 2 : 1;
@@ -961,7 +945,7 @@ int FFmpegAudioStream::num_planes() const
 
 int64_t FFmpegAudioStream::traverse_samples()
 {
-	FrameQueue queue(12);
+	auto queue = FrameQueue { 12 };
 	queue.set_source(formatContext_.get(), stream_index());
 	queue.set_decoder(codecContext_.get());
 
@@ -979,7 +963,7 @@ int64_t FFmpegAudioStream::traverse_samples()
 	// Allow 1 packet less than capacity before requesting new packets
 	const auto allowed_diff   = decltype( queue )::size_type { 1 };
 
-	const auto queue_capacity = queue.capacity();
+	const auto queue_capacity { queue.capacity() };
 
 	// current frame
 	auto frame = AVFramePtr { nullptr };
@@ -1009,7 +993,7 @@ int64_t FFmpegAudioStream::traverse_samples()
 
 	// Flush queue
 
-	std::vector<AVFramePtr> decoded_frames;
+	auto decoded_frames = std::vector<AVFramePtr>{};
 	decoded_frames.reserve(queue.size());
 	// TODO Using a vector is not the nicest solution, consider AVAudioFifo
 	// https://ffmpeg.org/doxygen/trunk/structAVAudioFifo.html
@@ -1091,14 +1075,14 @@ FFmpegAudioReaderImpl::~FFmpegAudioReaderImpl() noexcept = default;
 std::unique_ptr<AudioSize> FFmpegAudioReaderImpl::do_acquire_size(
 	const std::string& filename)
 {
-	std::unique_ptr<AudioSize> audiosize =
-		std::make_unique<AudioSize>();
+	using arcstk::AudioSize;
+	using arcstk::UNIT;
 
-	FFmpegAudioStreamLoader loader;
-	auto audiofile = loader.load(filename);
-	audiosize->set_samples(audiofile->total_samples_declared());
+	const auto loader    = FFmpegAudioStreamLoader{};
+	const auto audiofile { loader.load(filename) };
 
-	return audiosize;
+	return std::make_unique<AudioSize>(
+				audiofile->total_samples_declared(), UNIT::SAMPLES);
 }
 
 
@@ -1111,8 +1095,8 @@ void FFmpegAudioReaderImpl::do_process_file(const std::string& filename)
 
 	// Plug file, buffer and processor together
 
-	FFmpegAudioStreamLoader loader;
-	auto audiostream = loader.load(filename);
+	const auto loader = FFmpegAudioStreamLoader{};
+	const auto audiostream { loader.load(filename) };
 
 	if (audiostream->channels_swapped())
 	{
@@ -1145,13 +1129,19 @@ void FFmpegAudioReaderImpl::do_process_file(const std::string& filename)
 
 	const auto total_samples_expected { audiostream->total_samples_declared() };
 
+	if (total_samples_expected > std::numeric_limits<int32_t>::max())
 	{
-		AudioSize size;
-		size.set_samples(total_samples_expected);
-		this->signal_updateaudiosize(size);
+		using std::to_string;
+		throw std::runtime_error("Number of samples too big: " +
+				to_string(total_samples_expected));
 	}
 
-	const auto total_samples          { audiostream->traverse_samples() };
+	using arcstk::UNIT;
+
+	this->signal_updateaudiosize(
+			{ static_cast<int32_t>(total_samples_expected), UNIT::SAMPLES });
+
+	const auto total_samples { audiostream->traverse_samples() };
 
 	this->signal_endinput();
 
@@ -1194,7 +1184,7 @@ void FFmpegAudioReaderImpl::frame_callback(AVFramePtr frame)
 
 void FFmpegAudioReaderImpl::pass_frame(AVFramePtr frame)
 {
-	const auto format = static_cast<::AVSampleFormat>(frame->format);
+	const auto format { static_cast<::AVSampleFormat>(frame->format) };
 
 	switch (format)
 	{
@@ -1220,7 +1210,7 @@ void FFmpegAudioReaderImpl::pass_frame(AVFramePtr frame)
 			}
 		default:
 			{
-				std::ostringstream msg;
+				auto msg = std::ostringstream{};
 				msg << "Cannot pass sequence with unknown sample format: "
 					<< ::av_get_sample_fmt_name(format);
 
@@ -1233,7 +1223,7 @@ void FFmpegAudioReaderImpl::pass_frame(AVFramePtr frame)
 template<enum ::AVSampleFormat F>
 void FFmpegAudioReaderImpl::pass_samples(AVFramePtr frame)
 {
-	const auto sequence = sequence_for<F>(frame);
+	const auto sequence { sequence_for<F>(frame) };
 
 	using std::cbegin;
 	using std::cend;
@@ -1253,7 +1243,7 @@ void print_dictionary(std::ostream& out, const ::AVDictionary* dict);
 
 void print_dictionary(std::ostream& out, const ::AVDictionary* dict)
 {
-	::AVDictionaryEntry* e = nullptr;
+	::AVDictionaryEntry* e { nullptr };
 
 	while ((e = ::av_dict_get(dict, "", e, /*macro*/AV_DICT_IGNORE_SUFFIX)))
 	{
@@ -1621,7 +1611,7 @@ LibInfo DescriptorFFmpeg::do_libraries() const
 
 std::unique_ptr<FileReader> DescriptorFFmpeg::do_create_reader() const
 {
-	auto impl = std::make_unique<details::ffmpeg::FFmpegAudioReaderImpl>();
+	auto impl { std::make_unique<details::ffmpeg::FFmpegAudioReaderImpl>() };
 	return std::make_unique<AudioReader>(std::move(impl));
 }
 
