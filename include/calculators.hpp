@@ -386,15 +386,15 @@ public:
 	 * Note that in this use case, it is not offered to compute the ARId of the
 	 * album since the exact offsets are missing.
 	 *
-	 * \param[in] audiofilenames       Names of the audiofiles
-	 * \param[in] first_file_with_skip Process first file as first track
-	 * \param[in] last_file_with_skip  Process last file as last track
+	 * \param[in] audiofilenames            Names of the audiofiles
+	 * \param[in] first_file_is_first_track Process first file as first track
+	 * \param[in] last_file_is_last_track   Process last file as last track
 	 *
 	 * \return AccurateRip checksums of the input files
 	 */
 	Checksums calculate(const std::vector<std::string>& audiofilenames,
-			const bool first_file_with_skip,
-			const bool last_file_with_skip);
+			const bool first_file_is_first_track,
+			const bool last_file_is_last_track);
 
 	/**
 	 * \brief Calculate a single ARCS for an audio file.

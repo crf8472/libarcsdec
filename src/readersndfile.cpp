@@ -11,6 +11,26 @@
 #include "readersndfile_details.hpp" // for LibsndfileAudioReaderImpl
 #endif
 
+#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
+#include "audioreader.hpp"  // for AudioReaderImpl, InvalidAudioException
+#endif
+#ifndef __LIBARCSDEC_LIBINSPECT_HPP__
+#include "libinspect.hpp"   // for first_libname_match
+#endif
+#ifndef __LIBARCSDEC_SELECTION_HPP__
+#include "selection.hpp"    // for RegisterDescriptor
+#endif
+
+#ifndef __LIBARCSTK_METADATA_HPP__
+#include <arcstk/metadata.hpp>   // for AudioSize, CDDA
+#endif
+#ifndef __LIBARCSTK_SAMPLES_HPP__
+#include <arcstk/samples.hpp>    // for SampleSequence
+#endif
+#ifndef __LIBARCSTK_LOGGING_HPP__
+#include <arcstk/logging.hpp>    // for ARCS_LOG, _ERROR, _INFO, _DEBUG
+#endif
+
 #include <cstdint>  // for int16_t, unit32_t, uint64_t
 #include <memory>   // for unique_ptr
 #include <set>      // for set
@@ -21,26 +41,6 @@
 
 #ifndef SNDFILE_HH
 #include <sndfile.hh>  // for SndfileHandle, SFM_READ, SF_FORMAT_PCM_16
-#endif
-
-#ifndef __LIBARCSTK_CALCULATE_HPP__
-#include <arcstk/calculate.hpp>  // for AudioSize
-#endif
-#ifndef __LIBARCSTK_SAMPLES_HPP__
-#include <arcstk/samples.hpp>    // for SampleSequence
-#endif
-#ifndef __LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp>    // for ARCS_LOG, _ERROR, _INFO, _DEBUG
-#endif
-
-#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
-#include "audioreader.hpp"  // for AudioReaderImpl, InvalidAudioException
-#endif
-#ifndef __LIBARCSDEC_LIBINSPECT_HPP__
-#include "libinspect.hpp"   // for first_libname_match
-#endif
-#ifndef __LIBARCSDEC_SELECTION_HPP__
-#include "selection.hpp"    // for RegisterDescriptor
 #endif
 
 
@@ -70,18 +70,22 @@ LibsndfileAudioReaderImpl::~LibsndfileAudioReaderImpl() noexcept = default;
 std::unique_ptr<AudioSize> LibsndfileAudioReaderImpl::do_acquire_size(
 	const std::string& filename)
 {
+	using arcstk::AudioSize;
+	using arcstk::UNIT;
+
 	SndfileHandle audiofile(filename);
 
-	auto audiosize { std::make_unique<AudioSize>() };
-	audiosize->set_total_samples(audiofile.frames());
 	// FIXME works only for WAV??
-
-	return audiosize;
+	/* libsndfile's frames == libarcstk's samples */
+	return std::make_unique<AudioSize>(audiofile.frames(), UNIT::SAMPLES );
 }
 
 
 void LibsndfileAudioReaderImpl::do_process_file(const std::string& filename)
 {
+	using arcstk::AudioSize;
+	using arcstk::UNIT;
+
 	SndfileHandle audiofile(filename, SFM_READ);
 
 	// TODO Check whether this was successful
@@ -111,8 +115,15 @@ void LibsndfileAudioReaderImpl::do_process_file(const std::string& filename)
 
 	// Update Calculation with sample count
 
-	AudioSize audiosize;
-	audiosize.set_total_samples(audiofile.frames());
+	const auto total_samples = audiofile.frames();
+
+	if (total_samples > std::numeric_limits<int32_t>::max())
+	{
+		throw std::runtime_error("Number of samples exceeds maximum AudioSize");
+	}
+
+	const auto audiosize = AudioSize {
+			static_cast<int32_t>(total_samples), UNIT::SAMPLES };
 	this->signal_updateaudiosize(audiosize);
 
 	// Prepare Read buffer (16 bit samples)

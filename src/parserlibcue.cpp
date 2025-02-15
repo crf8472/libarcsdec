@@ -249,7 +249,8 @@ CueInfo CueOpenFile::info() const
 			msg << "Track " << i << ": ";
 			msg << e.what();
 
-			throw InvalidMetadataException(msg.str());
+			//throw InvalidMetadataException(msg.str());
+			throw std::invalid_argument(msg.str());
 		}
 
 		filenames.emplace_back(audiofilename);
