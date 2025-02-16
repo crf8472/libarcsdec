@@ -23,8 +23,7 @@ inline namespace v_1_0_0
 {
 
 /**
- * \brief Generic AudioReader for virtually any lossless audio format,
- * implemented with ffmpeg.
+ * \brief Reader for lossless audio formats, implemented with ffmpeg.
  *
  * \details
  *

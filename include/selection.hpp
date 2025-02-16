@@ -31,7 +31,7 @@ inline namespace v_1_0_0
 
 
 /**
- * \defgroup selection API for selecting FileReaders
+ * \defgroup selection Select FileReaders
  *
  * \brief API for selecting \link FileReader FileReaders\endlink for given
  * input files.
@@ -120,12 +120,12 @@ private:
 
 
 /**
- * \brief DescriptorPreference for the most specific descriptor (with least
- * supported Formats and Codecs).
+ * \brief Preference for the most specific descriptor.
  *
- * A default preference value for the given input. The more formats and
- * codecs a FileReader supports, the higher is the penalty subtracted from its
- * preference for a given Format and Codec.
+ * A default preference value for the given input. The less formats and codecs a
+ * FileReader supports, the more specific it is considered to be. The more
+ * formats and codecs a FileReader supports, the higher is the penalty
+ * subtracted from its preference for a given Format and Codec.
  *
  * This prefers specialized readers (like libFLAC) over general multi-input
  * readers (like ffmpeg).
@@ -146,8 +146,7 @@ class DefaultPreference final : public DescriptorPreference
 
 
 /**
- * \brief DescriptorPreference that is always
- * DescriptorPreference::MIN_PREFERENCE.
+ * \brief DescriptorPreference equivalent to MIN_PREFERENCE.
  *
  * \note
  * Any input is ignored. This preference model can be combined with selectors
@@ -161,8 +160,7 @@ class MinPreference final : public DescriptorPreference
 
 
 /**
- * \brief DescriptorPreference for the most specific descriptor that accepts the
- * Format.
+ * \brief Preference for the most specific descriptor accepting the Format.
  *
  * \note
  * The codec is ignored. This preference model is used as the default model
@@ -229,8 +227,7 @@ private:
 
 
 /**
- * \brief FileReaderSelector for first descriptor (in order of occurrence) with
- * highest preference.
+ * \brief Selector for highest preference.
  *
  * Assigns a preference to each FileReaderDescriptor and returns the first one
  * (in order of occurrence) that has the highest occurring preference based on
@@ -430,8 +427,7 @@ using FunctionReturningUniquePtr = std::unique_ptr<T>(*)();
 
 
 /**
- * \brief Registry holding all available FileReaderDescriptors
- * and all supported Formats.
+ * \brief Hold all available FileReaderDescriptors and all supported Formats.
  *
  * A FileReaderDescriptor instance is registered via instantiating the template
  * subclass RegisterDescriptor with the appropriate Descriptor type.

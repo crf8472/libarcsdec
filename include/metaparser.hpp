@@ -30,9 +30,9 @@ inline namespace v_1_0_0
 using arcstk::ToC;
 
 /**
- * \defgroup metaparser API for implementing MetadataParsers
+ * \defgroup metaparser Implement MetadataParsers
  *
- * \brief API for implementing \link MetadataParser MetadataParsers\endlink.
+ * \brief Implement \link MetadataParser MetadataParsers\endlink.
  *
  * Class MetadataParser provides an interface for parsing ToC files.
  *

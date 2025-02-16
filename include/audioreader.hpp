@@ -36,9 +36,9 @@ using arcstk::AudioSize;
 
 
 /**
- * \defgroup audioreader API for implementing AudioReaders
+ * \defgroup audioreader Implement AudioReaders
  *
- * \brief API for implementing \link AudioReader AudioReaders\endlink.
+ * \brief Implement \link AudioReader AudioReaders\endlink.
  *
  * Class AudioReader provides an interface for reading audio files.
  *
@@ -660,7 +660,7 @@ struct CDDAValidator final
 
 
 /**
- * \brief Service: interpret sequences of 2 or 4 little-endian bytes as integer.
+ * \brief Service: interpret 2 or 4 little-endian bytes as integer.
  */
 struct LittleEndianBytes final
 {
@@ -737,7 +737,7 @@ struct LittleEndianBytes final
 
 
 /**
- * \brief Service: interpret sequences of 2 or 4 big endian bytes as integer.
+ * \brief Service: interpret 2 or 4 big-endian bytes as integer.
  */
 struct BigEndianBytes final
 {

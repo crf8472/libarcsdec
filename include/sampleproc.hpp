@@ -17,9 +17,9 @@ inline namespace v_1_0_0
 {
 
 /**
- * \defgroup sampleproc API for processing samples
+ * \defgroup sampleproc Process samples
  *
- * \brief API for processing samples.
+ * \brief API for AudioReaders to process samples.
  *
  * @{
  */

@@ -82,7 +82,7 @@ using ci_string = std::basic_string<char, ci_char_traits>;
 
 
 /**
- * \defgroup descriptor API for abstract FileReaders
+ * \defgroup descriptor Interfaces for abstract FileReaders
  *
  * \brief API for describing \link FileReader FileReaders\endlink for several
  * file \link Format Formats\endlink.

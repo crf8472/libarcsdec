@@ -57,7 +57,7 @@ using arcstk::ToC;
 /**
  * \defgroup calculators Calculators for AccurateRip Checksums and IDs
  *
- * \brief Calculators for AccurateRip checksums and IDs.
+ * \brief Calculate AccurateRip checksums and IDs.
  *
  * Calculators provide calculation results, thereby processing data provided by
  * FileReader instances. When passed filenames, calculators determine
