@@ -111,7 +111,7 @@ Checksums merge_results(const std::vector<Calculation>& calculations);
  *
  * \param[in] toc The ToC to inspect for audiofile name
  */
-std::string get_audiofilename(const ToC& toc);
+// std::string get_audiofilename(const ToC& toc);
 
 /**
  * \brief Worker: process an audio file via specified SampleProcessor.
