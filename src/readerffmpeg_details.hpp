@@ -1190,6 +1190,40 @@ private:
 	void pass_samples(AVFramePtr frame);
 };
 
+
+/**
+ * \brief Pretty-print an AVDictionary.
+ *
+ * \param[in] out  The stream to print
+ * \param[in] dict The dictionary to print
+ */
+void print_dictionary(std::ostream& out, const ::AVDictionary* dict);
+
+
+/**
+ * \brief Log some information about the codec.
+ *
+ * \param[in] cctx The ::AVCodecContext to analyze
+ */
+void print_codec_info(std::ostream& out, const ::AVCodecContext* cctx);
+
+
+/**
+ * \brief Log some information about the format.
+ *
+ * \param[in] out  The ostream to log to
+ * \param[in] fctx The ::AVFormatContext to analyze
+ */
+void print_format_info(std::ostream& out, const ::AVFormatContext* fctx);
+
+
+/**
+ * \brief Log some information about the stream.
+ *
+ * \param[in] stream The ::AVStream to analyze
+ */
+void print_stream_info(std::ostream& out, const ::AVStream* stream);
+
 /// @}
 
 } // namespace ffmpeg

@@ -184,7 +184,7 @@ void Free_AVPacket::operator()(::AVPacket* packet) const
 
 AVPacketPtr Make_AVPacketPtr::operator()() const
 {
-	auto packet { ::av_packet_alloc() };
+	auto packet { AVPacketPtr { ::av_packet_alloc() } };
 
 	if (!packet)
 	{
@@ -194,7 +194,7 @@ AVPacketPtr Make_AVPacketPtr::operator()() const
 	packet->data = nullptr;
 	packet->size = 0;
 
-	return AVPacketPtr(packet);
+	return packet;
 }
 
 
@@ -213,14 +213,14 @@ void Free_AVFrame::operator()(::AVFrame* frame) const
 
 AVFramePtr Make_AVFramePtr::operator()() const
 {
-	::AVFrame* f { ::av_frame_alloc() };
+	auto frame { AVFramePtr { ::av_frame_alloc() } };
 
-	if (!f)
+	if (!frame)
 	{
 		throw std::bad_alloc();
 	}
 
-	return AVFramePtr(f);
+	return frame;
 }
 
 
@@ -531,7 +531,8 @@ AVCodecContextPtr FFmpegFile::audio_decoder(::AVFormatContext* fctx,
 		throw std::invalid_argument("Stream index is negative");
 	}
 
-	::AVStream* stream { fctx->streams[stream_idx] };
+	// ::AVStream*
+	const auto* stream { fctx->streams[stream_idx] };
 
 	if (!stream)
 	{
@@ -547,7 +548,7 @@ AVCodecContextPtr FFmpegFile::audio_decoder(::AVFormatContext* fctx,
 		auto skip = bool { false };
 
 #if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(60, 31, 102)
-		const uint8_t *data =
+		const uint8_t* data =
 			::av_stream_get_side_data(
 					stream, ::AV_PKT_DATA_SKIP_SAMPLES, nullptr);
 
@@ -555,10 +556,10 @@ AVCodecContextPtr FFmpegFile::audio_decoder(::AVFormatContext* fctx,
 #else
 		for (auto i = int { 0 }; i < stream->codecpar->nb_coded_side_data; ++i)
 		{
-			const AVPacketSideData* const sd =
-				&stream->codecpar->coded_side_data[i];
+			//const AVPacketSideData* const
+			const auto* const sd_data { &stream->codecpar->coded_side_data[i] };
 
-			if (::AV_PKT_DATA_SKIP_SAMPLES == sd->type)
+			if (::AV_PKT_DATA_SKIP_SAMPLES == sd_data->type)
 			{
 				skip = true;
 				break;
@@ -606,15 +607,13 @@ AVCodecContextPtr FFmpegFile::audio_decoder(::AVFormatContext* fctx,
 				"avcodec_find_decoder could not determine codec");
 	}
 
-	::AVCodecContext* cctx { ::avcodec_alloc_context3(codec) };
+	auto ccontext { AVCodecContextPtr { ::avcodec_alloc_context3(codec) } };
 
-	if (!cctx)
+	if (!ccontext)
 	{
 		ARCS_LOG_ERROR << "Could not allocate AVCodecContext for decoding";
 		throw std::bad_alloc();
 	}
-
-	auto ccontext { AVCodecContextPtr { cctx } };
 
 	if (NumberOfChannels(ccontext.get()) > AV_NUM_DATA_POINTERS)/*macro*/
 	{
@@ -629,14 +628,14 @@ AVCodecContextPtr FFmpegFile::audio_decoder(::AVFormatContext* fctx,
 	}
 
 	const auto error_pars {
-		::avcodec_parameters_to_context(cctx, stream_params) };
+		::avcodec_parameters_to_context(ccontext.get(), stream_params) };
 
 	if (error_pars < 0) // success: >= 0
 	{
 		throw FFmpegException(error_pars, "avcodec_parameters_to_context");
 	}
 
-	const auto error_open { ::avcodec_open2(cctx, codec, nullptr) };
+	const auto error_open { ::avcodec_open2(ccontext.get(), codec, nullptr) };
 
 	if (error_open < 0) // success: == 0
 	{
@@ -651,7 +650,7 @@ std::pair<int, const ::AVCodec*> FFmpegFile::identify_stream(
 		::AVFormatContext* fctx, const ::AVMediaType media_type)
 {
 #if LIBAVFORMAT_VERSION_INT < AV_VERSION_INT(59, 16, 100) //  < ffmpeg 5.0
-	::AVCodec* codec = nullptr;
+	::AVCodec* codec { nullptr };
 #else
 	const ::AVCodec* codec { nullptr };
 #endif
@@ -1078,7 +1077,7 @@ std::unique_ptr<AudioSize> FFmpegAudioReaderImpl::do_acquire_size(
 	using arcstk::AudioSize;
 	using arcstk::UNIT;
 
-	const auto loader    = FFmpegAudioStreamLoader{};
+	const auto loader    { FFmpegAudioStreamLoader{} };
 	const auto audiofile { loader.load(filename) };
 
 	return std::make_unique<AudioSize>(
@@ -1095,7 +1094,7 @@ void FFmpegAudioReaderImpl::do_process_file(const std::string& filename)
 
 	// Plug file, buffer and processor together
 
-	const auto loader = FFmpegAudioStreamLoader{};
+	const auto loader      { FFmpegAudioStreamLoader{} };
 	const auto audiostream { loader.load(filename) };
 
 	if (audiostream->channels_swapped())
@@ -1232,15 +1231,6 @@ void FFmpegAudioReaderImpl::pass_samples(AVFramePtr frame)
 }
 
 
-/**
- * \brief Pretty-print an AVDictionary.
- *
- * \param[in] out  The stream to print
- * \param[in] dict The dictionary to print
- */
-void print_dictionary(std::ostream& out, const ::AVDictionary* dict);
-
-
 void print_dictionary(std::ostream& out, const ::AVDictionary* dict)
 {
 	::AVDictionaryEntry* e { nullptr };
@@ -1259,14 +1249,6 @@ void operator << (std::ostream& out, const ::AVDictionary* dict)
 {
 	print_dictionary(out, dict);
 }
-
-
-/**
- * \brief Log some information about the codec.
- *
- * \param[in] cctx The ::AVCodecContext to analyze
- */
-void print_codec_info(std::ostream& out, const ::AVCodecContext* cctx);
 
 
 void print_codec_info(std::ostream& out, const ::AVCodecContext* cctx)
@@ -1472,15 +1454,6 @@ void operator << (std::ostream& out, const ::AVCodecContext* cctx)
 }
 
 
-/**
- * \brief Log some information about the format.
- *
- * \param[in] out  The ostream to log to
- * \param[in] fctx The ::AVFormatContext to analyze
- */
-void print_format_info(std::ostream& out, const ::AVFormatContext* fctx);
-
-
 void print_format_info(std::ostream& out, const ::AVFormatContext* fctx)
 {
 	// Commented out, kept as a note:
@@ -1503,14 +1476,6 @@ void operator << (std::ostream& out, const ::AVFormatContext* fctx)
 {
 	print_format_info(out, fctx);
 }
-
-
-/**
- * \brief Log some information about the stream.
- *
- * \param[in] stream The ::AVStream to analyze
- */
-void print_stream_info(std::ostream& out, const ::AVStream* stream);
 
 
 void print_stream_info(std::ostream& out, const ::AVStream* s)
@@ -1626,7 +1591,7 @@ std::unique_ptr<FileReaderDescriptor> DescriptorFFmpeg::do_clone() const
 
 namespace {
 
-const auto d = RegisterDescriptor<DescriptorFFmpeg>();
+const auto d = RegisterDescriptor<DescriptorFFmpeg>{};
 
 } // namespace
 
