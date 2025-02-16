@@ -150,9 +150,6 @@ void Free_AVFormatContext::operator()(::AVFormatContext* fctx) const
 }
 
 
-void operator << (std::ostream& out, const ::AVFormatContext* fctx);
-
-
 // Free_AVCodecContext
 
 
@@ -164,9 +161,6 @@ void Free_AVCodecContext::operator()(::AVCodecContext* cctx) const
 		cctx = nullptr;
 	}
 }
-
-
-void operator << (std::ostream& out, const ::AVCodecContext* cctx);
 
 
 // Free_AVPacket
@@ -222,9 +216,6 @@ AVFramePtr Make_AVFramePtr::operator()() const
 
 	return frame;
 }
-
-
-void operator << (std::ostream& out, const ::AVStream* stream);
 
 
 // FrameQueue
@@ -1240,9 +1231,6 @@ void print_dictionary(std::ostream& out, const ::AVDictionary* dict)
 		out << "  Name: " << e->key << "  Value: "    << e->value << std::endl;
 	}
 }
-
-
-void operator << (std::ostream& out, const ::AVDictionary* dict);
 
 
 void operator << (std::ostream& out, const ::AVDictionary* dict)

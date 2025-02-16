@@ -146,6 +146,9 @@ private:
 };
 
 
+void operator << (std::ostream& out, const ::AVDictionary* dict);
+
+
 /**
  * \brief Free AVFormatContext* instances.
  *
@@ -155,6 +158,8 @@ struct Free_AVFormatContext final
 {
 	void operator()(::AVFormatContext* fctx) const;
 };
+
+void operator << (std::ostream& out, const ::AVFormatContext* fctx);
 
 
 using AVFormatContextPtr =
@@ -170,6 +175,8 @@ struct Free_AVCodecContext final
 {
 	void operator()(::AVCodecContext* cctx) const;
 };
+
+void operator << (std::ostream& out, const ::AVCodecContext* cctx);
 
 
 using AVCodecContextPtr =
@@ -217,6 +224,8 @@ struct Free_AVFrame final
 {
 	void operator()(::AVFrame* frame) const;
 };
+
+void operator << (std::ostream& out, const ::AVStream* stream);
 
 
 /**
