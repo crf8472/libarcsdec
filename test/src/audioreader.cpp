@@ -1,14 +1,14 @@
 #include "catch2/catch_test_macros.hpp"
 
-#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
-#include "audioreader.hpp"
-#endif
-
 /**
  * \file
  *
- * Tests for all API classes exported by audioreader.hpp
+ * \brief Fixtures for audioreader.hpp.
  */
+
+#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
+#include "audioreader.hpp"              // TO BE TESTED
+#endif
 
 
 TEST_CASE ( "LittleEndianBytes", "[littleendianbytes]" )

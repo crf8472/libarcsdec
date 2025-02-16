@@ -1,20 +1,18 @@
 #include "catch2/catch_test_macros.hpp"
 
-#ifndef __LIBARCSDEC_PARSERLIBCUE_HPP__
-#include "parserlibcue.hpp"
-#endif
-#ifndef __LIBARCSDEC_PARSERLIBCUE_DETAILS_HPP__
-#include "parserlibcue_details.hpp"
-#endif
-#ifndef __LIBARCSDEC_SELECTION_HPP__
-#include "selection.hpp"
-#endif
-
 /**
  * \file
  *
- * Tests for classes in parserlibcue.cpp
+ * \brief Fixtures for parserlibcue.hpp.
  */
+
+#ifndef __LIBARCSDEC_PARSERLIBCUE_HPP__
+#include "parserlibcue.hpp"             // TO BE TESTED
+#endif
+
+#ifndef __LIBARCSDEC_SELECTION_HPP__
+#include "selection.hpp"                // for FileReaderSelection
+#endif
 
 
 TEST_CASE ("DescriptorCue", "[parserlibcue]" )
@@ -97,71 +95,6 @@ TEST_CASE ("DescriptorCue", "[parserlibcue]" )
 }
 
 
-TEST_CASE ("CueParserImpl", "[parserlibcue]" )
-{
-	using arcsdec::details::libcue::CueParserImpl;
-	using arcsdec::DescriptorCue;
-
-	auto d = CueParserImpl{}.descriptor();
-
-	SECTION ("Parser implementation returns correct descriptor type")
-	{
-		CHECK ( d );
-		auto p = d.get();
-
-		CHECK ( dynamic_cast<const DescriptorCue*>(p) != nullptr );
-	}
-
-	SECTION ("ok01.cue: Parses a syntactically intact input correctly")
-	{
-		using arcstk::AudioSize;
-		using arcstk::UNIT;
-
-		using arcsdec::details::libcue::CueParserImpl;
-		auto parser = CueParserImpl{};
-		const auto cue = parser.parse("cuesheet/ok01.cue");
-		// This Cuesheet is complete and syntactically correct
-		const auto filenames { cue->filenames() };
-		const auto offsets   { cue->offsets() };
-
-		CHECK ( cue->total_tracks() == 2 );
-
-		CHECK ( filenames[0] == "john_doe_album.wav" );
-		CHECK ( filenames[1] == "john_doe_album.wav" );
-
-		CHECK ( offsets[0] == AudioSize { 150,   UNIT::FRAMES } );
-		CHECK ( offsets[1] == AudioSize { 25072, UNIT::FRAMES } );
-
-		CHECK ( cue->leadout().zero() ); // since last track (2) has unkown length
-		CHECK ( !cue->complete() ); // since leadout is 0
-	}
-
-	SECTION ("ok02.cue: Parses a syntactically intact input correctly")
-	{
-		using arcstk::AudioSize;
-		using arcstk::UNIT;
-
-		using arcsdec::details::libcue::CueParserImpl;
-		auto parser = CueParserImpl{};
-		const auto cue = parser.parse("cuesheet/ok02.cue");
-		// This Cuesheet is complete and syntactically correct
-		const auto filenames { cue->filenames() };
-		const auto offsets   { cue->offsets() };
-
-		CHECK ( cue->total_tracks() == 2 );
-
-		CHECK ( filenames[0] == "john_doe_album.wav" );
-		CHECK ( filenames[1] == "john_doe_album.wav" );
-
-		CHECK ( offsets[0] == AudioSize { 150,   UNIT::FRAMES } );
-		CHECK ( offsets[1] == AudioSize { 25072, UNIT::FRAMES } );
-
-		CHECK ( cue->leadout().zero() ); // since last track (2) has unkown length
-		CHECK ( !cue->complete() ); // since leadout is 0
-	}
-}
-
-
 TEST_CASE ("FileReaderSelection", "[filereaderselection]")
 {
 	using arcsdec::FileReaderSelection;
@@ -184,4 +117,36 @@ TEST_CASE ("FileReaderSelection", "[filereaderselection]")
 		CHECK ( nullptr != arcsdec::FileReaderRegistry::reader("libcue") );
 	}
 }
+
+
+//TEST_CASE ("FormatCue", "[parserlibcue]" )
+//{
+//	auto f = arcsdec::FormatCue{};
+//
+//	SECTION ("Returns own name correctly")
+//	{
+//		CHECK ( "cue" == f.name() );
+//	}
+//
+//	SECTION ("Matches accepted bytes correctly")
+//	{
+//		CHECK ( f.bytes({}, 0) );
+//		CHECK ( f.bytes({3, 2, 1}, 2) );
+//		CHECK ( f.bytes({0x65, 0x32, 0x88}, 1) );
+//		// TODO Check for always true
+//	}
+//
+//	SECTION ("Matches accepted filenames correctly")
+//	{
+//		CHECK ( f.filename("foo.cue") );
+//		CHECK ( f.filename("bar.CUE") );
+//		CHECK ( f.filename("bar.CUe") );
+//
+//		CHECK ( !f.filename("bar.rcue") );
+//		CHECK ( !f.filename("bar.PCUe") );
+//
+//		CHECK ( !f.filename("bar.cuef") );
+//		CHECK ( !f.filename("bar.CUEl") );
+//	}
+//}
 

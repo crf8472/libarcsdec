@@ -1,20 +1,19 @@
-/**
- * \file
- *
- * \brief Parser for Cuesheets
- */
-
-
 #ifndef __LIBARCSDEC_PARSERCUE_HPP__
 #define __LIBARCSDEC_PARSERCUE_HPP__
 
-#include <memory>   // for unique_ptr
-#include <set>      // for set
-#include <string>   // for string
+/**
+ * \file
+ *
+ * \brief Parser for Cuesheets.
+ */
 
 #ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
 #include "descriptor.hpp"// for Codec, Format, FileReaderDescriptor, FileReader
 #endif
+
+#include <memory>   // for unique_ptr
+#include <set>      // for set
+#include <string>   // for string
 
 
 namespace arcsdec
@@ -30,7 +29,6 @@ inline namespace v_1_0_0
  *
  * @{
  */
-
 
 /**
  * \brief Parser for Cuesheets.

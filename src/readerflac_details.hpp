@@ -1,34 +1,35 @@
 #ifndef __LIBARCSDEC_READERFLAC_HPP__
 #error "Do not include readerflac_details.hpp, include readerflac.hpp instead"
 #endif
-
-/**
- * \file
- *
- * \brief Testable implementation classes for readerflac.
- */
-
 #ifndef __LIBARCSDEC_READERFLAC_DETAILS_HPP__
 #define __LIBARCSDEC_READERFLAC_DETAILS_HPP__
 
-#include <FLAC++/decoder.h>   // for FLAC::Decoder::File,
-							  // FLAC__StreamDecoderWriteStatus,
-							  // FLAC__StreamDecoderErrorStatus
-#include <FLAC++/metadata.h>  // for FLAC::Metadata::StreamInfo,
-							  // FLAC__StreamMetadata
-							  // for FLAC__int32
-							  // for FLAC__Frame
+/**
+ * \internal
+ *
+ * \file
+ *
+ * \brief Implementation details of readerflac.hpp.
+ */
 
-#include <memory>   // for unique_ptr
-#include <string>   // for string
+#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
+#include "audioreader.hpp"    // for AudioReaderImpl, DefaultValidator
+#endif
 
 #ifndef __LIBARCSTK_SAMPLES_HPP__
 #include <arcstk/samples.hpp> // for SampleSequence
 #endif
 
-#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
-#include "audioreader.hpp"    // for AudioReaderImpl, DefaultValidator
-#endif
+#include <FLAC++/decoder.h>		// for FLAC::Decoder::File,
+								// FLAC__StreamDecoderWriteStatus,
+								// FLAC__StreamDecoderErrorStatus
+#include <FLAC++/metadata.h>	// for FLAC::Metadata::StreamInfo,
+								// FLAC__StreamMetadata
+								// for FLAC__int32
+								// for FLAC__Frame
+
+#include <memory>   // for unique_ptr
+#include <string>   // for string
 
 
 namespace arcsdec
@@ -37,13 +38,21 @@ inline namespace v_1_0_0
 {
 namespace details
 {
+
+/**
+ * \internal
+ *
+ * \brief Implementation details of readerflac.
+ */
 namespace flac
 {
 
 using arcstk::SampleSequence;
 
 /**
- * \internal \defgroup readerflacImpl Implementation
+ * \internal
+ *
+ * \defgroup readerflacImpl Implementation
  *
  * \ingroup readerflac
  *

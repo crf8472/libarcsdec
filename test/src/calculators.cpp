@@ -1,27 +1,36 @@
 #include "catch2/catch_test_macros.hpp"
 
-#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
-#include "audioreader.hpp"
-#endif
-#ifndef __LIBARCSDEC_METAPARSER_HPP__
-#include "metaparser.hpp"
-#endif
-#ifndef __LIBARCSDEC_CALCULATORS_HPP__
-#include "calculators.hpp"
-#endif
-
-
 /**
  * \file
  *
- * Tests for all API classes exported by calculators.hpp
+ * \brief Fixtures for calculators.hpp.
  */
+
+#ifndef __LIBARCSDEC_CALCULATORS_HPP__
+#include "calculators.hpp"              // TO BE TESTED
+#endif
+
+#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
+#include "audioreader.hpp"              // for AudioReader
+#endif
+#ifndef __LIBARCSDEC_METAPARSER_HPP__
+#include "metaparser.hpp"               // for MetadataParser
+#endif
+#ifndef __LIBARCSDEC_SELECTION_HPP__
+#include "selection.hpp"                // for FileReaderRegistry
+#endif
 
 
 using arcsdec::ReaderAndFormatHolder;
 
-// ReaderAndFormatHolder is abstract by its destructor
-class TestHolder : public ReaderAndFormatHolder
+/**
+ * \brief Mock for ReaderAndFormatHolder.
+ *
+ * ReaderAndFormatHolder is an abstract class by its destructor. The mock is
+ * intended to add no functionality but just access the functions in its base
+ * class.
+ */
+class Mock_ReaderAndFormatHolder : public ReaderAndFormatHolder
 {
 	// empty
 };
@@ -31,7 +40,7 @@ TEST_CASE ( "ReaderAndFormatHolder", "[readerandformatholder]")
 {
 	using arcsdec::FileReaderRegistry;
 
-	TestHolder h;
+	auto h = Mock_ReaderAndFormatHolder{};
 
 	SECTION ( "Create Holder for Readers and Formats with defaults" )
 	{
@@ -61,14 +70,13 @@ TEST_CASE ( "ReaderAndFormatHolder", "[readerandformatholder]")
 
 TEST_CASE ( "SelectionPerformer", "[selectionperformer]")
 {
+	using arcsdec::AudioReader;
+	using arcsdec::MetadataParser;
 	using arcsdec::SelectionPerformer;
 
-	using arcsdec::MetadataParser;
-	using arcsdec::AudioReader;
-
-	TestHolder h;
-	SelectionPerformer<MetadataParser> p;
-	SelectionPerformer<AudioReader> a;
+	const auto h = Mock_ReaderAndFormatHolder{};
+	const auto p = SelectionPerformer<MetadataParser>{};
+	const auto a = SelectionPerformer<AudioReader>{};
 
 	SECTION ( "Create reader for CueSheet correctly" )
 	{
@@ -91,7 +99,7 @@ TEST_CASE ( "AudioInfo", "[calculators]")
 	using arcsdec::AudioInfo;
 	using arcsdec::FileReaderRegistry;
 
-	AudioInfo i;
+	const auto i = AudioInfo{};
 
 	SECTION ("Initial set of FileReaders is present and complete")
 	{
@@ -112,10 +120,10 @@ TEST_CASE ( "AudioInfo", "[calculators]")
 
 TEST_CASE ( "ToCParser", "[calculators]" )
 {
-	using arcsdec::ToCParser;
 	using arcsdec::FileReaderRegistry;
+	using arcsdec::ToCParser;
 
-	ToCParser p;
+	const auto p = ToCParser{};
 
 	SECTION ("Initial set of FileReaders is present and complete")
 	{
@@ -140,7 +148,7 @@ TEST_CASE ( "ARCSCalculator", "[calculators]" )
 {
 	using arcsdec::ARCSCalculator;
 
-	ARCSCalculator c;
+	auto c = ARCSCalculator{};
 
 	SECTION ("Initial DescriptorSet is present and complete")
 	{
@@ -171,7 +179,7 @@ TEST_CASE ( "ARIdCalculator", "[calculators]" )
 	using arcsdec::ARIdCalculator;
 	using arcsdec::FileReaderRegistry;
 
-	ARIdCalculator c;
+	const auto c = ARIdCalculator{};
 
 	SECTION ("Initial set of FileReaders is present and complete")
 	{

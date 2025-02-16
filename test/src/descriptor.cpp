@@ -1,26 +1,25 @@
 #include "catch2/catch_test_macros.hpp"
 
-#include <climits>
-#include <type_traits>
-
-#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
-#include "descriptor.hpp"
-#endif
-
-
 /**
  * \file
  *
- * \brief Tests for classes in descriptor.cpp
+ * \brief Fixtures for descriptor.hpp.
  */
 
+#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
+#include "descriptor.hpp"               // TO BE TESTED
+#endif
+
+#include <climits>
+#include <type_traits>
+
+
+TEST_CASE ( "ci_string", "[ci_string]" )
+{
+  //using arcsdec::details::ci_string;
 
 // TODO
-//TEST_CASE ( "ci_string", "[ci_string]" )
-//{
-	//using arcsdec::details::ci_string;
-
-//}
+}
 
 
 TEST_CASE ( "ByteSeq", "[byteseq]")

@@ -1,22 +1,21 @@
+#ifndef __LIBARCSDEC_READERFFMPEG_HPP__
+#define __LIBARCSDEC_READERFFMPEG_HPP__
+
 /**
  * \file
  *
- * \brief FFmpeg-based generic audio reader.
+ * \brief Audio reader for multiple file formats, implemented with ffmpeg.
  */
 
-
-#ifndef __LIBARCSDEC_READERFFMPEG_HPP__
-#define __LIBARCSDEC_READERFFMPEG_HPP__
+#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
+#include "descriptor.hpp"  // for FileReaderDescriptor
+#endif
 
 #include <cstdint>  // for uint64_t
 #include <memory>   // for unique_ptr
 #include <set>      // for set
 #include <string>   // for string
 #include <vector>   // for vector
-
-#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
-#include "descriptor.hpp"  // for FileReaderDescriptor
-#endif
 
 
 namespace arcsdec

@@ -1,28 +1,28 @@
 #ifndef __LIBARCSDEC_READERWAV_HPP__
 #error "Do not include readerwav_details.hpp, include readerwav.hpp instead"
 #endif
-
-/**
- * \file
- *
- * \brief Internal APIs for native RIFFWAV/PCM reader
- */
-
 #ifndef __LIBARCSDEC_READERWAV_DETAILS_HPP__
 #define __LIBARCSDEC_READERWAV_DETAILS_HPP__
 
-#include <array>      // for array
-#include <cstddef>    // for size_t
-#include <cstdint>    // for uint8_t, uint32_t, int64_t
-#include <fstream>    // for ifstream
-#include <functional> // for function
-#include <memory>     // for unique_ptr
-#include <string>     // for string
-#include <vector>     // for vector
+/**
+ * \internal
+ *
+ * \file
+ *
+ * \brief Implementation details of readerwav.hpp.
+ */
 
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__
 #include "audioreader.hpp"  // for AudioReaderImpl
 #endif
+
+#include <array>      // for array
+#include <cstdint>    // for uint8_t, uint32_t, int64_t
+#include <fstream>    // for ifstream
+#include <memory>     // for unique_ptr
+#include <string>     // for string
+#include <vector>     // for vector
+
 
 namespace arcsdec
 {
@@ -30,12 +30,18 @@ inline namespace v_1_0_0
 {
 namespace details
 {
-namespace wave
-{
-
 
 /**
  * \internal
+ *
+ * \brief Implementation details of readerwav.
+ */
+namespace wave
+{
+
+/**
+ * \internal
+ *
  * \defgroup readerwavInternal Implementation of the WAV reader
  *
  * \ingroup readerwav
@@ -52,7 +58,6 @@ namespace wave
  *
  * @{
  */
-
 
 /**
  * \brief Represents an interface for different reference CDDA representations

@@ -4,8 +4,16 @@
 /**
  * \file
  *
- * \brief Toolkit for selecting file readers by format and codec.
+ * \brief Select file readers by format and codec.
  */
+
+#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
+#include "descriptor.hpp"       // for FileReaderDescriptor
+#endif
+
+#ifndef __LIBARCSTK_LOGGING_HPP__
+#include <arcstk/logging.hpp>   // for ARCS_LOG_WARNING, ARCS_LOG_DEBUG
+#endif
 
 #include <memory>        // for unique_ptr, make_unique
 #include <set>           // for set
@@ -14,14 +22,6 @@
 #include <unordered_map> // for unordered_map
 #include <utility>       // for pair, move, make_pair, forward
 #include <vector>        // for vector
-
-#ifndef __LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp>   // for ARCS_LOG_WARNING, ARCS_LOG_DEBUG
-#endif
-
-#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
-#include "descriptor.hpp"       // for FileReaderDescriptor
-#endif
 
 
 namespace arcsdec

@@ -1,15 +1,23 @@
 #ifndef __LIBARCSDEC_PARSERLIBCUE_HPP__
 #error "Do not include parserlibcue_details.hpp, include parserlibcue.hpp instead"
 #endif
-
-/**
- * \file
- *
- * \brief Internal APIs for libcue-based CueSheet reader
- */
-
 #ifndef __LIBARCSDEC_PARSERLIBCUE_DETAILS_HPP__
 #define __LIBARCSDEC_PARSERLIBCUE_DETAILS_HPP__
+
+/**
+ * \internal
+ *
+ * \file
+ *
+ * \brief Implementation details of parserlibcue.hpp.
+ */
+
+#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
+#include "descriptor.hpp"       // for FileReaderDescriptor
+#endif
+#ifndef __LIBARCSDEC_METAPARSER_HPP__
+#include "metaparser.hpp"        // for MetaparserImpl
+#endif
 
 #include <cstdint>  // for uint16_t, int32_t
 #include <memory>   // for unique_ptr
@@ -21,16 +29,6 @@ extern "C" {
 #include <libcue/libcue.h>  // for Cd
 }
 
-#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
-#include "descriptor.hpp"       // for FileReaderDescriptor
-#endif
-#ifndef __LIBARCSDEC_METAPARSER_HPP__
-#include "metaparser.hpp"        // for MetaparserImpl
-#endif
-
-#ifndef __LIBARCSTK_METADATA_HPP__
-#include <arcstk/metadata.hpp>   // for ToC
-#endif
 
 namespace arcsdec
 {
@@ -38,6 +36,12 @@ inline namespace v_1_0_0
 {
 namespace details
 {
+
+/**
+ * \internal
+ *
+ * \brief Implementation details of parserlibcue.
+ */
 namespace libcue
 {
 
@@ -45,13 +49,14 @@ using arcstk::ToC;
 
 
 /**
- * \internal \defgroup parserCueImpl Implementation details of CueSheet parsing
+ * \internal
+ *
+ * \defgroup parserLibcueImpl Implementation details of CueSheet parsing
  *
  * \ingroup parserlibcue
  *
  * @{
  */
-
 
 /**
  * \brief Type for amounts of lba frames.

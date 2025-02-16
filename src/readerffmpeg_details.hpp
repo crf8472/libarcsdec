@@ -1,27 +1,29 @@
 #ifndef __LIBARCSDEC_READERFFMPEG_HPP__
 #error "Do not include readerffmpeg_details.hpp, include readerffmpeg.hpp instead"
 #endif
-
-/**
- * \file
- *
- * \brief Internal APIs for FFmpeg-based generic audio reader.
- */
-
 #ifndef __LIBARCSDEC_READERFFMPEG_DETAILS_HPP__
 #define __LIBARCSDEC_READERFFMPEG_DETAILS_HPP__
 
+/**
+ * \internal
+ *
+ * \file
+ *
+ * \brief Implementation details of readerffmpeg.hpp.
+ */
 
-#include <cstddef>   // for size_t
-#include <exception> // for exception
-#include <functional>// for function
-#include <memory>    // for unique_ptr
-#include <queue>     // for queue
-#include <string>    // for string
-#include <type_traits> // for true_type, false_type
-#include <utility>   // for pair
+#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
+#include "audioreader.hpp"      // for AudioReaderImpl
+#endif
 
+#ifndef __LIBARCSTK_SAMPLES_HPP__
+#include <arcstk/samples.hpp>   // for SampleInputIterator
+#endif
+#ifndef __LIBARCSTK_CALCULATE_HPP__
+#include <arcstk/calculate.hpp> // for AudioSize
+#endif
 
+// ffmpeg
 extern "C"
 {
 #include <libavcodec/avcodec.h>
@@ -31,33 +33,32 @@ extern "C"
 #include <libavutil/channel_layout.h>
 }
 
-
-#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
-#include "audioreader.hpp"      // for AudioReaderImpl
-#endif
-
-
-#ifndef __LIBARCSTK_SAMPLES_HPP__
-#include <arcstk/samples.hpp>   // for SampleInputIterator
-#endif
-#ifndef __LIBARCSTK_CALCULATE_HPP__
-#include <arcstk/calculate.hpp> // for AudioSize
-#endif
+#include <cstddef>     // for size_t
+#include <exception>   // for exception
+#include <functional>  // for function
+#include <memory>      // for unique_ptr
+#include <queue>       // for queue
+#include <string>      // for string
+#include <type_traits> // for true_type, false_type
+#include <utility>     // for pair
 
 
 namespace arcsdec
 {
 inline namespace v_1_0_0
 {
-
-
-using arcstk::SampleSequence;
-
-
 namespace details
 {
+
+/**
+ * \internal
+ *
+ * \brief Implementation details of readerffmpeg.
+ */
 namespace ffmpeg
 {
+
+using arcstk::SampleSequence;
 
 using arcstk::SampleInputIterator;
 using arcstk::SampleSequence;
@@ -66,7 +67,9 @@ using arcstk::PlanarSamples;
 using arcstk::InterleavedSamples;
 
 /**
- * \internal \defgroup readerffmpegImpl Implementation
+ * \internal
+ *
+ * \defgroup readerffmpegImpl Implementation
  *
  * \ingroup readerffmpeg
  *

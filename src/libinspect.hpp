@@ -4,12 +4,12 @@
 /**
  * \file
  *
- * \brief Toolkit for inspecting the libarcsdec library
+ * \brief Inspect the libarcsdec library.
  */
 
-#include <list>        // for list
 #include <regex>       // for regex
 #include <string>      // for string
+#include <vector>      // for vector
 
 namespace arcsdec
 {
@@ -22,6 +22,7 @@ namespace details
 
 /**
  * \internal
+ *
  * \defgroup libinfoImpl API for implementing info functions about descriptors
  *
  * \ingroup descriptors

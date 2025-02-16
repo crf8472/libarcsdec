@@ -1,22 +1,26 @@
+#ifndef __LIBARCSDEC_READERWVPK_HPP__
+#define __LIBARCSDEC_READERWVPK_HPP__
+
 /**
  * \file
  *
- * \brief Audio reader for Wavpack audio files.
+ * \brief Audio reader for Wavpack audio files, implmented with libwavpack.
+ *
+ * The Wavpack AudioReader will only read Wavpack files containing losslessly
+ * compressed integer samples. Validation requires CDDA conform samples in PCM
+ * format. Float samples are not supported. Original file formats other than
+ * WAV are not supported.
  */
 
-
-#ifndef __LIBARCSDEC_READERWVPK_HPP__
-#define __LIBARCSDEC_READERWVPK_HPP__
+#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
+#include "descriptor.hpp"  // for FileReaderDescriptor
+#endif
 
 #include <cstdint>  // for uint64_t
 #include <memory>   // for unique_ptr
 #include <set>      // for set
 #include <string>   // for string
 #include <vector>   // for vector
-
-#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
-#include "descriptor.hpp"  // for FileReaderDescriptor
-#endif
 
 
 namespace arcsdec

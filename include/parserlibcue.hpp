@@ -1,22 +1,21 @@
+#ifndef __LIBARCSDEC_PARSERLIBCUE_HPP__
+#define __LIBARCSDEC_PARSERLIBCUE_HPP__
+
 /**
  * \file
  *
- * \brief Parser for Cue sheets
+ * \brief Parser for Cuesheets, implemented with libcue.
  */
 
-
-#ifndef __LIBARCSDEC_PARSERLIBCUE_HPP__
-#define __LIBARCSDEC_PARSERLIBCUE_HPP__
+#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
+#include "descriptor.hpp"// for Codec, Format, FileReaderDescriptor, FileReader
+#endif
 
 #include <cstdint>  // for uint64_t
 #include <memory>   // for unique_ptr
 #include <set>      // for set
 #include <string>   // for string
 #include <vector>   // for vector
-
-#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
-#include "descriptor.hpp"// for Codec, Format, FileReaderDescriptor, FileReader
-#endif
 
 
 namespace arcsdec

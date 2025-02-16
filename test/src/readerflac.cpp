@@ -1,27 +1,18 @@
 #include "catch2/catch_test_macros.hpp"
 
-#ifndef __LIBARCSDEC_READERFLAC_HPP__
-#include "readerflac.hpp"
-#endif
-#ifndef __LIBARCSDEC_READERFLAC_DETAILS_HPP__
-#include "readerflac_details.hpp"
-#endif
-#ifndef __LIBARCSDEC_SELECTION_HPP__
-#include "selection.hpp"
-#endif
-
-#ifndef __LIBARCSDEC_READERMOCKS_HPP__
-#include "readermocks.hpp"
-#endif
-
-#include <set>  // for set
-
-
 /**
  * \file
  *
- * Tests for classes in readerflac.cpp
+ * \brief Fixtures for readerflac.hpp.
  */
+
+#ifndef __LIBARCSDEC_READERFLAC_HPP__
+#include "readerflac.hpp"               // TO BE TESTED
+#endif
+
+#ifndef __LIBARCSDEC_SELECTION_HPP__
+#include "selection.hpp"                // for FileReaderSelection
+#endif
 
 
 TEST_CASE ("DescriptorFlac", "[readerflac]" )
@@ -109,53 +100,13 @@ TEST_CASE ("DescriptorFlac", "[readerflac]" )
 }
 
 
-TEST_CASE ("FlacMetadataHandler", "[readerflac]" )
-{
-	using arcsdec::details::flac::FlacMetadataHandler;
-	using arcsdec::Codec;
-
-	FlacMetadataHandler h;
-
-	SECTION ("Accepted set of codecs is only FLAC")
-	{
-		CHECK ( h.codecs() == std::set<Codec>{ Codec::FLAC } );
-	}
-}
-
-
-TEST_CASE ("FlacAudioReaderImpl", "[readerflac]" )
-{
-	using arcsdec::details::flac::FlacAudioReaderImpl;
-	using arcsdec::DescriptorFlac;
-
-	FlacAudioReaderImpl r;
-	auto proc = SampleProcessorMock{};
-	r.attach_processor(proc);
-
-	auto d = r.descriptor();
-
-	SECTION ("Parser implementation returns correct descriptor type")
-	{
-		CHECK ( d );
-		auto p = d.get();
-
-		CHECK ( dynamic_cast<const DescriptorFlac*>(p) != nullptr );
-	}
-
-	SECTION ("Parses a syntactically intact input correctly")
-	{
-		r.process_file("test01.flac");
-		// TODO What the mock sees in its callbacks has to be tested
-	}
-}
-
-
 TEST_CASE ("FileReaderSelection", "[filereaderselection]")
 {
 	using arcsdec::FileReaderSelection;
 	using arcsdec::FileReaderRegistry;
 	using arcsdec::Format;
 	using arcsdec::Codec;
+	using arcsdec::DescriptorFlac;
 
 	const auto default_selection {
 		FileReaderRegistry::default_audio_selection() };
@@ -188,4 +139,28 @@ TEST_CASE ("FileReaderSelection", "[filereaderselection]")
 		CHECK ( "flac" == reader->id() );
 	}
 }
+
+
+//TEST_CASE ("FormatFlac", "[readerflac]" )
+//{
+//	auto f = arcsdec::FormatFlac{};
+//
+//	SECTION ("Matches accepted bytes correctly")
+//	{
+//		CHECK ( f.bytes({ 0x66, 0x4C, 0x61, 0x43 }, 0) );
+//	}
+//
+//	SECTION ("Matches names correctly")
+//	{
+//		CHECK ( f.filename("foo.flac") );
+//		CHECK ( f.filename("bar.FLAC") );
+//		CHECK ( f.filename("bar.FlAc") );
+//
+//		CHECK ( !f.filename("bar.rflac") );
+//		CHECK ( !f.filename("bar.PFLac") );
+//
+//		CHECK ( !f.filename("bar.flacr") );
+//		CHECK ( !f.filename("bar.FLACD") );
+//	}
+//}
 

@@ -73,6 +73,9 @@ using arcstk::make_arid;
 
 // calculate_details.hpp
 
+namespace details
+{
+
 
 // get_algorithms
 
@@ -413,6 +416,8 @@ void MultiCalculationProcessor::do_end_input()
 			});
 }
 
+} // namespace details
+
 
 // calculate.hpp
 
@@ -653,6 +658,12 @@ Checksums ARCSCalculator::calculate(const std::string& audiofilename,
 		const Settings& settings, const ChecksumtypeSet& types,
 		std::unique_ptr<AudioSize>& leadout, const Points& offsets)
 {
+	using details::get_algorithms_or_throw;
+	using details::init_calculations;
+	using details::merge_results;
+	using details::process_audio_file;
+	using details::MultiCalculationProcessor;
+
 	ARCS_LOG_DEBUG <<
 		"Calculate by single audiofilename and complete input data";
 
@@ -680,8 +691,8 @@ Checksums ARCSCalculator::calculate(const std::string& audiofilename,
 			processor.add(c);
 		}
 
-		process_audio_file(audiofilename, std::move(reader), read_buffer_size(),
-				processor);
+		process_audio_file(audiofilename, std::move(reader),
+				read_buffer_size(), processor);
 	}
 
 	// Check results

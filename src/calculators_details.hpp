@@ -1,20 +1,26 @@
+#ifndef __LIBARCSDEC_CALCULATORS_HPP__
+#error "Do not include calculators_details.hpp, include calculators.hpp instead"
+#endif
 #ifndef __LIBARCSDEC_CALCULATORS_DETAILS_HPP__
 #define __LIBARCSDEC_CALCULATORS_DETAILS_HPP__
+
 /**
+ * \internal
+ *
  * \file
  *
- * \brief Implementation details of calculators.hpp
+ * \brief Implementation details of calculators.hpp.
  */
 
 #ifndef __LIBARCSDEC_SAMPLEPROC_HPP__
 #include "sampleproc.hpp"       // for SampleProcessor
 #endif
 
-#ifndef __LIBARCSTK_METADATA_HPP__
-#include <arcstk/metadata.hpp>  // for ToC
-#endif
 #ifndef __LIBARCSTK_CALCULATE_HPP__
 #include <arcstk/calculate.hpp> // for Checksums, ChecksumtypeSet, Points
+#endif
+#ifndef __LIBARCSTK_METADATA_HPP__
+#include <arcstk/metadata.hpp>  // for ToC
 #endif
 
 #include <cstdint>  // for uint32_t, int32_t
@@ -27,6 +33,9 @@ inline namespace v_1_0_0
 {
 
 class AudioReader;
+
+namespace details
+{
 
 using arcstk::Algorithm;
 using arcstk::AudioSize;
@@ -47,7 +56,6 @@ using arcstk::ToCData;
  * order.
  */
 using Algorithms = std::unordered_set<std::unique_ptr<Algorithm>>;
-
 
 /**
  * \brief Acquire the algorithms for calculating a set of types.
@@ -98,8 +106,8 @@ Checksums merge_results(const std::vector<Calculation>& calculations);
  *
  * Iff the ToC contains exactly one audiofilename, this name is the result. Iff
  * the ToC contains multiple filenames that are identical, this name is the
- * result. Iff the ToC contains either no filename or multiple filenames that
- * are different, the function throws.
+ * result. Iff the ToC contains either no filename or multiple different
+ * filenames, the function throws.
  *
  * \param[in] toc The ToC to inspect for audiofile name
  */
@@ -221,6 +229,7 @@ private:
 	std::vector<CalculationProcessor> processors_;
 };
 
+} // namespace details
 } // namespace v_1_0_0
 } // namespace arcsdec
 

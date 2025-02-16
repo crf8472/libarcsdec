@@ -35,6 +35,8 @@
 #include "selection.hpp"   // for RegisterDescriptor
 #endif
 
+#include <cdio++/cdio.hpp> // libcdio
+
 
 namespace arcsdec
 {

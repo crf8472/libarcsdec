@@ -1,22 +1,21 @@
+#ifndef __LIBARCSDEC_READERWAV_HPP__
+#define __LIBARCSDEC_READERWAV_HPP__
+
 /**
  * \file
  *
- * \brief Audio reader for RIFF/WAVE audio files with PCM.
+ * \brief Audio reader for RIFF/WAVE audio files with PCM samples.
  */
 
-
-#ifndef __LIBARCSDEC_READERWAV_HPP__
-#define __LIBARCSDEC_READERWAV_HPP__
+#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
+#include "descriptor.hpp"  // for FileReaderDescriptor
+#endif
 
 #include <cstdint>  // for uint64_t
 #include <memory>   // for unique_ptr
 #include <set>      // for set
 #include <string>   // for string
 #include <vector>   // for vector
-
-#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
-#include "descriptor.hpp"  // for FileReaderDescriptor
-#endif
 
 
 namespace arcsdec

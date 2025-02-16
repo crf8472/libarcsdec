@@ -4,8 +4,12 @@
 /**
  * \file
  *
- * \brief Toolkit for recognizing file types and selecting file readers.
+ * \brief Recognize file formats and select compatible file readers.
  */
+
+#ifndef __LIBARCSTK_LOGGING_HPP__
+#include <arcstk/logging.hpp>   // for ARCS_LOG_WARNING, ARCS_LOG_DEBUG
+#endif
 
 #include <algorithm>   // for transform
 #include <cctype>      // for toupper
@@ -18,10 +22,6 @@
 #include <string>      // for basic_string, string, char_traits
 #include <utility>     // for pair
 #include <vector>      // for vector
-
-#ifndef __LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp>   // for ARCS_LOG_WARNING, ARCS_LOG_DEBUG
-#endif
 
 
 namespace arcsdec

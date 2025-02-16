@@ -4,7 +4,6 @@
  * \brief Implements API for implementing AudioReaders.
  */
 
-
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__
 #include "audioreader.hpp"
 #endif

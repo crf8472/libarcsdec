@@ -4,8 +4,16 @@
 /**
  * \file
  *
- * \brief API for implementing MetadataParsers
+ * \brief Implement MetadataParsers.
  */
+
+#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
+#include "descriptor.hpp"  // for FileReader, FileReaderDescriptor
+#endif
+
+#ifndef __LIBARCSTK_METADATA_HPP__
+#include <arcstk/metadata.hpp>    // for ToC
+#endif
 
 #include <limits>       // for numeric_limits
 #include <memory>       // for unique_ptr
@@ -13,14 +21,6 @@
 #include <stdexcept>    // for out_of_range, runtime_error
 #include <string>       // for string
 #include <type_traits>  // for is_signed, is_unsigned
-
-#ifndef __LIBARCSTK_METADATA_HPP__
-#include <arcstk/metadata.hpp>    // for ToC
-#endif
-
-#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
-#include "descriptor.hpp"  // for FileReader, FileReaderDescriptor
-#endif
 
 namespace arcsdec
 {

@@ -4,8 +4,19 @@
 /**
  * \file
  *
- * \brief API for implementing AudioReaders
+ * \brief Implement AudioReaders.
  */
+
+#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
+#include "descriptor.hpp"  // for Codec, FileReaderDescriptor, ...
+#endif
+#ifndef __LIBARCSDEC_SAMPLEPROC_HPP__
+#include "sampleproc.hpp"  // for SampleProcessor, SampleProvider
+#endif
+
+#ifndef __LIBARCSTK_CALCULATE_HPP__
+#include <arcstk/calculate.hpp>  // for AudioSize, SampleInputIterator
+#endif
 
 #include <cstddef>    // for size_t
 #include <cstdint>    // for uint16_t, uint32_t, int16_t, int32_t
@@ -14,17 +25,6 @@
 #include <stdexcept>  // for logic_error
 #include <string>     // for string
 #include <vector>     // for vector
-
-#ifndef __LIBARCSTK_CALCULATE_HPP__
-#include <arcstk/calculate.hpp>  // for AudioSize, SampleInputIterator
-#endif
-
-#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
-#include "descriptor.hpp"  // for Codec, FileReaderDescriptor, ...
-#endif
-#ifndef __LIBARCSDEC_SAMPLEPROC_HPP__
-#include "sampleproc.hpp"  // for SampleProcessor, SampleProvider
-#endif
 
 namespace arcsdec
 {

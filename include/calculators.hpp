@@ -4,7 +4,7 @@
 /**
  * \file
  *
- * \brief A high-level API for calculating ARCSs and IDs.
+ * \brief Calculate AccurateRip Checksums and IDs.
  */
 
 #ifndef __LIBARCSDEC_SELECTION_HPP__

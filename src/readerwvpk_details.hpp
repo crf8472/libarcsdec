@@ -1,23 +1,23 @@
 #ifndef __LIBARCSDEC_READERWVPK_HPP__
 #error "Do not include readerwvpk_details.hpp, include readerwvpk.hpp instead"
 #endif
-
-/**
- * \file
- *
- * \brief Testable implementation classes for readerwvpk.
- *
- * The Wavpack AudioReader will only read Wavpack files containing losslessly
- * compressed integer samples. Validation requires CDDA conform samples in PCM
- * format. Float samples are not supported. Original file formats other than
- * WAV are not supported.
- */
-
 #ifndef __LIBARCSDEC_READERWVPK_DETAILS_HPP__
 #define __LIBARCSDEC_READERWVPK_DETAILS_HPP__
 
+/**
+ * \internal
+ *
+ * \file
+ *
+ * \brief Implementation details of readerwvpk.hpp.
+ */
+
+#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
+#include "audioreader.hpp"  // for AudioReaderImpl
+#endif
+
 extern "C" {
-#include <wavpack/wavpack.h>
+#include <wavpack/wavpack.h>  // for WavpackContext
 }
 
 #include <cstdint>   // for uint8_t, int32_t, int64_t
@@ -26,29 +26,31 @@ extern "C" {
 #include <string>    // for string
 #include <vector>    // for vector
 
-#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
-#include "audioreader.hpp"  // for AudioReaderImpl
-#endif
-
 
 namespace arcsdec
 {
 inline namespace v_1_0_0
 {
-
 namespace details
 {
+
+/**
+ * \internal
+ *
+ * \brief Implementation details of readerwav.
+ */
 namespace wavpack
 {
 
 /**
- * \internal \defgroup readerwvpkImpl Implementation
+ * \internal
+ *
+ * \defgroup readerwvpkImpl Implementation
  *
  * \ingroup readerwvpk
  *
  * @{
  */
-
 
 /**
  * \brief Functor for freeing WavpackContext* instances.
@@ -106,14 +108,14 @@ private:
  * Can be subclassed to be more permissive. Default implementation allows
  * only WAV format and no floats.
  */
-class WAVPACK_CDDA_t
+class WAVPACK_CDDA_t final
 {
 public:
 
 	/**
 	 * \brief Default destructor.
 	 */
-	virtual ~WAVPACK_CDDA_t() noexcept;
+	~WAVPACK_CDDA_t() noexcept;
 
 	/**
 	 * \brief Expect lossless compression.
@@ -129,7 +131,7 @@ public:
 	 *
 	 * \return TRUE iff only WAV format is exclusively required, otherwise FALSE
 	 */
-	virtual bool wav_format_only() const;
+	bool wav_format_only() const;
 
 	/**
 	 * \brief Declare whether it is required to have samples represented as
@@ -140,7 +142,7 @@ public:
 	 *
 	 * \return TRUE iff float samples can be processed, otherwise FALSE
 	 */
-	virtual bool floats_ok() const;
+	bool floats_ok() const;
 
 	/**
 	 * \brief Declare the least version of wavpack that is supported.
@@ -149,7 +151,7 @@ public:
 	 *
 	 * \return The least version of wavpack supported
 	 */
-	virtual int at_least_version() const;
+	int at_least_version() const;
 
 	/**
 	 * \brief Declare the highest version of wavpack that is supported.
@@ -158,7 +160,7 @@ public:
 	 *
 	 * \return The highest version of wavpack supported
 	 */
-	virtual int at_most_version() const;
+	int at_most_version() const;
 };
 
 
@@ -184,7 +186,7 @@ public:
 	/**
 	 * \brief Virtual default destructor.
 	 */
-	virtual ~WavpackOpenFile() noexcept;
+	~WavpackOpenFile() noexcept;
 
 	/**
 	 * \brief Returns TRUE if file is lossless.

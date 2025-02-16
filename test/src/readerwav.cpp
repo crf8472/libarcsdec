@@ -1,20 +1,17 @@
 #include "catch2/catch_test_macros.hpp"
 
-#ifndef __LIBARCSDEC_READERWAV_HPP__
-#include "readerwav.hpp"
-#endif
-#ifndef __LIBARCSDEC_READERWAV_DETAILS_HPP__
-#include "readerwav_details.hpp"
-#endif
-#ifndef __LIBARCSDEC_SELECTION_HPP__
-#include "selection.hpp"
-#endif
-
 /**
  * \file
  *
- * Tests for classes in readerwav.cpp
+ * \brief Fixtures for readerwav.hpp.
  */
+
+#ifndef __LIBARCSDEC_READERWAV_HPP__
+#include "readerwav.hpp"                // TO BE TESTED
+#endif
+#ifndef __LIBARCSDEC_SELECTION_HPP__
+#include "selection.hpp"                // for FileReaderSelection
+#endif
 
 
 TEST_CASE ("DescriptorWavPCM", "[readerwav]" )
@@ -104,29 +101,6 @@ TEST_CASE ("DescriptorWavPCM", "[readerwav]" )
 }
 
 
-TEST_CASE ( "RIFFWAV_PCM_CDDA_t constants", "[readerwav]" )
-{
-	using arcsdec::details::wave::RIFFWAV_PCM_CDDA_t;
-
-	RIFFWAV_PCM_CDDA_t w;
-
-	// RIFF Chunk
-	CHECK( w.chunk_id()          ==  0x52494646 );
-	CHECK( w.format()            ==  0x57415645 );
-	CHECK( w.fmt_subchunk_id()   ==  0x666D7420 );
-	CHECK( w.data_subchunk_id()  ==  0x64617461 );
-
-	// Format Subchunk
-	CHECK( w.fmt_subchunk_size() ==  16 );
-	CHECK( w.wFormatTag()        ==  1 );
-	CHECK( w.wChannels()         ==  2 );
-	CHECK( w.dwSamplesPerSec()   ==  44100 );
-	CHECK( w.dwAvgBytesPerSec()  ==  176400 );
-	CHECK( w.wBlockAlign()       ==  4 );
-	CHECK( w.wBitsPerSample()    ==  16 );
-}
-
-
 TEST_CASE ("FileReaderSelection", "[filereaderselection]")
 {
 	using arcsdec::FileReaderSelection;
@@ -165,4 +139,96 @@ TEST_CASE ("FileReaderSelection", "[filereaderselection]")
 		CHECK ( "wavpcm" == reader->id() );
 	}
 }
+
+//TEST_CASE ("FormatWavPCM", "[readerwav]" )
+//{
+//	using arcsdec::details::wave::RIFFWAV_PCM_CDDA_t;
+//	auto d = arcsdec::FormatWavPCM {};
+//
+//	SECTION ("Matches accepted bytes correctly")
+//	{
+//		RIFFWAV_PCM_CDDA_t w;
+//
+//		CHECK ( not d.bytes( {}, 0 ));
+//		CHECK ( not d.bytes( {}, 12 ));
+//		CHECK ( not d.bytes( {}, 45 ));
+//		CHECK ( not d.bytes( {}, 145 ));
+//
+//		// wav-header (0-11)
+//		CHECK (     d.bytes( {'R', 'I', 'F', 'F'}, 0) );
+//		CHECK ( not d.bytes( {'R', 'I', 'F', 'F'}, 3) );
+//		CHECK (     d.bytes( {'I', 'F', 'F'}, 1) );
+//		CHECK ( not d.bytes( {'I', 'F', 'F'}, 2) );
+//		CHECK (     d.bytes( {'W', 'A', 'V', 'E'}, 8) );
+//		CHECK ( not d.bytes( {'W', 'A', 'V', 'E'}, 9) );
+//
+//		// 'fmt ' (12-33)
+//		CHECK (     d.bytes( {'f', 'm', 't', ' '}, 12) );
+//		CHECK ( not d.bytes( {'f', 'm', 't', '_'}, 12) );
+//		// size == 16, wFormatTag == 1, Channels == 2, dwSamplesPerSec = 44.100
+//		CHECK ( d.bytes( { 16, 0, 0, 0, 1, 0, 2, 0, 68, 172, 0, 0 },
+//				16) );
+//		CHECK ( not d.bytes( { 16, 1, 0, 0, 1, 1, 2, 1, 68, 173, 0, 0 },
+//				16) );
+//		CHECK ( d.bytes( { 68, 172, 0, 0}, 24));
+//		// dwAvgBytesPerSec == 176400, wBlockAlign  == 4
+//		CHECK ( d.bytes( { 16, 177, 2, 0, 4, 0 }, 28));
+//		CHECK ( not d.bytes( { 16, 177, 2, 1, 5, 0 }, 28));
+//		// wBitsPerSample == 16
+//		CHECK ( d.bytes( { 16, 0 }, 34));
+//		CHECK ( not d.bytes( { 16, 1 }, 34));
+//		CHECK ( not d.bytes( { 17, 0 }, 34));
+//
+//		CHECK ( not d.bytes( { 0, 0, 0, 16, 0, 1, 0, 2, 0, 0 }, 15) );
+//		CHECK ( not d.bytes( { 0, 0, 0, 16, 0, 1, 1, 2, 0, 0 }, 16) );
+//		CHECK ( not d.bytes( { 16, 176, 2, 0, 4, 0 }, 28));
+//		CHECK ( not d.bytes( { 16, 176, 2, 0, 5, 0 }, 28));
+//
+//		// Accepts any declared file size?
+//
+//		CHECK (     d.bytes( {' ', ' ', ' ', ' ' }, 4) );
+//		CHECK (     d.bytes( {' ', ' ', ' ', ' ', 'W' }, 4) );
+//		CHECK ( not d.bytes( {' ', ' ', ' ', ' ', 'T' }, 4) );
+//		CHECK (     d.bytes( {'I', 'F', 'F', ' ', ' ', ' ', ' ', 'W' },
+//					1) );
+//		CHECK (     d.bytes( {'I', 'F', 'F', '1', '2', '3', '4', 'W' },
+//					1) );
+//		CHECK ( not d.bytes( {'I', 'F', 'F', ' ', ' ', ' ', ' ', 'X' },
+//					1) );
+//
+//		// Accepts any declared data chunk size?
+//
+//		CHECK (     d.bytes( {' ', ' ', ' ', ' ' }, 40) );
+//		CHECK (     d.bytes( {' ', ' ', ' ', ' ', '%' }, 40) );
+//		CHECK (     d.bytes( {'a', 't', 'a', ' ', ' ', ' ', ' ', 'W' },
+//					37) );
+//		CHECK (     d.bytes( {'a', 't', 'a', '1', '2', '3', '4', 'T' },
+//					37) );
+//		CHECK ( not d.bytes( {'a', 't', 'i', ' ', ' ', ' ', ' ', 'X' },
+//					37) );
+//		CHECK (     d.bytes( {'a', 't', 'a', '1', '2', '3', '4' },
+//					37) );
+//	}
+//
+//	SECTION ("Matches accepted filenames correctly")
+//	{
+//		CHECK ( d.filename("foo.wav") );
+//		CHECK ( d.filename("bar.WAV") );
+//		CHECK ( d.filename("foo.wave") );
+//		CHECK ( d.filename("bar.WAVE") );
+//		CHECK ( d.filename("foo.wAvE") );
+//		CHECK ( d.filename("bar.Wave") );
+//
+//		CHECK ( not d.filename("bar.WAVX") );
+//		CHECK ( not d.filename("bar.wavx") );
+//		CHECK ( not d.filename("bar.waving") );
+//		CHECK ( not d.filename("bar.warg") );
+//		CHECK ( not d.filename("bar.walar") );
+//		CHECK ( not d.filename("bar.WALINOR") );
+//		CHECK ( not d.filename("bar.PWAV") );
+//		CHECK ( not d.filename("bar.pwav") );
+//		CHECK ( not d.filename("bar.CWAVE") );
+//		CHECK ( not d.filename("bar.cwave") );
+//	}
+//}
 
