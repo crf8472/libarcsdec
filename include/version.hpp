@@ -9,9 +9,9 @@
 
 #include <string>
 
+
 namespace arcsdec
 {
-
 inline namespace v_1_0_0
 {
 

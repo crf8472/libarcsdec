@@ -11,6 +11,20 @@
 #include "parserlibcue_details.hpp"  // for CueParserImpl, CueOpenFile
 #endif
 
+#ifndef __LIBARCSDEC_METAPARSER_HPP__
+#include "metaparser.hpp"         // for MetadataParseException
+#endif
+#ifndef __LIBARCSDEC_SELECTION_HPP__
+#include "selection.hpp"          // for RegisterDescriptor
+#endif
+
+#ifndef __LIBARCSTK_METADATA_HPP__
+#include <arcstk/metadata.hpp>    // for ToC, make_toc
+#endif
+#ifndef __LIBARCSTK_LOGGING_HPP__
+#include <arcstk/logging.hpp>
+#endif
+
 extern "C" {
 #include <libcue/libcue.h>
 }
@@ -23,20 +37,6 @@ extern "C" {
 #include <stdexcept> // for invalid_argument
 #include <string>    // for string
 #include <vector>    // for vector
-
-#ifndef __LIBARCSTK_METADATA_HPP__
-#include <arcstk/metadata.hpp>    // for ToC, make_toc
-#endif
-#ifndef __LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp>
-#endif
-
-#ifndef __LIBARCSDEC_METAPARSER_HPP__
-#include "metaparser.hpp"  // for MetadataParseException
-#endif
-#ifndef __LIBARCSDEC_SELECTION_HPP__
-#include "selection.hpp"   // for RegisterDescriptor
-#endif
 
 
 // Note: This project requires libcue >= 2.0 but the code compiles fine with

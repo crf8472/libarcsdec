@@ -4,7 +4,6 @@
  * \brief Implements interface for processing samples
  */
 
-
 #ifndef __LIBARCSDEC_SAMPLEPROC_HPP__
 #include "sampleproc.hpp"
 #endif

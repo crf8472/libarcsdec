@@ -8,6 +8,14 @@
 #include "libinspect.hpp"
 #endif
 
+#ifndef __LIBARCSDEC_VERSION_HPP__
+#include "version.hpp"        // for LIBARCSDEC_NAME
+#endif
+
+#ifndef __LIBARCSTK_LOGGING_HPP__
+#include <arcstk/logging.hpp> // for ARCS_LOG_WARNING, ARCS_LOG_DEBUG
+#endif
+
 extern "C"
 {
 #include <dlfcn.h>     // [glibc, Linux] for dlopen, dlclose, dlerror, RTLD_LAZY
@@ -18,19 +26,11 @@ extern "C"
 #include <regex>       // for regex, regex_match
 #include <string>      // for string
 
-#ifndef __LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp>   // for ARCS_LOG_WARNING, ARCS_LOG_DEBUG
-#endif
-
-#ifndef __LIBARCSDEC_VERSION_HPP__
-#include "version.hpp"  // for LIBARCSDEC_NAME
-#endif
 
 namespace arcsdec
 {
 inline namespace v_1_0_0
 {
-
 namespace details
 {
 

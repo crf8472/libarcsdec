@@ -11,6 +11,29 @@
 #include "readerwav_details.hpp" // for WavAudioHandler, RIFFWAV_PCM_CDDA_t
 #endif
 
+#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
+#include "audioreader.hpp"  // for AudioReaderImpl, *EndianBytes,
+#endif
+#ifndef __LIBARCSDEC_LIBINSPECT_HPP__
+#include "libinspect.hpp"   // for first_libname_match
+#endif
+#ifndef __LIBARCSDEC_SAMPLEPROC_HPP__
+#include "sampleproc.hpp"   // for BLOCKSIZE
+#endif
+#ifndef __LIBARCSDEC_SELECTION_HPP__
+#include "selection.hpp"    // for RegisterDescriptor
+#endif
+#ifndef __LIBARCSDEC_VERSION_HPP__
+#include "version.hpp"      // for LIBARCSDEC_NAME
+#endif
+
+#ifndef __LIBARCSTK_METADATA_HPP__
+#include <arcstk/metadata.hpp>  // for AudioSize, UNIT, CDDA
+#endif
+#ifndef __LIBARCSTK_LOGGING_HPP__
+#include <arcstk/logging.hpp>   // for ARCS_LOG, _ERROR, _WARNING, _INFO, _DEBUG
+#endif
+
 extern "C" {
 #include <assert.h>   // for assert
 #include <sys/stat.h> // for ::stat
@@ -31,29 +54,6 @@ extern "C" {
 
 #if __cplusplus >= 201703L
 #include <filesystem>
-#endif
-
-#ifndef __LIBARCSTK_METADATA_HPP__
-#include <arcstk/metadata.hpp>  // for AudioSize, UNIT, CDDA
-#endif
-#ifndef __LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp>   // for ARCS_LOG, _ERROR, _WARNING, _INFO, _DEBUG
-#endif
-
-#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
-#include "audioreader.hpp"  // for AudioReaderImpl, *EndianBytes,
-#endif
-#ifndef __LIBARCSDEC_LIBINSPECT_HPP__
-#include "libinspect.hpp"   // for first_libname_match
-#endif
-#ifndef __LIBARCSDEC_SAMPLEPROC_HPP__
-#include "sampleproc.hpp"   // for BLOCKSIZE
-#endif
-#ifndef __LIBARCSDEC_SELECTION_HPP__
-#include "selection.hpp"    // for RegisterDescriptor
-#endif
-#ifndef __LIBARCSDEC_VERSION_HPP__
-#include "version.hpp"      // for LIBARCSDEC_NAME
 #endif
 
 

@@ -31,6 +31,10 @@
 #include <arcstk/logging.hpp>    // for ARCS_LOG, _ERROR, _INFO, _DEBUG
 #endif
 
+#ifndef SNDFILE_HH
+#include <sndfile.hh>  // for SndfileHandle, SFM_READ, SF_FORMAT_PCM_16
+#endif
+
 #include <cstdint>  // for int16_t, unit32_t, uint64_t
 #include <memory>   // for unique_ptr
 #include <set>      // for set
@@ -38,10 +42,6 @@
 #include <string>   // for string, to_string
 #include <utility>  // for make_unique, move
 #include <vector>   // for vector
-
-#ifndef SNDFILE_HH
-#include <sndfile.hh>  // for SndfileHandle, SFM_READ, SF_FORMAT_PCM_16
-#endif
 
 
 namespace arcsdec

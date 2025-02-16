@@ -9,13 +9,13 @@
 #include "metaparser.hpp"
 #endif
 
-#include <memory>   // for unique_ptr
-#include <string>   // for string
-#include <utility>  // for move
-
 #ifndef __LIBARCSTK_LOGGING_HPP__
 #include <arcstk/logging.hpp>  // for ARCS_LOG_DEBUG
 #endif
+
+#include <memory>   // for unique_ptr
+#include <string>   // for string
+#include <utility>  // for move
 
 
 namespace arcsdec

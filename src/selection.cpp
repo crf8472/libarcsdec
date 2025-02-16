@@ -8,6 +8,14 @@
 #include "selection.hpp"
 #endif
 
+#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
+#include "descriptor.hpp"     // for FileReaderDescriptor
+#endif
+
+#ifndef __LIBARCSTK_LOGGING_HPP__
+#include <arcstk/logging.hpp> // for ARCS_LOG, _WARNING, _DEBUG
+#endif
+
 #include <algorithm>    // for find_if
 #include <iterator>     // for begin, end
 #include <memory>       // for unique_ptr, make_unique
@@ -16,13 +24,6 @@
 #include <type_traits>  // for remove_reference
 #include <utility>      // for pair, make_pair, move
 
-#ifndef __LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp> // for ARCS_LOG, _WARNING, _DEBUG
-#endif
-
-#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
-#include "descriptor.hpp"     // for FileReaderDescriptor
-#endif
 
 namespace arcsdec
 {

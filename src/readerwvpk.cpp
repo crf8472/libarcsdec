@@ -11,19 +11,15 @@
 #include "readerwvpk_details.hpp"
 #endif
 
-extern "C" {
-#include <wavpack/wavpack.h>
-}
-
-#include <cstdint>   // for uint8_t, uint64_t, int32_t, int64_t
-#include <cstdlib>   // for size_t, free
-#include <memory>    // for unique_ptr
-#include <set>       // for set
-#include <sstream>   // for ostringstream
-#include <stdexcept> // for invalid_argument
-#include <string>    // for string, to_string
-#include <utility>   // for make_unique, move
-#include <vector>    // for vector
+#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
+#include "audioreader.hpp"  // for AudioReaderImpl, InvalidAudioException
+#endif
+#ifndef __LIBARCSDEC_LIBINSPECT_HPP__
+#include "libinspect.hpp"   // for first_libname_match
+#endif
+#ifndef __LIBARCSDEC_SELECTION_HPP__
+#include "selection.hpp"    // for RegisterDescriptor
+#endif
 
 #ifndef __LIBARCSTK_IDENTIFIER_HPP__
 #include <arcstk/identifier.hpp>     // for CDDA
@@ -38,15 +34,19 @@ extern "C" {
 #include <arcstk/logging.hpp> // for ARCS_LOG_ERROR, _WARNING, _INFO, _DEBUG
 #endif
 
-#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
-#include "audioreader.hpp"  // for AudioReaderImpl, InvalidAudioException
-#endif
-#ifndef __LIBARCSDEC_LIBINSPECT_HPP__
-#include "libinspect.hpp"   // for first_libname_match
-#endif
-#ifndef __LIBARCSDEC_SELECTION_HPP__
-#include "selection.hpp"    // for RegisterDescriptor
-#endif
+extern "C" {
+#include <wavpack/wavpack.h>
+}
+
+#include <cstdint>   // for uint8_t, uint64_t, int32_t, int64_t
+#include <cstdlib>   // for size_t, free
+#include <memory>    // for unique_ptr
+#include <set>       // for set
+#include <sstream>   // for ostringstream
+#include <stdexcept> // for invalid_argument
+#include <string>    // for string, to_string
+#include <utility>   // for make_unique, move
+#include <vector>    // for vector
 
 
 namespace arcsdec

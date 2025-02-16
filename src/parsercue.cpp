@@ -11,6 +11,29 @@
 #include "parsercue_details.hpp"  // for CuesheetParserImpl
 #endif
 
+#ifndef __LIBARCSDEC_CUESHEET_DRIVER_HPP__
+#include "cuesheet/driver.hpp"
+#endif
+#ifndef __LIBARCSDEC_CUESHEET_TOCHANDLER_HPP__
+#include "cuesheet/tochandler.hpp"
+#endif
+#ifndef __LIBARCSDEC_LIBINSPECT_HPP__
+#include "libinspect.hpp"      // for first_libname_match
+#endif
+#ifndef __LIBARCSDEC_METAPARSER_HPP__
+#include "metaparser.hpp"      // for MetadataParseException
+#endif
+#ifndef __LIBARCSDEC_SELECTION_HPP__
+#include "selection.hpp"       // for RegisterDescriptor
+#endif
+
+#ifndef __LIBARCSTK_METADATA_HPP__
+#include <arcstk/metadata.hpp> // for ToC, make_toc
+#endif
+#ifndef __LIBARCSTK_LOGGING_HPP__
+#include <arcstk/logging.hpp>
+#endif
+
 #include <cstdio>    // for fopen, fclose, FILE
 #include <iomanip>   // for setw
 #include <fstream>
@@ -20,30 +43,6 @@
 #include <stdexcept> // for invalid_argument
 #include <string>    // for string
 #include <vector>    // for vector
-
-#ifndef __LIBARCSTK_METADATA_HPP__
-#include <arcstk/metadata.hpp>    // for ToC, make_toc
-#endif
-#ifndef __LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp>
-#endif
-
-#ifndef __LIBARCSDEC_LIBINSPECT_HPP__
-#include "libinspect.hpp"   // for first_libname_match
-#endif
-#ifndef __LIBARCSDEC_METAPARSER_HPP__
-#include "metaparser.hpp"  // for MetadataParseException
-#endif
-#ifndef __LIBARCSDEC_SELECTION_HPP__
-#include "selection.hpp"   // for RegisterDescriptor
-#endif
-
-#ifndef __LIBARCSDEC_CUESHEET_DRIVER_HPP__
-#include "cuesheet/driver.hpp"
-#endif
-#ifndef __LIBARCSDEC_CUESHEET_TOCHANDLER_HPP__
-#include "cuesheet/tochandler.hpp"
-#endif
 
 namespace arcsdec
 {

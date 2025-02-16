@@ -23,6 +23,7 @@ inline namespace v_1_0_0
 
 /**
  * \internal
+ *
  * \defgroup parsercue Metadata: Cuesheet
  *
  * \brief A MetadataParser for Cuesheet files

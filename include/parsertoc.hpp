@@ -25,6 +25,7 @@ inline namespace v_1_0_0
 
 /**
  * \internal
+ *
  * \defgroup parsertoc Metadata: CDRDAO/TOC
  *
  * \brief A MetadataParser for CDRDAO/TOC files

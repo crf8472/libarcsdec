@@ -19,15 +19,15 @@
 #include "metaparser.hpp"        // for MetaparserImpl
 #endif
 
+extern "C" {
+#include <libcue/libcue.h>  // for Cd
+}
+
 #include <cstdint>  // for uint16_t, int32_t
 #include <memory>   // for unique_ptr
 #include <string>   // for string
 #include <tuple>    // for tuple
 #include <vector>   // for vector
-
-extern "C" {
-#include <libcue/libcue.h>  // for Cd
-}
 
 
 namespace arcsdec

@@ -28,13 +28,13 @@
 
 
 /**
- * \brief Main namespace for libarcsdec.
+ * \brief APIs of libarcsdec.
  */
 namespace arcsdec
 {
 
 /**
- * \brief API version 1.0.0.
+ * \brief libarcsdec API version 1.0.0.
  */
 inline namespace v_1_0_0
 {

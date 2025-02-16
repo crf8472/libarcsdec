@@ -24,6 +24,7 @@ inline namespace v_1_0_0
 
 /**
  * \internal
+ *
  * \defgroup readerflac Audio: fLaC by libFLAC++
  *
  * \brief An AudioReader for fLaC/fLaC files.

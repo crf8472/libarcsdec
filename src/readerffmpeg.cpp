@@ -11,6 +11,31 @@
 #include "readerffmpeg_details.hpp"
 #endif
 
+#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
+#include "audioreader.hpp"  // for AudioReaderImpl, InvalidAudioException
+#endif
+#ifndef __LIBARCSDEC_LIBINSPECT_HPP__
+#include "libinspect.hpp"   // for first_libname_match
+#endif
+#ifndef __LIBARCSDEC_SELECTION_HPP__
+#include "selection.hpp"    // for RegisterDescriptor
+#endif
+
+#ifndef __LIBARCSTK_METADATA_HPP__
+#include <arcstk/metadata.hpp>  // for AudioSize
+#endif
+#ifndef __LIBARCSTK_LOGGING_HPP__
+#include <arcstk/logging.hpp>   // for ARCS_LOG, _ERROR, _WARNING, _INFO, _DEBUG
+#endif
+
+extern "C"
+{
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+#include <libavformat/version.h>   // for LIBAVFORMAT_VERSION_INT
+#include <libavutil/avutil.h>
+}
+
 #include <algorithm>  // for remove
 #include <cerrno>     // for EAGAIN
 #include <climits>    // for CHAR_BIT
@@ -26,31 +51,6 @@
 #include <string>     // for string
 #include <utility>    // for make_pair, move
 #include <vector>     // for vector
-
-extern "C"
-{
-#include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
-#include <libavformat/version.h>   // for LIBAVFORMAT_VERSION_INT
-#include <libavutil/avutil.h>
-}
-
-#ifndef __LIBARCSTK_METADATA_HPP__
-#include <arcstk/metadata.hpp>  // for AudioSize
-#endif
-#ifndef __LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp>   // for ARCS_LOG, _ERROR, _WARNING, _INFO, _DEBUG
-#endif
-
-#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
-#include "audioreader.hpp"  // for AudioReaderImpl, InvalidAudioException
-#endif
-#ifndef __LIBARCSDEC_LIBINSPECT_HPP__
-#include "libinspect.hpp"   // for first_libname_match
-#endif
-#ifndef __LIBARCSDEC_SELECTION_HPP__
-#include "selection.hpp"    // for RegisterDescriptor
-#endif
 
 
 namespace arcsdec

@@ -26,6 +26,7 @@ inline namespace v_1_0_0
 
 /**
  * \internal
+ *
  * \defgroup readerffmpeg Audio: Generic by FFmpeg
  *
  * \brief A generic AudioReader for losslessly encoded audio files.

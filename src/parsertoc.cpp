@@ -11,6 +11,22 @@
 #include "parsertoc_details.hpp"
 #endif
 
+#ifndef __LIBARCSDEC_METAPARSER_HPP__
+#include "metaparser.hpp"  // for MetadataParseException
+#endif
+#ifndef __LIBARCSDEC_SELECTION_HPP__
+#include "selection.hpp"   // for RegisterDescriptor
+#endif
+
+#ifndef __LIBARCSTK_METADATA_HPP__
+#include <arcstk/metadata.hpp>    // for ToC, make_toc
+#endif
+#ifndef __LIBARCSTK_LOGGING_HPP__
+#include <arcstk/logging.hpp>
+#endif
+
+#include <cdio++/cdio.hpp> // libcdio
+
 #include <cstdint>   // for uint64_t
 #include <cstdio>    // for fopen, fclose, FILE
 #include <iomanip>   // for setw
@@ -20,22 +36,6 @@
 #include <stdexcept> // for invalid_argument
 #include <string>    // for string
 #include <vector>    // for vector
-
-#ifndef __LIBARCSTK_METADATA_HPP__
-#include <arcstk/metadata.hpp>    // for ToC, make_toc
-#endif
-#ifndef __LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp>
-#endif
-
-#ifndef __LIBARCSDEC_METAPARSER_HPP__
-#include "metaparser.hpp"  // for MetadataParseException
-#endif
-#ifndef __LIBARCSDEC_SELECTION_HPP__
-#include "selection.hpp"   // for RegisterDescriptor
-#endif
-
-#include <cdio++/cdio.hpp> // libcdio
 
 
 namespace arcsdec

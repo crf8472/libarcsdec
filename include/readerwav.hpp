@@ -25,6 +25,7 @@ inline namespace v_1_0_0
 
 /**
  * \internal
+ *
  * \defgroup readerwav Audio: RIFF/WAVE with PCM encoding
  *
  * \brief AudioReader for RIFF/WAVE files with CDDA-compliant PCM data.
