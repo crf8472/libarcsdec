@@ -11,11 +11,10 @@
 #include "descriptor.hpp"  // for FileReaderDescriptor
 #endif
 
-#include <cstdint>  // for uint64_t
 #include <memory>   // for unique_ptr
 #include <set>      // for set
 #include <string>   // for string
-#include <vector>   // for vector
+
 
 namespace arcsdec
 {
@@ -23,34 +22,24 @@ inline namespace v_1_0_0
 {
 
 /**
- * \internal
- *
- * \defgroup readerflac Audio: fLaC by libFLAC++
- *
  * \brief An AudioReader for fLaC/fLaC files.
- *
- * The Flac AudioReader will only read files in fLaC file format. fLaC/Ogg is
- * currently not supported. Validation requires CDDA conform samples. Embedded
- * CUESheets are ignored.
- *
- * @{
- */
-
-
-/**
- * \brief Libflac-based reader for fLaC containers holding fLaC data.
  *
  * Represents a Flac container holding samples conforming to CDDA. That
  * is 16 bit, 2 channels, 44100 samples/sec as integer representation.
+ *
+ * The Flac AudioReader will only read files in fLaC file format. fLaC/Ogg is
+ * currently not supported. Validation requires CDDA conform samples. Embedded
+ * Cuesheets are ignored.
  */
 class DescriptorFlac final : public FileReaderDescriptor
 {
 public:
 
 	/**
-	 * \brief Virtual default destructor.
+	 * \brief Default destructor.
 	 */
 	~DescriptorFlac() noexcept final;
+
 
 private:
 
@@ -74,10 +63,7 @@ private:
 	std::unique_ptr<FileReaderDescriptor> do_clone() const final;
 };
 
-/// @}
-
 } // namespace v_1_0_0
-
 } // namespace arcsdec
 
 #endif

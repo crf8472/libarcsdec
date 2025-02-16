@@ -11,11 +11,9 @@
 #include "descriptor.hpp"  // for FileReaderDescriptor
 #endif
 
-#include <cstdint>  // for uint64_t
 #include <memory>   // for unique_ptr
 #include <set>      // for set
 #include <string>   // for string
-#include <vector>   // for vector
 
 
 namespace arcsdec
@@ -24,35 +22,25 @@ inline namespace v_1_0_0
 {
 
 /**
- * \internal
- *
- * \defgroup readerwav Audio: RIFF/WAVE with PCM encoding
- *
  * \brief AudioReader for RIFF/WAVE files with CDDA-compliant PCM data.
- *
- * Additional fields in the format subchunk are not supported. Validation
- * requires CDDA conform samples in PCM format. Non-standard subchunks are
- * ignored. RIFX containers are currently not supported.
- *
- * @{
- */
-
-
-/**
- * \brief Reader for RIFF WAVE files containing PCM data.
  *
  * Represents a RIFF WAVE container holding PCM samples conforming to CDDA. That
  * is 16 bit, 2 channels, 44100 samples/sec as integer representation
  * exclusively.
+ *
+ * Additional fields in the format subchunk are not supported. Validation
+ * requires CDDA conform samples in PCM format. Non-standard subchunks are
+ * ignored. RIFX containers are currently not supported.
  */
 class DescriptorWavPCM final : public FileReaderDescriptor
 {
 public:
 
 	/**
-	 * \brief Virtual default destructor
+	 * \brief Default destructor.
 	 */
 	~DescriptorWavPCM() noexcept final;
+
 
 private:
 
@@ -76,10 +64,7 @@ private:
 	std::unique_ptr<FileReaderDescriptor> do_clone() const final;
 };
 
-/// @}
-
 } // namespace v_1_0_0
-
 } // namespace arcsdec
 
 #endif

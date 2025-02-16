@@ -16,11 +16,9 @@
 #include "descriptor.hpp"  // for FileReaderDescriptor
 #endif
 
-#include <cstdint>  // for uint64_t
 #include <memory>   // for unique_ptr
 #include <set>      // for set
 #include <string>   // for string
-#include <vector>   // for vector
 
 
 namespace arcsdec
@@ -29,36 +27,26 @@ inline namespace v_1_0_0
 {
 
 /**
- * \internal
- *
- * \defgroup readerwvpk Audio: Lossless Wavpack by libwavpack
- *
- * \brief An AudioReader for losslessly encoded Wavpack/Wv files.
- *
- * The Wavpack AudioReader will only read Wavpack files containing losslessly
- * compressed samples in integer format. Float samples are not supported.
- * Validation requires CDDA conform samples. Original file formats other than
- * WAV are not supported.
- *
- * @{
- */
-
-
-/**
  * \brief Wavpack-5-based reader for losslessly encoded wavpack files.
  *
  * Represents a Wavpack container holding losslessly encoded samples conforming
  * to CDDA. That is 16 bit, 2 channels, 44100 samples/sec as integer
  * representation exclusively.
+ *
+ * The Wavpack AudioReader will only read Wavpack files containing losslessly
+ * compressed samples in integer format. Float samples are not supported.
+ * Validation requires CDDA conform samples. Original file formats other than
+ * WAV are not supported.
  */
 class DescriptorWavpack final : public FileReaderDescriptor
 {
 public:
 
 	/**
-	 * \brief Virtual default destructor.
+	 * \brief Default destructor.
 	 */
 	~DescriptorWavpack() noexcept final;
+
 
 private:
 
@@ -82,10 +70,7 @@ private:
 	std::unique_ptr<FileReaderDescriptor> do_clone() const final;
 };
 
-/// @}
-
 } // namespace v_1_0_0
-
 } // namespace arcsdec
 
 #endif

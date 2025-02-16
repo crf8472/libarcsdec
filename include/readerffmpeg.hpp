@@ -11,11 +11,9 @@
 #include "descriptor.hpp"  // for FileReaderDescriptor
 #endif
 
-#include <cstdint>  // for uint64_t
 #include <memory>   // for unique_ptr
 #include <set>      // for set
 #include <string>   // for string
-#include <vector>   // for vector
 
 
 namespace arcsdec
@@ -25,11 +23,10 @@ inline namespace v_1_0_0
 {
 
 /**
- * \internal
+ * \brief Generic AudioReader for virtually any lossless audio format,
+ * implemented with ffmpeg.
  *
- * \defgroup readerffmpeg Audio: Generic by FFmpeg
- *
- * \brief A generic AudioReader for losslessly encoded audio files.
+ * \details
  *
  * Since checksumming makes only sense for losslessly encoded files, the
  * FFmpegAudioReaderImpl uses a whitelist to verify whether the codec of the
@@ -50,22 +47,16 @@ inline namespace v_1_0_0
  * introduced the new API was 57.37.100 on 2016-04-21). It can not be compiled
  * with ffmpeg versions prior to 3.1 (at least with libavcodec prior to
  * 57.37.100).
- *
- * @{
- */
-
-
-/**
- * \brief FFmpeg-based AudioReader for virtually any lossless audio format.
  */
 class DescriptorFFmpeg final : public FileReaderDescriptor
 {
 public:
 
 	/**
-	 * \brief Virtual default destructor.
+	 * \brief Default destructor.
 	 */
 	~DescriptorFFmpeg() noexcept final;
+
 
 private:
 
@@ -89,10 +80,7 @@ private:
 	std::unique_ptr<FileReaderDescriptor> do_clone() const final;
 };
 
-/// @}
-
 } // namespace v_1_0_0
-
 } // namespace arcsdec
 
 #endif

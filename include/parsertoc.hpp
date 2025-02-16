@@ -11,11 +11,9 @@
 #include "descriptor.hpp"// for Codec, Format, FileReaderDescriptor, FileReader
 #endif
 
-#include <cstdint>  // for uint64_t
 #include <memory>   // for unique_ptr
 #include <set>      // for set
 #include <string>   // for string
-#include <vector>   // for vector
 
 
 namespace arcsdec
@@ -24,28 +22,16 @@ inline namespace v_1_0_0
 {
 
 /**
- * \internal
- *
- * \defgroup parsertoc Metadata: CDRDAO/TOC
- *
- * \brief A MetadataParser for CDRDAO/TOC files
- *
- * @{
- */
-
-
-/**
- * \brief Libcdio-based parser for CDRDAO's .toc files.
+ * \brief A MetadataParser for CDRDAO/TOC files, implemented with libcdio.
  */
 class DescriptorToc final : public FileReaderDescriptor
 {
-
 public:
 
 	/**
-	 * \brief Virtual default destructor.
+	 * \brief Default destructor.
 	 */
-	virtual ~DescriptorToc() noexcept final;
+	~DescriptorToc() noexcept final;
 
 
 private:
@@ -71,8 +57,6 @@ private:
 
 	std::unique_ptr<FileReaderDescriptor> do_clone() const final;
 };
-
-/// @}
 
 } // namespace v_1_0_0
 } // namespace arcsdec

@@ -22,27 +22,16 @@ inline namespace v_1_0_0
 {
 
 /**
- * \internal
- *
- * \defgroup parsercue Metadata: Cuesheet
- *
- * \brief A MetadataParser for Cuesheet files
- *
- * @{
- */
-
-/**
- * \brief Parser for Cuesheets.
+ * \brief A MetadataParser for Cuesheet files.
  */
 class DescriptorCuesheet final : public FileReaderDescriptor
 {
-
 public:
 
 	/**
-	 * \brief Virtual default destructor.
+	 * \brief Default destructor.
 	 */
-	virtual ~DescriptorCuesheet() noexcept final;
+	~DescriptorCuesheet() noexcept final;
 
 
 private:
@@ -68,8 +57,6 @@ private:
 
 	std::unique_ptr<FileReaderDescriptor> do_clone() const final;
 };
-
-/// @}
 
 } // namespace v_1_0_0
 } // namespace arcsdec

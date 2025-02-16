@@ -632,10 +632,10 @@ auto cast_reader(std::unique_ptr<FileReader> file_reader) noexcept
  * Select a reader that is guaranteed to accept the current input file or return
  * a nullptr.
  *
- * \param[in] filename Name of the file to read
- * \param[in] selector Selector to choose a reader
- * \param[in] formats  Set of file formats to check \c filename for
- * \param[in] readers  Set of available file readers
+ * \param[in] filename  Name of the file to read
+ * \param[in] selection FileReaderSelection to select from
+ * \param[in] formats   Set of file formats to check \c filename for
+ * \param[in] readers   Set of available file readers
  *
  * \return Descriptor that accepts the input file.
  */
@@ -652,10 +652,10 @@ std::unique_ptr<FileReaderDescriptor> select_descriptor(
  * Select a reader that is guaranteed to accept the current input file or return
  * a null pointer.
  *
- * \param[in] filename Name of the file to read
- * \param[in] selector Selector to choose a reader
- * \param[in] formats  Set of file formats to check \c filename for
- * \param[in] readers  Set of available file readers
+ * \param[in] filename  Name of the file to read
+ * \param[in] selection FileReaderSelection to select from
+ * \param[in] formats   Set of file formats to check \c filename for
+ * \param[in] readers   Set of available file readers
  *
  * \return FileReader that accepts the input file.
  */
@@ -693,8 +693,8 @@ struct CreateReader final
 	/**
 	 * \brief Return a unique_ptr to an instance of the specified \c ReaderType.
 	 *
-	 * \param[in] selector  The FileReaderSelector to choose from
 	 * \param[in] filename  The name of the file to choose a FileReader
+	 * \param[in] selection FileReaderSelection to select from
 	 * \param[in] formats   Set of supported formats
 	 * \param[in] readers   Set of available file readers
 	 */

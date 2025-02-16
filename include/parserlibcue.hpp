@@ -11,11 +11,9 @@
 #include "descriptor.hpp"// for Codec, Format, FileReaderDescriptor, FileReader
 #endif
 
-#include <cstdint>  // for uint64_t
 #include <memory>   // for unique_ptr
 #include <set>      // for set
 #include <string>   // for string
-#include <vector>   // for vector
 
 
 namespace arcsdec
@@ -24,28 +22,16 @@ inline namespace v_1_0_0
 {
 
 /**
- * \internal
- *
- * \defgroup parserlibcue Metadata: CueSheet
- *
- * \brief A MetadataParser for CueSheet files
- *
- * @{
- */
-
-
-/**
- * \brief Libcue-based parser for Cuesheets.
+ * \brief A MetadataParser for Cuesheet files, implemented with libcue 2.
  */
 class DescriptorCue final : public FileReaderDescriptor
 {
-
 public:
 
 	/**
-	 * \brief Virtual default destructor.
+	 * \brief Default destructor.
 	 */
-	virtual ~DescriptorCue() noexcept final;
+	~DescriptorCue() noexcept final;
 
 
 private:
@@ -53,9 +39,9 @@ private:
 	std::string do_id() const final;
 
 	/**
-	 * \brief Returns "CueSheet".
+	 * \brief Returns "Libcue".
 	 *
-	 * \return "CueSheet"
+	 * \return "Libcue"
 	 */
 	std::string do_name() const final;
 
@@ -71,8 +57,6 @@ private:
 
 	std::unique_ptr<FileReaderDescriptor> do_clone() const final;
 };
-
-/// @}
 
 } // namespace v_1_0_0
 } // namespace arcsdec

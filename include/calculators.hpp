@@ -86,7 +86,7 @@ using arcstk::ToC;
  *			<td>AudioInfo is a format independent reader for metadata of audio
  *			files that currently provides the amount of samples.</td>
  *		</tr>
- * <table>
+ * </table>
  *
  * @{
  */

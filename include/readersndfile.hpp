@@ -11,11 +11,9 @@
 #include "descriptor.hpp"  // for FileReaderDescriptor
 #endif
 
-#include <cstdint>  // for uint64_t
 #include <memory>   // for unique_ptr
 #include <set>      // for set
 #include <string>   // for string
-#include <vector>   // for vector
 
 
 namespace arcsdec
@@ -24,10 +22,6 @@ inline namespace v_1_0_0
 {
 
 /**
- * \internal
- *
- * \defgroup readersndfile Audio: Generic by libsndfile
- *
  * \brief A generic AudioReader for losslessly encoded audio files.
  *
  * The LibsndfileAudioReaderImpl can also read FLAC encoded data in either
@@ -42,21 +36,13 @@ inline namespace v_1_0_0
  * \todo Since checksumming makes only sense for losslessly encoded files, the
  * LibsndfileAudioReaderImpl uses a whitelist to verify whether the codec of
  * the input data is supported.
- *
- * @{
- */
-
-
-/**
- * \brief Libsndfile-based reader for some lossless audio input formats.
  */
 class DescriptorSndfile final : public FileReaderDescriptor
 {
-
 public:
 
 	/**
-	 * \brief Virtual default destructor.
+	 * \brief Default destructor.
 	 */
 	~DescriptorSndfile() noexcept final;
 
@@ -82,8 +68,6 @@ private:
 
 	std::unique_ptr<FileReaderDescriptor> do_clone() const final;
 };
-
-/// @}
 
 } // namespace v_1_0_0
 } // namespace arcsdec
