@@ -14,8 +14,11 @@
 #include "sampleproc.hpp"  // for SampleProcessor, SampleProvider
 #endif
 
+#ifndef __LIBARCSTK_METADATA_HPP__
+#include <arcstk/metadata.hpp>   // for AudioSize, UNIT
+#endif
 #ifndef __LIBARCSTK_CALCULATE_HPP__
-#include <arcstk/calculate.hpp>  // for AudioSize, SampleInputIterator
+#include <arcstk/calculate.hpp>  // for SampleInputIterator
 #endif
 
 #include <cstddef>    // for size_t
@@ -33,6 +36,7 @@ inline namespace v_1_0_0
 {
 
 using arcstk::AudioSize;
+using arcstk::UNIT;
 
 
 /**
@@ -168,6 +172,17 @@ protected:
 	 * \brief Use the internal SampleProcessor.
 	 */
 	SampleProcessor* use_processor();
+
+	/**
+	 * \brief Service: convert 64 bit wide number of total samples to AudioSize.
+	 *
+	 * \param[in] total_samples Total samples
+	 *
+	 * \return AudioSize representing the number of total samples
+	 *
+	 * \throw std::invalid_argument If total_samples is bigger than 32 bit
+	 */
+	AudioSize to_audiosize(const int64_t total_samples, const UNIT& u) const;
 
 private:
 
@@ -342,6 +357,27 @@ public:
 	 */
 	explicit InvalidAudioException(const char* what_arg);
 };
+
+
+/**
+ * \brief Perform a safe cast to int32_t.
+ *
+ * \param[in] value The value to cast
+ *
+ * \tparam INT The type to cast
+ */
+template <typename INT>
+constexpr inline static int32_t cast_to_int32(const INT value)
+{
+	if (value > std::numeric_limits<int32_t>::max())
+	{
+		using std::to_string;
+		throw std::invalid_argument(std::string { "Value " } + to_string(value)
+				+ " cannot be represented with only 32 bit");
+	}
+
+	return static_cast<int32_t>(value);
+}
 
 
 /**

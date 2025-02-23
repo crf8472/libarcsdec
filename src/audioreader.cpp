@@ -459,6 +459,33 @@ int64_t AudioReaderImpl::samples_per_read() const
 }
 
 
+AudioSize AudioReaderImpl::to_audiosize(const int64_t val, const UNIT& u) const
+{
+	using arcstk::AudioSize;
+	using arcstk::UNIT;
+
+	auto s = AudioSize{};
+
+	try
+	{
+		s = { cast_to_int32(val), u };
+	} catch (const std::invalid_argument& e)
+	{
+		using std::to_string;
+
+		ARCS_LOG_ERROR << "Total number of samples in audio stream "
+			<< to_string(val)
+			<< " exceeds the maximum possible value";
+
+		throw InvalidAudioException(std::string { "Too much input: " }
+				+ to_string(val)
+				+ " samples exceed the maximal CDDA-conforming value");
+	}
+
+	return s;
+}
+
+
 std::unique_ptr<FileReaderDescriptor> AudioReaderImpl::descriptor() const
 {
 	return this->do_descriptor();
