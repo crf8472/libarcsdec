@@ -198,38 +198,6 @@ Checksums merge_results(const std::vector<Calculation>& calculations)
 }
 
 
-// get_audiofilename
-
-
-// std::string get_audiofilename(const ToC& toc)
-// {
-// 	// Check whether ToC references exactly one audio file.
-// 	// (Other cases are currently unsupported.)
-//
-// 	const auto audiofilenames { toc.filenames() };
-//
-// 	if (audiofilenames.empty())
-// 	{
-// 		throw std::runtime_error(
-// 				"ToC does not seem to reference any audio file.");
-// 	}
-//
-// 	using std::cbegin;
-// 	using std::cend;
-//
-// 	const std::unordered_set<std::string> name_set(
-// 			cbegin(audiofilenames), cend(audiofilenames));
-//
-// 	if (name_set.size() != 1)
-// 	{
-// 		throw std::runtime_error(
-// 				"ToC does not reference exactly one audio file.");
-// 	}
-//
-// 	return *cbegin(name_set);
-// }
-
-
 // process_audio_file
 
 

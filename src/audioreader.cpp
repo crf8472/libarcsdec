@@ -35,7 +35,7 @@ using arcstk::CDDA;
 // MAX_SAMPLES_TO_READ
 
 
-const int32_t MAX_SAMPLES_TO_READ =
+constexpr int32_t MAX_SAMPLES_TO_READ =
 	CDDA::MAX_BLOCK_ADDRESS * CDDA::SAMPLES_PER_FRAME;
 
 

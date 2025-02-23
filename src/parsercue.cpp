@@ -55,14 +55,12 @@ namespace cuesheet
 
 using arcstk::ToC;
 using arcstk::make_toc;
-//using arcstk::InvalidMetadataException;
 
 
 std::unique_ptr<ToC> CuesheetParserImpl::do_parse(const std::string& filename)
 {
-	Driver driver;
-											//
-	ToCHandler handler;
+	auto driver  = Driver{};
+	auto handler = ToCHandler{};
 	driver.set_handler(handler);
 
 	std::ifstream file;
@@ -79,13 +77,10 @@ std::unique_ptr<ToC> CuesheetParserImpl::do_parse(const std::string& filename)
 
 	if (driver.parse() != 0)
 	{
-		//throw InvalidMetadataException(
-		throw std::invalid_argument(
+		throw std::runtime_error(
 				std::string { "Faild to parse file " } + filename);
 	}
 
-	//return make_toc(handler.total_tracks(), handler.offsets(),
-	//		handler.lengths(), handler.filenames());
 	return make_toc(handler.offsets(), handler.filenames());
 }
 

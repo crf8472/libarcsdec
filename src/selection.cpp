@@ -35,7 +35,7 @@ inline namespace v_1_0_0
  *
  * This amount is sufficient to determine the file format and codec.
  */
-const uint32_t TOTAL_BYTES_TO_READ = 44;
+constexpr uint32_t TOTAL_BYTES_TO_READ = 44;
 // Why 44? => Enough for WAVE and every other metadata format.
 // We want to recognize container format, codec and CDDA format.
 // Consider RIFFWAVE/PCM: the first 12 bytes identify the container

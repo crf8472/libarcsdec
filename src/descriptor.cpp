@@ -698,15 +698,21 @@ InputType FileReaderDescriptor::do_input_type() const
 
 bool FileReaderDescriptor::do_accepts_format(const Format f) const
 {
+	using std::cbegin;
+	using std::cend;
+
 	const auto fs = formats();
-	return std::find(fs.begin(), fs.end(), f) != fs.end();
+	return std::find(cbegin(fs), cend(fs), f) != cend(fs);
 }
 
 
 bool FileReaderDescriptor::do_accepts_codec(const Codec c) const
 {
+	using std::cbegin;
+	using std::cend;
+
 	const auto cs = codecs();
-	return std::find(cs.begin(), cs.end(), c) != cs.end();
+	return std::find(cbegin(cs), cend(cs), c) != cend(cs);
 }
 
 

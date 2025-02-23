@@ -39,7 +39,7 @@ void escape(std::string& input, const char c, const std::string& escape_seq)
 	std::size_t lookHere = 0;
 	std::size_t foundHere;
 
-	auto replacement = escape_seq + c;
+	const auto replacement = escape_seq + c;
 	while((foundHere = input.find(c, lookHere)) != std::string::npos)
 	{
 		input.replace(foundHere, 1, replacement);
@@ -72,17 +72,17 @@ const std::string& first_libname_match(const std::vector<std::string>& list,
 
 	const auto pattern = to_libname_pattern(name);
 
-	using std::begin;
-	using std::end;
+	using std::cbegin;
+	using std::cend;
 
-	const auto first_match = std::find_if(begin(list), end(list),
+	const auto first_match = std::find_if(cbegin(list), cend(list),
 			[pattern](const std::string& lname)
 			{
 				return std::regex_match(lname, pattern);
 			}
 	);
 
-	if (first_match == list.end())
+	if (first_match == cend(list))
 	{
 		return empty_entry;
 	}

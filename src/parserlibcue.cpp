@@ -63,7 +63,6 @@ namespace libcue
 
 using arcstk::ToC;
 using arcstk::make_toc;
-// using arcstk::InvalidMetadataException;
 
 
 // FreeCd
@@ -84,7 +83,7 @@ void Free_Cd::operator()(::Cd* cd) const
 
 CdPtr Make_CdPtr::operator()(const std::string& filename) const
 {
-	CdPtr cd_ptr;
+	auto cd_ptr = CdPtr{};
 
 	{ // begin scope of FILE f
 #ifdef MSC_SAFECODE
@@ -98,7 +97,7 @@ CdPtr Make_CdPtr::operator()(const std::string& filename) const
 
 		if (!f)
 		{
-			std::ostringstream message;
+			auto message = std::ostringstream{};
 			message << "Failed to open Cuesheet file: " << filename;
 
 			throw FileReadException(message.str());
@@ -112,7 +111,7 @@ CdPtr Make_CdPtr::operator()(const std::string& filename) const
 
 		if (std::fclose(f)) // fclose returns 0 on success and EOF on error
 		{
-			std::ostringstream message;
+			auto message = std::ostringstream{};
 			message << "Failed to close Cuesheet file after reading: "
 				<< filename;
 
@@ -122,7 +121,7 @@ CdPtr Make_CdPtr::operator()(const std::string& filename) const
 
 	if (!cd_ptr.get())
 	{
-		std::ostringstream message;
+		auto message = std::ostringstream{};
 		message << "Failed to parse Cuesheet file: " << filename;
 
 		throw MetadataParseException(message.str());
@@ -146,9 +145,9 @@ CueOpenFile& CueOpenFile::operator = (CueOpenFile&& file) noexcept = default;
 CueOpenFile::CueOpenFile(const std::string& filename)
 	: cd_info_ { nullptr }
 {
-	static const Make_CdPtr make_cd;
+	static const Make_CdPtr make_cd; // FIXME Use a noexcept version
 
-	cd_info_ = std::move(make_cd(filename));
+	cd_info_ = make_cd(filename);
 }
 
 
@@ -160,15 +159,15 @@ CueInfo CueOpenFile::info() const
 
 	if (track_count < 0 or track_count > arcstk::CDDA::MAX_TRACKCOUNT)
 	{
-		std::ostringstream ss;
-		ss << "Invalid number of tracks: " << track_count;
+		auto msg = std::ostringstream{};
+		msg << "Invalid number of tracks: " << track_count;
 
-		throw MetadataParseException(ss.str());
+		throw MetadataParseException(msg.str());
 	}
 
-	std::vector<lba_type>    offsets;
-	std::vector<lba_type>    lengths;
-	std::vector<std::string> filenames;
+	auto offsets   = std::vector<lba_type>{};
+	auto lengths   = std::vector<lba_type>{};
+	auto filenames = std::vector<std::string>{};
 
 	using offsets_sz   = decltype( offsets )::size_type;
 	using lengths_sz   = decltype( lengths )::size_type;
@@ -179,8 +178,8 @@ CueInfo CueOpenFile::info() const
 	filenames.reserve(static_cast<filenames_sz>(track_count));
 
 	// types according to libcue-API
-	long trk_offset = 0;
-	long trk_length = 0;
+	auto trk_offset = long { 0 };
+	auto trk_length = long { 0 };
 	::Track* trk = nullptr;
 
 	// Read offset, length + filename for each track in Cue file
@@ -199,7 +198,7 @@ CueInfo CueOpenFile::info() const
 
 		if (trk_offset < 0)
 		{
-			std::ostringstream msg;
+			auto msg = std::ostringstream{};
 			msg << "Offset for track " << i
 				<< " is not expected to be negative: " << trk_offset;
 			//throw InvalidMetadataException(msg.str());
@@ -211,14 +210,14 @@ CueInfo CueOpenFile::info() const
 		// Length of last track is allowed to be -1.
 		if (i < track_count and trk_length < 0)
 		{
-			std::ostringstream msg;
+			auto msg = std::ostringstream{};
 			msg << "Length for track " << i
 				<< " is not expected to be negative: " << trk_length;
 			//throw InvalidMetadataException(msg.str());
 			throw std::invalid_argument(msg.str());
 		}
 
-		std::string audiofilename(::track_get_filename(trk));
+		auto audiofilename = std::string { ::track_get_filename(trk) };
 
 		// Log the contents
 
@@ -245,11 +244,10 @@ CueInfo CueOpenFile::info() const
 			lengths.emplace_back(cast_or_throw<lba_type>(trk_length));
 		} catch (const std::invalid_argument& e)
 		{
-			std::ostringstream msg;
+			auto msg = std::ostringstream{};
 			msg << "Track " << i << ": ";
 			msg << e.what();
 
-			//throw InvalidMetadataException(msg.str());
 			throw std::invalid_argument(msg.str());
 		}
 
@@ -274,13 +272,6 @@ std::unique_ptr<ToC> CueParserImpl::do_parse(const std::string& filename)
 {
 	const auto cue_info = this->parse_worker(filename);
 
-	/*
-	return make_toc(
-			std::get<0>(cue_info),  // track count
-			std::get<1>(cue_info),  // offsets
-			std::get<2>(cue_info),  // lengths
-			std::get<3>(cue_info)); // filenames
-	*/
 	return make_toc(std::get<1>(cue_info),  // offsets
 					std::get<3>(cue_info)); // filenames
 }
