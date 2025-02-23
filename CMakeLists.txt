@@ -10,7 +10,7 @@ cmake_policy (SET CMP0048 NEW )
 cmake_policy (SET CMP0088 NEW )
 
 
-project (libarcsdec VERSION 0.1.1 LANGUAGES CXX )
+project (libarcsdec VERSION 0.2.0 LANGUAGES CXX )
 
 get_directory_property (HAS_PARENT PARENT_DIRECTORY )
 
