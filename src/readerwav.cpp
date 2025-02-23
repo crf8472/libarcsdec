@@ -590,7 +590,9 @@ std::unique_ptr<AudioSize> WavAudioReaderImpl::do_acquire_size(
 		}
 	}
 
-	return std::make_unique<AudioSize>(total_pcm_bytes, UNIT::BYTES);
+	const auto audiosize = to_audiosize(total_pcm_bytes, UNIT::BYTES);
+
+	return std::make_unique<AudioSize>(audiosize);
 }
 
 
@@ -599,6 +601,7 @@ void WavAudioReaderImpl::do_process_file(const std::string& audiofilename)
 	// Validate And Calculate, emit AudioReader signals
 
 	auto total_pcm_bytes = int64_t { 0 }; /* ignore */
+
 	wav_process_file(audiofilename, samples_per_read(), audio_handler_.get(),
 			this, total_pcm_bytes);
 }
@@ -979,7 +982,7 @@ int64_t wav_process_file_worker(std::ifstream& in,
 						{ static_cast<int32_t>(subchunk_size), UNIT::BYTES });
 				} else
 				{
-					std::ostringstream msg;
+					auto msg = std::ostringstream{};
 					msg << "Data subchunk declares a size of "
 						<< subchunk_size
 						<< " bytes which exceeds expected size.";
@@ -1013,8 +1016,8 @@ int64_t wav_process_file_worker(std::ifstream& in,
 
 				if (audio_handler)
 				{
-					auto remainder {
-						audio_handler->physical_file_size() - total_bytes_read };
+					const auto remainder { audio_handler->physical_file_size()
+						- total_bytes_read };
 
 					if (remainder > 0)
 					{
@@ -1090,7 +1093,7 @@ void wav_process_file(const std::string& filename,
 
 	const int64_t bytes_read {
 		wav_process_file_worker(in, samples_per_read, audio_handler,
-				audio_reader, total_pcm_bytes)};
+				audio_reader, total_pcm_bytes) };
 
 	ARCS_LOG_DEBUG << "Read " << bytes_read << " bytes from audio file";
 
@@ -1120,7 +1123,6 @@ int64_t retrieve_file_size_bytes(const std::string& filename)
 #if __cplusplus >= 201703L
 
 	namespace fs = std::filesystem;
-	using std::to_string;
 
 	const auto path = fs::path { filename };
 	const auto file_size { fs::file_size(path) };
@@ -1129,6 +1131,7 @@ int64_t retrieve_file_size_bytes(const std::string& filename)
 
 	if (file_size > std::numeric_limits<int64_t>::max())
 	{
+		using std::to_string;
 		throw std::runtime_error("File is too big: " + to_string(file_size));
 	}
 
