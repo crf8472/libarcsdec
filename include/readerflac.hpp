@@ -40,7 +40,6 @@ public:
 	 */
 	~DescriptorFlac() noexcept final;
 
-
 private:
 
 	std::string do_id() const final;

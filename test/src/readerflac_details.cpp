@@ -20,12 +20,12 @@
 #include <set>  // for set
 
 
-TEST_CASE ("FlacMetadataHandler", "[readerflac]" )
+TEST_CASE ("FlacDefaultMetadataHandler", "[readerflac]" )
 {
-	using arcsdec::details::flac::FlacMetadataHandler;
+	using arcsdec::details::flac::FlacDefaultMetadataHandler;
 	using arcsdec::Codec;
 
-	FlacMetadataHandler h;
+	FlacDefaultMetadataHandler h;
 
 	SECTION ("Accepted set of codecs is only FLAC")
 	{
@@ -37,8 +37,13 @@ TEST_CASE ("FlacMetadataHandler", "[readerflac]" )
 TEST_CASE ("FlacAudioReaderImpl", "[readerflac]" )
 {
 	using arcsdec::details::flac::FlacAudioReaderImpl;
+	using arcsdec::details::flac::FlacDefaultMetadataHandler;
+	using arcsdec::details::flac::FlacDefaultErrorHandler;
 
 	FlacAudioReaderImpl r;
+	r.register_metadata_handler(std::make_unique<FlacDefaultMetadataHandler>());
+	r.register_error_handler(std::make_unique<FlacDefaultErrorHandler>());
+
 	auto proc = Mock_SampleProcessor{};
 	r.attach_processor(proc);
 
