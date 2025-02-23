@@ -65,16 +65,18 @@ struct Free_WavpackContext final
  * \brief A unique_ptr for WavpackContext using Free_WavpackContext as a
  * custom deleter.
  */
-using ContextPtr = std::unique_ptr<::WavpackContext, Free_WavpackContext>;
+using WavpackContextPtr =
+	std::unique_ptr<::WavpackContext, Free_WavpackContext>;
 
 
 /**
- * \brief Construction functor for ContextPtr instances.
+ * \brief Open a Wavpack file.
+ *
+ * \param[in] filename Wavpack filename
+ *
+ * \return WavpackContext
  */
-struct Make_ContextPtr final
-{
-	ContextPtr operator()(const std::string& filename) const;
-};
+extern WavpackContextPtr get_context(const std::string& filename) noexcept;
 
 
 /**
@@ -184,9 +186,13 @@ public:
 	explicit WavpackOpenFile(const std::string& filename);
 
 	/**
-	 * \brief Virtual default destructor.
+	 * \brief Default destructor.
 	 */
 	~WavpackOpenFile() noexcept;
+
+	// class is non-copyable
+	WavpackOpenFile(const WavpackOpenFile& file) = delete;
+	WavpackOpenFile& operator = (WavpackOpenFile& file) = delete;
 
 	/**
 	 * \brief Returns TRUE if file is lossless.
@@ -296,29 +302,21 @@ public:
 	int64_t read_pcm_samples(const int64_t pcm_samples_to_read,
 		std::vector<int32_t>& buffer) const;
 
+	/**
+	 * \brief Return TRUE iff file could be opened.
+	 *
+	 * Iff this function yields FALSE, destroy the instance.
+	 *
+	 * \return TRUE iff file is opened.
+	 */
+	bool success() const;
+
 private:
 
-	// forward declaration for private implementation
-	class Impl;
-
 	/**
-	 * \brief Private implementation
+	 * \brief Internal WavpackContext.
 	 */
-	std::unique_ptr<Impl> impl_;
-
-	/**
-	 * \brief Private copy constructor.
-	 *
-	 * Implemented empty. This class is non-copyable.
-	 */
-	WavpackOpenFile(const WavpackOpenFile& file) = delete;
-
-	/**
-	 * \brief Private copy assignment operator.
-	 *
-	 * Implemented empty. This class is non-copyable.
-	 */
-	WavpackOpenFile& operator = (WavpackOpenFile& file) = delete;
+	WavpackContextPtr context_;
 };
 
 
