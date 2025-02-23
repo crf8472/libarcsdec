@@ -46,7 +46,6 @@ public:
 	 */
 	~DescriptorSndfile() noexcept final;
 
-
 private:
 
 	std::string do_id() const final;

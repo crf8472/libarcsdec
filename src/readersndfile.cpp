@@ -73,7 +73,7 @@ std::unique_ptr<AudioSize> LibsndfileAudioReaderImpl::do_acquire_size(
 	using arcstk::AudioSize;
 	using arcstk::UNIT;
 
-	SndfileHandle audiofile(filename);
+	auto audiofile = SndfileHandle { filename };
 
 	// FIXME works only for WAV??
 	/* libsndfile's frames == libarcstk's samples */
@@ -86,11 +86,12 @@ void LibsndfileAudioReaderImpl::do_process_file(const std::string& filename)
 	using arcstk::AudioSize;
 	using arcstk::UNIT;
 
-	SndfileHandle audiofile(filename, SFM_READ);
+	auto audiofile = SndfileHandle { filename, SFM_READ };
 
 	// TODO Check whether this was successful
 
 	// Perform validation
+	// TODO Use validator
 
 	if (audiofile.samplerate() - CDDA::SAMPLES_PER_SECOND != 0)
 	{
@@ -104,9 +105,10 @@ void LibsndfileAudioReaderImpl::do_process_file(const std::string& filename)
 		return;
 	}
 
-	if (not (audiofile.format() | SF_FORMAT_PCM_16))
+	if (!(audiofile.format() | SF_FORMAT_PCM_16))
 	{
-		ARCS_LOG_DEBUG << "Format: " << std::to_string(audiofile.format());
+		using std::to_string;
+		ARCS_LOG_DEBUG << "Format: " << to_string(audiofile.format());
 		return;
 	}
 
@@ -116,22 +118,17 @@ void LibsndfileAudioReaderImpl::do_process_file(const std::string& filename)
 	// Update Calculation with sample count
 
 	const auto total_samples = audiofile.frames();
+	const auto audiosize     = to_audiosize(total_samples, UNIT::SAMPLES);
 
-	if (total_samples > std::numeric_limits<int32_t>::max())
-	{
-		throw std::runtime_error("Number of samples exceeds maximum AudioSize");
-	}
-
-	const auto audiosize = AudioSize {
-			static_cast<int32_t>(total_samples), UNIT::SAMPLES };
 	this->signal_updateaudiosize(audiosize);
 
 	// Prepare Read buffer (16 bit samples)
 
-	uint32_t buffer_len = this->samples_per_read() * CDDA::NUMBER_OF_CHANNELS;
-	std::vector<int16_t> buffer(buffer_len);
+	const std::size_t buffer_len =
+		this->samples_per_read() * CDDA::NUMBER_OF_CHANNELS;
 
-	SampleSequence<int16_t, false> sequence;
+	auto buffer   = std::vector<int16_t>(buffer_len);
+	auto sequence = SampleSequence<int16_t, false>{};
 
 	// Checking
 
@@ -139,8 +136,8 @@ void LibsndfileAudioReaderImpl::do_process_file(const std::string& filename)
 
 	// Logging
 
-	auto sample_count = uint64_t  { 0 };
-	auto blocks_processed = uint32_t  { 0 };
+	auto sample_count     = uint64_t { 0 };
+	auto blocks_processed = uint32_t { 0 };
 
 	// Read blocks
 
@@ -156,11 +153,11 @@ void LibsndfileAudioReaderImpl::do_process_file(const std::string& filename)
 		{
 			// This is allowed only for the last block
 
-			auto expected_total { audiosize.samples() - sample_count };
+			const auto expected_total { audiosize.samples() - sample_count };
 
 			if (expected_total != ints_in_block / CDDA::NUMBER_OF_CHANNELS)
 			{
-				std::ostringstream ss;
+				auto ss = std::ostringstream{};
 				ss << "  Block contains "
 					<< ints_in_block
 					<< " integers, expected were "
@@ -267,6 +264,7 @@ std::unique_ptr<FileReader> DescriptorSndfile::do_create_reader() const
 	using details::sndfile::LibsndfileAudioReaderImpl;
 
 	auto impl = std::make_unique<LibsndfileAudioReaderImpl>();
+
 	return std::make_unique<AudioReader>(std::move(impl));
 }
 
@@ -281,7 +279,7 @@ std::unique_ptr<FileReaderDescriptor> DescriptorSndfile::do_clone() const
 
 namespace {
 
-const auto d = RegisterDescriptor<DescriptorSndfile>();
+const auto d = RegisterDescriptor<DescriptorSndfile>{};
 
 } // namespace
 

@@ -59,9 +59,9 @@ class LibsndfileAudioReaderImpl final : public AudioReaderImpl
 public:
 
 	/**
-	 * \brief Virtual default destructor.
+	 * \brief Default destructor.
 	 */
-	virtual ~LibsndfileAudioReaderImpl() noexcept;
+	~LibsndfileAudioReaderImpl() noexcept final;
 
 private:
 
