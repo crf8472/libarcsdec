@@ -7,19 +7,19 @@ namespace arcsdec
 inline namespace v_1_0_0
 {
 
-const std::string LIBARCSDEC_NAME = "@PROJECT_NAME@";
+extern const std::string LIBARCSDEC_NAME = "@PROJECT_NAME@";
 
-const int LIBARCSDEC_VERSION_MAJOR = std::stoi("@PROJECT_VERSION_MAJOR@");
+extern const int LIBARCSDEC_VERSION_MAJOR = std::stoi("@PROJECT_VERSION_MAJOR@");
 
-const int LIBARCSDEC_VERSION_MINOR = std::stoi("@PROJECT_VERSION_MINOR@");
+extern const int LIBARCSDEC_VERSION_MINOR = std::stoi("@PROJECT_VERSION_MINOR@");
 
-const int LIBARCSDEC_VERSION_PATCH = std::stoi("@PROJECT_VERSION_PATCH@");
+extern const int LIBARCSDEC_VERSION_PATCH = std::stoi("@PROJECT_VERSION_PATCH@");
 
-const std::string LIBARCSDEC_VERSION_SUFFIX = "@PROJECT_VERSION_SUFFIX@";
+extern const std::string LIBARCSDEC_VERSION_SUFFIX = "@PROJECT_VERSION_SUFFIX@";
 
-const std::string LIBARCSDEC_VERSION = "@PROJECT_VERSION_STRING@";
+extern const std::string LIBARCSDEC_VERSION = "@PROJECT_VERSION_STRING@";
 
-const std::string LIBARCSDEC_GIT_VERSION = "@GIT_VERSION_STRING@";
+extern const std::string LIBARCSDEC_GIT_VERSION = "@GIT_VERSION_STRING@";
 
 
 /**
