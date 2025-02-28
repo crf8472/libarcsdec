@@ -98,7 +98,7 @@ Algorithms get_algorithms(const ChecksumtypeSet& types)
 
 	if (types.empty()/* default */ || types.size() > 1/* all known types*/)
 	{
-		algorithms.insert(std::make_unique<AccurateRip::V1and2>());
+		algorithms.insert(std::make_unique<AccurateRip::V1andV2>());
 	} else
 	{
 		// exactly one type
