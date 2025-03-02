@@ -507,7 +507,9 @@ if (WITH_FLAC )
 
 	message (STATUS "Build with fLaC reading capability for fLaC audio" )
 
-	find_package (FLAC 1.3.1 REQUIRED ) ## checks libFLAC as well as libFLAC++
+	find_package (Threads       REQUIRED )
+	find_package (FLAC    1.3.1 REQUIRED ) ## checks libFLAC and libFLAC++
+
 	list (APPEND PKG_REQUIRE_ARRAY "flac++ >= 1.3.1" )
 
 	if (TARGET FLAC::FLAC++ )
@@ -537,6 +539,7 @@ if (WITH_WAVPACK)
 	message (STATUS "Build with WavPack reading capability for wavpack audio" )
 
 	find_package (libwavpack 5.0.0 REQUIRED )
+
 	list (APPEND PKG_REQUIRE_ARRAY "wavpack >= 5.0.0" )
 
 	target_include_directories (${PROJECT_NAME}
@@ -631,12 +634,14 @@ if (WITH_LIBSNDFILE )
 	message (STATUS "Build with libsndfile support for audio" )
 
 	find_package (SndFile 1.0.17 REQUIRED )
+
 	list (APPEND PKG_REQUIRE_ARRAY "sndfile >= 1.0.17" )
 
 	if (TARGET SndFile::sndfile )
 		## found by libsndfile's cmake config
 		target_link_libraries (${PROJECT_NAME} PRIVATE SndFile::sndfile )
 	else()
+		## found by cmake/Modules/Findlibsndfile.cmake
 
 		if (NOT libsndfile_LIBRARIES )
 			find_package (libsndfile 1.0.17 REQUIRED )
@@ -685,7 +690,8 @@ if (NOT SKIP_INSTALL_ALL )
 
 		## Support pkgconfig
 
-		string (REPLACE ";" ", " PKG_REQUIRE "${PKG_REQUIRE_ARRAY}" )
+		string (REPLACE lib ""   PKG_BIND_NAME "${PROJECT_NAME}" )
+		string (REPLACE ";" ", " PKG_REQUIRE   "${PKG_REQUIRE_ARRAY}" )
 
 		configure_file (
 			"${CMAKE_CURRENT_SOURCE_DIR}/libarcsdec.pc.in"
@@ -694,6 +700,7 @@ if (NOT SKIP_INSTALL_ALL )
 		)
 
 		unset (PKG_REQUIRE )
+		unset (PKG_BIND_NAME )
 
 		install (FILES "${PROJECT_BUILD_SOURCE_DIR}/libarcsdec.pc"
 			DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig" )
