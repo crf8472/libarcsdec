@@ -3,7 +3,7 @@
 ## Use HTML5/CSS3 from m.css for generating HTML from Doxygen XML output
 ##
 ## Prerequisites from parent:
-## - Targets: 'libarcsdec_doc'
+## - Targets:   'doc'
 ## - Variables: DOC_GEN_DIR, DOC_COMMENT, DOXYGEN_NEEDS_XML_DEDUP,
 ##              DOXYGEN_VERSION (from find_package)
 ##
@@ -154,6 +154,9 @@ if (DOXYGEN_NEEDS_XML_DEDUP )
 		VERBATIM
 	)
 else()
+
+#	add_dependencies (libarcsdec_mcss_doc
+#		libarcsdec_create_output_dir libarcsdec_create_log_dir )
 
 	## Doxygen is called by m.css.
 
