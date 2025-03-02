@@ -28,7 +28,7 @@
 #endif
 
 #ifndef __LIBARCSTK_ALGORITHMS_HPP__
-#include <arcstk/algorithms.hpp>// for AccurateRipV1V2...
+#include <arcstk/algorithms.hpp>// for AccurateRip::V1andV2...
 #endif
 #ifndef __LIBARCSTK_IDENTIFIER_HPP__
 #include <arcstk/identifier.hpp>// for ARId, make_arid
@@ -83,7 +83,7 @@ namespace details
 Algorithms get_algorithms(const ChecksumtypeSet& types)
 {
 	using Type = arcstk::checksum::type;
-	namespace AccurateRip = arcstk::accuraterip;
+	namespace AccurateRip = arcstk::AccurateRip;
 
 	Algorithms algorithms;
 
