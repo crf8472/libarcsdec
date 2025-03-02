@@ -1,19 +1,20 @@
 //
 // Example for calculating AccurateRip checksums from each track of an album,
-// represented by a CUESheet and a single losslessly encoded audio file.
+// represented by a Cuesheet and a single losslessly encoded audio file.
 //
 
-#include <iomanip>   // for setw, setfill, hex
-#include <iostream>  // for cerr, cout
-#include <string>    // for string
-
-#ifndef __LIBARCSDEC_CALCULATORS_HPP__ // libarcsdec: TOCParser, ARCSCalculator
+#ifndef __LIBARCSDEC_CALCULATORS_HPP__ // libarcsdec: ToCParser, ARCSCalculator
 #include <arcsdec/calculators.hpp>
 #endif
 
-#ifndef __LIBARCSTK_LOGGING_HPP__   // libarcstk: log what you do
+#ifndef __LIBARCSTK_LOGGING_HPP__      // libarcstk: log what you do
 #include <arcstk/logging.hpp>
 #endif
+
+#include <iomanip>   // for setw, setfill, hex
+#include <iostream>  // for cerr, cout
+#include <memory>    // for make_unique
+#include <string>    // for string
 
 
 // ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
@@ -50,16 +51,17 @@ int main(int argc, char* argv[])
 
 	// Parse the metadata file.
 	// Actually, this step is completely format independent and not restricted
-	// to CUESheets. We require a CUESheet for this example since at the time of
-	// writing, CUESheet is the only actual input format implemented. :-)
-	arcsdec::TOCParser parser;
+	// to Cuesheets. We require a Cuesheet for this example since at the time of
+	// writing, Cuesheet is the only actual input format implemented. :-)
+	arcsdec::ToCParser parser;
 	auto tocptr { parser.parse(metafilename) };
 
 	// Read the audio file and calculate the result.
 	// Note that technical details of the audio input are "abstracted away" by
 	// libarcsdec. ARCSCalculator takes some audio and gives you the ARCSs.
 	arcsdec::ARCSCalculator calculator;
-	auto result { calculator.calculate(audiofilename, *tocptr) };
+	const auto [ checksums, arid ] =
+		calculator.calculate(audiofilename, *tocptr);
 
 	// The result is a tuple containing the checksums as well as the ARId.
 	// We print both to the command line. Of course you can use the URL to
@@ -67,16 +69,18 @@ int main(int argc, char* argv[])
 	// libarcstk's Matchers or just parse them to plaintext.
 
 	// Print the ARId.
-	std::cout << "AccurateRip URL: " << result.second.url() << std::endl;
+	std::cout << "AccurateRip URL: " << arid.url() << std::endl;
 
 	// Print the actual checksums.
 	std::cout << "Track  ARCSv1    ARCSv2" << std::endl;
 	int trk_no = 1;
 
-	for (const auto& track_values : result.first)
+	using arcstk::checksum::type;
+
+	for (const auto& track_values : checksums)
 	{
-		auto arcs1 = track_values.get(arcstk::checksum::type::ARCS1);
-		auto arcs2 = track_values.get(arcstk::checksum::type::ARCS2);
+		auto arcs1 = track_values.get(type::ARCS1);
+		auto arcs2 = track_values.get(type::ARCS2);
 
 		std::cout << std::dec << " " << std::setw(2) << std::setfill(' ')
 			<< trk_no << "   " << std::hex << std::uppercase
@@ -88,3 +92,4 @@ int main(int argc, char* argv[])
 		++trk_no;
 	}
 }
+

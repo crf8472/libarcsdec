@@ -8,6 +8,14 @@
 #include "descriptor.hpp"
 #endif
 
+#ifndef __LIBARCSDEC_LIBINSPECT_HPP__
+#include "libinspect.hpp"     // for libfile
+#endif
+
+#ifndef __LIBARCSTK_LOGGING_HPP__
+#include <arcstk/logging.hpp> // for ARCS_LOG, _WARNING, _DEBUG
+#endif
+
 #include <algorithm>    // for find, find_if, mismatch
 #include <array>        // for array
 #include <cstdint>      // for uint32_t, uint64_t, int64_t
@@ -22,19 +30,11 @@
 #include <type_traits>  // for underlying_type_t
 #include <vector>       // for vector
 
-#ifndef __LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp> // for ARCS_LOG, _WARNING, _DEBUG
-#endif
-
-#ifndef __LIBARCSDEC_LIBINSPECT_HPP__
-#include "libinspect.hpp"   // for libfile
-#endif
 
 namespace arcsdec
 {
 inline namespace v_1_0_0
 {
-
 
 std::string name(Format format)
 {
@@ -212,13 +212,13 @@ ByteSeq::byte_type* ByteSeq::data()
 }
 
 
-bool operator == (const ByteSeq &lhs, const ByteSeq &rhs)
+bool operator == (const ByteSeq& lhs, const ByteSeq& rhs)
 {
 	return lhs.sequence_ == rhs.sequence_ && lhs.wildcards_ == rhs.wildcards_;
 }
 
 
-void swap(ByteSeq &lhs, ByteSeq &rhs)
+void swap(ByteSeq& lhs, ByteSeq& rhs)
 {
 	lhs.swap(rhs);
 }
@@ -227,7 +227,7 @@ void swap(ByteSeq &lhs, ByteSeq &rhs)
 // Bytes
 
 
-bool operator == (const Bytes &lhs, const Bytes &rhs)
+bool operator == (const Bytes& lhs, const Bytes& rhs)
 {
 	return lhs.offset_ == rhs.offset_ && lhs.seq_ == rhs.seq_;
 }
@@ -244,7 +244,7 @@ Bytes::Bytes()
 }
 
 
-Bytes::Bytes(const uint32_t offset, const ByteSequence &bytes)
+Bytes::Bytes(const uint32_t offset, const ByteSequence& bytes)
 	: offset_ { offset }
 	, seq_    { bytes }
 {
@@ -252,13 +252,13 @@ Bytes::Bytes(const uint32_t offset, const ByteSequence &bytes)
 }
 
 
-bool Bytes::match(const Bytes &bytes) const
+bool Bytes::match(const Bytes& bytes) const
 {
 	return match(bytes.sequence(), bytes.offset());
 }
 
 
-bool Bytes::match(const ByteSequence &bytes, const uint32_t &ioffset) const
+bool Bytes::match(const ByteSequence& bytes, const uint32_t& ioffset) const
 {
 	// No test bytes? => accept
 	if (bytes.empty())
@@ -348,7 +348,7 @@ bool Bytes::match(const ByteSequence &bytes, const uint32_t &ioffset) const
 }
 
 
-bool Bytes::match(const ByteSequence &bytes) const
+bool Bytes::match(const ByteSequence& bytes) const
 {
 	return this->match(bytes, 0);
 }
@@ -398,7 +398,7 @@ namespace details
 {
 
 
-bool ci_match_suffix(const SuffixSet &suffices, const std::string &filename)
+bool ci_match_suffix(const SuffixSet& suffices, const std::string& filename)
 {
 	const auto fname_suffix = details::get_suffix(filename, ".");
 
@@ -407,7 +407,7 @@ bool ci_match_suffix(const SuffixSet &suffices, const std::string &filename)
 
 	const auto ref_suffix = details::ci_string { fname_suffix.c_str() };
 	auto result = std::find_if(suffices.begin(), suffices.end(),
-			[ref_suffix](const SuffixSet::value_type &suffix)
+			[ref_suffix](const SuffixSet::value_type& suffix)
 			{
 				return suffix == ref_suffix; // case insensitive comparison
 			});
@@ -416,7 +416,7 @@ bool ci_match_suffix(const SuffixSet &suffices, const std::string &filename)
 }
 
 
-std::string get_suffix(const std::string &filename, const std::string &delim)
+std::string get_suffix(const std::string& filename, const std::string& delim)
 {
 	// TODO Use std::filesystem of C++17
 
@@ -432,8 +432,8 @@ std::string get_suffix(const std::string &filename, const std::string &delim)
 }
 
 
-Bytes read_bytes(const std::string &filename,
-	const uint32_t &offset, const uint32_t &length)
+Bytes read_bytes(const std::string& filename,
+	const uint32_t& offset, const uint32_t& length)
 {
 	// Read a specified number of bytes from a file offset
 
@@ -525,13 +525,13 @@ std::string Matcher::name() const
 }
 
 
-bool Matcher::matches(const Bytes &bytes) const
+bool Matcher::matches(const Bytes& bytes) const
 {
 	return do_matches(bytes);
 }
 
 
-bool Matcher::matches(const std::string &filename) const
+bool Matcher::matches(const std::string& filename) const
 {
 	return do_matches(filename);
 }
@@ -564,7 +564,7 @@ std::unique_ptr<Matcher> Matcher::clone() const
 // libinfo_entry_filepath
 
 
-LibInfoEntry libinfo_entry_filepath(const std::string &libname)
+LibInfoEntry libinfo_entry_filepath(const std::string& libname)
 {
 	return { libname, details::libfile(libname) };
 }
@@ -585,7 +585,7 @@ std::unique_ptr<FileReaderDescriptor> FileReader::descriptor() const
 // InputFormatException
 
 
-InputFormatException::InputFormatException(const std::string &what_arg)
+InputFormatException::InputFormatException(const std::string& what_arg)
 	: std::runtime_error(what_arg)
 {
 	/* empty */
@@ -595,7 +595,7 @@ InputFormatException::InputFormatException(const std::string &what_arg)
 // FileReadException
 
 
-FileReadException::FileReadException(const std::string &what_arg)
+FileReadException::FileReadException(const std::string& what_arg)
 	: std::runtime_error { what_arg }
 	, byte_pos_ { -1 }
 {
@@ -603,8 +603,8 @@ FileReadException::FileReadException(const std::string &what_arg)
 }
 
 
-FileReadException::FileReadException(const std::string &what_arg,
-		const int64_t &byte_pos)
+FileReadException::FileReadException(const std::string& what_arg,
+		const int64_t& byte_pos)
 	: std::runtime_error { what_arg }
 	, byte_pos_ { byte_pos }
 {
@@ -698,15 +698,21 @@ InputType FileReaderDescriptor::do_input_type() const
 
 bool FileReaderDescriptor::do_accepts_format(const Format f) const
 {
+	using std::cbegin;
+	using std::cend;
+
 	const auto fs = formats();
-	return std::find(fs.begin(), fs.end(), f) != fs.end();
+	return std::find(cbegin(fs), cend(fs), f) != cend(fs);
 }
 
 
 bool FileReaderDescriptor::do_accepts_codec(const Codec c) const
 {
+	using std::cbegin;
+	using std::cend;
+
 	const auto cs = codecs();
-	return std::find(cs.begin(), cs.end(), c) != cs.end();
+	return std::find(cbegin(cs), cend(cs), c) != cend(cs);
 }
 
 
@@ -741,8 +747,8 @@ std::set<Codec> FileReaderDescriptor::define_codecs() const
 }
 
 
-bool operator == (const FileReaderDescriptor &lhs,
-			const FileReaderDescriptor &rhs)
+bool operator == (const FileReaderDescriptor& lhs,
+			const FileReaderDescriptor& rhs)
 {
 	// FileReaderDescriptors are stateless and hence equal iff they are of the
 	// same static type
@@ -751,7 +757,7 @@ bool operator == (const FileReaderDescriptor &lhs,
 }
 
 
-void swap(Bytes &lhs, Bytes &rhs)
+void swap(Bytes& lhs, Bytes& rhs)
 {
 	lhs.swap(rhs);
 }

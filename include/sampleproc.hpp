@@ -17,9 +17,9 @@ inline namespace v_1_0_0
 {
 
 /**
- * \defgroup sampleproc API for processing samples
+ * \defgroup sampleproc Process samples
  *
- * \brief API for processing samples.
+ * \brief API for AudioReaders to process samples.
  *
  * @{
  */
@@ -31,7 +31,7 @@ using arcstk::AudioSize;
 /**
  * \brief Symbolic constants for certain block sizes (in PCM 32 bit samples).
  */
-struct BLOCKSIZE
+struct BLOCKSIZE final
 {
 	/**
 	 * \brief Maximum buffer size in number of PCM 32 bit samples.
@@ -95,7 +95,7 @@ public:
 	 *
 	 * \param[in] size New AudioSize
 	 */
-	void update_audiosize(const AudioSize &size);
+	void update_audiosize(const AudioSize& size);
 
 	/**
 	 * \brief Callback for end of input
@@ -104,11 +104,11 @@ public:
 
 protected:
 
-	SampleProcessor(const SampleProcessor &) = default;
-	SampleProcessor& operator = (const SampleProcessor &) = default;
+	SampleProcessor(const SampleProcessor&) = default;
+	SampleProcessor& operator = (const SampleProcessor&) = default;
 
-	SampleProcessor(SampleProcessor &&) noexcept = default;
-	SampleProcessor& operator = (SampleProcessor &&) noexcept = default;
+	SampleProcessor(SampleProcessor&&) noexcept = default;
+	SampleProcessor& operator = (SampleProcessor&&) noexcept = default;
 
 private:
 
@@ -128,7 +128,7 @@ private:
 	/**
 	 * \brief Implements \ref update_audiosize().
 	 */
-	virtual void do_update_audiosize(const AudioSize &size)
+	virtual void do_update_audiosize(const AudioSize& size)
 	= 0;
 
 	/**
@@ -181,7 +181,7 @@ public:
 	 *
 	 * \param[in] size The updated value to signal
 	 */
-	void signal_updateaudiosize(const AudioSize &size);
+	void signal_updateaudiosize(const AudioSize& size);
 
 	/**
 	 * \brief Signal the processor that input ends.
@@ -193,7 +193,7 @@ public:
 	 *
 	 * \param[in] processor The SampleProcessor to use
 	 */
-	void attach_processor(SampleProcessor &processor);
+	void attach_processor(SampleProcessor& processor);
 
 	/**
 	 * \brief Return the registered SampleProcessor.
@@ -204,11 +204,11 @@ public:
 
 protected:
 
-	SampleProvider(const SampleProvider &) = default;
-	SampleProvider& operator = (const SampleProvider &) = default;
+	SampleProvider(const SampleProvider&) = default;
+	SampleProvider& operator = (const SampleProvider&) = default;
 
-	SampleProvider(SampleProvider &&) noexcept = default;
-	SampleProvider& operator = (SampleProvider &&) noexcept = default;
+	SampleProvider(SampleProvider&&) noexcept = default;
+	SampleProvider& operator = (SampleProvider&&) noexcept = default;
 
 private:
 
@@ -233,7 +233,7 @@ private:
 	 *
 	 * \param[in] size The updated value to signal
 	 */
-	virtual void do_signal_updateaudiosize(const AudioSize &size)
+	virtual void do_signal_updateaudiosize(const AudioSize& size)
 	= 0;
 
 	/**
@@ -253,7 +253,7 @@ private:
 	 *
 	 * \param[in] processor The SampleProcessor to use
 	 */
-	virtual void do_attach_processor(SampleProcessor &processor)
+	virtual void do_attach_processor(SampleProcessor& processor)
 	= 0;
 
 	/**

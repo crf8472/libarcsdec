@@ -16,37 +16,45 @@ set (TEST_SOURCE_DIR "src" )
 ## Define testsuites
 
 set (TEST_SETS )
-list (APPEND TEST_SETS audioreader  )
-list (APPEND TEST_SETS calculators  )
-list (APPEND TEST_SETS descriptor   )
-list (APPEND TEST_SETS libinspect   )
-list (APPEND TEST_SETS parsercue    )
-list (APPEND TEST_SETS readerwav    )
-list (APPEND TEST_SETS selection    )
-list (APPEND TEST_SETS dec_version  )
+list (APPEND TEST_SETS audioreader           )
+list (APPEND TEST_SETS calculators           )
+list (APPEND TEST_SETS descriptor            )
+list (APPEND TEST_SETS libinspect            )
+list (APPEND TEST_SETS parsercue             )
+list (APPEND TEST_SETS parsercue_details     )
+list (APPEND TEST_SETS readerwav             )
+list (APPEND TEST_SETS readerwav_details     )
+list (APPEND TEST_SETS selection             )
+list (APPEND TEST_SETS dec_version           )
 
 if (WITH_LIBCUE )
-list (APPEND TEST_SETS parserlibcue )
+list (APPEND TEST_SETS parserlibcue          )
+list (APPEND TEST_SETS parserlibcue_details  )
 endif()
 
 if (WITH_LIBCDIO )
-list (APPEND TEST_SETS parsertoc    )
+list (APPEND TEST_SETS parsertoc             )
+list (APPEND TEST_SETS parsertoc_details     )
 endif()
 
 if (WITH_FLAC )
-list (APPEND TEST_SETS readerflac   )
+list (APPEND TEST_SETS readerflac            )
+list (APPEND TEST_SETS readerflac_details    )
 endif()
 
 if (WITH_WAVPACK )
-list (APPEND TEST_SETS readerwvpk   )
+list (APPEND TEST_SETS readerwvpk            )
+list (APPEND TEST_SETS readerwvpk_details    )
 endif()
 
 if (WITH_FFMPEG )
-list (APPEND TEST_SETS readerffmpeg )
+list (APPEND TEST_SETS readerffmpeg          )
+list (APPEND TEST_SETS readerffmpeg_details  )
 endif()
 
 if (WITH_LIBSNDFILE )
-list (APPEND TEST_SETS readersndfile )
+list (APPEND TEST_SETS readersndfile         )
+list (APPEND TEST_SETS readersndfile_details )
 endif()
 
 
@@ -88,7 +96,7 @@ foreach (_testcase ${TEST_SETS} )
 	## Define an executable for each single testfile
 	add_executable (${_testcase}_test "${TEST_SOURCE_DIR}/${_testcase}.cpp" )
 
-	set_property (TARGET ${_testcase}_test PROPERTY CXX_STANDARD 14 )
+	set_property (TARGET ${_testcase}_test PROPERTY CXX_STANDARD 17 )
 
 	target_include_directories (${_testcase}_test
 		PRIVATE ${PROJECT_INCLUDE_DIR}      ## public headers
@@ -121,15 +129,21 @@ foreach (_testcase ${TEST_SETS} )
 
 endforeach()
 
-## Add FLAC dependencies to testcase
+## Add FLAC dependencies to testcases
 if (WITH_FLAC )
 
 	if (TARGET FLAC::FLAC++ )
-		target_link_libraries (readerflac_test PRIVATE FLAC::FLAC++ )
+		target_link_libraries (readerflac_test         PRIVATE FLAC::FLAC++ )
+		target_link_libraries (readerflac_details_test PRIVATE FLAC::FLAC++ )
 	else()
 		target_include_directories (readerflac_test
 			PRIVATE ${LIBFLACPP_INCLUDE_DIRS} )
+		target_include_directories (readerflac_details_test
+			PRIVATE ${LIBFLACPP_INCLUDE_DIRS} )
+
 		target_link_libraries (readerflac_test
+			PRIVATE ${LIBFLACPP_LIBRARIES} )
+		target_link_libraries (readerflac_details_test
 			PRIVATE ${LIBFLACPP_LIBRARIES} )
 	endif()
 endif()

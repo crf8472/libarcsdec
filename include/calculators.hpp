@@ -4,37 +4,37 @@
 /**
  * \file
  *
- * \brief A high-level API for calculating ARCSs and IDs.
+ * \brief Calculate AccurateRip Checksums and IDs.
  */
+
+#ifndef __LIBARCSDEC_SELECTION_HPP__
+#include "selection.hpp"           // for CreateReader, FileReaders, FormatList,
+#endif                             // FileReaderSelector
+
+#ifndef __LIBARCSTK_CALCULATE_HPP__
+#include <arcstk/calculate.hpp>    // for Checksums, ChecksumSet,...
+#endif
+#ifndef __LIBARCSTK_IDENTIFIER_HPP__
+#include <arcstk/identifier.hpp>   // for ARId
+#endif
+#ifndef __LIBARCSTK_METADATA_HPP__
+#include <arcstk/metadata.hpp>     // for ToC
+#endif
 
 #include <memory>   // for unique_ptr
 #include <string>   // for string
 #include <utility>  // for pair
 #include <vector>   // for vector
 
-#ifndef __LIBARCSTK_IDENTIFIER_HPP__
-#include <arcstk/identifier.hpp>   // for ARId, TOC
-#endif
-#ifndef __LIBARCSTK_CALCULATE_HPP__
-#include <arcstk/calculate.hpp>    // for Checksums, ChecksumSet
-#endif
-
-#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
-#include "descriptor.hpp"          // for FileReaderDescriptor
-#endif
-#ifndef __LIBARCSDEC_SELECTION_HPP__
-#include "selection.hpp"           // for CreateReader, FileReaders, FormatList,
-#endif                             // FileReaderSelector
-
 
 /**
- * \brief Main namespace for libarcsdec.
+ * \brief APIs of libarcsdec.
  */
 namespace arcsdec
 {
 
 /**
- * \brief API version 1.0.0.
+ * \brief libarcsdec API version 1.0.0.
  */
 inline namespace v_1_0_0
 {
@@ -43,25 +43,53 @@ inline namespace v_1_0_0
 class AudioReader;
 class MetadataParser;
 
-using arcstk::TOC;
 using arcstk::ARId;
-using arcstk::Checksums;
+using arcstk::Algorithm;
+using arcstk::AudioSize;
 using arcstk::ChecksumSet;
+using arcstk::Checksums;
+using arcstk::ChecksumtypeSet;
+using arcstk::Points;
+using arcstk::Settings;
+using arcstk::ToC;
 
 
 /**
  * \defgroup calculators Calculators for AccurateRip Checksums and IDs
  *
- * \brief Calculators for AccurateRip checksums and IDs.
+ * \brief Calculate AccurateRip checksums and IDs.
  *
- * ARIdCalculator is a calculator for the AccurateRip id of a given medium
- * description. ARCSCalculator is a calculator for the ARCSs for each audio
- * track of a given file. TOCParser is a format independent parser for
- * TOC files.
+ * Calculators provide calculation results, thereby processing data provided by
+ * FileReader instances. When passed filenames, calculators determine
+ * autonomously the required FileReader types for reading those files, perform
+ * the read process and their respective calculation task and provide the result
+ * to the caller. The caller is not responsible for any format or codec related
+ * task.
+ *
+ * This module defines four calculators providing different kinds of
+ * information:
+ *
+ * <table>
+ *		<tr>
+ *			<td>ARCSCalculator is a calculator for the ARCSs for each audio
+ *				track of a given audio-/metadata file pair.</td>
+ *		</tr>
+ *		<tr>
+ *			<td>ARIdCalculator is a calculator for the AccurateRip id of a given
+ *				audio-/metadata file pair.</td>
+ *		</tr>
+ *		<tr>
+ *			<td>ToCParser is a format independent parser for metadata files.
+ *			</td>
+ *		</tr>
+ *		<tr>
+ *			<td>AudioInfo is a format independent reader for metadata of audio
+ *			files that currently provides the amount of samples.</td>
+ *		</tr>
+ * </table>
  *
  * @{
  */
-
 
 /**
  * \brief Provide the default FileReaderSelection for the specified ReaderType.
@@ -100,14 +128,15 @@ public:
 	/**
 	 * \brief Pure virtual default descriptor.
 	 */
-	virtual ~ReaderAndFormatHolder() noexcept = 0;
+	virtual ~ReaderAndFormatHolder() noexcept
+	= 0;
 
 	/**
 	 * \brief Set the list of formats supported by this instance.
 	 *
 	 * \param[in] formats The list of supported formats.
 	 */
-	void set_formats(const FormatList *formats);
+	void set_formats(const FormatList* formats);
 
 	/**
 	 * \brief List of formats supported by this instance.
@@ -121,7 +150,7 @@ public:
 	 *
 	 * \param[in] readers The set of available FileReaderDescriptors to use
 	 */
-	void set_readers(const FileReaders *readers);
+	void set_readers(const FileReaders* readers);
 
 	/**
 	 * \brief Get the FileReaders used by this instance.
@@ -135,12 +164,13 @@ private:
 	/**
 	 * \brief Internal list of supported formats
 	 */
-	const FormatList *formats_;
+	const FormatList* formats_;
 
 	/**
-	 * \brief Internal list of available \link FileReaderDescriptor FileReaderDescriptors\endlink
+	 * \brief Internal list of available
+	 * \link FileReaderDescriptor FileReaderDescriptors\endlink
 	 */
-	const FileReaders *descriptors_;
+	const FileReaders* descriptors_;
 };
 
 
@@ -158,10 +188,10 @@ public:
 	/**
 	 * \brief Constructor.
 	 *
-	 * Initializes the instance with the default_selection() for the ReaderType.
+	 * \param[in] selection The selection to use
 	 */
-	inline SelectionPerformer()
-		: selection_ { default_selection<ReaderType>() }
+	explicit SelectionPerformer(const FileReaderSelection* selection)
+		: selection_ { selection }
 		, create_    { /* default */ }
 	{
 		/* empty */
@@ -170,11 +200,10 @@ public:
 	/**
 	 * \brief Constructor.
 	 *
-	 * \param[in] selection The selection to use
+	 * Initializes the instance with the default_selection() for the ReaderType.
 	 */
-	inline SelectionPerformer(const FileReaderSelection* selection)
-		: selection_ { selection }
-		, create_    { /* default */ }
+	SelectionPerformer()
+		: SelectionPerformer(default_selection<ReaderType>())
 	{
 		/* empty */
 	}
@@ -182,17 +211,14 @@ public:
 	/**
 	 * \brief Virtual default destructor.
 	 */
-	inline virtual ~SelectionPerformer() noexcept
-	{
-		/* empty */
-	}
+	virtual ~SelectionPerformer() noexcept = default;
 
 	/**
 	 * \brief Set the selection to be used for selecting AudioReaders.
 	 *
 	 * \param[in] selection Selection for AudioReaders
 	 */
-	inline void set_selection(const FileReaderSelection *selection)
+	void set_selection(const FileReaderSelection* selection)
 	{
 		selection_ = selection;
 	}
@@ -202,7 +228,7 @@ public:
 	 *
 	 * \return Selection for AudioReaders
 	 */
-	inline const FileReaderSelection* selection() const
+	const FileReaderSelection* selection() const
 	{
 		return selection_;
 	}
@@ -215,7 +241,7 @@ public:
 	 *
 	 * \return A FileReader for the input file
 	 */
-	inline std::unique_ptr<ReaderType> file_reader(const std::string &filename,
+	std::unique_ptr<ReaderType> file_reader(const std::string& filename,
 			const ReaderAndFormatHolder* f) const
 	{
 		return this->create_(filename, *this->selection(), *f->formats(),
@@ -227,7 +253,7 @@ private:
 	/**
 	 * \brief Internal selection for \link FileReaders FileReaders\endlink
 	 */
-	const FileReaderSelection *selection_;
+	const FileReaderSelection* selection_;
 
 	/**
 	 * \brief Internal FileReader creator.
@@ -241,14 +267,14 @@ private:
 
 
 /**
- * \brief Base class for classes that create opaque readers.
+ * \brief Abstract base class for classes that create opaque readers.
  *
  * A subclass must specify the ReaderType and can then easily use create()
  * to create an appropriate FileReader by just specifying the filename.
  */
 template <class ReaderType>
 class FileReaderProvider : public ReaderAndFormatHolder
-					     , public SelectionPerformer<ReaderType>
+						 , public SelectionPerformer<ReaderType>
 {
 protected:
 
@@ -259,7 +285,7 @@ protected:
 	 *
 	 * \return A FileReader for the input file
 	 */
-	inline std::unique_ptr<ReaderType> create(const std::string &filename) const
+	std::unique_ptr<ReaderType> create(const std::string& filename) const
 	{
 		return this->file_reader(filename, this);
 	}
@@ -267,20 +293,39 @@ protected:
 
 
 /**
- * \brief Format-independent parser for CD TOC metadata files.
+ * \brief Format-independent parser for audio metadata.
  */
-class TOCParser final : public FileReaderProvider<MetadataParser>
+class AudioInfo final : public FileReaderProvider<AudioReader>
 {
 public:
 
 	/**
-	 * \brief Parse the metadata file to a TOC object.
+	 * \brief Parse the size of the audio data from the audio file.
+	 *
+	 * \param[in] audiofilename Name of the audiodatafile
+	 *
+	 * \return The size of the audio data
+	 */
+	std::unique_ptr<arcstk::AudioSize> size(const std::string& audiofilename)
+		const;
+};
+
+
+/**
+ * \brief Format-independent parser for CD ToC metadata files.
+ */
+class ToCParser final : public FileReaderProvider<MetadataParser>
+{
+public:
+
+	/**
+	 * \brief Parse the metadata file to a ToC object.
 	 *
 	 * \param[in] metafilename Name of the metadatafile
 	 *
-	 * \return The parsed TOC
+	 * \return The parsed ToC
 	 */
-	std::unique_ptr<TOC> parse(const std::string &metafilename) const;
+	std::unique_ptr<ToC> parse(const std::string& metafilename) const;
 };
 
 
@@ -299,7 +344,7 @@ public:
 	 *
 	 * \param[in] type The Checksum type to calculate.
 	 */
-	ARCSCalculator(const arcstk::checksum::type type);
+	explicit ARCSCalculator(const ChecksumtypeSet& type);
 
 	/**
 	 * \brief Constructor.
@@ -309,23 +354,23 @@ public:
 	ARCSCalculator();
 
 	/**
-	 * \brief Calculate ARCS values for an audio file, using the given TOC.
+	 * \brief Calculate ARCS values for an audio file, using the given ToC.
 	 *
-	 * The TOC is supposed to contain the offsets of all tracks represented
+	 * The ToC is supposed to contain the offsets of all tracks represented
 	 * in the audio file. It is not required to be <tt>complete()</tt>.
 	 *
-	 * Any audio file names in the TOC are ignored in favor of \c audiofilename.
+	 * Any audio file names in the ToC are ignored in favor of \c audiofilename.
 	 *
 	 * The result will contain ARCS v1 and v2 for all tracks specified in the
-	 * TOC.
+	 * ToC.
 	 *
 	 * \param[in] audiofilename Name of the audiofile
 	 * \param[in] toc           Offsets for the audiofile
 	 *
-	 * \return AccurateRip checksums of all tracks specified in the TOC
+	 * \return AccurateRip checksums of all tracks specified in the ToC
 	 */
-	std::pair<Checksums, ARId> calculate(const std::string &audiofilename,
-			const TOC &toc);
+	std::pair<Checksums, ARId> calculate(const std::string& audiofilename,
+			const ToC& toc);
 
 	/**
 	 * \brief Calculate ARCSs for audio files.
@@ -341,86 +386,102 @@ public:
 	 * Note that in this use case, it is not offered to compute the ARId of the
 	 * album since the exact offsets are missing.
 	 *
-	 * \param[in] audiofilenames       Names of the audiofiles
-	 * \param[in] first_file_with_skip Process first file as first track
-	 * \param[in] last_file_with_skip  Process last file as last track
+	 * \param[in] audiofilenames            Names of the audiofiles
+	 * \param[in] first_file_is_first_track Process first file as first track
+	 * \param[in] last_file_is_last_track   Process last file as last track
 	 *
 	 * \return AccurateRip checksums of the input files
 	 */
-	Checksums calculate(const std::vector<std::string> &audiofilenames,
-			const bool &first_file_with_skip,
-			const bool &last_file_with_skip);
+	Checksums calculate(const std::vector<std::string>& audiofilenames,
+			const bool first_file_is_first_track,
+			const bool last_file_is_last_track);
 
 	/**
 	 * \brief Calculate a single ARCS for an audio file.
 	 *
-	 * The flags \c skip_front and \c skip_back control whether the track is
-	 * processed as first or last track of an album. If \c skip_front is set to
-	 * <tt>TRUE</tt>, the track is processed as first track of an album, meaning
-	 * the first 2939 samples are skipped in the calculation according to the
-	 * ARCS checksum definition. If \c skip_back is set to <tt>TRUE</tt>, the
-	 * track is processed as the last track of an album, meaning that the last
-	 * 5 frames of the input are skipped in the calculation.
+	 * The flags \c is_first_track and \c is_last_track control whether the
+	 * track is processed as first or last track of an album. Since the
+	 * AccurateRip algorithms process the first and last file in a special way,
+	 * it is required to flag them accordingly.
 	 *
-	 * \param[in] audiofilename  Name  of the audiofile
-	 * \param[in] skip_front     Skip front samples of first track
-	 * \param[in] skip_back      Skip back samples of last track
+	 * \param[in] audiofilename     Name of the audiofile
+	 * \param[in] is_first_track    Iff TRUE, file is treated as first track
+	 * \param[in] is_last_track     Iff TRUE, file is treated as last track
 	 *
 	 * \return The AccurateRip checksum of this track
 	 */
-	ChecksumSet calculate(const std::string &audiofilename,
-		const bool &skip_front, const bool &skip_back);
+	ChecksumSet calculate(const std::string& audiofilename,
+		const bool is_first_track, const bool is_last_track);
+	// NOTE This is not really useful except for testing
+
+	/**
+	 * \brief Calculate Checksums of a single audiofile.
+	 *
+	 * \param[in] audiofilename Name of audio file to process
+	 * \param[in] settings      Settings for calculations
+	 * \param[in] types         Requested checksum types
+	 * \param[in,out] leadout   Leadout
+	 * \param[in] offsets       Offsets
+	 */
+	Checksums calculate(const std::string& audiofilename,
+			const Settings& settings, const ChecksumtypeSet& types,
+			std::unique_ptr<AudioSize>& leadout, const Points& offsets);
+
+	/**
+	 * \brief Return checksum::types calculated by this instance.
+	 *
+	 * \return The set of checksum::types to calculate
+	 */
+	ChecksumtypeSet types() const;
 
 	/**
 	 * \brief Set checksum::type for the instance to calculate.
 	 *
 	 * \param[in] type The checksum::type to calculate
 	 */
-	void set_type(const arcstk::checksum::type type);
+	void set_types(const ChecksumtypeSet& type);
 
 	/**
-	 * \brief Return checksum::type calculated by this instance.
+	 * \brief Size of the read buffer.
 	 *
-	 * \return The checksum::type to calculate
+	 * \return Preferred size of the read buffer
 	 */
-	arcstk::checksum::type type() const;
-	// TODO Should be a set of types, e.g. arcstk::ChecksumTypeSet
+	int64_t read_buffer_size() const;
+
+	/**
+	 * \brief Set the preferred size of the read buffer.
+	 *
+	 * This determines the number of samples to read in one read operation.
+	 *
+	 * The Audioreader is not forced to respect it, but it is a strong hint.
+	 *
+	 * \param[in] total_samples Number of PCM 32 bit samples to read at once
+	 */
+	void set_read_buffer_size(const int64_t total_samples); // TODO AudioSize?
 
 private:
 
 	/**
-	 * \brief Worker method: calculating the ARCS of a single audiofile.
+	 * \brief Convert the flags for first and last track to a Context.
 	 *
-	 * \param[in] audiofilename Name of the audiofile
+	 * \param[in] first_file_is_first_track Treat first file as track 1
+	 * \param[in] last_file_is_last_track   Treat last file as last track
 	 *
-	 * \return The AccurateRip checksum of this track
+	 * \return Context equivalent to the input flags
 	 */
-	ChecksumSet calculate_track(const std::string &audiofilename,
-		const bool &skip_front, const bool &skip_back);
+	arcstk::Context to_context(
+		const bool first_file_is_first_track,
+		const bool last_file_is_last_track) const;
 
 	/**
 	 * \brief Internal checksum type.
 	 */
-	arcstk::checksum::type type_;
-};
-
-
-/**
- * \brief Format-independent parser for audio metadata.
- */
-class AudioInfo final : public FileReaderProvider<AudioReader>
-{
-public:
+	ChecksumtypeSet types_;
 
 	/**
-	 * \brief Parse the size of the audio data from the audio file.
-	 *
-	 * \param[in] audiofilename Name of the audiodatafile
-	 *
-	 * \return The size of the audio data
+	 * \brief Size of the read buffer (in number of samples).
 	 */
-	std::unique_ptr<arcstk::AudioSize> size(const std::string &audiofilename)
-		const;
+	int64_t read_buffer_size_;
 };
 
 
@@ -440,24 +501,29 @@ public:
 	ARIdCalculator();
 
 	/**
-	 * \brief Calculate ARId using the specified metadata file.
-	 *
-	 * \param[in] metafilename Name of the metadata file
-	 *
-	 * \return The AccurateRip id for this medium
-	 */
-	std::unique_ptr<ARId> calculate(const std::string &metafilename) const;
-
-	/**
-	 * \brief Calculate ARId using the specified metadata and audio files.
+	 * \brief Calculate ARId using the specified metadata and audio file.
 	 *
 	 * \param[in] metafilename  Name of the metadata file
 	 * \param[in] audiofilename Name of the audiofile
 	 *
 	 * \return The AccurateRip id for this medium
 	 */
-	std::unique_ptr<ARId> calculate(const std::string &metafilename,
-			const std::string &audiofilename) const;
+	std::unique_ptr<ARId> calculate(const std::string& metafilename,
+			const std::string& audiofilename) const;
+
+	/**
+	 * \brief Calculate ARId from ToC while taking leadout from audio file.
+	 *
+	 * Iff the ToC is complete(), the audiofilename parameter is completely
+	 * ignored.
+	 *
+	 * \param[in] toc           ToC of the audio data
+	 * \param[in] audiofilename Name of the audiofile
+	 *
+	 * \return The AccurateRip id for this medium
+	 */
+	std::unique_ptr<ARId> calculate(const ToC& toc,
+			const std::string& audiofilename) const;
 
 	/**
 	 * \brief AudioInfo used by this instance.
@@ -474,18 +540,6 @@ public:
 	void set_audio(const AudioInfo& audio);
 
 private:
-
-	/**
-	 * \brief Worker: calculate ID from TOC while taking leadout from audio
-	 * file.
-	 *
-	 * \param[in] toc           TOC of the image
-	 * \param[in] audiofilename Name of the image audiofile
-	 *
-	 * \return The AccurateRip id for this medium
-	 */
-	std::unique_ptr<ARId> calculate(const TOC &toc,
-			const std::string &audiofilename) const;
 
 	/**
 	 * \brief Internal worker to determine the AudioSize if required.

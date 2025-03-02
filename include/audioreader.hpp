@@ -4,8 +4,22 @@
 /**
  * \file
  *
- * \brief API for implementing AudioReaders
+ * \brief Implement AudioReaders.
  */
+
+#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
+#include "descriptor.hpp"  // for Codec, FileReaderDescriptor, ...
+#endif
+#ifndef __LIBARCSDEC_SAMPLEPROC_HPP__
+#include "sampleproc.hpp"  // for SampleProcessor, SampleProvider
+#endif
+
+#ifndef __LIBARCSTK_METADATA_HPP__
+#include <arcstk/metadata.hpp>   // for AudioSize, UNIT
+#endif
+#ifndef __LIBARCSTK_CALCULATE_HPP__
+#include <arcstk/calculate.hpp>  // for SampleInputIterator
+#endif
 
 #include <cstddef>    // for size_t
 #include <cstdint>    // for uint16_t, uint32_t, int16_t, int32_t
@@ -15,16 +29,6 @@
 #include <string>     // for string
 #include <vector>     // for vector
 
-#ifndef __LIBARCSTK_CALCULATE_HPP__
-#include <arcstk/calculate.hpp>  // for AudioSize, SampleInputIterator
-#endif
-
-#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
-#include "descriptor.hpp"  // for Codec, FileReaderDescriptor, ...
-#endif
-#ifndef __LIBARCSDEC_SAMPLEPROC_HPP__
-#include "sampleproc.hpp"  // for SampleProcessor, SampleProvider
-#endif
 
 namespace arcsdec
 {
@@ -32,12 +36,13 @@ inline namespace v_1_0_0
 {
 
 using arcstk::AudioSize;
+using arcstk::UNIT;
 
 
 /**
- * \defgroup audioreader API for implementing AudioReaders
+ * \defgroup audioreader Implement AudioReaders
  *
- * \brief API for implementing \link AudioReader AudioReaders\endlink.
+ * \brief Implement \link AudioReader AudioReaders\endlink.
  *
  * Class AudioReader provides an interface for reading audio files.
  *
@@ -113,7 +118,7 @@ public:
 	 *
 	 * \throw FileReadException If the file could not be read
 	 */
-	std::unique_ptr<AudioSize> acquire_size(const std::string &filename);
+	std::unique_ptr<AudioSize> acquire_size(const std::string& filename);
 
 	/**
 	 * \brief Provides implementation for process_file() of some AudioReader.
@@ -124,7 +129,7 @@ public:
 	 *
 	 * \throw FileReadException If the file could not be read
 	 */
-	void process_file(const std::string &filename);
+	void process_file(const std::string& filename);
 
 	/**
 	 * \brief Set the number of samples to read in one read operation.
@@ -133,14 +138,14 @@ public:
 	 *
 	 * \param[in] samples_per_read Number of samples to read/buffer at once.
 	 */
-	void set_samples_per_read(const std::size_t samples_per_read);
+	void set_samples_per_read(const int64_t samples_per_read);
 
 	/**
 	 * \brief Return the number of samples to read in one read operation.
 	 *
 	 * \return Number of samples per read operation.
 	 */
-	std::size_t samples_per_read() const;
+	int64_t samples_per_read() const;
 
 	/**
 	 * \brief Create a descriptor for this AudioReader implementation.
@@ -152,21 +157,32 @@ public:
 protected:
 
 	// Avoid -Weffc++ firing
-	AudioReaderImpl(const AudioReaderImpl &) = delete;
-	AudioReaderImpl& operator = (const AudioReaderImpl &) = delete;
+	AudioReaderImpl(const AudioReaderImpl&) = delete;
+	AudioReaderImpl& operator = (const AudioReaderImpl&) = delete;
 
-	AudioReaderImpl(AudioReaderImpl &&) noexcept;
-	AudioReaderImpl& operator = (AudioReaderImpl &&) noexcept;
+	AudioReaderImpl(AudioReaderImpl&&) noexcept;
+	AudioReaderImpl& operator = (AudioReaderImpl&&) noexcept;
 
 	/**
 	 * \brief Default implementation of attach_processor().
 	 */
-	void attach_processor_impl(SampleProcessor &processor);
+	void attach_processor_impl(SampleProcessor& processor);
 
 	/**
 	 * \brief Use the internal SampleProcessor.
 	 */
 	SampleProcessor* use_processor();
+
+	/**
+	 * \brief Service: convert 64 bit wide number of total samples to AudioSize.
+	 *
+	 * \param[in] total_samples Total samples
+	 *
+	 * \return AudioSize representing the number of total samples
+	 *
+	 * \throw std::invalid_argument If total_samples is bigger than 32 bit
+	 */
+	AudioSize to_audiosize(const int64_t total_samples, const UNIT& u) const;
 
 private:
 
@@ -177,11 +193,11 @@ private:
 	void do_signal_appendsamples(SampleInputIterator begin,
 			SampleInputIterator end) override;
 
-	void do_signal_updateaudiosize(const AudioSize &size) override;
+	void do_signal_updateaudiosize(const AudioSize& size) override;
 
 	void do_signal_endinput() override;
 
-	void do_attach_processor(SampleProcessor &processor) override;
+	void do_attach_processor(SampleProcessor& processor) override;
 
 	const SampleProcessor* do_processor() const override;
 
@@ -195,7 +211,7 @@ private:
 	 * \throw FileReadException If the file could not be read
 	 */
 	virtual std::unique_ptr<AudioSize> do_acquire_size(
-		const std::string &filename)
+		const std::string& filename)
 	= 0;
 
 	/**
@@ -207,7 +223,7 @@ private:
 	 *
 	 * \throw FileReadException If the file could not be read
 	 */
-	virtual void do_process_file(const std::string &filename)
+	virtual void do_process_file(const std::string& filename)
 	= 0;
 
 	virtual std::unique_ptr<FileReaderDescriptor> do_descriptor() const
@@ -221,7 +237,7 @@ private:
 	/**
 	 * \brief Buffer size as total number of PCM 32 bit samples.
 	 */
-	std::size_t samples_per_read_;
+	int64_t samples_per_read_;
 };
 
 
@@ -243,7 +259,7 @@ public:
 	 * \param[in] impl AudioReader implementation to use
 	 * \param[in] proc SampleProcessor to use
 	 */
-	AudioReader(std::unique_ptr<AudioReaderImpl> impl, SampleProcessor &proc);
+	AudioReader(std::unique_ptr<AudioReaderImpl> impl, SampleProcessor& proc);
 
 	/**
 	 * \brief Constructor with a concrete implementation
@@ -252,13 +268,13 @@ public:
 	 */
 	explicit AudioReader(std::unique_ptr<AudioReaderImpl> impl);
 
-	AudioReader(AudioReader &&) noexcept;
-	AudioReader& operator = (AudioReader &&) noexcept;
+	AudioReader(AudioReader&&) noexcept;
+	AudioReader& operator = (AudioReader&&) noexcept;
 
 	/**
 	 * \brief Default destructor.
 	 */
-	~AudioReader() noexcept override;
+	~AudioReader() noexcept final;
 
 	/**
 	 * \brief Set the number of samples to read in one read operation.
@@ -267,21 +283,21 @@ public:
 	 *
 	 * \param[in] samples_per_read The number of 32 bit PCM samples per read
 	 */
-	void set_samples_per_read(const std::size_t samples_per_read);
+	void set_samples_per_read(const int64_t samples_per_read);
 
 	/**
 	 * \brief Return the number of samples to read in one read operation.
 	 *
 	 * \return Number of samples per read operation.
 	 */
-	std::size_t samples_per_read() const;
+	int64_t samples_per_read() const;
 
 	/**
 	 * \brief Register a SampleProcessor instance to pass the read samples to.
 	 *
 	 * \param[in] processor SampleProcessor to use
 	 */
-	void set_processor(SampleProcessor &processor);
+	void set_processor(SampleProcessor& processor);
 
 	/**
 	 * \brief Acquire the AudioSize of a file.
@@ -294,7 +310,7 @@ public:
 	 *
 	 * \throw FileReadException If the file could not be read
 	 */
-	std::unique_ptr<AudioSize> acquire_size(const std::string &filename) const;
+	std::unique_ptr<AudioSize> acquire_size(const std::string& filename) const;
 
 	/**
 	 * \brief Process the file and return ARCSs v1 and v2 for all tracks.
@@ -305,7 +321,7 @@ public:
 	 *
 	 * \throw FileReadException If the file could not be read
 	 */
-	void process_file(const std::string &filename);
+	void process_file(const std::string& filename);
 
 private:
 
@@ -316,7 +332,7 @@ private:
 	 */
 	std::unique_ptr<AudioReader::Impl> impl_;
 
-	std::unique_ptr<FileReaderDescriptor> do_descriptor() const override;
+	std::unique_ptr<FileReaderDescriptor> do_descriptor() const final;
 };
 
 
@@ -332,19 +348,40 @@ public:
 	 *
 	 * \param[in] what_arg What argument
 	 */
-	explicit InvalidAudioException(const std::string &what_arg);
+	explicit InvalidAudioException(const std::string& what_arg);
 
 	/**
 	 * \brief Constructor.
 	 *
 	 * \param[in] what_arg What argument
 	 */
-	explicit InvalidAudioException(const char *what_arg);
+	explicit InvalidAudioException(const char* what_arg);
 };
 
 
 /**
- * \brief Base class for validation handlers for
+ * \brief Perform a safe cast to int32_t.
+ *
+ * \param[in] value The value to cast
+ *
+ * \tparam INT The type to cast
+ */
+template <typename INT>
+constexpr inline static int32_t cast_to_int32(const INT value)
+{
+	if (value > std::numeric_limits<int32_t>::max())
+	{
+		using std::to_string;
+		throw std::invalid_argument(std::string { "Value " } + to_string(value)
+				+ " cannot be represented with only 32 bit");
+	}
+
+	return static_cast<int32_t>(value);
+}
+
+
+/**
+ * \brief Abstract base class for validation handlers for
  * \link AudioReaderImpl AudioReaderImpls\endlink.
  *
  * Implements a class that just provides some assert methods that get a label, a
@@ -407,7 +444,7 @@ public:
 	 * \return TRUE if the sample size equals CDDAValidator::bits_per_sample()
 	 * otherwise FALSE
 	 */
-	bool bits_per_sample(const int bits_per_sample);
+	void validate_bits_per_sample(const int bits_per_sample);
 
 	/**
 	 * \brief CDDA validation of the sampling rate (must be 44.100).
@@ -422,7 +459,7 @@ public:
 	 * \return TRUE if the sampling rate equals
 	 * CDDAValidator::samples_per_second() otherwise FALSE
 	 */
-	bool samples_per_second(const int samples_per_second);
+	void validate_samples_per_second(const int samples_per_second);
 
 	/**
 	 * \brief CDDA validation for stereo (must be 2).
@@ -436,14 +473,14 @@ public:
 	 * \return TRUE if num_channels is equal to CDDAValidator::num_channels()
 	 * otherwise FALSE
 	 */
-	bool num_channels(const int num_channels);
+	void validate_num_channels(const int num_channels);
 
 	/**
 	 * \brief Add an error to the internal error list.
 	 *
 	 * \param[in] msg The error message to be added to the error list
 	 */
-	void error(const std::string &msg);
+	void error(const std::string& msg);
 
 	/**
 	 * \brief Returns the last error that occurred.
@@ -468,9 +505,16 @@ public:
 
 protected:
 
-	AudioValidator(AudioValidator &&) noexcept = default;
-	AudioValidator& operator = (AudioValidator &&) noexcept
+	AudioValidator(AudioValidator&&) noexcept = default;
+	AudioValidator& operator = (AudioValidator&&) noexcept
 		= default;
+
+	/**
+	 * \brief Call on_failure() iff condition is TRUE.
+	 *
+	 * \param[in] condition Condition to check for TRUE
+	 */
+	void fail_if(const bool condition);
 
 	/**
 	 * \brief Returns TRUE iff value == proper_value.
@@ -487,10 +531,10 @@ protected:
 	 * \return TRUE if value is equal to proper_value, otherwise FALSE
 	 */
 	bool assert_equals(
-		const std::string &label,
+		const std::string& label,
 		int value,
 		int proper_value,
-		const std::string error_msg);
+		const std::string& error_msg);
 
 	/**
 	 * \brief Returns TRUE iff value == proper_value.
@@ -507,10 +551,10 @@ protected:
 	 * \return TRUE if value is equal to proper_value, otherwise FALSE
 	 */
 	bool assert_equals_u(
-		const std::string &label,
+		const std::string& label,
 		uint32_t value,
 		uint32_t proper_value,
-		const std::string error_msg);
+		const std::string& error_msg);
 
 	/**
 	 * \brief Returns TRUE iff value >= proper_value.
@@ -527,10 +571,10 @@ protected:
 	 * \return TRUE if value is not smaller than proper_value, otherwise FALSE
 	 */
 	bool assert_at_least(
-		const std::string &label,
+		const std::string& label,
 		int value,
 		int proper_value,
-		const std::string error_msg);
+		const std::string& error_msg);
 
 	/**
 	 * \brief Returns TRUE iff value <= proper_value.
@@ -547,10 +591,10 @@ protected:
 	 * \return TRUE if value is not bigger than proper_value, otherwise FALSE
 	 */
 	bool assert_at_most(
-		const std::string &label,
+		const std::string& label,
 		int value,
 		int proper_value,
-		const std::string error_msg);
+		const std::string& error_msg);
 
 	/**
 	 * \brief Returns TRUE iff value is true.
@@ -565,9 +609,9 @@ protected:
 	 * \return TRUE if value is TRUE, otherwise FALSE
 	 */
 	bool assert_true(
-		const std::string &label,
+		const std::string& label,
 		bool value,
-		const std::string error_msg);
+		const std::string& error_msg);
 
 	/**
 	 * \brief Logs every error on the error stack with ARCS_LOG_ERROR.
@@ -600,10 +644,11 @@ private:
 
 
 /**
- * \brief Default implementation of AudioValidator.
+ * \brief Abstract base implementation of AudioValidator.
  *
  * Implements \c on_failure to throw an InvalidAudioException with the message
- * of the last error.
+ * of the last error. The implementation of \c do_codecs() is left to
+ * subclasses.
  */
 class DefaultValidator : public AudioValidator
 {
@@ -626,7 +671,7 @@ struct CDDAValidator final
 	 * \return TRUE iff the number of bits per sample is 16 (conforming to CDDA)
 	 * otherwise FALSE
 	 */
-	static bool bits_per_sample(const int &bits_per_sample);
+	static bool bits_per_sample(const int& bits_per_sample);
 
 	/**
 	 * \brief Return TRUE iff the number of channels conforms to CDDA.
@@ -636,7 +681,7 @@ struct CDDAValidator final
 	 * \return TRUE iff the number of channels is 2 (conforming to CDDA)
 	 * otherwise FALSE
 	 */
-	static bool num_channels(const int &num_channels);
+	static bool num_channels(const int& num_channels);
 
 	/**
 	 * \brief Return TRUE if the sample rate conforms to CDDA.
@@ -646,12 +691,12 @@ struct CDDAValidator final
 	 * \return TRUE iff the number of samples per second is 44100
 	 * (conforming to CDDA) otherwise FALSE
 	 */
-	static bool samples_per_second(const int &samples_per_second);
+	static bool samples_per_second(const int& samples_per_second);
 };
 
 
 /**
- * \brief Service: interpret sequences of 2 or 4 little-endian bytes as integer.
+ * \brief Service: interpret 2 or 4 little-endian bytes as integer.
  */
 struct LittleEndianBytes final
 {
@@ -667,7 +712,7 @@ struct LittleEndianBytes final
 	 *
 	 * \return The bytes as 16 bit (signed) integer
 	 */
-	static int16_t to_int16(const char &b1, const char &b2);
+	static int16_t to_int16(const char& b1, const char& b2);
 
 	/**
 	 * \brief Service method: Interpret 2 bytes as a 16 bit unsigned integer
@@ -681,7 +726,7 @@ struct LittleEndianBytes final
 	 *
 	 * \return The bytes as 16 bit unsigned integer
 	 */
-	static uint16_t to_uint16(const char &b1, const char &b2);
+	static uint16_t to_uint16(const char& b1, const char& b2);
 
 	/**
 	 * \brief Service method: Interpret 4 bytes as a 32 bit (signed) integer
@@ -699,10 +744,10 @@ struct LittleEndianBytes final
 	 *
 	 * \return The bytes as 32 bit (signed) integer
 	 */
-	static int32_t to_int32(const char &b1,
-			const char &b2,
-			const char &b3,
-			const char &b4);
+	static int32_t to_int32(const char& b1,
+			const char& b2,
+			const char& b3,
+			const char& b4);
 
 	/**
 	 * \brief Service method: Interpret 4 bytes as a 32 bit unsigned integer
@@ -720,15 +765,15 @@ struct LittleEndianBytes final
 	 *
 	 * \return The bytes as 32 bit unsigned integer
 	 */
-	static uint32_t to_uint32(const char &b1,
-			const char &b2,
-			const char &b3,
-			const char &b4);
+	static uint32_t to_uint32(const char& b1,
+			const char& b2,
+			const char& b3,
+			const char& b4);
 };
 
 
 /**
- * \brief Service: interpret sequences of 2 or 4 big endian bytes as integer.
+ * \brief Service: interpret 2 or 4 big-endian bytes as integer.
  */
 struct BigEndianBytes final
 {
@@ -748,10 +793,10 @@ struct BigEndianBytes final
 	 *
 	 * \return The bytes as 32 bit (signed) integer
 	 */
-	static int32_t to_int32(const char &b1,
-			const char &b2,
-			const char &b3,
-			const char &b4);
+	static int32_t to_int32(const char& b1,
+			const char& b2,
+			const char& b3,
+			const char& b4);
 
 	/**
 	 * \brief Service method: Interpret 4 bytes as a 32 bit unsigned integer
@@ -769,10 +814,10 @@ struct BigEndianBytes final
 	 *
 	 * \return The bytes as 32 bit unsigned integer
 	 */
-	static uint32_t to_uint32(const char &b1,
-			const char &b2,
-			const char &b3,
-			const char &b4);
+	static uint32_t to_uint32(const char& b1,
+			const char& b2,
+			const char& b3,
+			const char& b4);
 };
 
 /// @}

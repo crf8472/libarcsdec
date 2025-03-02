@@ -4,7 +4,6 @@
  * \brief Implements interface for processing samples
  */
 
-
 #ifndef __LIBARCSDEC_SAMPLEPROC_HPP__
 #include "sampleproc.hpp"
 #endif
@@ -43,7 +42,7 @@ void SampleProcessor::append_samples(SampleInputIterator begin,
 }
 
 
-void SampleProcessor::update_audiosize(const AudioSize &size)
+void SampleProcessor::update_audiosize(const AudioSize& size)
 {
 	this->do_update_audiosize(size);
 }
@@ -64,7 +63,7 @@ SampleProvider::SampleProvider() = default;
 SampleProvider::~SampleProvider() noexcept = default;
 
 
-void SampleProvider::attach_processor(SampleProcessor &processor)
+void SampleProvider::attach_processor(SampleProcessor& processor)
 {
 	this->do_attach_processor(processor);
 }
@@ -89,7 +88,7 @@ void SampleProvider::signal_appendsamples(SampleInputIterator begin,
 }
 
 
-void SampleProvider::signal_updateaudiosize(const AudioSize &size)
+void SampleProvider::signal_updateaudiosize(const AudioSize& size)
 {
 	this->do_signal_updateaudiosize(size);
 }

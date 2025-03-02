@@ -8,6 +8,14 @@
 #include "libinspect.hpp"
 #endif
 
+#ifndef __LIBARCSDEC_VERSION_HPP__
+#include "version.hpp"        // for LIBARCSDEC_NAME
+#endif
+
+#ifndef __LIBARCSTK_LOGGING_HPP__
+#include <arcstk/logging.hpp> // for ARCS_LOG_WARNING, ARCS_LOG_DEBUG
+#endif
+
 extern "C"
 {
 #include <dlfcn.h>     // [glibc, Linux] for dlopen, dlclose, dlerror, RTLD_LAZY
@@ -18,28 +26,20 @@ extern "C"
 #include <regex>       // for regex, regex_match
 #include <string>      // for string
 
-#ifndef __LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp>   // for ARCS_LOG_WARNING, ARCS_LOG_DEBUG
-#endif
-
-#ifndef __LIBARCSDEC_VERSION_HPP__
-#include "version.hpp"  // for LIBARCSDEC_NAME
-#endif
 
 namespace arcsdec
 {
 inline namespace v_1_0_0
 {
-
 namespace details
 {
 
-void escape(std::string &input, const char c, const std::string &escape_seq)
+void escape(std::string& input, const char c, const std::string& escape_seq)
 {
 	std::size_t lookHere = 0;
 	std::size_t foundHere;
 
-	auto replacement = escape_seq + c;
+	const auto replacement = escape_seq + c;
 	while((foundHere = input.find(c, lookHere)) != std::string::npos)
 	{
 		input.replace(foundHere, 1, replacement);
@@ -48,7 +48,7 @@ void escape(std::string &input, const char c, const std::string &escape_seq)
 }
 
 
-std::regex to_libname_pattern(const std::string &libname)
+std::regex to_libname_pattern(const std::string& libname)
 {
 	auto e_name = libname;
 
@@ -65,24 +65,24 @@ std::regex to_libname_pattern(const std::string &libname)
 }
 
 
-const std::string& first_libname_match(const std::vector<std::string> &list,
-		const std::string &name)
+const std::string& first_libname_match(const std::vector<std::string>& list,
+		const std::string& name)
 {
 	static const auto empty_entry = std::string{};
 
 	const auto pattern = to_libname_pattern(name);
 
-	using std::begin;
-	using std::end;
+	using std::cbegin;
+	using std::cend;
 
-	const auto first_match = std::find_if(begin(list), end(list),
-			[pattern](const std::string &lname)
+	const auto first_match = std::find_if(cbegin(list), cend(list),
+			[pattern](const std::string& lname)
 			{
 				return std::regex_match(lname, pattern);
 			}
 	);
 
-	if (first_match == list.end())
+	if (first_match == cend(list))
 	{
 		return empty_entry;
 	}
@@ -91,7 +91,7 @@ const std::string& first_libname_match(const std::vector<std::string> &list,
 }
 
 
-std::vector<std::string> runtime_deps(const std::string &object_name)
+std::vector<std::string> runtime_deps(const std::string& object_name)
 {
 	//std::cerr << "Runtime deps of " << object_name << '\n';
 
@@ -189,7 +189,7 @@ const std::vector<std::string>& libarcsdec_deps()
 }
 
 
-const std::string& libfile(const std::string &libname)
+const std::string& libfile(const std::string& libname)
 {
 	return first_libname_match(libarcsdec_deps(), libname);
 }

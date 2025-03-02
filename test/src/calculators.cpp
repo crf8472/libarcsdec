@@ -1,27 +1,36 @@
 #include "catch2/catch_test_macros.hpp"
 
-#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
-#include "audioreader.hpp"
-#endif
-#ifndef __LIBARCSDEC_METAPARSER_HPP__
-#include "metaparser.hpp"
-#endif
-#ifndef __LIBARCSDEC_CALCULATORS_HPP__
-#include "calculators.hpp"
-#endif
-
-
 /**
  * \file
  *
- * Tests for all API classes exported by calculators.hpp
+ * \brief Fixtures for calculators.hpp.
  */
+
+#ifndef __LIBARCSDEC_CALCULATORS_HPP__
+#include "calculators.hpp"              // TO BE TESTED
+#endif
+
+#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
+#include "audioreader.hpp"              // for AudioReader
+#endif
+#ifndef __LIBARCSDEC_METAPARSER_HPP__
+#include "metaparser.hpp"               // for MetadataParser
+#endif
+#ifndef __LIBARCSDEC_SELECTION_HPP__
+#include "selection.hpp"                // for FileReaderRegistry
+#endif
 
 
 using arcsdec::ReaderAndFormatHolder;
 
-// ReaderAndFormatHolder is abstract by its destructor
-class TestHolder : public ReaderAndFormatHolder
+/**
+ * \brief Mock for ReaderAndFormatHolder.
+ *
+ * ReaderAndFormatHolder is an abstract class by its destructor. The mock is
+ * intended to add no functionality but just access the functions in its base
+ * class.
+ */
+class Mock_ReaderAndFormatHolder : public ReaderAndFormatHolder
 {
 	// empty
 };
@@ -31,7 +40,7 @@ TEST_CASE ( "ReaderAndFormatHolder", "[readerandformatholder]")
 {
 	using arcsdec::FileReaderRegistry;
 
-	TestHolder h;
+	auto h = Mock_ReaderAndFormatHolder{};
 
 	SECTION ( "Create Holder for Readers and Formats with defaults" )
 	{
@@ -61,14 +70,13 @@ TEST_CASE ( "ReaderAndFormatHolder", "[readerandformatholder]")
 
 TEST_CASE ( "SelectionPerformer", "[selectionperformer]")
 {
+	using arcsdec::AudioReader;
+	using arcsdec::MetadataParser;
 	using arcsdec::SelectionPerformer;
 
-	using arcsdec::MetadataParser;
-	using arcsdec::AudioReader;
-
-	TestHolder h;
-	SelectionPerformer<MetadataParser> p;
-	SelectionPerformer<AudioReader> a;
+	const auto h = Mock_ReaderAndFormatHolder{};
+	const auto p = SelectionPerformer<MetadataParser>{};
+	const auto a = SelectionPerformer<AudioReader>{};
 
 	SECTION ( "Create reader for CueSheet correctly" )
 	{
@@ -91,36 +99,38 @@ TEST_CASE ( "AudioInfo", "[calculators]")
 	using arcsdec::AudioInfo;
 	using arcsdec::FileReaderRegistry;
 
-	AudioInfo i;
+	const auto i = AudioInfo{};
 
 	SECTION ("Initial set of FileReaders is present and complete")
 	{
 		CHECK ( i.readers() == FileReaderRegistry::readers() );
 		CHECK ( not i.readers()->empty() );
-		CHECK ( 7 >= i.readers()->size() );
+		CHECK ( 5 <= i.readers()->size() ); // cue, wavpcm, ffmpeg, flac, wvpk
+		CHECK ( 8 >= i.readers()->size() ); // + toc, libcue, sndfile
 	}
 
 	SECTION( "Get size of wav file correctly" )
 	{
-		const auto leadout { i.size("test01.wav")->total_samples() };
+		const auto leadout { i.size("test01.wav")->samples() };
 
 		CHECK ( leadout == 1025 );
 	}
 }
 
 
-TEST_CASE ( "TOCParser", "[calculators]" )
+TEST_CASE ( "ToCParser", "[calculators]" )
 {
-	using arcsdec::TOCParser;
 	using arcsdec::FileReaderRegistry;
+	using arcsdec::ToCParser;
 
-	TOCParser p;
+	const auto p = ToCParser{};
 
 	SECTION ("Initial set of FileReaders is present and complete")
 	{
 		CHECK ( p.readers() == FileReaderRegistry::readers() );
-		CHECK ( 7 >= p.readers()->size() );
 		CHECK ( not p.readers()->empty() );
+		CHECK ( 5 <= p.readers()->size() ); // cue, wavpcm, ffmpeg, flac, wvpk
+		CHECK ( 8 >= p.readers()->size() ); // + toc, libcue, sndfile
 	}
 
 	SECTION( "Parse CueSheet file correctly" )
@@ -128,8 +138,8 @@ TEST_CASE ( "TOCParser", "[calculators]" )
 		const auto toc { p.parse("cuesheet/ok01.cue") };
 
 		CHECK ( toc->total_tracks() == 2 );
-		CHECK ( toc->offset(1)      == 150 );
-		CHECK ( toc->offset(2)      == 25072 );
+		CHECK ( toc->offsets().at(0).frames() ==   150 );
+		CHECK ( toc->offsets().at(1).frames() == 25072 );
 	}
 }
 
@@ -138,11 +148,11 @@ TEST_CASE ( "ARCSCalculator", "[calculators]" )
 {
 	using arcsdec::ARCSCalculator;
 
-	ARCSCalculator c;
+	auto c = ARCSCalculator{};
 
 	SECTION ("Initial DescriptorSet is present and complete")
 	{
-		CHECK ( 7 >= c.readers()->size() );
+		CHECK ( 8 >= c.readers()->size() );
 		CHECK ( not c.readers()->empty() );
 	}
 
@@ -169,13 +179,14 @@ TEST_CASE ( "ARIdCalculator", "[calculators]" )
 	using arcsdec::ARIdCalculator;
 	using arcsdec::FileReaderRegistry;
 
-	ARIdCalculator c;
+	const auto c = ARIdCalculator{};
 
 	SECTION ("Initial set of FileReaders is present and complete")
 	{
 		CHECK ( c.readers() == FileReaderRegistry::readers() );
-		CHECK ( 7 >= c.readers()->size() );
 		CHECK ( not c.readers()->empty() );
+		CHECK ( 5 <= c.readers()->size() ); // cue, wavpcm, ffmpeg, flac, wvpk
+		CHECK ( 8 >= c.readers()->size() ); // + toc, libcue, sndfile
 	}
 
 	// TODO Provide test files with realistic results

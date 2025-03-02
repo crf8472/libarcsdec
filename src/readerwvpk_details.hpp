@@ -1,23 +1,23 @@
 #ifndef __LIBARCSDEC_READERWVPK_HPP__
 #error "Do not include readerwvpk_details.hpp, include readerwvpk.hpp instead"
 #endif
-
-/**
- * \file
- *
- * \brief Testable implementation classes for readerwvpk.
- *
- * The Wavpack AudioReader will only read Wavpack files containing losslessly
- * compressed integer samples. Validation requires CDDA conform samples in PCM
- * format. Float samples are not supported. Original file formats other than
- * WAV are not supported.
- */
-
 #ifndef __LIBARCSDEC_READERWVPK_DETAILS_HPP__
 #define __LIBARCSDEC_READERWVPK_DETAILS_HPP__
 
+/**
+ * \internal
+ *
+ * \file
+ *
+ * \brief Implementation details of readerwvpk.hpp.
+ */
+
+#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
+#include "audioreader.hpp"  // for AudioReaderImpl
+#endif
+
 extern "C" {
-#include <wavpack/wavpack.h>
+#include <wavpack/wavpack.h>  // for WavpackContext
 }
 
 #include <cstdint>   // for uint8_t, int32_t, int64_t
@@ -26,29 +26,31 @@ extern "C" {
 #include <string>    // for string
 #include <vector>    // for vector
 
-#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
-#include "audioreader.hpp"  // for AudioReaderImpl
-#endif
-
 
 namespace arcsdec
 {
 inline namespace v_1_0_0
 {
-
 namespace details
 {
+
+/**
+ * \internal
+ *
+ * \brief Implementation details of readerwav.
+ */
 namespace wavpack
 {
 
 /**
- * \internal \defgroup readerwvpkImpl Implementation
+ * \internal
+ *
+ * \defgroup readerwvpkImpl Implementation
  *
  * \ingroup readerwvpk
  *
  * @{
  */
-
 
 /**
  * \brief Functor for freeing WavpackContext* instances.
@@ -63,16 +65,18 @@ struct Free_WavpackContext final
  * \brief A unique_ptr for WavpackContext using Free_WavpackContext as a
  * custom deleter.
  */
-using ContextPtr = std::unique_ptr<::WavpackContext, Free_WavpackContext>;
+using WavpackContextPtr =
+	std::unique_ptr<::WavpackContext, Free_WavpackContext>;
 
 
 /**
- * \brief Construction functor for ContextPtr instances.
+ * \brief Open a Wavpack file.
+ *
+ * \param[in] filename Wavpack filename
+ *
+ * \return WavpackContext
  */
-struct Make_ContextPtr final
-{
-	ContextPtr operator()(const std::string &filename) const;
-};
+extern WavpackContextPtr get_context(const std::string& filename) noexcept;
 
 
 /**
@@ -89,10 +93,10 @@ public:
 	 * \param[in] name  Name of function that returned the unexpected value
 	 * \param[in] error_msg Error message from libwavpack
 	 */
-	LibwavpackException(const std::string &value, const std::string &name,
-			const std::string &error_msg);
+	LibwavpackException(const std::string& value, const std::string& name,
+			const std::string& error_msg);
 
-	char const * what() const noexcept override;
+	char const * what() const noexcept final;
 
 private:
 
@@ -106,14 +110,14 @@ private:
  * Can be subclassed to be more permissive. Default implementation allows
  * only WAV format and no floats.
  */
-class WAVPACK_CDDA_t
+class WAVPACK_CDDA_t final
 {
 public:
 
 	/**
 	 * \brief Default destructor.
 	 */
-	virtual ~WAVPACK_CDDA_t() noexcept;
+	~WAVPACK_CDDA_t() noexcept;
 
 	/**
 	 * \brief Expect lossless compression.
@@ -129,7 +133,7 @@ public:
 	 *
 	 * \return TRUE iff only WAV format is exclusively required, otherwise FALSE
 	 */
-	virtual bool wav_format_only() const;
+	bool wav_format_only() const;
 
 	/**
 	 * \brief Declare whether it is required to have samples represented as
@@ -140,7 +144,7 @@ public:
 	 *
 	 * \return TRUE iff float samples can be processed, otherwise FALSE
 	 */
-	virtual bool floats_ok() const;
+	bool floats_ok() const;
 
 	/**
 	 * \brief Declare the least version of wavpack that is supported.
@@ -149,7 +153,7 @@ public:
 	 *
 	 * \return The least version of wavpack supported
 	 */
-	virtual int at_least_version() const;
+	int at_least_version() const;
 
 	/**
 	 * \brief Declare the highest version of wavpack that is supported.
@@ -158,14 +162,14 @@ public:
 	 *
 	 * \return The highest version of wavpack supported
 	 */
-	virtual int at_most_version() const;
+	int at_most_version() const;
 };
 
 
 /**
  * \brief Represents an opened wavpack audio file.
  */
-class WavpackOpenFile
+class WavpackOpenFile final
 {
 public:
 
@@ -179,12 +183,16 @@ public:
 	 *
 	 * \throw FileReadException If file could not be opened
 	 */
-	explicit WavpackOpenFile(const std::string &filename);
+	explicit WavpackOpenFile(const std::string& filename);
 
 	/**
-	 * \brief Virtual default destructor.
+	 * \brief Default destructor.
 	 */
-	virtual ~WavpackOpenFile() noexcept;
+	~WavpackOpenFile() noexcept;
+
+	// class is non-copyable
+	WavpackOpenFile(const WavpackOpenFile& file) = delete;
+	WavpackOpenFile& operator = (WavpackOpenFile& file) = delete;
 
 	/**
 	 * \brief Returns TRUE if file is lossless.
@@ -292,31 +300,23 @@ public:
 	 * \throw invalid_argument If buffer.size() < (pcm_samples_to_read * 2)
 	 */
 	int64_t read_pcm_samples(const int64_t pcm_samples_to_read,
-		std::vector<int32_t> &buffer) const;
+		std::vector<int32_t>& buffer) const;
+
+	/**
+	 * \brief Return TRUE iff file could be opened.
+	 *
+	 * Iff this function yields FALSE, destroy the instance.
+	 *
+	 * \return TRUE iff file is opened.
+	 */
+	bool success() const;
 
 private:
 
-	// forward declaration for private implementation
-	class Impl;
-
 	/**
-	 * \brief Private implementation
+	 * \brief Internal WavpackContext.
 	 */
-	std::unique_ptr<Impl> impl_;
-
-	/**
-	 * \brief Private copy constructor.
-	 *
-	 * Implemented empty. This class is non-copyable.
-	 */
-	WavpackOpenFile(const WavpackOpenFile &file) = delete;
-
-	/**
-	 * \brief Private copy assignment operator.
-	 *
-	 * Implemented empty. This class is non-copyable.
-	 */
-	WavpackOpenFile& operator = (WavpackOpenFile &file) = delete;
+	WavpackContextPtr context_;
 };
 
 
@@ -324,7 +324,7 @@ private:
  * \brief A handler to validate wavpack files for whether they can be processed
  * by this WavpackAudioReaderImpl.
  */
-class WavpackValidatingHandler : public DefaultValidator
+class WavpackValidatingHandler final : public DefaultValidator
 {
 public:
 
@@ -337,7 +337,7 @@ public:
 	/**
 	 * \brief Virtual default destructor.
 	 */
-	~WavpackValidatingHandler() noexcept override;
+	~WavpackValidatingHandler() noexcept final;
 
 	/**
 	 * \brief Validate the format of the wavpack file.
@@ -346,7 +346,7 @@ public:
 	 *
 	 * \return TRUE if validation succeeded, otherwise FALSE
 	 */
-	bool validate_format(const WavpackOpenFile &file);
+	bool validate_format(const WavpackOpenFile& file);
 
 	/**
 	 * \brief Validate properties expressed by the mode of the wavpack file.
@@ -355,7 +355,7 @@ public:
 	 *
 	 * \return TRUE if validation succeeded, otherwise FALSE
 	 */
-	bool validate_mode(const WavpackOpenFile &file);
+	bool validate_mode(const WavpackOpenFile& file);
 
 	/**
 	 * \brief Validate audio content of the wavpack file for CDDA conformity.
@@ -364,7 +364,7 @@ public:
 	 *
 	 * \return TRUE if validation succeeded, otherwise FALSE
 	 */
-	bool validate_cdda(const WavpackOpenFile &file);
+	bool validate_cdda(const WavpackOpenFile& file);
 
 	/**
 	 * \brief Validate the wavpack version of the wavpack file.
@@ -373,11 +373,11 @@ public:
 	 *
 	 * \return TRUE if validation succeeded, otherwise FALSE
 	 */
-	bool validate_version(const WavpackOpenFile &file);
+	bool validate_version(const WavpackOpenFile& file);
 
 private:
 
-	codec_set_type do_codecs() const override;
+	codec_set_type do_codecs() const final;
 
 	/**
 	 * \brief Configuration: Reference values for validation.
@@ -402,10 +402,10 @@ public:
 
 private:
 
-	std::unique_ptr<AudioSize> do_acquire_size(const std::string &filename)
+	std::unique_ptr<AudioSize> do_acquire_size(const std::string& filename)
 		final;
 
-	void do_process_file(const std::string &filename) final;
+	void do_process_file(const std::string& filename) final;
 
 	std::unique_ptr<FileReaderDescriptor> do_descriptor() const final;
 
@@ -416,7 +416,7 @@ private:
 	 *
 	 * \return TRUE iff validation succeeded, otherwise FALSE
 	 */
-	bool perform_validations(const WavpackOpenFile &file);
+	bool perform_validations(const WavpackOpenFile& file);
 
 	/**
 	 * \brief Validating handler of this instance.

@@ -4,8 +4,16 @@
 /**
  * \file
  *
- * \brief API for implementing MetadataParsers
+ * \brief Implement MetadataParsers.
  */
+
+#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
+#include "descriptor.hpp"  // for FileReader, FileReaderDescriptor
+#endif
+
+#ifndef __LIBARCSTK_METADATA_HPP__
+#include <arcstk/metadata.hpp>    // for ToC
+#endif
 
 #include <limits>       // for numeric_limits
 #include <memory>       // for unique_ptr
@@ -14,36 +22,28 @@
 #include <string>       // for string
 #include <type_traits>  // for is_signed, is_unsigned
 
-#ifndef __LIBARCSTK_IDENTIFIER_HPP__
-#include <arcstk/identifier.hpp>  // for TOC
-#endif
-
-#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
-#include "descriptor.hpp"  // for FileReader, FileReaderDescriptor
-#endif
-
 namespace arcsdec
 {
 inline namespace v_1_0_0
 {
 
-using arcstk::TOC;
+using arcstk::ToC;
 
 /**
- * \defgroup metaparser API for implementing MetadataParsers
+ * \defgroup metaparser Implement MetadataParsers
  *
- * \brief API for implementing \link MetadataParser MetadataParsers\endlink.
+ * \brief Implement \link MetadataParser MetadataParsers\endlink.
  *
- * Class MetadataParser provides an interface for parsing TOC files.
+ * Class MetadataParser provides an interface for parsing ToC files.
  *
  * The MetadataParser provides function \c parse() to parse the input file to
- * a arcstk::TOC instance. The TOC object is constructed using arcstk::make_toc.
+ * a arcstk::ToC instance. The ToC object is constructed using arcstk::make_toc.
  *
  * A MetadataParser internally holds a concrete instance of MetadataParserImpl.
  * MetadataParserImpl can be subclassed to implement the capabilities of a
  * MetadataParser.
  *
- * The concrete reading of a given TOC file is implemented by the subclasses
+ * The concrete reading of a given ToC file is implemented by the subclasses
  * of MetadataParserImpl.
  *
  * A parse error is reported by a MetadataParseException.
@@ -80,12 +80,12 @@ public:
 	 *
 	 * \param[in] filename The file to parse
 	 *
-	 * \return The TOC information represented by the file
+	 * \return The ToC information represented by the file
 	 *
 	 * \throw FileReadException      If the file could not be read
 	 * \throw MetadataParseException If the metadata could not be parsed
 	 */
-	std::unique_ptr<TOC> parse(const std::string &filename);
+	std::unique_ptr<ToC> parse(const std::string& filename);
 
 	/**
 	 * \brief Create a descriptor for this MetadataParser implementation.
@@ -96,8 +96,8 @@ public:
 
 protected:
 
-	MetadataParserImpl(MetadataParserImpl &&) noexcept;
-	MetadataParserImpl& operator = (MetadataParserImpl &&) noexcept;
+	MetadataParserImpl(MetadataParserImpl&&) noexcept;
+	MetadataParserImpl& operator = (MetadataParserImpl&&) noexcept;
 
 private:
 
@@ -106,12 +106,12 @@ private:
 	 *
 	 * \param[in] filename The file to parse
 	 *
-	 * \return The TOC information represented by the file
+	 * \return The ToC information represented by the file
 	 *
 	 * \throw FileReadException      If the file could not be read
 	 * \throw MetadataParseException If the metadata could not be parsed
 	 */
-	virtual std::unique_ptr<TOC> do_parse(const std::string &filename)
+	virtual std::unique_ptr<ToC> do_parse(const std::string& filename)
 	= 0;
 
 	/**
@@ -125,7 +125,7 @@ private:
 
 
 /**
- * \brief Parse metadata files and provide the content as a TOC instance.
+ * \brief Parse metadata files and provide the content as a ToC instance.
  *
  * \note
  * Instances of this class are non-copyable but movable.
@@ -141,20 +141,20 @@ public:
 	 */
 	MetadataParser(std::unique_ptr<MetadataParserImpl> impl);
 
-	MetadataParser(MetadataParser &&) noexcept;
-	MetadataParser& operator = (MetadataParser &&) noexcept;
+	MetadataParser(MetadataParser&&) noexcept;
+	MetadataParser& operator = (MetadataParser&&) noexcept;
 
 	/**
 	 * \brief Parses a metadata file.
 	 *
 	 * \param[in] filename The file to parse
 	 *
-	 * \return The TOC information represented by the file
+	 * \return The ToC information represented by the file
 	 *
 	 * \throw FileReadException      If the file could not be read
 	 * \throw MetadataParseException If the metadata could not be parsed
 	 */
-	std::unique_ptr<TOC> parse(const std::string &filename);
+	std::unique_ptr<ToC> parse(const std::string& filename);
 
 private:
 
@@ -163,7 +163,7 @@ private:
 	 */
 	std::unique_ptr<MetadataParserImpl> impl_;
 
-	std::unique_ptr<FileReaderDescriptor> do_descriptor() const override;
+	std::unique_ptr<FileReaderDescriptor> do_descriptor() const final;
 };
 
 
@@ -179,7 +179,7 @@ public:
 	 *
 	 * \param[in] what_arg What argument
 	 */
-	explicit MetadataParseException(const std::string &what_arg);
+	explicit MetadataParseException(const std::string& what_arg);
 };
 
 
@@ -193,7 +193,7 @@ namespace details
  * \tparam T Right type
  */
 template <typename S, typename T>
-struct signedness : public std::integral_constant<bool,
+struct signedness final : public std::integral_constant<bool,
 	(std::is_signed<S>::value && std::is_signed<T>::value)
 	|| (std::is_unsigned<S>::value && std::is_unsigned<T>::value)>
 {
@@ -220,7 +220,7 @@ template <typename S, typename T,
 		 std::enable_if_t<details::signedness<S, T>::value, int> = 0>
 inline auto cast_or_throw(const T value) -> S
 {
-	auto throw_with_message = [](const T val, const std::string &msg)
+	auto throw_with_message = [](const T val, const std::string& msg)
 	{
 		std::ostringstream stream;
 		stream << "Value " << val << " " << msg;

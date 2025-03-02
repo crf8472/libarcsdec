@@ -9,13 +9,13 @@
 #include "metaparser.hpp"
 #endif
 
-#include <memory>   // for unique_ptr
-#include <string>   // for string
-#include <utility>  // for move
-
 #ifndef __LIBARCSTK_LOGGING_HPP__
 #include <arcstk/logging.hpp>  // for ARCS_LOG_DEBUG
 #endif
+
+#include <memory>   // for unique_ptr
+#include <string>   // for string
+#include <utility>  // for move
 
 
 namespace arcsdec
@@ -32,7 +32,7 @@ MetadataParserImpl::MetadataParserImpl() = default;
 MetadataParserImpl::~MetadataParserImpl() noexcept = default;
 
 
-std::unique_ptr<TOC> MetadataParserImpl::parse(const std::string &filename)
+std::unique_ptr<ToC> MetadataParserImpl::parse(const std::string& filename)
 {
 	return this->do_parse(filename);
 }
@@ -54,14 +54,14 @@ MetadataParser::MetadataParser(std::unique_ptr<MetadataParserImpl> impl)
 }
 
 
-MetadataParser::MetadataParser(MetadataParser &&) noexcept = default;
+MetadataParser::MetadataParser(MetadataParser&&) noexcept = default;
 
 
-MetadataParser& MetadataParser::operator = (MetadataParser &&) noexcept
+MetadataParser& MetadataParser::operator = (MetadataParser&&) noexcept
 = default;
 
 
-std::unique_ptr<TOC> MetadataParser::parse(const std::string &filename)
+std::unique_ptr<ToC> MetadataParser::parse(const std::string& filename)
 {
 	ARCS_LOG_DEBUG << "Try to read metadata file '" << filename << "'";
 
@@ -82,7 +82,7 @@ std::unique_ptr<FileReaderDescriptor> MetadataParser::do_descriptor() const
 // MetadataParseException
 
 
-MetadataParseException::MetadataParseException(const std::string &what_arg)
+MetadataParseException::MetadataParseException(const std::string& what_arg)
 	: std::runtime_error { what_arg }
 {
 	// empty

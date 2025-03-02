@@ -11,6 +11,29 @@
 #include "parsercue_details.hpp"  // for CuesheetParserImpl
 #endif
 
+#ifndef __LIBARCSDEC_CUESHEET_DRIVER_HPP__
+#include "cuesheet/driver.hpp"
+#endif
+#ifndef __LIBARCSDEC_CUESHEET_TOCHANDLER_HPP__
+#include "cuesheet/tochandler.hpp"
+#endif
+#ifndef __LIBARCSDEC_LIBINSPECT_HPP__
+#include "libinspect.hpp"      // for first_libname_match
+#endif
+#ifndef __LIBARCSDEC_METAPARSER_HPP__
+#include "metaparser.hpp"      // for MetadataParseException
+#endif
+#ifndef __LIBARCSDEC_SELECTION_HPP__
+#include "selection.hpp"       // for RegisterDescriptor
+#endif
+
+#ifndef __LIBARCSTK_METADATA_HPP__
+#include <arcstk/metadata.hpp> // for ToC, make_toc
+#endif
+#ifndef __LIBARCSTK_LOGGING_HPP__
+#include <arcstk/logging.hpp>
+#endif
+
 #include <cstdio>    // for fopen, fclose, FILE
 #include <iomanip>   // for setw
 #include <fstream>
@@ -21,27 +44,6 @@
 #include <string>    // for string
 #include <vector>    // for vector
 
-#ifndef __LIBARCSTK_IDENTIFIER_HPP__
-#include <arcstk/identifier.hpp>  // for TOC, make_toc, InvalidMetadataException
-#endif
-#ifndef __LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp>
-#endif
-
-#ifndef __LIBARCSDEC_METAPARSER_HPP__
-#include "metaparser.hpp"  // for MetadataParseException
-#endif
-#ifndef __LIBARCSDEC_SELECTION_HPP__
-#include "selection.hpp"   // for RegisterDescriptor
-#endif
-
-#ifndef __LIBARCSDEC_CUESHEET_DRIVER_HPP__
-#include "cuesheet/driver.hpp"
-#endif
-#ifndef __LIBARCSDEC_CUESHEET_TOCHANDLER_HPP__
-#include "cuesheet/tochandler.hpp"
-#endif
-
 namespace arcsdec
 {
 inline namespace v_1_0_0
@@ -51,16 +53,14 @@ namespace details
 namespace cuesheet
 {
 
-using arcstk::TOC;
+using arcstk::ToC;
 using arcstk::make_toc;
-using arcstk::InvalidMetadataException;
 
 
-std::unique_ptr<TOC> CuesheetParserImpl::do_parse(const std::string &filename)
+std::unique_ptr<ToC> CuesheetParserImpl::do_parse(const std::string& filename)
 {
-	Driver driver;
-											//
-	TOCHandler handler;
+	auto driver  = Driver{};
+	auto handler = ToCHandler{};
 	driver.set_handler(handler);
 
 	std::ifstream file;
@@ -77,12 +77,11 @@ std::unique_ptr<TOC> CuesheetParserImpl::do_parse(const std::string &filename)
 
 	if (driver.parse() != 0)
 	{
-		throw InvalidMetadataException(
+		throw std::runtime_error(
 				std::string { "Faild to parse file " } + filename);
 	}
 
-	return make_toc(handler.total_tracks(), handler.offsets(),
-			handler.lengths(), handler.filenames());
+	return make_toc(handler.offsets(), handler.filenames());
 }
 
 std::unique_ptr<FileReaderDescriptor> CuesheetParserImpl::do_descriptor() const
@@ -133,7 +132,10 @@ std::set<Format> DescriptorCuesheet::define_formats() const
 
 LibInfo DescriptorCuesheet::do_libraries() const
 {
-	return { /* empty */ };
+	//return { /* empty */ };
+	return { { "-genuine-",
+		details::first_libname_match(details::runtime_deps(""), LIBARCSDEC_NAME)
+	} };
 }
 
 

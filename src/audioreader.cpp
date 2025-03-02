@@ -4,9 +4,15 @@
  * \brief Implements API for implementing AudioReaders.
  */
 
-
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__
 #include "audioreader.hpp"
+#endif
+
+#ifndef __LIBARCSTK_METADATA_HPP__
+#include <arcstk/metadata.hpp> // for CDDA
+#endif
+#ifndef __LIBARCSTK_LOGGING_HPP__
+#include <arcstk/logging.hpp>  // for ARCS_LOG, _ERROR, _WARNING, _DEBUG
 #endif
 
 #include <cstdint>       // for uint16_t, uint32_t, int16_t, int32_t
@@ -15,13 +21,6 @@
 #include <stdexcept>     // for logic_error
 #include <string>        // for string, to_string
 #include <utility>       // for move
-
-#ifndef __LIBARCSTK_IDENTIFIER_HPP__
-#include <arcstk/identifier.hpp> // for CDDA
-#endif
-#ifndef __LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp> // for ARCS_LOG, _ERROR, _WARNING, _DEBUG
-#endif
 
 
 namespace arcsdec
@@ -36,14 +35,14 @@ using arcstk::CDDA;
 // MAX_SAMPLES_TO_READ
 
 
-const int32_t MAX_SAMPLES_TO_READ =
+constexpr int32_t MAX_SAMPLES_TO_READ =
 	CDDA::MAX_BLOCK_ADDRESS * CDDA::SAMPLES_PER_FRAME;
 
 
 // LittleEndianBytes
 
 
-int16_t LittleEndianBytes::to_int16(const char &b1, const char &b2)
+int16_t LittleEndianBytes::to_int16(const char& b1, const char& b2)
 {
 	uint16_t val =
 			static_cast<uint16_t>(b2 & 0xFF) << 8 |
@@ -78,16 +77,16 @@ int16_t LittleEndianBytes::to_int16(const char &b1, const char &b2)
 }
 
 
-uint16_t LittleEndianBytes::to_uint16(const char &b1, const char &b2)
+uint16_t LittleEndianBytes::to_uint16(const char& b1, const char& b2)
 {
 	return static_cast<uint16_t>(((b2 & 0xFF) << 8) | (b1 & 0xFF)) & 0xFFFFU;
 }
 
 
-int32_t LittleEndianBytes::to_int32(const char &b1,
-		const char &b2,
-		const char &b3,
-		const char &b4)
+int32_t LittleEndianBytes::to_int32(const char& b1,
+		const char& b2,
+		const char& b3,
+		const char& b4)
 {
 	uint32_t val =
 			static_cast<uint32_t>(b4 & 0xFF) << 24 |
@@ -101,10 +100,10 @@ int32_t LittleEndianBytes::to_int32(const char &b1,
 }
 
 
-uint32_t LittleEndianBytes::to_uint32(const char &b1,
-		const char &b2,
-		const char &b3,
-		const char &b4)
+uint32_t LittleEndianBytes::to_uint32(const char& b1,
+		const char& b2,
+		const char& b3,
+		const char& b4)
 {
 	return static_cast<uint32_t>(to_int32(b1, b2, b3, b4));
 }
@@ -113,10 +112,10 @@ uint32_t LittleEndianBytes::to_uint32(const char &b1,
 // BigEndianBytes
 
 
-int32_t BigEndianBytes::to_int32(const char &b1,
-		const char &b2,
-		const char &b3,
-		const char &b4)
+int32_t BigEndianBytes::to_int32(const char& b1,
+		const char& b2,
+		const char& b3,
+		const char& b4)
 {
 	return LittleEndianBytes::to_int32(b4, b3, b2, b1);
 	/*
@@ -133,10 +132,10 @@ int32_t BigEndianBytes::to_int32(const char &b1,
 }
 
 
-uint32_t BigEndianBytes::to_uint32(const char &b1,
-		const char &b2,
-		const char &b3,
-		const char &b4)
+uint32_t BigEndianBytes::to_uint32(const char& b1,
+		const char& b2,
+		const char& b3,
+		const char& b4)
 {
 	//return be_bytes_to_int32(b1, b2, b3, b4) & 0xFFFFFFFF;
 	return static_cast<uint32_t>(BigEndianBytes::to_int32(b1, b2, b3, b4));
@@ -146,19 +145,19 @@ uint32_t BigEndianBytes::to_uint32(const char &b1,
 // CDDAValidator
 
 
-bool CDDAValidator::bits_per_sample(const int &bits_per_sample)
+bool CDDAValidator::bits_per_sample(const int& bits_per_sample)
 {
 	return CDDA::BITS_PER_SAMPLE == bits_per_sample;
 }
 
 
-bool CDDAValidator::num_channels(const int &num_channels)
+bool CDDAValidator::num_channels(const int& num_channels)
 {
 	return CDDA::NUMBER_OF_CHANNELS == num_channels;
 }
 
 
-bool CDDAValidator::samples_per_second(const int &samples_per_second)
+bool CDDAValidator::samples_per_second(const int& samples_per_second)
 {
 	return CDDA::SAMPLES_PER_SECOND == samples_per_second;
 }
@@ -167,14 +166,14 @@ bool CDDAValidator::samples_per_second(const int &samples_per_second)
 // InvalidAudioException
 
 
-InvalidAudioException::InvalidAudioException(const std::string &what_arg)
+InvalidAudioException::InvalidAudioException(const std::string& what_arg)
 	: std::logic_error { what_arg }
 {
 	// empty
 }
 
 
-InvalidAudioException::InvalidAudioException(const char *what_arg)
+InvalidAudioException::InvalidAudioException(const char* what_arg)
 	: std::logic_error { what_arg }
 {
 	// empty
@@ -200,49 +199,31 @@ AudioValidator::codec_set_type AudioValidator::codecs() const
 }
 
 
-bool AudioValidator::bits_per_sample(const int bits_per_sample)
+void AudioValidator::validate_bits_per_sample(const int bits_per_sample)
 {
-	if (not this->assert_true("Test (CDDA): Bits per sample",
+	fail_if(not this->assert_true("Test (CDDA): Bits per sample",
 			CDDAValidator::bits_per_sample(bits_per_sample),
-			"Number of bits per sample does not conform to CDDA"))
-	{
-		this->on_failure();
-		return false;
-	}
-
-	return true;
+			"Number of bits per sample does not conform to CDDA"));
 }
 
 
-bool AudioValidator::samples_per_second(const int sps)
+void AudioValidator::validate_samples_per_second(const int sps)
 {
-	if (not this->assert_true("Test (CDDA): Sample Rate",
+	fail_if(not this->assert_true("Test (CDDA): Sample Rate",
 			CDDAValidator::samples_per_second(sps),
-			"Number of samples per second does not conform to CDDA"))
-	{
-		this->on_failure();
-		return false;
-	}
-
-	return true;
+			"Number of samples per second does not conform to CDDA"));
 }
 
 
-bool AudioValidator::num_channels(const int num_channels)
+void AudioValidator::validate_num_channels(const int num_channels)
 {
-	if (not this->assert_true("Test (CDDA): Channels",
+	fail_if(not this->assert_true("Test (CDDA): Channels",
 			CDDAValidator::num_channels(num_channels),
-			"Number of channels does not conform to CDDA"))
-	{
-		this->on_failure();
-		return false;
-	}
-
-	return true;
+			"Number of channels does not conform to CDDA"));
 }
 
 
-void AudioValidator::error(const std::string &msg)
+void AudioValidator::error(const std::string& msg)
 {
 	errors_.push_back(msg);
 }
@@ -267,11 +248,20 @@ const AudioValidator::error_list_type&
 }
 
 
+void AudioValidator::fail_if(const bool condition)
+{
+	if (condition)
+	{
+		this->on_failure();
+	}
+}
+
+
 bool AudioValidator::assert_equals(
-		const std::string &label,
+		const std::string& label,
 		int value,
 		int proper_value,
-		const std::string error_msg)
+		const std::string& error_msg)
 {
 	ARCS_LOG(DEBUG1) << label
 		<< "  ["
@@ -280,11 +270,13 @@ bool AudioValidator::assert_equals(
 
 	if (value != proper_value)
 	{
+		using std::to_string;
+
 		std::ostringstream msg;
 
 		msg << error_msg;
-		msg << ". Expected " << std::to_string(proper_value)
-			<< " but is " << std::to_string(value);
+		msg << ". Expected " << to_string(proper_value)
+			<< " but is "    << to_string(value);
 
 		errors_.push_back(msg.str());
 		return false;
@@ -295,10 +287,10 @@ bool AudioValidator::assert_equals(
 
 
 bool AudioValidator::assert_equals_u(
-		const std::string &label,
+		const std::string& label,
 		uint32_t value,
 		uint32_t proper_value,
-		const std::string error_msg)
+		const std::string& error_msg)
 {
 	ARCS_LOG(DEBUG1) << label
 		<< "  ["
@@ -307,11 +299,13 @@ bool AudioValidator::assert_equals_u(
 
 	if (value != proper_value)
 	{
+		using std::to_string;
+
 		std::ostringstream msg;
 
 		msg << error_msg;
-		msg << ". Expected " << std::to_string(proper_value)
-			<< " but is " << std::to_string(value);
+		msg << ". Expected " << to_string(proper_value)
+			<< " but is "    << to_string(value);
 
 		errors_.push_back(msg.str());
 		return false;
@@ -322,10 +316,10 @@ bool AudioValidator::assert_equals_u(
 
 
 bool AudioValidator::assert_at_least(
-		const std::string &label,
+		const std::string& label,
 		int value,
 		int proper_value,
-		const std::string error_msg)
+		const std::string& error_msg)
 {
 	ARCS_LOG(DEBUG1) << label
 		<< "  ["
@@ -334,11 +328,13 @@ bool AudioValidator::assert_at_least(
 
 	if (value < proper_value)
 	{
+		using std::to_string;
+
 		std::ostringstream msg;
 
 		msg << error_msg;
-		msg << ". Expected at least " << std::to_string(proper_value)
-			<< " but is only " << std::to_string(value);
+		msg << ". Expected at least " << to_string(proper_value)
+			<< " but is only "        << to_string(value);
 
 		errors_.push_back(msg.str());
 		return false;
@@ -349,10 +345,10 @@ bool AudioValidator::assert_at_least(
 
 
 bool AudioValidator::assert_at_most(
-		const std::string &label,
+		const std::string& label,
 		int value,
 		int proper_value,
-		const std::string error_msg)
+		const std::string& error_msg)
 {
 	ARCS_LOG(DEBUG1) << label
 		<< "  ["
@@ -361,11 +357,13 @@ bool AudioValidator::assert_at_most(
 
 	if (value > proper_value)
 	{
+		using std::to_string;
+
 		std::ostringstream msg;
 
 		msg << error_msg;
-		msg << ". Expected at most " << std::to_string(proper_value)
-			<< " but is in fact " << std::to_string(value);
+		msg << ". Expected at most " << to_string(proper_value)
+			<< " but is in fact "    << to_string(value);
 
 		errors_.push_back(msg.str());
 		return false;
@@ -376,9 +374,9 @@ bool AudioValidator::assert_at_most(
 
 
 bool AudioValidator::assert_true(
-		const std::string &label,
+		const std::string& label,
 		bool value,
-		const std::string error_msg)
+		const std::string& error_msg)
 {
 	ARCS_LOG(DEBUG1) << label << "  [" << (value ? "yes" : "no") << "]";
 
@@ -413,7 +411,7 @@ void AudioValidator::log_error_stack() const
 
 void DefaultValidator::on_failure()
 {
-	throw InvalidAudioException(this->last_error());
+	throw InvalidAudioException(last_error());
 }
 
 
@@ -428,35 +426,63 @@ AudioReaderImpl::AudioReaderImpl()
 }
 
 
-AudioReaderImpl::AudioReaderImpl(AudioReaderImpl &&) noexcept = default;
+AudioReaderImpl::AudioReaderImpl(AudioReaderImpl&&) noexcept = default;
 
 
-AudioReaderImpl& AudioReaderImpl::operator = (AudioReaderImpl &&) noexcept
+AudioReaderImpl& AudioReaderImpl::operator = (AudioReaderImpl&&) noexcept
 = default;
 
 
 std::unique_ptr<AudioSize> AudioReaderImpl::acquire_size(
-		const std::string &filename)
+		const std::string& filename)
 {
 	return this->do_acquire_size(filename);
 }
 
 
-void AudioReaderImpl::process_file(const std::string &filename)
+void AudioReaderImpl::process_file(const std::string& filename)
 {
+	ARCS_LOG_DEBUG << "Process audio file " << filename;
 	this->do_process_file(filename);
 }
 
 
-void AudioReaderImpl::set_samples_per_read(const std::size_t samples_per_read)
+void AudioReaderImpl::set_samples_per_read(const int64_t samples_per_read)
 {
 	samples_per_read_ = samples_per_read;
 }
 
 
-std::size_t AudioReaderImpl::samples_per_read() const
+int64_t AudioReaderImpl::samples_per_read() const
 {
 	return samples_per_read_;
+}
+
+
+AudioSize AudioReaderImpl::to_audiosize(const int64_t val, const UNIT& u) const
+{
+	using arcstk::AudioSize;
+	using arcstk::UNIT;
+
+	auto s = AudioSize{};
+
+	try
+	{
+		s = { cast_to_int32(val), u };
+	} catch (const std::invalid_argument& e)
+	{
+		using std::to_string;
+
+		ARCS_LOG_ERROR << "Total number of samples in audio stream "
+			<< to_string(val)
+			<< " exceeds the maximum possible value";
+
+		throw InvalidAudioException(std::string { "Too much input: " }
+				+ to_string(val)
+				+ " samples exceed the maximal CDDA-conforming value");
+	}
+
+	return s;
 }
 
 
@@ -466,7 +492,7 @@ std::unique_ptr<FileReaderDescriptor> AudioReaderImpl::descriptor() const
 }
 
 
-void AudioReaderImpl::attach_processor_impl(SampleProcessor &processor)
+void AudioReaderImpl::attach_processor_impl(SampleProcessor& processor)
 {
 	processor_ = &processor;
 }
@@ -491,7 +517,7 @@ void AudioReaderImpl::do_signal_appendsamples(
 }
 
 
-void AudioReaderImpl::do_signal_updateaudiosize(const AudioSize &size)
+void AudioReaderImpl::do_signal_updateaudiosize(const AudioSize& size)
 {
 	use_processor()->update_audiosize(size);
 }
@@ -503,7 +529,7 @@ void AudioReaderImpl::do_signal_endinput()
 }
 
 
-void AudioReaderImpl::do_attach_processor(SampleProcessor &processor)
+void AudioReaderImpl::do_attach_processor(SampleProcessor& processor)
 {
 	this->attach_processor_impl(processor);
 }
@@ -532,7 +558,7 @@ public:
 	 * \param[in] processor  The SampleProcessor to use
 	 */
 	Impl(std::unique_ptr<AudioReaderImpl> readerimpl,
-			SampleProcessor &processor);
+			SampleProcessor& processor);
 
 	/**
 	 * Construct an incomplete AudioReader::Impl (without SampleProcessor).
@@ -541,34 +567,34 @@ public:
 	 */
 	explicit Impl(std::unique_ptr<AudioReaderImpl> readerimpl);
 
-	Impl(const Impl &rhs) = delete;
-	Impl& operator = (const Impl &rhs) = delete;
+	Impl(const Impl& rhs) = delete;
+	Impl& operator = (const Impl& rhs) = delete;
 
 	/**
 	 * Set the number of samples to read in one read operation.
 	 *
 	 * The default is BLOCKSIZE::DEFAULT.
 	 */
-	void set_samples_per_read(const std::size_t samples_per_read);
+	void set_samples_per_read(const int64_t samples_per_read);
 
 	/**
 	 * Return the number of samples to read in one read operation.
 	 *
 	 * \return Number of samples per read operation.
 	 */
-	std::size_t samples_per_read() const;
+	int64_t samples_per_read() const;
 
 	/**
 	 *
 	 * \param[in] filename Audiofile to get size from
 	 */
-	std::unique_ptr<AudioSize> acquire_size(const std::string &filename) const;
+	std::unique_ptr<AudioSize> acquire_size(const std::string& filename) const;
 
 	/**
 	 *
 	 * \param[in] filename Audiofile to process
 	 */
-	void process_file(const std::string &filename);
+	void process_file(const std::string& filename);
 
 	/**
 	 * \brief Create a descriptor for this AudioReader implementation.
@@ -581,7 +607,7 @@ public:
 	 *
 	 * \param[in] processor The SampleProcessor to use
 	 */
-	void set_processor(SampleProcessor &processor);
+	void set_processor(SampleProcessor& processor);
 
 	/**
 	 *
@@ -599,7 +625,7 @@ private:
 
 
 AudioReader::Impl::Impl(std::unique_ptr<AudioReaderImpl> readerimpl,
-			SampleProcessor &processor)
+			SampleProcessor& processor)
 	: readerimpl_ { std::move(readerimpl) }
 {
 	readerimpl_->attach_processor(processor);
@@ -613,37 +639,41 @@ AudioReader::Impl::Impl(std::unique_ptr<AudioReaderImpl> readerimpl)
 }
 
 
-void AudioReader::Impl::set_samples_per_read(const std::size_t samples_per_read)
+void AudioReader::Impl::set_samples_per_read(const int64_t samples_per_read)
 {
 	readerimpl_->set_samples_per_read(samples_per_read);
 }
 
 
-std::size_t AudioReader::Impl::samples_per_read() const
+int64_t AudioReader::Impl::samples_per_read() const
 {
 	return readerimpl_->samples_per_read();
 }
 
 
 std::unique_ptr<AudioSize> AudioReader::Impl::acquire_size(
-		const std::string &filename) const
+		const std::string& filename) const
 {
-	ARCS_LOG_DEBUG << "Try to acquire audio file size of '" << filename << "'";
+	ARCS_LOG_DEBUG << "Acquire total number of samples in file '"
+		<< filename << "'";
 
 	auto audiosize = readerimpl_->acquire_size(filename);
 
+	using std::to_string;
 	ARCS_LOG_DEBUG << "Audio file size of '" << filename
-		<< "' successfully acquired (== "
-		<< std::to_string(audiosize->leadout_frame())
-		<< " LBA frames)";
+		<< "' successfully acquired: "
+		<< to_string(audiosize->frames())
+		<< " LBA frames == "
+		<< to_string(audiosize->samples())
+		<< " PCM stereo samples";
 
 	return audiosize;
 }
 
 
-void AudioReader::Impl::process_file(const std::string &filename)
+void AudioReader::Impl::process_file(const std::string& filename)
 {
-	ARCS_LOG_DEBUG << "Try to process audio file '" << filename << "'";
+	ARCS_LOG_DEBUG << "Start to process audio file '" << filename << "'";
 
 	readerimpl_->process_file(filename);
 
@@ -657,7 +687,7 @@ std::unique_ptr<FileReaderDescriptor> AudioReader::Impl::descriptor() const
 }
 
 
-void AudioReader::Impl::set_processor(SampleProcessor &processor)
+void AudioReader::Impl::set_processor(SampleProcessor& processor)
 {
 	readerimpl_->attach_processor(processor);
 }
@@ -673,7 +703,7 @@ const SampleProcessor* AudioReader::Impl::sampleprocessor()
 
 
 AudioReader::AudioReader(std::unique_ptr<AudioReaderImpl> impl,
-			SampleProcessor &proc)
+			SampleProcessor& proc)
 	: impl_ { std::make_unique<AudioReader::Impl>(std::move(impl), proc) }
 {
 	// empty
@@ -687,36 +717,36 @@ AudioReader::AudioReader(std::unique_ptr<AudioReaderImpl> impl)
 }
 
 
-AudioReader::AudioReader(AudioReader &&) noexcept = default;
+AudioReader::AudioReader(AudioReader&&) noexcept = default;
 
 
-AudioReader& AudioReader::operator = (AudioReader &&) noexcept = default;
+AudioReader& AudioReader::operator = (AudioReader&&) noexcept = default;
 
 
 AudioReader::~AudioReader() noexcept = default;
 
 
-void AudioReader::set_samples_per_read(const std::size_t samples_per_read)
+void AudioReader::set_samples_per_read(const int64_t samples_per_read)
 {
 	impl_->set_samples_per_read(samples_per_read);
 }
 
 
-std::size_t AudioReader::samples_per_read() const
+int64_t AudioReader::samples_per_read() const
 {
 	return impl_->samples_per_read();
 }
 
 
 std::unique_ptr<AudioSize> AudioReader::acquire_size(
-	const std::string &filename) const
+	const std::string& filename) const
 {
 	auto size = impl_->acquire_size(filename);
 
-	if (size->total_samples() > MAX_SAMPLES_TO_READ)
+	if (size->samples() > MAX_SAMPLES_TO_READ)
 	{
 		ARCS_LOG_WARNING << "File seems to contain "
-			<< size->total_samples()
+			<< size->samples()
 			<< " but redbook defines a maximum of "
 			<< MAX_SAMPLES_TO_READ
 			<< ". File does not seem to be a compact disc image";
@@ -726,13 +756,13 @@ std::unique_ptr<AudioSize> AudioReader::acquire_size(
 }
 
 
-void AudioReader::process_file(const std::string &filename)
+void AudioReader::process_file(const std::string& filename)
 {
 	impl_->process_file(filename);
 }
 
 
-void AudioReader::set_processor(SampleProcessor &processor)
+void AudioReader::set_processor(SampleProcessor& processor)
 {
 	impl_->set_processor(processor);
 }

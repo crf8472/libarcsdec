@@ -4,8 +4,16 @@
 /**
  * \file
  *
- * \brief Toolkit for selecting file readers by format and codec.
+ * \brief Select file readers by format and codec.
  */
+
+#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
+#include "descriptor.hpp"       // for FileReaderDescriptor
+#endif
+
+#ifndef __LIBARCSTK_LOGGING_HPP__
+#include <arcstk/logging.hpp>   // for ARCS_LOG_WARNING, ARCS_LOG_DEBUG
+#endif
 
 #include <memory>        // for unique_ptr, make_unique
 #include <set>           // for set
@@ -15,14 +23,6 @@
 #include <utility>       // for pair, move, make_pair, forward
 #include <vector>        // for vector
 
-#ifndef __LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp>   // for ARCS_LOG_WARNING, ARCS_LOG_DEBUG
-#endif
-
-#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
-#include "descriptor.hpp"       // for FileReaderDescriptor
-#endif
-
 
 namespace arcsdec
 {
@@ -31,7 +31,7 @@ inline namespace v_1_0_0
 
 
 /**
- * \defgroup selection API for selecting FileReaders
+ * \defgroup selection Select FileReaders
  *
  * \brief API for selecting \link FileReader FileReaders\endlink for given
  * input files.
@@ -55,7 +55,7 @@ inline namespace v_1_0_0
  *
  * Class FileReaderRegistry holds the set of available FileReaderDescriptors as
  * well as the set of supported \link Format Formats\endlink. It also defines
- * default selections for Metadata/TOC formats as well as audio formats.
+ * default selections for Metadata/ToC formats as well as audio formats.
  *
  * @{
  */
@@ -109,23 +109,23 @@ public:
 	 * \return Preference value to read format and codec with this descriptor
 	 */
 	type preference(const Format format, const Codec codec,
-		const FileReaderDescriptor &desc) const;
+		const FileReaderDescriptor& desc) const;
 
 private:
 
 	virtual type do_preference(const Format format, const Codec codec,
-		const FileReaderDescriptor &desc) const
+		const FileReaderDescriptor& desc) const
 	= 0;
 };
 
 
 /**
- * \brief DescriptorPreference for the most specific descriptor (with least
- * supported Formats and Codecs).
+ * \brief Preference for the most specific descriptor.
  *
- * A default preference value for the given input. The more formats and
- * codecs a FileReader supports, the higher is the penalty subtracted from its
- * preference for a given Format and Codec.
+ * A default preference value for the given input. The less formats and codecs a
+ * FileReader supports, the more specific it is considered to be. The more
+ * formats and codecs a FileReader supports, the higher is the penalty
+ * subtracted from its preference for a given Format and Codec.
  *
  * This prefers specialized readers (like libFLAC) over general multi-input
  * readers (like ffmpeg).
@@ -141,13 +141,12 @@ private:
 class DefaultPreference final : public DescriptorPreference
 {
 	type do_preference(const Format format, const Codec codec,
-		const FileReaderDescriptor &desc) const override;
+		const FileReaderDescriptor& desc) const final;
 };
 
 
 /**
- * \brief DescriptorPreference that is always
- * DescriptorPreference::MIN_PREFERENCE.
+ * \brief DescriptorPreference equivalent to MIN_PREFERENCE.
  *
  * \note
  * Any input is ignored. This preference model can be combined with selectors
@@ -156,13 +155,12 @@ class DefaultPreference final : public DescriptorPreference
 class MinPreference final : public DescriptorPreference
 {
 	type do_preference(const Format format, const Codec codec,
-		const FileReaderDescriptor &desc) const override;
+		const FileReaderDescriptor& desc) const final;
 };
 
 
 /**
- * \brief DescriptorPreference for the most specific descriptor that accepts the
- * Format.
+ * \brief Preference for the most specific descriptor accepting the Format.
  *
  * \note
  * The codec is ignored. This preference model is used as the default model
@@ -172,7 +170,7 @@ class MinPreference final : public DescriptorPreference
 class FormatPreference final : public DescriptorPreference
 {
 	type do_preference(const Format format, const Codec codec,
-		const FileReaderDescriptor &desc) const override;
+		const FileReaderDescriptor& desc) const final;
 };
 
 
@@ -216,21 +214,20 @@ public:
 	 * \return A FileReaderDescriptor that accepts \c format and \c codec
 	 */
 	std::unique_ptr<FileReaderDescriptor> select(const Format format,
-			const Codec codec, const FileReaders &descs,
-			const DescriptorPreference &pref_model) const;
+			const Codec codec, const FileReaders& descs,
+			const DescriptorPreference& pref_model) const;
 
 private:
 
 	virtual std::unique_ptr<FileReaderDescriptor> do_select(
-		const Format format, const Codec codec, const FileReaders &descs,
-		const DescriptorPreference &pref_model) const
+		const Format format, const Codec codec, const FileReaders& descs,
+		const DescriptorPreference& pref_model) const
 	= 0;
 };
 
 
 /**
- * \brief FileReaderSelector for first descriptor (in order of occurrence) with
- * highest preference.
+ * \brief Selector for highest preference.
  *
  * Assigns a preference to each FileReaderDescriptor and returns the first one
  * (in order of occurrence) that has the highest occurring preference based on
@@ -241,8 +238,8 @@ class DefaultSelector final : public FileReaderSelector
 private:
 
 	std::unique_ptr<FileReaderDescriptor> do_select(const Format format,
-			const Codec codec, const FileReaders &descs,
-			const DescriptorPreference &pref_model) const override;
+			const Codec codec, const FileReaders& descs,
+			const DescriptorPreference& pref_model) const final;
 };
 
 
@@ -261,7 +258,7 @@ public:
 	 *
 	 * \param[in] reader_id Select reader with this id, if available
 	 */
-	IdSelector(const std::string &reader_id);
+	IdSelector(const std::string& reader_id);
 
 	/**
 	 * \brief Reader id to select.
@@ -278,8 +275,8 @@ private:
 	std::string reader_id_;
 
 	std::unique_ptr<FileReaderDescriptor> do_select(const Format format,
-			const Codec codec, const FileReaders &descs,
-			const DescriptorPreference &pref_model) const override;
+			const Codec codec, const FileReaders& descs,
+			const DescriptorPreference& pref_model) const final;
 };
 
 
@@ -305,12 +302,12 @@ public:
 	 * \return A FileReaderDescriptor that accepts \c format and \c codec
 	 */
 	std::unique_ptr<FileReaderDescriptor> get(const Format format,
-			const Codec codec, const FileReaders &descs) const;
+			const Codec codec, const FileReaders& descs) const;
 
 private:
 
 	virtual std::unique_ptr<FileReaderDescriptor> do_get(const Format format,
-			const Codec codec, const FileReaders &descs) const
+			const Codec codec, const FileReaders& descs) const
 	= 0;
 };
 
@@ -406,7 +403,7 @@ private:
 
 
 	inline std::unique_ptr<FileReaderDescriptor> do_get(const Format format,
-			const Codec codec, const FileReaders &descs) const final
+			const Codec codec, const FileReaders& descs) const final
 	{
 		return selector()->select(format, codec, descs, *preference());
 	}
@@ -430,8 +427,7 @@ using FunctionReturningUniquePtr = std::unique_ptr<T>(*)();
 
 
 /**
- * \brief Registry holding all available FileReaderDescriptors
- * and all supported Formats.
+ * \brief Hold all available FileReaderDescriptors and all supported Formats.
  *
  * A FileReaderDescriptor instance is registered via instantiating the template
  * subclass RegisterDescriptor with the appropriate Descriptor type.
@@ -487,7 +483,7 @@ public:
 	 *
 	 * \return The FileReaderDescriptor with the specified \c id or nullptr.
 	 */
-	static std::unique_ptr<FileReaderDescriptor> reader(const std::string &id);
+	static std::unique_ptr<FileReaderDescriptor> reader(const std::string& id);
 
 	/**
 	 * \brief List of supported \link Format Formats\endlink.
@@ -506,7 +502,7 @@ public:
 	/**
 	 * \brief Default selection for \link AudioReader AudioReaders\endlink.
 	 *
-	 * This is used to initialize TOCParser and the Calculators with the same
+	 * This is used to initialize ToCParser and the Calculators with the same
 	 * default selection setup for audio readers.
 	 *
 	 * \return The default selector for determining an AudioReader
@@ -517,8 +513,8 @@ public:
 	 * \brief Default selection for
 	 * \link MetadataParser MetatdataParsers\endlink.
 	 *
-	 * This is used to initialize TOCParser and the Calculators with the same
-	 * default selection setup for TOCs.
+	 * This is used to initialize ToCParser and the Calculators with the same
+	 * default selection setup for ToCs.
 	 *
 	 * \return The default selector for determining a MetadataParser
 	 */
@@ -632,18 +628,18 @@ auto cast_reader(std::unique_ptr<FileReader> file_reader) noexcept
  * Select a reader that is guaranteed to accept the current input file or return
  * a nullptr.
  *
- * \param[in] filename Name of the file to read
- * \param[in] selector Selector to choose a reader
- * \param[in] formats  Set of file formats to check \c filename for
- * \param[in] readers  Set of available file readers
+ * \param[in] filename  Name of the file to read
+ * \param[in] selection FileReaderSelection to select from
+ * \param[in] formats   Set of file formats to check \c filename for
+ * \param[in] readers   Set of available file readers
  *
  * \return Descriptor that accepts the input file.
  */
 std::unique_ptr<FileReaderDescriptor> select_descriptor(
-		const std::string &filename,
-		const FileReaderSelection &selection,
-		const FormatList &formats,
-		const FileReaders &readers);
+		const std::string& filename,
+		const FileReaderSelection& selection,
+		const FormatList& formats,
+		const FileReaders& readers);
 
 
 /**
@@ -652,18 +648,18 @@ std::unique_ptr<FileReaderDescriptor> select_descriptor(
  * Select a reader that is guaranteed to accept the current input file or return
  * a null pointer.
  *
- * \param[in] filename Name of the file to read
- * \param[in] selector Selector to choose a reader
- * \param[in] formats  Set of file formats to check \c filename for
- * \param[in] readers  Set of available file readers
+ * \param[in] filename  Name of the file to read
+ * \param[in] selection FileReaderSelection to select from
+ * \param[in] formats   Set of file formats to check \c filename for
+ * \param[in] readers   Set of available file readers
  *
  * \return FileReader that accepts the input file.
  */
 std::unique_ptr<FileReader> select_reader(
-		const std::string &filename,
-		const FileReaderSelection &selection,
-		const FormatList &formats,
-		const FileReaders &readers);
+		const std::string& filename,
+		const FileReaderSelection& selection,
+		const FormatList& formats,
+		const FileReaders& readers);
 
 
 /**
@@ -683,7 +679,7 @@ std::unique_ptr<FileReader> select_reader(
  * \see CreateMetadataParser
  */
 template <class ReaderType>
-struct CreateReader
+struct CreateReader final
 {
 	/**
 	 * \brief Default destructor.
@@ -693,15 +689,15 @@ struct CreateReader
 	/**
 	 * \brief Return a unique_ptr to an instance of the specified \c ReaderType.
 	 *
-	 * \param[in] selector  The FileReaderSelector to choose from
 	 * \param[in] filename  The name of the file to choose a FileReader
+	 * \param[in] selection FileReaderSelection to select from
 	 * \param[in] formats   Set of supported formats
 	 * \param[in] readers   Set of available file readers
 	 */
-	auto operator()(const std::string &filename,
-			const FileReaderSelection &selection,
-			const FormatList &formats,
-			const FileReaders &readers) const
+	auto operator()(const std::string& filename,
+			const FileReaderSelection& selection,
+			const FormatList& formats,
+			const FileReaders& readers) const
 	-> std::unique_ptr<ReaderType>
 	{
 		ARCS_LOG_DEBUG << "Input file: " << filename << "";
@@ -769,7 +765,7 @@ struct RegisterFormat final : private FileReaderRegistry
 	 * \param[in] suffices Set of supported filename suffices for \c F
 	 * \param[in] codecs   Set of codecs supported with \c F
 	 */
-	RegisterFormat(const SuffixSet &suffices, const std::set<Codec> &codecs)
+	RegisterFormat(const SuffixSet& suffices, const std::set<Codec>& codecs)
 	{
 		add_format(std::make_unique<FormatMatcher<F>>(suffices, codecs));
 	}
@@ -781,8 +777,8 @@ struct RegisterFormat final : private FileReaderRegistry
 	 * \param[in] bytes    Reference byte sequence to determine \c F
 	 * \param[in] codecs   Set of codecs supported with \c F
 	 */
-	RegisterFormat(const SuffixSet &suffices, const Bytes &bytes,
-			const std::set<Codec> &codecs)
+	RegisterFormat(const SuffixSet& suffices, const Bytes& bytes,
+			const std::set<Codec>& codecs)
 	{
 		add_format(std::make_unique<FormatMatcher<F>>(suffices, bytes, codecs));
 	}

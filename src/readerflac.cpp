@@ -4,6 +4,7 @@
  * \brief Implements audio reader for FLAC audio files.
  */
 
+#include <stdexcept>
 #ifndef __LIBARCSDEC_READERFLAC_HPP__
 #include "readerflac.hpp"
 #endif
@@ -11,33 +12,38 @@
 #include "readerflac_details.hpp"
 #endif
 
-#include <FLAC++/decoder.h>
-#include <FLAC++/metadata.h>
+#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
+#include "audioreader.hpp"      // for AudioReaderImpl, InvalidAudioException
+#endif
+#ifndef __LIBARCSDEC_LIBINSPECT_HPP__
+#include "libinspect.hpp"       // for libinfo_entry_filepath
+#endif
+#ifndef __LIBARCSDEC_SELECTION_HPP__
+#include "selection.hpp"        // for RegisterDescriptor
+#endif
 
-#include <cstdint>     // for uint64_t
+#ifndef __LIBARCSTK_METADATA_HPP__
+#include <arcstk/metadata.hpp>  // for AudioSize
+#endif
+#ifndef __LIBARCSTK_LOGGING_HPP__
+#include <arcstk/logging.hpp>   // for ARCS_LOG_ERROR, _WARNING, _INFO, _DEBUG
+#endif
+
+//#include <FLAC/ordinals.h>     // for FLAC__int64_t, FLAC__int32_t
+
+#include <FLAC++/decoder.h>		// for FLAC::Decoder::File,
+								// FLAC__StreamDecoderWriteStatus,
+								// FLAC__StreamDecoderErrorStatus
+#include <FLAC++/metadata.h>	// for FLAC::Metadata::StreamInfo,
+								// FLAC__StreamMetadata
+								// for FLAC__Frame
+
 #include <limits>      // for numeric_limits
 #include <memory>      // for unique_ptr
 #include <set>         // for set
 #include <sstream>     // for ostringstream
 #include <string>      // for string
 #include <utility>     // for make_unique, move
-
-#ifndef __LIBARCSTK_CALCULATE_HPP__
-#include <arcstk/calculate.hpp> // for AudioSize
-#endif
-#ifndef __LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp>   // for ARCS_LOG_ERROR, _WARNING, _INFO, _DEBUG
-#endif
-
-#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
-#include "audioreader.hpp"      // for AudioReaderImpl, InvalidAudioException
-#endif
-#ifndef __LIBARCSDEC_LIBINSPECT_HPP__
-#include "libinspect.hpp"       // for first_libname_match
-#endif
-#ifndef __LIBARCSDEC_SELECTION_HPP__
-#include "selection.hpp"        // for RegisterDescriptor
-#endif
 
 
 namespace arcsdec
@@ -55,13 +61,79 @@ using arcstk::AudioSize;
 // FlacMetadataHandler
 
 
-bool FlacMetadataHandler::streaminfo(
-		const FLAC::Metadata::StreamInfo &streaminfo)
+FlacMetadataHandler::~FlacMetadataHandler() noexcept = default;
+
+
+void FlacMetadataHandler::validate(const FLAC::Metadata::StreamInfo& streaminfo)
+{
+	do_validate(streaminfo);
+}
+
+
+void FlacMetadataHandler::cuesheet(const FLAC::Metadata::CueSheet& cuesheet)
+{
+	do_cuesheet(cuesheet);
+}
+
+
+// FlacErrorHandler
+
+
+FlacErrorHandler::~FlacErrorHandler() noexcept = default;
+
+
+void FlacErrorHandler::error(::FLAC__StreamDecoderErrorStatus status)
+{
+	do_error(status);
+}
+
+
+// FlacDefaultMetadataHandler
+
+
+FlacDefaultMetadataHandler::FlacDefaultMetadataHandler()
+	= default;
+
+
+FlacDefaultMetadataHandler::FlacDefaultMetadataHandler(
+		FlacDefaultMetadataHandler&&) noexcept
+= default;
+
+
+FlacDefaultMetadataHandler&
+		FlacDefaultMetadataHandler::operator = (FlacDefaultMetadataHandler&&)
+		noexcept
+= default;
+
+
+void FlacDefaultMetadataHandler::do_validate(
+		const FLAC::Metadata::StreamInfo& metadata)
+{
+	if (!validate_streaminfo(metadata))
+	{
+		ARCS_LOG_ERROR << "Validation of Flac file failed. Error is:"
+			<< last_error();
+
+		throw InvalidAudioException(last_error());
+	}
+}
+
+
+void FlacDefaultMetadataHandler::do_cuesheet(
+		const FLAC::Metadata::CueSheet& cuesheet)
+{
+	ARCS_LOG_INFO << "Ignore CueSheet found in FLAC file";
+
+	// TODO Implement
+}
+
+
+bool FlacDefaultMetadataHandler::validate_streaminfo(
+		const FLAC::Metadata::StreamInfo& streaminfo)
 {
 	ARCS_LOG_DEBUG << "Found FLAC streaminfo metadata block";
 
-	if (not this->assert_true("Test: Valid streaminfo?",
-		streaminfo.is_valid(),
+	if (!this->assert_true("Test: Valid streaminfo?", streaminfo.is_valid(),
 		"FLAC Streaminfo is not valid"))
 	{
 		return false;
@@ -75,13 +147,9 @@ bool FlacMetadataHandler::streaminfo(
 		return false;
 	} // Check this explicitly because we will cast to int
 
-	if (not this->assert_true("Test (CDDA): Bits per sample",
-		CDDAValidator::bits_per_sample(
-			static_cast<int>(streaminfo.get_bits_per_sample())),
-		"Number of bits per sample does not conform to CDDA"))
-	{
-		return false;
-	}
+	validate_bits_per_sample(
+			static_cast<int>(streaminfo.get_bits_per_sample()));
+
 
 	if (streaminfo.get_channels() > std::numeric_limits<int>::max())
 	{
@@ -89,13 +157,8 @@ bool FlacMetadataHandler::streaminfo(
 		return false;
 	} // Check this explicitly because we will cast to int
 
-	if (not this->assert_true("Test (CDDA): Channels",
-		CDDAValidator::num_channels(
-			static_cast<int>(streaminfo.get_channels())),
-		"Number of channels does not conform to CDDA"))
-	{
-		return false;
-	}
+	validate_num_channels(static_cast<int>(streaminfo.get_channels()));
+
 
 	if (streaminfo.get_sample_rate() > std::numeric_limits<int>::max())
 	{
@@ -103,88 +166,24 @@ bool FlacMetadataHandler::streaminfo(
 		return false;
 	} // Check this explicitly because we will cast to int
 
-	if (not this->assert_true("Test (CDDA): Samples per second",
-		CDDAValidator::samples_per_second(
-			static_cast<int>(streaminfo.get_sample_rate())),
-		"Number of samples per second does not conform to CDDA"))
-	{
-		return false;
-	}
+	validate_samples_per_second(static_cast<int>(streaminfo.get_sample_rate()));
 
 	return true;
 }
 
 
-AudioValidator::codec_set_type FlacMetadataHandler::do_codecs() const
+AudioValidator::codec_set_type FlacDefaultMetadataHandler::do_codecs() const
 {
 	return { Codec::FLAC };
 }
 
 
-// FlacAudioReaderImpl
+// FlacDefaultErrorHandler
 
 
-FlacAudioReaderImpl::FlacAudioReaderImpl()
-	: smplseq_()
-	, metadata_handler_()
+void FlacDefaultErrorHandler::do_error(::FLAC__StreamDecoderErrorStatus status)
 {
-	// empty
-}
-
-
-::FLAC__StreamDecoderWriteStatus FlacAudioReaderImpl::write_callback(
-		const ::FLAC__Frame *frame,
-		const ::FLAC__int32 *const buffer[])
-{
-	smplseq_.wrap_int_buffer(buffer[0], buffer[1], frame->header.blocksize);
-	this->signal_appendsamples(smplseq_.begin(), smplseq_.end());
-
-	return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
-}
-
-
-void FlacAudioReaderImpl::metadata_callback(
-		const ::FLAC__StreamMetadata *metadata)
-{
-	AudioSize size;
-
-	switch (metadata->type)
-	{
-		case FLAC__METADATA_TYPE_STREAMINFO:
-
-			// Inform calculator instance about sample count
-
-			size.set_total_samples(metadata->data.stream_info.total_samples);
-			this->signal_updateaudiosize(size);
-
-			// Streaminfo could already have been validated explicitly
-
-			if (not metadata_handler_->streaminfo(metadata))
-			{
-				ARCS_LOG_ERROR << "Validation of Flac file failed. Error is:"
-						<< metadata_handler_->last_error();
-
-				throw InvalidAudioException(metadata_handler_->last_error());
-			}
-
-			break;
-
-		case FLAC__METADATA_TYPE_CUESHEET:
-
-			ARCS_LOG_DEBUG << "Found FLAC cuesheet metadata block (ignored)";
-			// TODO Implement cuesheet handler
-			break;
-
-		default:
-			break;
-	}
-}
-
-
-void FlacAudioReaderImpl::error_callback(
-		::FLAC__StreamDecoderErrorStatus status)
-{
-	std::ostringstream ss;
+	auto ss = std::ostringstream{};
 
 	switch (status)
 	{
@@ -213,57 +212,124 @@ void FlacAudioReaderImpl::error_callback(
 }
 
 
-std::unique_ptr<AudioSize> FlacAudioReaderImpl::do_acquire_size(
-	const std::string &filename)
+// FlacAudioReaderImpl
+
+
+FlacAudioReaderImpl::FlacAudioReaderImpl()
+	: smplseq_          { /* empty */ }
+	, metadata_handler_ { /* empty */ }
+	, error_handler_    { /* empty */ }
 {
-	::FLAC::Metadata::StreamInfo streaminfo;
-	::FLAC::Metadata::get_streaminfo(filename.c_str(), streaminfo);
-
-	if (!metadata_handler_->streaminfo(streaminfo))
-	{
-		ARCS_LOG_ERROR << metadata_handler_->last_error();
-		return nullptr;
-	}
-
-	std::unique_ptr<AudioSize> audiosize = std::make_unique<AudioSize>();
-
-	const auto total_samples = streaminfo.get_total_samples();
-	static const auto MAX_AUDIOSIZE =
-		std::numeric_limits<decltype(audiosize->total_samples())>::max();
-	if (total_samples > MAX_AUDIOSIZE)
-	{
-		ARCS_LOG_ERROR << "Total samples in FLAC stream " << total_samples
-			<< " exceed the maximum value of " << 0xFFFFFFFF;
-	}
-	audiosize->set_total_samples(total_samples);
-
-	return audiosize;
+	// empty
 }
 
 
-void FlacAudioReaderImpl::do_process_file(const std::string &filename)
+::FLAC__StreamDecoderWriteStatus FlacAudioReaderImpl::write_callback(
+		const ::FLAC__Frame* frame,
+		const ::FLAC__int32* const buffer[])
 {
+	smplseq_.wrap_int_buffer(buffer[0], buffer[1], frame->header.blocksize);
+
+	using std::cbegin;
+	using std::cend;
+
+	this->signal_appendsamples(cbegin(smplseq_), cend(smplseq_));
+
+	return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
+}
+
+
+void FlacAudioReaderImpl::metadata_callback(
+		const ::FLAC__StreamMetadata* metadata)
+{
+	switch (metadata->type)
+	{
+		case FLAC__METADATA_TYPE_STREAMINFO:
+
+			this->signal_updateaudiosize(
+					to_audiosize(metadata->data.stream_info.total_samples,
+						UNIT::SAMPLES));
+
+			metadata_handler_->validate(*metadata);
+			// Note: Streaminfo could already have been validated explicitly
+
+			break;
+
+		case FLAC__METADATA_TYPE_CUESHEET:
+
+			metadata_handler_->cuesheet(*metadata);
+
+			break;
+
+		default:
+			break;
+	}
+}
+
+
+void FlacAudioReaderImpl::error_callback(
+		::FLAC__StreamDecoderErrorStatus status)
+{
+	error_handler_->error(status);
+}
+
+
+void FlacAudioReaderImpl::register_metadata_handler(
+		std::unique_ptr<FlacMetadataHandler> hndlr)
+{
+	metadata_handler_ = std::move(hndlr);
+}
+
+
+void FlacAudioReaderImpl::register_error_handler(
+		std::unique_ptr<FlacErrorHandler> hndlr)
+{
+	error_handler_ = std::move(hndlr);
+}
+
+
+std::unique_ptr<AudioSize> FlacAudioReaderImpl::do_acquire_size(
+	const std::string& filename)
+{
+	auto streaminfo = ::FLAC::Metadata::StreamInfo{};
+
+	::FLAC::Metadata::get_streaminfo(filename.c_str(), streaminfo);
+
+	// Commented out, acquire_size() does not perform validation
+	//metadata_handler_->validate(streaminfo);
+
+	return std::make_unique<AudioSize>(to_audiosize(
+				streaminfo.get_total_samples(), UNIT::SAMPLES));
+}
+
+
+void FlacAudioReaderImpl::do_process_file(const std::string& filename)
+{
+	set_md5_checking(false); // TODO part of validation?
+
 	this->signal_startinput();
 
 	// Process decoded samples
 
-	this->set_md5_checking(false); // We check for checksums for ourselves
+	const auto init_status = this->init(filename);
 
-	::FLAC__StreamDecoderInitStatus init_status = this->init(filename);
 	if (init_status != ::FLAC__STREAM_DECODER_INIT_STATUS_OK)
 	{
 		ARCS_LOG_ERROR << "Initializing decoder failed.";
 		ARCS_LOG_ERROR << "FLAC__StreamDecoderInitStatus: "
-				<< std::string(
-					::FLAC__StreamDecoderInitStatusString[init_status]);
+				<< std::string{
+					::FLAC__StreamDecoderInitStatusString[init_status] };
 		return;
 	}
+
+	ARCS_LOG(DEBUG3) << "Initialized decoder successfully";
 
 	// Get channel order to decide whether order must be swapped.
 	// FLAC says: "Where defined, the channel order follows SMPTE/ITU-R
 	// recommendations." and only defines left/right orderings.
 
 	const auto channel_assignment = this->get_channel_assignment();
+
 	switch (channel_assignment)
 	{
 		case ::FLAC__CHANNEL_ASSIGNMENT_INDEPENDENT:
@@ -289,11 +355,11 @@ void FlacAudioReaderImpl::do_process_file(const std::string &filename)
 
 	const bool success = this->process_until_end_of_stream();
 
-	if (not success)
+	if (!success)
 	{
 		ARCS_LOG_ERROR << "Decoding failed";
 		ARCS_LOG_ERROR << "Last decoder state: "
-				<< std::string(this->get_state().as_cstring());
+				<< std::string { this->get_state().as_cstring() };
 	}
 
 	this->finish();
@@ -308,13 +374,6 @@ std::unique_ptr<FileReaderDescriptor> FlacAudioReaderImpl::do_descriptor()
 	const
 {
 	return std::make_unique<DescriptorFlac>();
-}
-
-
-void FlacAudioReaderImpl::register_validate_handler(
-		std::unique_ptr<FlacMetadataHandler> hndlr)
-{
-	metadata_handler_ = std::move(hndlr);
 }
 
 
@@ -362,10 +421,15 @@ LibInfo DescriptorFlac::do_libraries() const
 std::unique_ptr<FileReader> DescriptorFlac::do_create_reader() const
 {
 	using details::flac::FlacAudioReaderImpl;
-	using details::flac::FlacMetadataHandler;
+	using details::flac::FlacDefaultMetadataHandler;
+	using details::flac::FlacDefaultErrorHandler;
 
 	auto impl = std::make_unique<FlacAudioReaderImpl>();
-	impl->register_validate_handler(std::make_unique<FlacMetadataHandler>());
+	impl->register_metadata_handler(
+			std::make_unique<FlacDefaultMetadataHandler>());
+	impl->register_error_handler(
+			std::make_unique<FlacDefaultErrorHandler>());
+
 	return std::make_unique<AudioReader>(std::move(impl));
 }
 
@@ -380,7 +444,7 @@ std::unique_ptr<FileReaderDescriptor> DescriptorFlac::do_clone() const
 
 namespace {
 
-const auto d = RegisterDescriptor<DescriptorFlac>();
+const auto d = RegisterDescriptor<DescriptorFlac>{};
 
 } // namespace
 

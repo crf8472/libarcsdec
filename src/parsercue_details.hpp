@@ -1,32 +1,28 @@
 #ifndef __LIBARCSDEC_PARSERCUE_HPP__
 #error "Do not include parsercue_details.hpp, include parsercue.hpp instead"
 #endif
-
-/**
- * \file
- *
- * \brief Internal APIs for Cuesheet reader
- */
-
 #ifndef __LIBARCSDEC_PARSERCUE_DETAILS_HPP__
 #define __LIBARCSDEC_PARSERCUE_DETAILS_HPP__
 
-#include <cstdint>  // for uint16_t, int32_t
-#include <memory>   // for unique_ptr
-#include <string>   // for string
-#include <tuple>    // for tuple
-#include <vector>   // for vector
+/**
+ * \internal
+ *
+ * \file
+ *
+ * \brief Implementation details of parsercue.hpp.
+ */
 
 #ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
 #include "descriptor.hpp"       // for FileReaderDescriptor
 #endif
 #ifndef __LIBARCSDEC_METAPARSER_HPP__
-#include "metaparser.hpp"        // for MetaparserImpl
+#include "metaparser.hpp"       // for MetaparserImpl
 #endif
 
-#ifndef __LIBARCSTK_IDENTIFIER_HPP__
-#include <arcstk/identifier.hpp> // for TOC
-#endif
+#include <cstdint>  // for int32_t
+#include <memory>   // for unique_ptr
+#include <string>   // for string
+
 
 namespace arcsdec
 {
@@ -36,22 +32,25 @@ namespace details
 {
 
 /**
- * \brief Namespace for implementation details of parsercue
+ * \internal
+ *
+ * \brief Implementation details of parsercue.
  */
 namespace cuesheet
 {
 
-using arcstk::TOC;
+using arcstk::ToC;
 
 
 /**
- * \internal \defgroup parserCueImpl Implementation details of Cuesheet parsing
+ * \internal
+ *
+ * \defgroup parserCueImpl Implementation details of Cuesheet parsing
  *
  * \ingroup parsercue
  *
  * @{
  */
-
 
 /**
  * \brief Type for amounts of lba frames.
@@ -77,9 +76,9 @@ private:
 	 *
 	 * \throw FileReadException If the file could not be read
 	 */
-	//Cuesheet parse_worker(const std::string &filename) const;
+	//Cuesheet parse_worker(const std::string& filename) const;
 
-	std::unique_ptr<TOC> do_parse(const std::string &filename) final;
+	std::unique_ptr<ToC> do_parse(const std::string& filename) final;
 
 	std::unique_ptr<FileReaderDescriptor> do_descriptor() const final;
 };

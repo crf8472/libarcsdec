@@ -1,20 +1,17 @@
 #include "catch2/catch_test_macros.hpp"
 
-#ifndef __LIBARCSDEC_READERSNDFILE_HPP__
-#include "readersndfile.hpp"
-#endif
-#ifndef __LIBARCSDEC_READERSNDFILE_DETAILS_HPP__
-#include "readersndfile_details.hpp"
-#endif
-#ifndef __LIBARCSDEC_SELECTION_HPP__
-#include "selection.hpp"
-#endif
-
 /**
  * \file
  *
- * Tests for classes in readersndfile.cpp
+ * \brief Fixtures for readersndfile.hpp.
  */
+
+#ifndef __LIBARCSDEC_READERSNDFILE_HPP__
+#include "readersndfile.hpp"
+#endif
+#ifndef __LIBARCSDEC_SELECTION_HPP__
+#include "selection.hpp"                // for FileReaderSelection
+#endif
 
 
 TEST_CASE ("DescriptorSndfile", "[readersndfile]" )

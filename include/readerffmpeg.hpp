@@ -1,22 +1,19 @@
-/**
- * \file
- *
- * \brief FFmpeg-based generic audio reader.
- */
-
-
 #ifndef __LIBARCSDEC_READERFFMPEG_HPP__
 #define __LIBARCSDEC_READERFFMPEG_HPP__
 
-#include <cstdint>  // for uint64_t
-#include <memory>   // for unique_ptr
-#include <set>      // for set
-#include <string>   // for string
-#include <vector>   // for vector
+/**
+ * \file
+ *
+ * \brief Audio reader for multiple file formats, implemented with ffmpeg.
+ */
 
 #ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
 #include "descriptor.hpp"  // for FileReaderDescriptor
 #endif
+
+#include <memory>   // for unique_ptr
+#include <set>      // for set
+#include <string>   // for string
 
 
 namespace arcsdec
@@ -26,10 +23,9 @@ inline namespace v_1_0_0
 {
 
 /**
- * \internal
- * \defgroup readerffmpeg Audio: Generic by FFmpeg
+ * \brief Reader for lossless audio formats, implemented with ffmpeg.
  *
- * \brief A generic AudioReader for losslessly encoded audio files.
+ * \details
  *
  * Since checksumming makes only sense for losslessly encoded files, the
  * FFmpegAudioReaderImpl uses a whitelist to verify whether the codec of the
@@ -50,49 +46,40 @@ inline namespace v_1_0_0
  * introduced the new API was 57.37.100 on 2016-04-21). It can not be compiled
  * with ffmpeg versions prior to 3.1 (at least with libavcodec prior to
  * 57.37.100).
- *
- * @{
  */
-
-
-/**
- * \brief FFmpeg-based AudioReader for virtually any lossless audio format.
- */
-class DescriptorFFmpeg : public FileReaderDescriptor
+class DescriptorFFmpeg final : public FileReaderDescriptor
 {
 public:
 
 	/**
-	 * \brief Virtual default destructor.
+	 * \brief Default destructor.
 	 */
-	~DescriptorFFmpeg() noexcept override;
+	~DescriptorFFmpeg() noexcept final;
+
 
 private:
 
-	std::string do_id() const override;
+	std::string do_id() const final;
 
 	/**
 	 * \brief Returns "FFmpeg".
 	 *
 	 * \return "FFmpeg"
 	 */
-	std::string do_name() const override;
+	std::string do_name() const final;
 
-	std::set<Format> define_formats() const override;
+	std::set<Format> define_formats() const final;
 
-	std::set<Codec> define_codecs() const override;
+	std::set<Codec> define_codecs() const final;
 
-	LibInfo do_libraries() const override;
+	LibInfo do_libraries() const final;
 
-	std::unique_ptr<FileReader> do_create_reader() const override;
+	std::unique_ptr<FileReader> do_create_reader() const final;
 
-	std::unique_ptr<FileReaderDescriptor> do_clone() const override;
+	std::unique_ptr<FileReaderDescriptor> do_clone() const final;
 };
 
-/// @}
-
 } // namespace v_1_0_0
-
 } // namespace arcsdec
 
 #endif

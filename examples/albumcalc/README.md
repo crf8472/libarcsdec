@@ -2,14 +2,14 @@
 
 This example application demonstrates how libarcsdec is used to calculate
 AccurateRip checksums for each track of an album. The album is provided as a
-single audio file accompanied by a CUESheet.
+single audio file accompanied by a Cuesheet.
 
 This example implements the exact same usecase as
 [the example of the same name in libarcstk](
 https://github.com/crf8472/libarcstk/tree/main/examples/albumcalc/),
-but using libarcsdec. If you compare the code of this example to the code of
-libarcstk's albumcalc example you get an illustration what libarcsdec adds to
-libarcstk.
+but using the libarcsdec API instead of using libarcstk directly. If you compare
+the code of this example to the code of libarcstk's albumcalc example you get an
+illustration what libarcsdec adds to libarcstk.
 
 
 ## Requirements
@@ -22,8 +22,9 @@ Dependencies for building and running:
 
 ## Build
 
-If you have configured libarcsdec with the switch ''-DWITH_SUBMODULE=ON'', the
-dependency libarcstk will be available in the build tree.
+If you have initialized and updated the submodule and configured libarcsdec
+with the switch ''-DWITH_SUBMODULE=ON'', the dependency libarcstk will be
+available in the build tree.
 
 In this case, build the application with just
 
@@ -42,7 +43,7 @@ For removing all compiled and temporary files, just use
 
 ## Usage
 
-albumcalc expects two filenames as parameters, the first being a CUE sheet and
+albumcalc expects two filenames as parameters, the first being a Cuesheet and
 the second an audio file in a lossless audio format. (Due to a current
 limitation of libarcsdec, WMA lossless can actually not be decoded.)
 

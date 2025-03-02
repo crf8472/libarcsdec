@@ -1,22 +1,19 @@
-/**
- * \file
- *
- * \brief Libsndfile-based generic audio reader.
- */
-
-
 #ifndef __LIBARCSDEC_READERSNDFILE_HPP__
 #define __LIBARCSDEC_READERSNDFILE_HPP__
 
-#include <cstdint>  // for uint64_t
-#include <memory>   // for unique_ptr
-#include <set>      // for set
-#include <string>   // for string
-#include <vector>   // for vector
+/**
+ * \file
+ *
+ * \brief Audio reader for multiple file formats, implemented with libsndfile.
+ */
 
 #ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
 #include "descriptor.hpp"  // for FileReaderDescriptor
 #endif
+
+#include <memory>   // for unique_ptr
+#include <set>      // for set
+#include <string>   // for string
 
 
 namespace arcsdec
@@ -25,9 +22,6 @@ inline namespace v_1_0_0
 {
 
 /**
- * \internal
- * \defgroup readersndfile Audio: Generic by libsndfile
- *
  * \brief A generic AudioReader for losslessly encoded audio files.
  *
  * The LibsndfileAudioReaderImpl can also read FLAC encoded data in either
@@ -42,48 +36,37 @@ inline namespace v_1_0_0
  * \todo Since checksumming makes only sense for losslessly encoded files, the
  * LibsndfileAudioReaderImpl uses a whitelist to verify whether the codec of
  * the input data is supported.
- *
- * @{
  */
-
-
-/**
- * \brief Libsndfile-based reader for some lossless audio input formats.
- */
-class DescriptorSndfile : public FileReaderDescriptor
+class DescriptorSndfile final : public FileReaderDescriptor
 {
-
 public:
 
 	/**
-	 * \brief Virtual default destructor.
+	 * \brief Default destructor.
 	 */
-	~DescriptorSndfile() noexcept override;
-
+	~DescriptorSndfile() noexcept final;
 
 private:
 
-	std::string do_id() const override;
+	std::string do_id() const final;
 
 	/**
 	 * \brief Returns "unknown (handled by sndfile)"
 	 *
 	 * \return "unknown (handled by sndfile)"
 	 */
-	std::string do_name() const override;
+	std::string do_name() const final;
 
-	std::set<Format> define_formats() const override;
+	std::set<Format> define_formats() const final;
 
-	std::set<Codec> define_codecs() const override;
+	std::set<Codec> define_codecs() const final;
 
-	LibInfo do_libraries() const override;
+	LibInfo do_libraries() const final;
 
-	std::unique_ptr<FileReader> do_create_reader() const override;
+	std::unique_ptr<FileReader> do_create_reader() const final;
 
-	std::unique_ptr<FileReaderDescriptor> do_clone() const override;
+	std::unique_ptr<FileReaderDescriptor> do_clone() const final;
 };
-
-/// @}
 
 } // namespace v_1_0_0
 } // namespace arcsdec

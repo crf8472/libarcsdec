@@ -11,28 +11,6 @@
 #include "readersndfile_details.hpp" // for LibsndfileAudioReaderImpl
 #endif
 
-#include <cstdint>  // for int16_t, unit32_t, uint64_t
-#include <memory>   // for unique_ptr
-#include <set>      // for set
-#include <sstream>  // for ostringstream
-#include <string>   // for string, to_string
-#include <utility>  // for make_unique, move
-#include <vector>   // for vector
-
-#ifndef SNDFILE_HH
-#include <sndfile.hh>  // for SndfileHandle, SFM_READ, SF_FORMAT_PCM_16
-#endif
-
-#ifndef __LIBARCSTK_CALCULATE_HPP__
-#include <arcstk/calculate.hpp>  // for AudioSize
-#endif
-#ifndef __LIBARCSTK_SAMPLES_HPP__
-#include <arcstk/samples.hpp>    // for SampleSequence
-#endif
-#ifndef __LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp>    // for ARCS_LOG, _ERROR, _INFO, _DEBUG
-#endif
-
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__
 #include "audioreader.hpp"  // for AudioReaderImpl, InvalidAudioException
 #endif
@@ -42,6 +20,28 @@
 #ifndef __LIBARCSDEC_SELECTION_HPP__
 #include "selection.hpp"    // for RegisterDescriptor
 #endif
+
+#ifndef __LIBARCSTK_METADATA_HPP__
+#include <arcstk/metadata.hpp>   // for AudioSize, CDDA
+#endif
+#ifndef __LIBARCSTK_SAMPLES_HPP__
+#include <arcstk/samples.hpp>    // for SampleSequence
+#endif
+#ifndef __LIBARCSTK_LOGGING_HPP__
+#include <arcstk/logging.hpp>    // for ARCS_LOG, _ERROR, _INFO, _DEBUG
+#endif
+
+#ifndef SNDFILE_HH
+#include <sndfile.hh>  // for SndfileHandle, SFM_READ, SF_FORMAT_PCM_16
+#endif
+
+#include <cstdint>  // for int16_t, unit32_t, uint64_t
+#include <memory>   // for unique_ptr
+#include <set>      // for set
+#include <sstream>  // for ostringstream
+#include <string>   // for string, to_string
+#include <utility>  // for make_unique, move
+#include <vector>   // for vector
 
 
 namespace arcsdec
@@ -68,25 +68,30 @@ LibsndfileAudioReaderImpl::~LibsndfileAudioReaderImpl() noexcept = default;
 
 
 std::unique_ptr<AudioSize> LibsndfileAudioReaderImpl::do_acquire_size(
-	const std::string &filename)
+	const std::string& filename)
 {
-	SndfileHandle audiofile(filename);
+	using arcstk::AudioSize;
+	using arcstk::UNIT;
 
-	auto audiosize { std::make_unique<AudioSize>() };
-	audiosize->set_total_samples(audiofile.frames());
+	auto audiofile = SndfileHandle { filename };
+
 	// FIXME works only for WAV??
-
-	return audiosize;
+	/* libsndfile's frames == libarcstk's samples */
+	return std::make_unique<AudioSize>(audiofile.frames(), UNIT::SAMPLES );
 }
 
 
-void LibsndfileAudioReaderImpl::do_process_file(const std::string &filename)
+void LibsndfileAudioReaderImpl::do_process_file(const std::string& filename)
 {
-	SndfileHandle audiofile(filename, SFM_READ);
+	using arcstk::AudioSize;
+	using arcstk::UNIT;
+
+	auto audiofile = SndfileHandle { filename, SFM_READ };
 
 	// TODO Check whether this was successful
 
 	// Perform validation
+	// TODO Use validator
 
 	if (audiofile.samplerate() - CDDA::SAMPLES_PER_SECOND != 0)
 	{
@@ -100,9 +105,10 @@ void LibsndfileAudioReaderImpl::do_process_file(const std::string &filename)
 		return;
 	}
 
-	if (not (audiofile.format() | SF_FORMAT_PCM_16))
+	if (!(audiofile.format() | SF_FORMAT_PCM_16))
 	{
-		ARCS_LOG_DEBUG << "Format: " << std::to_string(audiofile.format());
+		using std::to_string;
+		ARCS_LOG_DEBUG << "Format: " << to_string(audiofile.format());
 		return;
 	}
 
@@ -111,16 +117,18 @@ void LibsndfileAudioReaderImpl::do_process_file(const std::string &filename)
 
 	// Update Calculation with sample count
 
-	AudioSize audiosize;
-	audiosize.set_total_samples(audiofile.frames());
+	const auto total_samples = audiofile.frames();
+	const auto audiosize     = to_audiosize(total_samples, UNIT::SAMPLES);
+
 	this->signal_updateaudiosize(audiosize);
 
 	// Prepare Read buffer (16 bit samples)
 
-	uint32_t buffer_len = this->samples_per_read() * CDDA::NUMBER_OF_CHANNELS;
-	std::vector<int16_t> buffer(buffer_len);
+	const std::size_t buffer_len =
+		this->samples_per_read() * CDDA::NUMBER_OF_CHANNELS;
 
-	SampleSequence<int16_t, false> sequence;
+	auto buffer   = std::vector<int16_t>(buffer_len);
+	auto sequence = SampleSequence<int16_t, false>{};
 
 	// Checking
 
@@ -128,8 +136,8 @@ void LibsndfileAudioReaderImpl::do_process_file(const std::string &filename)
 
 	// Logging
 
-	auto sample_count = uint64_t  { 0 };
-	auto blocks_processed = uint32_t  { 0 };
+	auto sample_count     = uint64_t { 0 };
+	auto blocks_processed = uint32_t { 0 };
 
 	// Read blocks
 
@@ -145,11 +153,11 @@ void LibsndfileAudioReaderImpl::do_process_file(const std::string &filename)
 		{
 			// This is allowed only for the last block
 
-			auto expected_total { audiosize.total_samples() - sample_count };
+			const auto expected_total { audiosize.samples() - sample_count };
 
 			if (expected_total != ints_in_block / CDDA::NUMBER_OF_CHANNELS)
 			{
-				std::ostringstream ss;
+				auto ss = std::ostringstream{};
 				ss << "  Block contains "
 					<< ints_in_block
 					<< " integers, expected were "
@@ -256,6 +264,7 @@ std::unique_ptr<FileReader> DescriptorSndfile::do_create_reader() const
 	using details::sndfile::LibsndfileAudioReaderImpl;
 
 	auto impl = std::make_unique<LibsndfileAudioReaderImpl>();
+
 	return std::make_unique<AudioReader>(std::move(impl));
 }
 
@@ -270,7 +279,7 @@ std::unique_ptr<FileReaderDescriptor> DescriptorSndfile::do_clone() const
 
 namespace {
 
-const auto d = RegisterDescriptor<DescriptorSndfile>();
+const auto d = RegisterDescriptor<DescriptorSndfile>{};
 
 } // namespace
 

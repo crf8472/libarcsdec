@@ -1,27 +1,29 @@
 #ifndef __LIBARCSDEC_READERFFMPEG_HPP__
 #error "Do not include readerffmpeg_details.hpp, include readerffmpeg.hpp instead"
 #endif
-
-/**
- * \file
- *
- * \brief Internal APIs for FFmpeg-based generic audio reader.
- */
-
 #ifndef __LIBARCSDEC_READERFFMPEG_DETAILS_HPP__
 #define __LIBARCSDEC_READERFFMPEG_DETAILS_HPP__
 
+/**
+ * \internal
+ *
+ * \file
+ *
+ * \brief Implementation details of readerffmpeg.hpp.
+ */
 
-#include <cstddef>   // for size_t
-#include <exception> // for exception
-#include <functional>// for function
-#include <memory>    // for unique_ptr
-#include <queue>     // for queue
-#include <string>    // for string
-#include <type_traits> // for true_type, false_type
-#include <utility>   // for pair
+#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
+#include "audioreader.hpp"      // for AudioReaderImpl
+#endif
 
+#ifndef __LIBARCSTK_SAMPLES_HPP__
+#include <arcstk/samples.hpp>   // for SampleInputIterator
+#endif
+#ifndef __LIBARCSTK_CALCULATE_HPP__
+#include <arcstk/calculate.hpp> // for AudioSize
+#endif
 
+// ffmpeg
 extern "C"
 {
 #include <libavcodec/avcodec.h>
@@ -31,33 +33,32 @@ extern "C"
 #include <libavutil/channel_layout.h>
 }
 
-
-#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
-#include "audioreader.hpp"      // for AudioReaderImpl
-#endif
-
-
-#ifndef __LIBARCSTK_SAMPLES_HPP__
-#include <arcstk/samples.hpp>   // for SampleInputIterator
-#endif
-#ifndef __LIBARCSTK_CALCULATE_HPP__
-#include <arcstk/calculate.hpp> // for AudioSize
-#endif
+#include <cstddef>     // for size_t
+#include <exception>   // for exception
+#include <functional>  // for function
+#include <memory>      // for unique_ptr
+#include <queue>       // for queue
+#include <string>      // for string
+#include <type_traits> // for true_type, false_type
+#include <utility>     // for pair
 
 
 namespace arcsdec
 {
 inline namespace v_1_0_0
 {
-
-
-using arcstk::SampleSequence;
-
-
 namespace details
 {
+
+/**
+ * \internal
+ *
+ * \brief Implementation details of readerffmpeg.
+ */
 namespace ffmpeg
 {
+
+using arcstk::SampleSequence;
 
 using arcstk::SampleInputIterator;
 using arcstk::SampleSequence;
@@ -66,7 +67,9 @@ using arcstk::PlanarSamples;
 using arcstk::InterleavedSamples;
 
 /**
- * \internal \defgroup readerffmpegImpl Implementation
+ * \internal
+ *
+ * \defgroup readerffmpegImpl Implementation
  *
  * \ingroup readerffmpeg
  *
@@ -86,6 +89,30 @@ av_always_inline char* av_err2str(int errnum)
 }
 #endif
 
+extern "C"
+{
+
+/**
+ * \internal
+ * \brief A redirect callback for the ffmpeg log messages.
+ *
+ * Redirects ffmpeg messages leveled as errors, warnings and informations to the
+ * libarcstk logging interface. Messages leveled as debug, trace or other are
+ * discarded. All parameters except \c lvl and \c msg are ignored.
+ *
+ * Since this function will be passed by a function pointer to a C function, it
+ * has to be a static or global function with C linkage to provide a portable
+ * way of setting a C++ function as a callback for a C function.
+ *
+ * \relatesalso FFmpegAudioStream
+ * \relatesalso FFmpegAudioStreamLoader
+ *
+ * \param[in] lvl The loglevel as defined by the ffmpeg API (e.g. AV_LOG_INFO)
+ * \param[in] msg The message to log
+ */
+void arcs_av_log(void* /*v*/, int lvl, const char* msg, va_list /*l*/);
+
+} // extern C
 
 /**
  * \brief Encapsulates error code from the ffmpeg API.
@@ -100,7 +127,7 @@ public:
 	 * \param[in] error Error code
 	 * \param[in] name  Name of function that returned the error code
 	 */
-	FFmpegException(const int error, const std::string &name);
+	FFmpegException(const int error, const std::string& name);
 
 	/**
 	 * \brief The original error code.
@@ -109,7 +136,7 @@ public:
 	 */
 	int error() const;
 
-	char const * what() const noexcept override;
+	char const* what() const noexcept final;
 
 private:
 
@@ -117,6 +144,9 @@ private:
 
 	std::string msg_;
 };
+
+
+void operator << (std::ostream& out, const ::AVDictionary* dict);
 
 
 /**
@@ -128,6 +158,8 @@ struct Free_AVFormatContext final
 {
 	void operator()(::AVFormatContext* fctx) const;
 };
+
+void operator << (std::ostream& out, const ::AVFormatContext* fctx);
 
 
 using AVFormatContextPtr =
@@ -143,6 +175,8 @@ struct Free_AVCodecContext final
 {
 	void operator()(::AVCodecContext* cctx) const;
 };
+
+void operator << (std::ostream& out, const ::AVCodecContext* cctx);
 
 
 using AVCodecContextPtr =
@@ -190,6 +224,8 @@ struct Free_AVFrame final
 {
 	void operator()(::AVFrame* frame) const;
 };
+
+void operator << (std::ostream& out, const ::AVStream* stream);
 
 
 /**
@@ -252,7 +288,7 @@ uint8_t* ByteBuffer(const ::AVFrame* f, const unsigned i)
  * \tparam T         The sample object type to get the bytes per plane from
  */
 template <typename S, bool is_planar, typename T>
-struct BytesPerPlane
+struct BytesPerPlane final
 {
 	/**
 	 * \brief Get number of bytes per plane.
@@ -267,7 +303,7 @@ struct BytesPerPlane
 
 // Specialization for ::AVFrame (planar)
 template <typename S>
-struct BytesPerPlane <S, true, ::AVFrame> // for planar frames
+struct BytesPerPlane <S, true, ::AVFrame> final // for planar frames
 {
 	static std::size_t get(const ::AVFrame* f)
 	{
@@ -278,7 +314,7 @@ struct BytesPerPlane <S, true, ::AVFrame> // for planar frames
 
 // Specialization for ::AVFrame (interleaved)
 template <typename S>
-struct BytesPerPlane <S, false, ::AVFrame> // for interleaved frames
+struct BytesPerPlane <S, false, ::AVFrame> final // for interleaved frames
 {
 	static std::size_t get(const ::AVFrame* f)
 	{
@@ -317,7 +353,7 @@ int NumberOfChannels(const T* p)
 /**
  * \brief Abstract getter for channel order info.
  */
-struct ChannelOrder
+struct ChannelOrder final
 {
 	/**
 	 * Returns \c TRUE iff the channel order is front left + front right,
@@ -394,7 +430,7 @@ struct ChannelOrder
 template <typename S, bool is_planar, typename Container,
 		typename SequenceType = SampleSequence<S, is_planar>>
 		//typename = details::IsSampleType<S>, // TODO SFINAE stuff
-class WrappingPolicy
+class WrappingPolicy final
 {
 	/* empty */
 };
@@ -405,13 +441,13 @@ class WrappingPolicy
 
 // Specialization for wrapping an ::AVFrame into a byte buffer (planar)
 template <typename S, typename SequenceType>
-class WrappingPolicy<S, true, AVFramePtr, SequenceType>
+class WrappingPolicy<S, true, AVFramePtr, SequenceType> final
 {
 	using TotalBytesPerPlane = BytesPerPlane<S, true, ::AVFrame>;
 
 public:
 
-	static SequenceType create(const details::ffmpeg::AVFramePtr &f)
+	static SequenceType create(const details::ffmpeg::AVFramePtr& f)
 	{
 		if (!f) { return SequenceType {}; }
 
@@ -419,8 +455,8 @@ public:
 			TotalBytesPerPlane::get(f.get()) };
 	}
 
-	static void wrap(const details::ffmpeg::AVFramePtr &f,
-			SequenceType &sequence)
+	static void wrap(const details::ffmpeg::AVFramePtr& f,
+			SequenceType& sequence)
 	{
 		sequence.wrap_byte_buffer(ByteBuffer(f.get(), 0),
 				ByteBuffer(f.get(), 1),
@@ -431,13 +467,13 @@ public:
 
 // Specialization for wrapping an ::AVFrame into a byte buffer (interleaved)
 template <typename S, typename SequenceType>
-class WrappingPolicy<S, false, details::ffmpeg::AVFramePtr, SequenceType>
+class WrappingPolicy<S, false, details::ffmpeg::AVFramePtr, SequenceType> final
 {
 	using TotalBytesPerPlane = BytesPerPlane<S, false, ::AVFrame>;
 
 public:
 
-	static SequenceType create(const details::ffmpeg::AVFramePtr &f)
+	static SequenceType create(const details::ffmpeg::AVFramePtr& f)
 	{
 		if (!f) { return SequenceType {}; }
 
@@ -445,8 +481,8 @@ public:
 			TotalBytesPerPlane::get(f.get()) };
 	}
 
-	static void wrap(const details::ffmpeg::AVFramePtr &f,
-			SequenceType &sequence)
+	static void wrap(const details::ffmpeg::AVFramePtr& f,
+			SequenceType& sequence)
 	{
 		sequence.wrap_byte_buffer(ByteBuffer(f.get(), 0),
 				TotalBytesPerPlane::get(f.get()));
@@ -458,16 +494,16 @@ public:
  * \brief Get size-in-bytes of a type denoted by ::AVSampleFormat.
  */
 template <enum ::AVSampleFormat>
-struct SampleSize { /* empty */ };
+struct SampleSize final { /* empty */ };
 
 // legal specializations
-template<> struct SampleSize<::AV_SAMPLE_FMT_S16>
+template<> struct SampleSize<::AV_SAMPLE_FMT_S16> final
 { constexpr static std::size_t value = 2; };
-template<> struct SampleSize<::AV_SAMPLE_FMT_S16P>
+template<> struct SampleSize<::AV_SAMPLE_FMT_S16P> final
 { constexpr static std::size_t value = 2; };
-template<> struct SampleSize<::AV_SAMPLE_FMT_S32>
+template<> struct SampleSize<::AV_SAMPLE_FMT_S32> final
 { constexpr static std::size_t value = 4; };
-template<> struct SampleSize<::AV_SAMPLE_FMT_S32P>
+template<> struct SampleSize<::AV_SAMPLE_FMT_S32P> final
 { constexpr static std::size_t value = 4; };
 
 
@@ -475,26 +511,26 @@ template<> struct SampleSize<::AV_SAMPLE_FMT_S32P>
  * \brief Get signedness of a type denoted by ::AVSampleFormat.
  */
 template <enum ::AVSampleFormat>
-struct IsSigned { /* empty */ };
+struct IsSigned final { /* empty */ };
 
 // specializations
-template<> struct IsSigned<::AV_SAMPLE_FMT_S16>  : std::true_type {/*empty*/};
-template<> struct IsSigned<::AV_SAMPLE_FMT_S16P> : std::true_type {/*empty*/};
-template<> struct IsSigned<::AV_SAMPLE_FMT_S32>  : std::true_type {/*empty*/};
-template<> struct IsSigned<::AV_SAMPLE_FMT_S32P> : std::true_type {/*empty*/};
+template<> struct IsSigned<::AV_SAMPLE_FMT_S16>  final : std::true_type {};
+template<> struct IsSigned<::AV_SAMPLE_FMT_S16P> final : std::true_type {};
+template<> struct IsSigned<::AV_SAMPLE_FMT_S32>  final : std::true_type {};
+template<> struct IsSigned<::AV_SAMPLE_FMT_S32P> final : std::true_type {};
 
 
 /**
  * \brief Get planarity status of a type denoted by ::AVSampleFormat.
  */
 template <enum ::AVSampleFormat>
-struct IsPlanar { /* empty */ };
+struct IsPlanar final { /* empty */ };
 
 // specializations
-template<> struct IsPlanar<::AV_SAMPLE_FMT_S16>  : std::false_type {/*empty*/};
-template<> struct IsPlanar<::AV_SAMPLE_FMT_S16P> : std::true_type  {/*empty*/};
-template<> struct IsPlanar<::AV_SAMPLE_FMT_S32>  : std::false_type {/*empty*/};
-template<> struct IsPlanar<::AV_SAMPLE_FMT_S32P> : std::true_type  {/*empty*/};
+template<> struct IsPlanar<::AV_SAMPLE_FMT_S16>  final : std::false_type {};
+template<> struct IsPlanar<::AV_SAMPLE_FMT_S16P> final : std::true_type  {};
+template<> struct IsPlanar<::AV_SAMPLE_FMT_S32>  final : std::false_type {};
+template<> struct IsPlanar<::AV_SAMPLE_FMT_S32P> final : std::true_type  {};
 
 
 /**
@@ -505,13 +541,13 @@ template<> struct IsPlanar<::AV_SAMPLE_FMT_S32P> : std::true_type  {/*empty*/};
  *                     unsigned type
  */
 template <int S, bool is_signed>
-struct SampleType { /* empty */ };
+struct SampleType final { /* empty */ };
 
 // legal specializations
-template<> struct SampleType<2, true>  { using type =  int16_t; };
-template<> struct SampleType<2, false> { using type = uint16_t; };
-template<> struct SampleType<4, true>  { using type =  int32_t; };
-template<> struct SampleType<4, false> { using type = uint32_t; };
+template<> struct SampleType<2, true>  final { using type =  int16_t; };
+template<> struct SampleType<2, false> final { using type = uint16_t; };
+template<> struct SampleType<4, true>  final { using type =  int32_t; };
+template<> struct SampleType<4, false> final { using type = uint32_t; };
 
 
 /**
@@ -523,7 +559,7 @@ template<> struct SampleType<4, false> { using type = uint32_t; };
  *                   indicates to use an interleaved sequence
  */
 template <typename S, bool is_planar>
-struct SequenceInstance
+struct SequenceInstance final
 {
 	static auto create() -> SampleSequence<S, is_planar>
 	{
@@ -542,7 +578,7 @@ struct SequenceInstance
 template <::AVSampleFormat F,
 	typename S =
 		typename SampleType<SampleSize<F>::value, IsSigned<F>::value>::type>
-auto sequence_for(const AVFramePtr &frame)
+auto sequence_for(const AVFramePtr& frame)
 	-> SampleSequence<S, IsPlanar<F>::value>
 {
 	auto sequence = SequenceInstance<S, IsPlanar<F>::value>::create();
@@ -706,7 +742,7 @@ private:
 	 *
 	 * \return \c TRUE on success, \c FALSE if decoder needs more input
 	 */
-	bool decode_packet(::AVPacket *packet);
+	bool decode_packet(::AVPacket* packet);
 
 	/**
 	 * \brief Returns the index of the stream to be decoded.
@@ -752,12 +788,12 @@ private:
 	/**
 	 * \brief Internal decoder.
 	 */
-	::AVCodecContext *cctx_;
+	::AVCodecContext* cctx_;
 
 	/**
 	 * \brief Internal file format context.
 	 */
-	::AVFormatContext *fctx_;
+	::AVFormatContext* fctx_;
 
 	/**
 	 * \brief Capacity in number of ::AVPacket instances.
@@ -769,7 +805,7 @@ private:
 /**
  * \brief Functions for analyzing a media file with FFmpeg.
  */
-class FFmpegFile
+class FFmpegFile final
 {
 public:
 
@@ -782,14 +818,14 @@ public:
 	 *
 	 * \throws FFmpegException If the file could not be opened
 	 */
-	static AVFormatContextPtr format_context(const std::string &filename);
+	static AVFormatContextPtr format_context(const std::string& filename);
 
 	/**
 	 * \brief Acquire stream index of the audio stream.
 	 *
 	 * \throws FFmpegException If the file could not be opened
 	 */
-	static int audio_stream(::AVFormatContext *fctx);
+	static int audio_stream(::AVFormatContext* fctx);
 
 	/**
 	 * \brief Create a decoder for the specified audio stream.
@@ -803,7 +839,7 @@ public:
 	 * \throws runtime_error    If no decoder could be found for the stream
 	 * \throws FFmpegException  If the decoder could not be opened
 	 */
-	static AVCodecContextPtr audio_decoder(::AVFormatContext *fctx,
+	static AVCodecContextPtr audio_decoder(::AVFormatContext* fctx,
 			const int stream_idx);
 
 	/**
@@ -892,7 +928,7 @@ struct IsSupported final
 /**
  * \brief Validator for ::AVCodecContext instances.
  */
-class FFmpegValidator : public DefaultValidator
+class FFmpegValidator final : public DefaultValidator
 {
 public:
 
@@ -905,7 +941,7 @@ public:
 
 private:
 
-	codec_set_type do_codecs() const override;
+	codec_set_type do_codecs() const final;
 };
 
 
@@ -925,7 +961,7 @@ public:
 	 *
 	 * \param[in] filename Filename
 	 */
-	std::unique_ptr<FFmpegAudioStream> load(const std::string &filename) const;
+	std::unique_ptr<FFmpegAudioStream> load(const std::string& filename) const;
 };
 
 
@@ -945,16 +981,16 @@ public:
 class FFmpegAudioStream final
 {
 	friend std::unique_ptr<FFmpegAudioStream> FFmpegAudioStreamLoader::load(
-			const std::string &filename) const;
+			const std::string& filename) const;
 
 public:
 
 	// make class non-copyable
-	FFmpegAudioStream (const FFmpegAudioStream &file) = delete;
-	FFmpegAudioStream& operator = (const FFmpegAudioStream &file) = delete;
+	FFmpegAudioStream (const FFmpegAudioStream& file) = delete;
+	FFmpegAudioStream& operator = (const FFmpegAudioStream& file) = delete;
 
-	FFmpegAudioStream (FFmpegAudioStream &&file) = default;
-	FFmpegAudioStream& operator = (FFmpegAudioStream &&file) = default;
+	FFmpegAudioStream (FFmpegAudioStream&& file) = default;
+	FFmpegAudioStream& operator = (FFmpegAudioStream&& file) = default;
 
 	/**
 	 * \brief Return the sample format of this file.
@@ -1032,7 +1068,7 @@ public:
 	 * \param[in] func The update_audiosize() method to use while reading
 	 */
 	void register_update_audiosize(
-			std::function<void(const AudioSize &size)> func);
+			std::function<void(const AudioSize& size)> func);
 
 	/**
 	 * \brief Register the end_input() method.
@@ -1094,7 +1130,7 @@ private:
 	/**
 	 * \brief Callback for notifying outside world about the correct AudioSize.
 	 */
-	std::function<void(const AudioSize &size)> update_audiosize_;
+	std::function<void(const AudioSize& size)> update_audiosize_;
 
 	/**
 	 * \brief Callback for ending input.
@@ -1134,10 +1170,10 @@ private:
 
 	// AudioReaderImpl
 
-	std::unique_ptr<AudioSize> do_acquire_size(const std::string &filename)
+	std::unique_ptr<AudioSize> do_acquire_size(const std::string& filename)
 		final;
 
-	void do_process_file(const std::string &filename) final;
+	void do_process_file(const std::string& filename) final;
 
 	std::unique_ptr<FileReaderDescriptor> do_descriptor() const final;
 
@@ -1165,6 +1201,40 @@ private:
 	template<enum ::AVSampleFormat>
 	void pass_samples(AVFramePtr frame);
 };
+
+
+/**
+ * \brief Pretty-print an AVDictionary.
+ *
+ * \param[in] out  The stream to print
+ * \param[in] dict The dictionary to print
+ */
+void print_dictionary(std::ostream& out, const ::AVDictionary* dict);
+
+
+/**
+ * \brief Log some information about the codec.
+ *
+ * \param[in] cctx The ::AVCodecContext to analyze
+ */
+void print_codec_info(std::ostream& out, const ::AVCodecContext* cctx);
+
+
+/**
+ * \brief Log some information about the format.
+ *
+ * \param[in] out  The ostream to log to
+ * \param[in] fctx The ::AVFormatContext to analyze
+ */
+void print_format_info(std::ostream& out, const ::AVFormatContext* fctx);
+
+
+/**
+ * \brief Log some information about the stream.
+ *
+ * \param[in] stream The ::AVStream to analyze
+ */
+void print_stream_info(std::ostream& out, const ::AVStream* stream);
 
 /// @}
 

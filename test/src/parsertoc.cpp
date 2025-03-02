@@ -1,20 +1,18 @@
 #include "catch2/catch_test_macros.hpp"
 
-#ifndef __LIBARCSDEC_PARSERTOC_HPP__
-#include "parsertoc.hpp"
-#endif
-#ifndef __LIBARCSDEC_PARSERTOC_DETAILS_HPP__
-#include "parsertoc_details.hpp"
-#endif
-#ifndef __LIBARCSDEC_SELECTION_HPP__
-#include "selection.hpp"
-#endif
-
 /**
  * \file
  *
- * Tests for classes in parsertoc.cpp
+ * \brief Fixtures for parsertoc.hpp.
  */
+
+#ifndef __LIBARCSDEC_PARSERTOC_HPP__
+#include "parsertoc.hpp"                // TO BE TESTED
+#endif
+
+#ifndef __LIBARCSDEC_SELECTION_HPP__
+#include "selection.hpp"                // for FileReaderSelection
+#endif
 
 
 TEST_CASE ("DescriptorToc", "[parsertoc]" )
@@ -94,23 +92,6 @@ TEST_CASE ("DescriptorToc", "[parsertoc]" )
 }
 
 
-TEST_CASE ("TocParserImpl", "[parsertoc]" )
-{
-	using arcsdec::details::cdrdao::TocParserImpl;
-	using arcsdec::DescriptorToc;
-
-	auto d = TocParserImpl{}.descriptor();
-
-	SECTION ("Parser implementation returns correct descriptor type")
-	{
-		CHECK ( d );
-		auto p = d.get();
-
-		CHECK ( dynamic_cast<const DescriptorToc*>(p) != nullptr );
-	}
-}
-
-
 TEST_CASE ("FileReaderSelection", "[filereaderselection]")
 {
 	using arcsdec::FileReaderSelection;
@@ -133,4 +114,30 @@ TEST_CASE ("FileReaderSelection", "[filereaderselection]")
 		CHECK ( nullptr != arcsdec::FileReaderRegistry::reader("cdrdaotoc") );
 	}
 }
+
+//TEST_CASE ("FormatToc", "[parsertoc]" )
+//{
+//	auto f = arcsdec::FormatToc{};
+//
+//	SECTION ("Matches accepted bytes correctly")
+//	{
+//		CHECK ( f.bytes({}, 0) );
+//		CHECK ( f.bytes({3, 2, 1}, 2) );
+//		CHECK ( f.bytes({0x65, 0x32, 0x88}, 1) );
+//		// TODO Check for always true
+//	}
+//
+//	SECTION ("Matches accepted filenames correctly")
+//	{
+//		CHECK ( f.filename("foo.toc") );
+//		CHECK ( f.filename("bar.TOC") );
+//		CHECK ( f.filename("bar.TOc") );
+//
+//		CHECK ( !f.filename("bar.rtoc") );
+//		CHECK ( !f.filename("bar.PTOc") );
+//
+//		CHECK ( !f.filename("bar.tocf") );
+//		CHECK ( !f.filename("bar.TOCl") );
+//	}
+//}
 

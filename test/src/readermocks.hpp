@@ -6,7 +6,12 @@
 #endif
 
 
-class SampleProcessorMock : public arcsdec::SampleProcessor
+/**
+ * \brief Mock for a SampleProcessor.
+ *
+ * All functions are implemented empty.
+ */
+class Mock_SampleProcessor: public arcsdec::SampleProcessor
 {
 	void do_start_input() final
 	{

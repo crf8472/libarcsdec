@@ -4,12 +4,12 @@
 /**
  * \file
  *
- * \brief Toolkit for inspecting the libarcsdec library
+ * \brief Inspect the libarcsdec library.
  */
 
-#include <list>        // for list
 #include <regex>       // for regex
 #include <string>      // for string
+#include <vector>      // for vector
 
 namespace arcsdec
 {
@@ -22,6 +22,7 @@ namespace details
 
 /**
  * \internal
+ *
  * \defgroup libinfoImpl API for implementing info functions about descriptors
  *
  * \ingroup descriptors
@@ -42,7 +43,7 @@ namespace details
  * \param[in]     c     Character to escape
  * \param[in]     seq   Escape string
  */
-void escape(std::string &input, const char c, const std::string &seq);
+void escape(std::string& input, const char c, const std::string& seq);
 
 
 /**
@@ -60,7 +61,7 @@ void escape(std::string &input, const char c, const std::string &seq);
  *
  * \return A regex matching concrete sonames for this library
  */
-std::regex to_libname_pattern(const std::string &libname);
+std::regex to_libname_pattern(const std::string& libname);
 
 
 /**
@@ -75,8 +76,8 @@ std::regex to_libname_pattern(const std::string &libname);
  *
  * \return Filepath for the object or empty string.
  */
-const std::string& first_libname_match(const std::vector<std::string> &list,
-		const std::string &name);
+const std::string& first_libname_match(const std::vector<std::string>& list,
+		const std::string& name);
 
 
 /**
@@ -93,7 +94,7 @@ const std::string& first_libname_match(const std::vector<std::string> &list,
  *
  * \return List of runtime dependencies of an object
  */
-std::vector<std::string> runtime_deps(const std::string &object_name);
+std::vector<std::string> runtime_deps(const std::string& object_name);
 
 
 /**
@@ -116,7 +117,7 @@ const std::vector<std::string>& libarcsdec_deps();
 /**
  * \brief Return the library filepath for the runtime dependency.
  */
-const std::string& libfile(const std::string &libname);
+const std::string& libfile(const std::string& libname);
 
 /// @}
 
