@@ -125,8 +125,6 @@ public:
 	 *
 	 * \param[in] filename The filename of the file to process
 	 *
-	 * \return The checksums of this file
-	 *
 	 * \throw FileReadException If the file could not be read
 	 */
 	void process_file(const std::string& filename);
@@ -177,6 +175,7 @@ protected:
 	 * \brief Service: convert 64 bit wide number of total samples to AudioSize.
 	 *
 	 * \param[in] total_samples Total samples
+	 * \param[in] u             Unit of \c total_samples
 	 *
 	 * \return AudioSize representing the number of total samples
 	 *
@@ -218,8 +217,6 @@ private:
 	 * \brief Provides implementation for process_file() of some AudioReader.
 	 *
 	 * \param[in] filename The filename of the file to process
-	 *
-	 * \return The checksums of this file
 	 *
 	 * \throw FileReadException If the file could not be read
 	 */
@@ -316,8 +313,6 @@ public:
 	 * \brief Process the file and return ARCSs v1 and v2 for all tracks.
 	 *
 	 * \param[in] filename The filename of the file to process
-	 *
-	 * \return The checksums of this file
 	 *
 	 * \throw FileReadException If the file could not be read
 	 */
@@ -441,8 +436,8 @@ public:
 	 *
 	 * \param[in] bits_per_sample The sample size to validate
 	 *
-	 * \return TRUE if the sample size equals CDDAValidator::bits_per_sample()
-	 * otherwise FALSE
+	 * \throws InvalidMetadataException If the sample size is not
+	 * CDDAValidator::bits_per_sample()
 	 */
 	void validate_bits_per_sample(const int bits_per_sample);
 
@@ -456,8 +451,8 @@ public:
 	 *
 	 * \param[in] samples_per_second The sampling rate to test
 	 *
-	 * \return TRUE if the sampling rate equals
-	 * CDDAValidator::samples_per_second() otherwise FALSE
+	 * \throws InvalidMetadataException If the sampling rate is not
+	 * CDDAValidator::samples_per_second()
 	 */
 	void validate_samples_per_second(const int samples_per_second);
 
@@ -470,8 +465,8 @@ public:
 	 *
 	 * \param[in] num_channels The number of channels to test
 	 *
-	 * \return TRUE if num_channels is equal to CDDAValidator::num_channels()
-	 * otherwise FALSE
+	 * \throws InvalidMetadataException If num_channels is not
+	 * CDDAValidator::num_channels()
 	 */
 	void validate_num_channels(const int num_channels);
 
