@@ -454,4 +454,4 @@ the dependencies to work (also including pkg-config)][4] on Windows using MinGW.
 [7]: https://xiph.org/flac/api/group__flacpp.html
 [8]: http://www.wavpack.com/
 [9]: http://ffmpeg.org/
-[10]: https://crf8472.github.io/crf8472/libarcsdec
+[10]: https://crf8472.github.io/crf8472/libarcsdec/current/
