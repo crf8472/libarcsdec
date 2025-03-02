@@ -4,15 +4,6 @@
 [![C++17](https://img.shields.io/badge/C++-17-darkblue.svg)](./API.md)
 [![Release](https://img.shields.io/github/v/release/crf8472/libarcsdec?display_name=tag&include_prereleases)](https://github.com/crf8472/libarcsdec/releases)
 
-## Version 0.2 introduces breaking changes
-
-- Libarcsdec 0.2 requires libarcstk >= 0.3
-- Libarcsdec 0.2 will be compileable as C++17 only. Support for C++14 is dropped.
-- Versions 0.1.x will move to a dedicated branch. Compiling libarcsdec against
-  libarcstk 0.2.x will require to use the code from this aforementioned 0.1
-  branch of libarcsdec.
-- Support for libarcsdec 0.1.x will be dropped in the future.
-
 ## What libarcsdec does
 
 - Provide a high-level API for sample and metadata input for [libarcstk][1].
