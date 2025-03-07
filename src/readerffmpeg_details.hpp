@@ -33,6 +33,7 @@ extern "C"
 #include <libavutil/channel_layout.h>
 }
 
+#include <cstdarg>     // for va_list
 #include <cstddef>     // for size_t
 #include <exception>   // for exception
 #include <functional>  // for function
@@ -41,6 +42,7 @@ extern "C"
 #include <string>      // for string
 #include <type_traits> // for true_type, false_type
 #include <utility>     // for pair
+#include <fstream>
 
 
 namespace arcsdec
@@ -107,10 +109,11 @@ extern "C"
  * \relatesalso FFmpegAudioStream
  * \relatesalso FFmpegAudioStreamLoader
  *
- * \param[in] lvl The loglevel as defined by the ffmpeg API (e.g. AV_LOG_INFO)
- * \param[in] msg The message to log
+ * \param[in] lvl  The loglevel as defined by the ffmpeg API (e.g. AV_LOG_INFO)
+ * \param[in] fmt  The message format to log
+ * \param[in] args The arguments to be placed in \c fmt
  */
-void arcs_av_log(void* /*v*/, int lvl, const char* msg, va_list /*l*/);
+void arcs_av_log(void* /*v*/, int lvl, const char* fmt, std::va_list args);
 
 } // extern C
 
@@ -139,6 +142,8 @@ public:
 	char const* what() const noexcept final;
 
 private:
+
+	std::string create_message(const int error, const std::string& name) const;
 
 	int error_;
 
@@ -181,6 +186,21 @@ void operator << (std::ostream& out, const ::AVCodecContext* cctx);
 
 using AVCodecContextPtr =
 		std::unique_ptr<::AVCodecContext, Free_AVCodecContext>;
+
+
+/**
+ * \brief Free AVIOContext* instances.
+ *
+ * Uses av_free to close and free the instance.
+ */
+struct Free_AVIOContext final
+{
+	void operator()(::AVIOContext* ioctx) const;
+};
+
+
+using AVIOContextPtr =
+		std::unique_ptr<::AVIOContext, Free_AVIOContext>;
 
 
 /**
@@ -803,86 +823,87 @@ private:
 
 
 /**
- * \brief Functions for analyzing a media file with FFmpeg.
+ * \brief Open a media file.
+ *
+ * \param[in] filename The file to open
+ *
+ * \return The format context for the file.
+ *
+ * \throws FFmpegException If the file could not be opened
  */
-class FFmpegFile final
-{
-public:
+AVFormatContextPtr get_format_context0(const std::string& filename);
 
-	/**
-	 * \brief Open a media file.
-	 *
-	 * \param[in] filename The file to open
-	 *
-	 * \return The format context for the file.
-	 *
-	 * \throws FFmpegException If the file could not be opened
-	 */
-	static AVFormatContextPtr format_context(const std::string& filename);
+/**
+ * \brief Open a media file.
+ *
+ * \param[in] ioctx The AVIOContext to use
+ *
+ * \return The format context for the file.
+ *
+ * \throws FFmpegException If the file could not be opened
+ */
+AVFormatContextPtr get_format_context1(::AVIOContext* ioctx);
 
-	/**
-	 * \brief Acquire stream index of the audio stream.
-	 *
-	 * \throws FFmpegException If the file could not be opened
-	 */
-	static int audio_stream(::AVFormatContext* fctx);
+/**
+ * \brief Acquire stream index of the audio stream.
+ *
+ * \throws FFmpegException If the file could not be opened
+ */
+int get_audio_stream(::AVFormatContext* fctx);
 
-	/**
-	 * \brief Create a decoder for the specified audio stream.
-	 *
-	 * \param[in] fctx       The FormatContext to use
-	 * \param[in] stream_idx The stream to decode
-	 *
-	 * \return A decoder for the specified stream
-	 *
-	 * \throws invalid_argument If stream does not exist or is not an audio stream
-	 * \throws runtime_error    If no decoder could be found for the stream
-	 * \throws FFmpegException  If the decoder could not be opened
-	 */
-	static AVCodecContextPtr audio_decoder(::AVFormatContext* fctx,
-			const int stream_idx);
+/**
+ * \brief Create a decoder for the specified audio stream.
+ *
+ * \param[in] fctx       The FormatContext to use
+ * \param[in] stream_idx The stream to decode
+ *
+ * \return A decoder for the specified stream
+ *
+ * \throws invalid_argument If stream does not exist or is not an audio stream
+ * \throws runtime_error    If no decoder could be found for the stream
+ * \throws FFmpegException  If the decoder could not be opened
+ */
+AVCodecContextPtr get_audio_decoder(::AVFormatContext* fctx,
+		const int stream_idx);
 
-	/**
-	 * \brief Estimate the total number of samples from the the information
-	 * provided by stream and codec context.
-	 *
-	 * Given a constant frame size, the estimation helps to recognize the last
-	 * frame. Without the estimation we could only check for a frame with a
-	 * different size and consider it to be the last. With an estimation, we can
-	 * check whether the sample count differs from the estimation by less than
-	 * the size of one frame. This seems to ensure a "better" decision than
-	 * just the comparison to the previous frame.
-	 *
-	 * \todo Is an estimation really required? To work correctly,
-	 * Calculation has to know about the last relevant block when it encounters
-	 * it. It is completely sufficient to know the correct total number of
-	 * samples BEFORE flushing the last block. For this, no estimation is
-	 * necessary.
-	 *
-	 * \param[in] cctx   The ::AVCodecContext to analyze
-	 * \param[in] stream The ::AVStream to analyze
-	 * \return Estimated total number of 32 bit PCM samples
-	 */
-	static int64_t total_samples(::AVCodecContext* cctx, ::AVStream* stream);
+/**
+ * \brief Identify the best stream of the specified media type.
+ *
+ * ::AVCodec has to be tested for NULL by the caller. Any error in respect to
+ * the stream index will indiciated by throwing.
+ *
+ * \param[in] fctx       The format context of the streams to inspect
+ * \param[in] media_type The stream type to identify
+ *
+ * \return Stream index and codec
+ *
+ * \throws FFmpegException If no stream could be identified
+ */
+std::pair<int, const ::AVCodec*> identify_stream(::AVFormatContext* fctx,
+		const ::AVMediaType media_type);
 
-private:
-
-	/**
-	 * \brief Identify the best stream of the specified media type.
-	 *
-	 * ::AVCodec has to be tested for NULL by the caller. Any error in respect to
-	 * the stream index will indiciated by throwing.
-	 *
-	 * \param[in] fctx       The format context of the streams to inspect
-	 * \param[in] media_type The stream type to identify
-	 *
-	 * \return Stream index and codec
-	 *
-	 * \throws FFmpegException If no stream could be identified
-	 */
-	static std::pair<int, const ::AVCodec*> identify_stream(
-			::AVFormatContext* fctx, const ::AVMediaType media_type);
-};
+/**
+ * \brief Estimate the total number of samples from the the information
+ * provided by stream and codec context.
+ *
+ * Given a constant frame size, the estimation helps to recognize the last
+ * frame. Without the estimation we could only check for a frame with a
+ * different size and consider it to be the last. With an estimation, we can
+ * check whether the sample count differs from the estimation by less than
+ * the size of one frame. This seems to ensure a "better" decision than
+ * just the comparison to the previous frame.
+ *
+ * \todo Is an estimation really required? To work correctly,
+ * Calculation has to know about the last relevant block when it encounters
+ * it. It is completely sufficient to know the correct total number of
+ * samples BEFORE flushing the last block. For this, no estimation is
+ * necessary.
+ *
+ * \param[in] cctx   The ::AVCodecContext to analyze
+ * \param[in] stream The ::AVStream to analyze
+ * \return Estimated total number of 32 bit PCM samples
+ */
+int64_t get_total_samples(::AVCodecContext* cctx, ::AVStream* stream);
 
 
 /**
@@ -942,6 +963,102 @@ public:
 private:
 
 	codec_set_type do_codecs() const final;
+};
+
+
+/**
+ * \brief Represents a file read by ffmpeg.
+ */
+class FFmpegFile final
+{
+	std::ifstream input_file_;
+
+public:
+
+	FFmpegFile(const std::string& filename);
+
+	~FFmpegFile() noexcept;
+
+	void open(const std::string& filename);
+
+	int read(char* data, const int size, int* bytes_read);
+
+	void seek_set(const int64_t pos);
+
+	void seek_cur(const int64_t pos);
+
+	void seek_end(const int64_t pos);
+
+	int64_t tell();
+
+	int64_t size();
+
+	void close();
+};
+
+
+/**
+ * \brief Wrapper for AVIOContext and its associated buffer.
+ */
+class IOContext final
+{
+	/**
+	 * \brief Internal filename representation.
+	 */
+	std::string filename_;
+
+	/**
+	 * \brief Internal file handle.
+	 */
+	FFmpegFile file_;
+
+	/**
+	 * \brief Internal size of the read buffer in bytes.
+	 */
+	std::size_t buffer_size_;
+
+	uint8_t* buf_;
+
+	/**
+	 * \brief Internal AVIOContext instance.
+	 */
+	AVIOContextPtr io_ctx_;
+
+public:
+
+	/**
+	 * \brief Constructor.
+	 *
+	 * \param[in] filename    Name of the file to open
+	 * \param[in] buffer_size Size of the read buffer in bytes
+	 */
+	IOContext(const std::string& filename, const std::size_t buffer_size);
+
+	/**
+	 * \brief Destructor.
+	 */
+	~IOContext() noexcept;
+
+	/**
+	 * \brief Pointer to underlying ::AVIOContext.
+	 *
+	 * \return Pointer to ::AVIOContext object
+	 */
+	::AVIOContext* ptr();
+
+	/**
+	 * \brief Filename of this IOContext.
+	 *
+	 * \return Filename
+	 */
+	std::string filename() const;
+
+	/**
+	 * \brief Buffer size of this IOContext.
+	 *
+	 * \return Buffer size in bytes
+	 */
+	std::size_t buffer_size() const;
 };
 
 
@@ -1085,6 +1202,11 @@ private:
 	 * \return Index of the decoded audio stream.
 	 */
 	int stream_index() const;
+
+	/**
+	 * \brief Internal io context pointer.
+	 */
+	std::unique_ptr<IOContext> ioContext_;
 
 	/**
 	 * \brief Internal format context pointer.
