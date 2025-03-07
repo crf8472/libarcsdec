@@ -659,13 +659,16 @@ std::unique_ptr<AudioSize> AudioReader::Impl::acquire_size(
 
 	auto audiosize = readerimpl_->acquire_size(filename);
 
-	using std::to_string;
-	ARCS_LOG_DEBUG << "Audio file size of '" << filename
-		<< "' successfully acquired: "
-		<< to_string(audiosize->frames())
-		<< " LBA frames == "
-		<< to_string(audiosize->samples())
-		<< " PCM stereo samples";
+	if (audiosize)
+	{
+		using std::to_string;
+		ARCS_LOG_DEBUG << "Audio file size of '" << filename
+			<< "' successfully acquired: "
+			<< to_string(audiosize->frames())
+			<< " LBA frames == "
+			<< to_string(audiosize->samples())
+			<< " PCM stereo samples";
+	}
 
 	return audiosize;
 }
