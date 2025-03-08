@@ -1246,8 +1246,10 @@ std::unique_ptr<FFmpegAudioStream> FFmpegAudioStreamLoader::load(
 		// FIXME Custom I/O is currently unused and buggy!
 		// It will mess up results!
 
-		iocontext = create_io_context(filename, buffer_size);
-		fcontext  = create_format_context1(iocontext->ptr());
+		//iocontext = create_io_context(filename, buffer_size);
+		//fcontext  = create_format_context1(iocontext->ptr());
+
+		fcontext = create_format_context0(filename); // same as with NO_BUFFER
 	}
 
 	const auto fctxptr = fcontext.get();
