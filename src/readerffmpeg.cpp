@@ -1152,6 +1152,10 @@ int64_t FFmpegFile::tell()
 {
 	ARCS_LOG(DEBUG1) << "pos (tellg):" << in_.tellg();
 	return in_.tellg();
+
+	// XXX This should in fact return the actual byte offset from the beginning
+	// since we opened the stream as 'binary'. In testing, it behaved that way.
+	// Not sure however, whether this does reliably what it is supposed to do.
 }
 
 
