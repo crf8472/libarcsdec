@@ -1015,37 +1015,104 @@ private:
 
 
 /**
- * \brief Represents an input file read by ffmpeg.
+ * \brief Represents an input binary file read by ffmpeg.
+ *
+ * The user has to open the file before working with it.
  */
 class FFmpegFile final
 {
+	/**
+	 * \brief Internal filename.
+	 */
 	std::string   filename_;
+
+	/**
+	 * \brief Internal ifstream.
+	 */
 	std::ifstream in_;
 
 public:
 
+	/**
+	 * \brief Constructor.
+	 */
 	FFmpegFile();
 
+	/**
+	 * \brief Default destructor.
+	 */
 	~FFmpegFile() noexcept;
 
+	/**
+	 * \brief Open file.
+	 *
+	 * \param[in] filename Filename of the file to open
+	 */
 	void open(const std::string& filename);
 
+	/**
+	 * \brief TRUE iff instance has been opened by open().
+	 *
+	 * \return TRUE iff open() has already been called
+	 */
 	bool is_open() const;
 
+	/**
+	 * \brief Filename of the underlying input file.
+	 *
+	 * \return Filename of the input file
+	 */
 	std::string filename() const;
 
+	/**
+	 * \brief Read \c size bytes to buffer \c data.
+	 *
+	 * \param[in]     data       Buffer for bytes read from file
+	 * \param[in]     size       Total bytes requested to read
+	 * \param[in,out] bytes_read Total bytes that were actually read
+	 *
+	 * \return Error status
+	 */
 	int read(char* data, const int size, int* bytes_read);
 
+	/**
+	 * \brief Place pointer \c pos bytes from the beginning.
+	 *
+	 * \param[in] pos Byte offset
+	 */
 	void seek_set(const int64_t pos);
 
+	/**
+	 * \brief Place pointer \c pos bytes from the current position.
+	 *
+	 * \param[in] pos Byte offset
+	 */
 	void seek_cur(const int64_t pos);
 
+	/**
+	 * \brief Place pointer \c pos bytes from the end.
+	 *
+	 * \param[in] pos Byte offset
+	 */
 	void seek_end(const int64_t pos);
 
+	/**
+	 * \brief Return position marker.
+	 *
+	 * \return Position marker of the current position
+	 */
 	int64_t tell();
 
+	/**
+	 * \brief Return file size as total number of bytes.
+	 *
+	 * \return File size
+	 */
 	int64_t size();
 
+	/**
+	 * \brief Close the file.
+	 */
 	void close();
 };
 
