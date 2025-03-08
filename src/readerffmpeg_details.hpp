@@ -114,6 +114,16 @@ void arcs_av_log(void* /*v*/, int lvl, const char* msg, va_list /*l*/);
 
 } // extern C
 
+
+/**
+ * \brief Convert ffmpeg loglevel to libarcstk's LOGLEVEL.
+ *
+ * \param[in] lvl ffmpeg loglevel
+ *
+ * \return LOGLEVEL
+ */
+arcstk::LOGLEVEL arcs_loglevel(const int lvl);
+
 /**
  * \brief Encapsulates error code from the ffmpeg API.
  */

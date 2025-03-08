@@ -41,6 +41,7 @@ extern "C"
 #include <climits>    // for CHAR_BIT
 #include <cstdarg>    // for va_list
 #include <cstdlib>    // for size_t, abs
+#include <cstring>    // for strlen
 #include <functional> // for function, bind, placeholders
 #include <memory>     // for unique_ptr, make_unique
 #include <new>        // for bad_alloc
@@ -67,48 +68,76 @@ using arcstk::AudioSize;
 extern "C"
 {
 
-void arcs_av_log(void* /*v*/, int lvl, const char* msg, va_list /*l*/)
+void arcs_av_log(void* /*v*/, int level, const char* fmt, std::va_list args)
 {
-	// Remove newline(s) from message text
+	using arcstk::LOGLEVEL;
+	const auto LEVEL = arcs_loglevel(level);
 
-	std::string text { msg };
+	// Decide whether to print anything at the first place
+
+	if (LEVEL > CLIP_LOGGING_LEVEL
+			|| LEVEL > arcstk::Logging::instance().level()
+			|| LEVEL == LOGLEVEL::NONE)
+	{
+		return;
+	}
+
+	// Format message as passed by ffmpeg
+
+	std::string text { "[FFMPEG] " };
+
+	{
+		// args may have up to 200 chs
+		const auto max_chars { 200 + std::strlen(fmt) };
+
+		char buf[max_chars];
+		const auto result { std::vsnprintf(buf, max_chars, fmt, args) };
+
+		text += buf;
+	}
+
+	// Remove newline(s) from message text
 
 	using std::begin;
 	using std::end;
 
 	text.erase(std::remove(begin(text), end(text), '\n'), end(text));
 
-	// Log according to the loglevel
-	// (All AV_LOG_* names are macros and have therefore no leading '::'.)
-
-	if (AV_LOG_ERROR == lvl)
-	{
-		ARCS_LOG_ERROR << "[FFMPEG] " << text;
-	} else
-	if (AV_LOG_WARNING == lvl)
-	{
-		ARCS_LOG_WARNING << "[FFMPEG] " << text;
-	} else
-	if (AV_LOG_INFO == lvl)
-	{
-		ARCS_LOG_INFO << "[FFMPEG] " << text;
-	} else
-	if (AV_LOG_DEBUG == lvl)
-	{
-		// ignore
-	} else
-	if (AV_LOG_TRACE == lvl)
-	{
-		// ignore
-	} else
-	{
-		// If level is totally unknown, at least show it when debugging
-
-		ARCS_LOG_DEBUG << "[FFMPEG] " << text;
-	}
+	arcstk::Log(arcstk::Logging::instance().logger(), LEVEL).get() << text;
 }
 
 } // extern C
+
+
+// arcs_loglevel
+
+
+arcstk::LOGLEVEL arcs_loglevel(const int lvl)
+{
+	// https://www.ffmpeg.org/doxygen/7.0/group__lavu__log__constants.html
+
+	using arcstk::LOGLEVEL;
+
+	if (AV_LOG_QUIET   <= lvl) { return LOGLEVEL::NONE; }
+
+	// ffmpeg FATAL or PANIC
+	if (AV_LOG_ERROR   <  lvl) { return LOGLEVEL::ERROR;   }
+
+	if (AV_LOG_ERROR   == lvl) { return LOGLEVEL::WARNING; }
+
+	if (AV_LOG_WARNING == lvl) { return LOGLEVEL::INFO;    }
+
+	if (AV_LOG_INFO    == lvl) { return LOGLEVEL::DEBUG1;  }
+
+	if (AV_LOG_VERBOSE == lvl) { return LOGLEVEL::DEBUG2;  }
+
+	if (AV_LOG_DEBUG   == lvl) { return LOGLEVEL::DEBUG3;  }
+
+	if (AV_LOG_TRACE   == lvl) { return LOGLEVEL::DEBUG4;  }
+
+	// if there would be more than TRACE, we are not interested
+	return LOGLEVEL::NONE;
+}
 
 
 // FFmpegException
@@ -1228,7 +1257,7 @@ void print_dictionary(std::ostream& out, const ::AVDictionary* dict)
 
 	while ((e = ::av_dict_get(dict, "", e, /*macro*/AV_DICT_IGNORE_SUFFIX)))
 	{
-		out << "  Name: " << e->key << "  Value: "    << e->value << std::endl;
+		out << "  Name: " << e->key << "  Value: "    << e->value << '\n';
 	}
 }
 
@@ -1243,86 +1272,85 @@ void print_codec_info(std::ostream& out, const ::AVCodecContext* cctx)
 {
 	if (!cctx)
 	{
-		out << "CodecContext information: NULL" << std::endl;
+		out << "CodecContext information: NULL" << '\n';
 		return;
 	}
 
-	out << "CodecContext information:" << std::endl;
+	out << "CodecContext information:" << '\n';
 
 	if (!cctx->codec_descriptor)
 	{
-		out << "  Context has no codec descriptor" << std::endl;
+		out << "  Context has no codec descriptor" << '\n';
 
 		if (!cctx->codec)
 		{
-			out << "  Context has neither a codec object" << std::endl;
+			out << "  Context has neither a codec object" << '\n';
 		} else
 		{
-			out << "  Codec name:     " << cctx->codec->long_name << std::endl;
-			out << "  Short name:     " << cctx->codec->name << std::endl;
+			out << "  Codec name:     " << cctx->codec->long_name << '\n';
+			out << "  Short name:     " << cctx->codec->name << '\n';
 		}
 	} else
 	{
 		out << "  Codec name:     " << cctx->codec_descriptor->long_name
-			<< std::endl;
-		out << "  Short name:     " << cctx->codec_descriptor->name
-			<< std::endl;
+			<< '\n';
+		out << "  Short name:     " << cctx->codec_descriptor->name << '\n';
 	}
 
 	out << "  Sample format:  " << ::av_get_sample_fmt_name(cctx->sample_fmt)
-		<< std::endl;
+		<< '\n';
 
 	const bool is_planar = ::av_sample_fmt_is_planar(cctx->sample_fmt);
-	out << "  Is planar:      " << (is_planar ? "yes" : "no") << std::endl;
+	out << "  Is planar:      " << (is_planar ? "yes" : "no") << '\n';
 
 	const auto bps = ::av_get_bytes_per_sample(cctx->sample_fmt);
 	out << "  Bytes/Sample:   " << bps << " (= " << (bps * CHAR_BIT) << " bit)"
-		<< std::endl;
+		<< '\n';
 
 	out << "  Number of channels:           " <<
-		NumberOfChannels(cctx) << std::endl;
+		NumberOfChannels(cctx) << '\n';
 	out << "  Channel order is_leftright:   " <<
 		(ChannelOrder::is_leftright(cctx) ? "yes" : "no") <<
-		std::endl;
+		'\n';
 	out << "  Channel order is_unspecified: " <<
 		(ChannelOrder::is_unspecified(cctx) ? "yes" : "no") <<
-		std::endl;
+		'\n';
 	out << "  Samplerate:     " << cctx->sample_rate << " Hz (samples/sec)"
-		<< std::endl;
-	out << "  skip_bottom:      " << cctx->skip_bottom << std::endl;
+		<< '\n';
+	out << "  skip_bottom:      " << cctx->skip_bottom << '\n';
 
 #if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(60, 2, 100) //  < ffmpeg 6.0
-	out << "  frame_number:     " << cctx->frame_number << std::endl;
+	out << "  frame_number:     " << cctx->frame_number << '\n';
 #else
-	out << "  frame_num:     "    << cctx->frame_num << std::endl;
+	out << "  frame_num:        " << cctx->frame_num << '\n';
 #endif
 
-	out << "  frame_size:       " << cctx->frame_size << std::endl;
-	out << "  initial_padding:  " << cctx->initial_padding << std::endl;
-	out << "  trailing_padding: " << cctx->trailing_padding << std::endl;
+	out << "  frame_size:       " << cctx->frame_size << '\n';
+	out << "  initial_padding:  " << cctx->initial_padding << '\n';
+	out << "  trailing_padding: " << cctx->trailing_padding << '\n';
 
 	switch(cctx->skip_frame)
 	{
 		case AVDISCARD_NONE:
-			out << "  skip_frame:       AVDISCARD_NONE" << std::endl;
+			out << "  skip_frame:       AVDISCARD_NONE" << '\n';
 			break;
 		case AVDISCARD_DEFAULT:
-			out << "  skip_frame:       AVDISCARD_DEFAULT" << std::endl;
+			out << "  skip_frame:       AVDISCARD_DEFAULT" << '\n';
 			break;
 		case AVDISCARD_NONREF:
-			out << "  skip_frame:       AVDISCARD_NONREF" << std::endl;
+			out << "  skip_frame:       AVDISCARD_NONREF" << '\n';
 			break;
 		case AVDISCARD_BIDIR:
-			out << "  skip_frame:       AVDISCARD_BIDIR" << std::endl;
+			out << "  skip_frame:       AVDISCARD_BIDIR" << '\n';
 			break;
 		case AVDISCARD_NONINTRA:
-			out << "  skip_frame:       AVDISCARD_NONINTRA" << std::endl;
+			out << "  skip_frame:       AVDISCARD_NONINTRA" << '\n';
 			break;
 		case AVDISCARD_NONKEY:
-			out << "  skip_frame:       AVDISCARD_NONKEY" << std::endl;
+			out << "  skip_frame:       AVDISCARD_NONKEY" << '\n';
 			break;
 		case AVDISCARD_ALL:
-			out << "  skip_frame:       AVDISCARD_ALL" << std::endl;
+			out << "  skip_frame:       AVDISCARD_ALL" << '\n';
 			break;
 
 		default: ; // do not print anything
@@ -1332,10 +1360,10 @@ void print_codec_info(std::ostream& out, const ::AVCodecContext* cctx)
 	{
 		out <<
 			"  Context has no codec descriptor, cannot print codec properties"
-			<< std::endl;
+			<< '\n';
 	}
 
-	out << "  --Codec Properties--" << std::endl;
+	out << "  --Codec Properties--" << '\n';
 	{
 		// Losslessness
 
@@ -1346,20 +1374,20 @@ void print_codec_info(std::ostream& out, const ::AVCodecContext* cctx)
 			cctx->codec_descriptor->props & AV_CODEC_PROP_LOSSY;
 
 		out << "  PROP_LOSSLESS:  " << (codec_prop_lossless ? "yes" : "no")
-			<< std::endl;
+			<< '\n';
 		out << "  PROP_LOSSY:     " << (codec_prop_lossy ?    "yes" : "no")
-			<< std::endl;
+			<< '\n';
 
 		if (codec_prop_lossy)
 		{
 			if (not codec_prop_lossless)
 			{
-				out << "Codec declares itself lossy-only, bail out" << std::endl;
+				out << "Codec declares itself lossy-only, bail out" << '\n';
 			} else
 			{
-				out << "Codec declares support for lossy encoding" << std::endl;
+				out << "Codec declares support for lossy encoding" << '\n';
 				out << "If you know that your file is lossless, proceed"
-					<< std::endl;
+					<< '\n';
 			}
 		}
 	}
@@ -1367,15 +1395,15 @@ void print_codec_info(std::ostream& out, const ::AVCodecContext* cctx)
 	if (!cctx->codec)
 	{
 		out << "No codec object in context, cannot print capabilities"
-			<< std::endl;
+			<< '\n';
 	}
 
-	out << "  --Codec Capabilities--" << std::endl;
+	out << "  --Codec Capabilities--" << '\n';
 	{
 		out << "  Capabilities:            " << cctx->codec->capabilities
-			<< std::endl;
+			<< '\n';
 		out << "  Capability bits:         " <<
-					(sizeof(cctx->codec->capabilities) * 8) << std::endl;
+					(sizeof(cctx->codec->capabilities) * 8) << '\n';
 
 		// Variable frame size ?
 
@@ -1384,7 +1412,7 @@ void print_codec_info(std::ostream& out, const ::AVCodecContext* cctx)
 
 		out << "  CAP_VARIABLE_FRAME_SIZE: "
 			<< (codec_cap_variable_frame_size ? "yes" : "no ")
-			<< "  (supports variable frame size)" << std::endl;
+			<< "  (supports variable frame size)" << '\n';
 
 		// Last frame smaller ?
 
@@ -1393,7 +1421,7 @@ void print_codec_info(std::ostream& out, const ::AVCodecContext* cctx)
 
 		out << "  CAP_SMALL_LAST_FRAME:    "
 			<< (codec_cap_small_last_frame ? "yes" : "no ")
-			<< "  (supports smaller last frame)" << std::endl;
+			<< "  (supports smaller last frame)" << '\n';
 
 		// Delay frames/require flush ?
 
@@ -1402,7 +1430,7 @@ void print_codec_info(std::ostream& out, const ::AVCodecContext* cctx)
 
 		out << "  CAP_DELAY:               "
 			<< (codec_cap_delay ? "yes" : "no ")
-			<< "  (may delay frames, decoder requires flushing)" << std::endl;
+			<< "  (may delay frames, decoder requires flushing)" << '\n';
 
 		// More than 1 frame per packet?
 
@@ -1411,7 +1439,7 @@ void print_codec_info(std::ostream& out, const ::AVCodecContext* cctx)
 
 		out << "  CAP_SUBFRAMES:           "
 			<< (codec_cap_subframes ? "yes" : "no ")
-			<< "  (allows more than 1 frame/packet)" << std::endl;
+			<< "  (allows more than 1 frame/packet)" << '\n';
 
 		// May use mulithreading (frame order?)
 
@@ -1421,7 +1449,7 @@ void print_codec_info(std::ostream& out, const ::AVCodecContext* cctx)
 
 		out << "  CAP_FRAME_THREADS:       "
 			<< (codec_cap_frame_threads ? "yes" : "no ")
-			<< "  (supports frame-level multithreading)" << std::endl;
+			<< "  (supports frame-level multithreading)" << '\n';
 
 		// Allows custom allocators?
 
@@ -1448,11 +1476,11 @@ void print_format_info(std::ostream& out, const ::AVFormatContext* fctx)
 	// Output ffmpeg-sytle info
 	//::av_dump_format(fctx, 0, filename.c_str(), 0);
 
-	out << "FormatContext information:" << std::endl;
+	out << "FormatContext information:" << '\n';
 
 	if (fctx->metadata)
 	{
-		out << "  Metadata:" << std::endl;
+		out << "  Metadata:" << '\n';
 		out << fctx->metadata;
 	}
 
@@ -1468,21 +1496,21 @@ void operator << (std::ostream& out, const ::AVFormatContext* fctx)
 
 void print_stream_info(std::ostream& out, const ::AVStream* s)
 {
-	out << "Stream information:" << std::endl;
+	out << "Stream information:" << '\n';
 
 	if (s->metadata)
 	{
-		out << "  Metadata:" << std::endl;
+		out << "  Metadata:" << '\n';
 		out << s->metadata;
 	}
 
-	out << "  initial_padding:  " << s->codecpar->initial_padding << std::endl;
-	out << "  trailing_padding: " << s->codecpar->trailing_padding << std::endl;
-	out << "  frame_size:       " << s->codecpar->frame_size << std::endl;
+	out << "  initial_padding:  " << s->codecpar->initial_padding << '\n';
+	out << "  trailing_padding: " << s->codecpar->trailing_padding << '\n';
+	out << "  frame_size:       " << s->codecpar->frame_size << '\n';
 #if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(60, 31, 102)
-	out << "  nb_side_data:     " << s->nb_side_data << std::endl;
+	out << "  nb_side_data:     " << s->nb_side_data << '\n';
 #else
-	out << "  nb_coded_side_data: " << s->codecpar->nb_coded_side_data << std::endl;
+	out << "  nb_coded_side_data: " << s->codecpar->nb_coded_side_data << '\n';
 #endif
 	out << "  nb_frames:        " << s->nb_frames;
 }
