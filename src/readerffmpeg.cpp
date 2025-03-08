@@ -948,6 +948,9 @@ int64_t get_total_samples(::AVCodecContext* cctx, ::AVStream* stream)
 }
 
 
+// get_declared_size()
+
+
 AudioSize get_declared_size(::AVFormatContext* fctx, ::AVCodecContext* cctx,
 		const int stream_idx)
 {
