@@ -80,10 +80,11 @@ void arcs_av_log(void* /*v*/, int lvl, const char* fmt, std::va_list args)
 	std::string text { "[FFMPEG] " };
 
 	{
-		const auto fmt_len     { std::strlen(fmt) };
-		const auto total_chars { 201 + fmt_len }; // args may have up to 200 chs
-		char buf[total_chars];
-		const auto result = std::vsnprintf(buf, total_chars, fmt, args);
+		// args may have up to 200 chs
+		const auto max_chars { 200 + std::strlen(fmt) };
+
+		char buf[max_chars];
+		const auto result { std::vsnprintf(buf, max_chars, fmt, args) };
 
 		text += buf;
 	}
@@ -177,9 +178,127 @@ void Free_AVIOContext::operator()(::AVIOContext* ioctx) const
 {
 	if (ioctx)
 	{
-		::av_free(ioctx);
+		// Since libavformat may or may not have messed with the actual buffer,
+		// we cannot simply free the original buffer pointer but the buffer
+		// actually hold by the AVIOContext!
+		if (ioctx->buffer)
+		{
+			::av_free(ioctx->buffer);
+			ioctx->buffer = nullptr;
+		}
+
+		::avio_context_free(&ioctx);
 		ioctx = nullptr;
 	}
+}
+
+
+// read_callback
+
+
+// Will be called by custom AVIOContext
+static int read_callback(void* opaque, uint8_t* buf, int buf_size)
+{
+	ARCS_LOG(DEBUG3) << "read_callback() called";
+
+	int total_bytes { 0 };
+
+    auto& from_file = *reinterpret_cast<FFmpegFile*>(opaque);
+
+    const int status = from_file.read((char*)buf, buf_size, &total_bytes);
+	// TODO Why is this C-style cast required?
+
+	ARCS_LOG(DEBUG3) << "Read " << total_bytes << " bytes from file";
+
+    if (EOF == status)
+	{
+		if (0 == total_bytes)
+		{
+			ARCS_LOG(DEBUG3) << "read_callback(): no bytes, return AVERROR_EOF";
+			return AVERROR_EOF; // Tell calling AVIOContext about EOF
+		}
+    }
+
+    return total_bytes;
+}
+
+
+// seek_callback
+
+
+// Will be called by custom AVIOContext
+static int64_t seek_callback(void* opaque, int64_t offset, int whence)
+{
+	ARCS_LOG(DEBUG3) << "seek_callback() called";
+
+    auto& from_file = *reinterpret_cast<FFmpegFile*>(opaque);
+
+	// Just tell size and do not seek anything (avio.h)
+	if (AVSEEK_SIZE == whence)
+	{
+		ARCS_LOG(DEBUG3) << "seek: AVSEEK_SIZE";
+		auto s { from_file.size() };
+		ARCS_LOG(DEBUG3) << "file size: " << s << " bytes";
+		return s;
+	}
+
+	// How to implement seek:
+	// https://stackoverflow.com/a/14528148
+	// https://stackoverflow.com/a/69095662
+
+	// Move file pointer position to the beginning of the file + offset bytes
+	// (like fseek).
+	if (SEEK_SET == whence)
+	{
+		ARCS_LOG(DEBUG3) << "seek: SEEK_SET, offset: " << offset;
+		from_file.seek_set(offset);
+		return from_file.tell();
+	}
+
+	// Move file pointer position to its current location + offset bytes
+	// (like fseek).
+	if (SEEK_CUR == whence)
+	{
+		ARCS_LOG(DEBUG3) << "seek: SEEK_CUR, offset: " << offset;
+		from_file.seek_cur(offset);
+		return from_file.tell();
+	}
+
+	// Move file pointer position to the end of file (like fseek).
+	if (SEEK_END == whence)
+	{
+		ARCS_LOG(DEBUG3) << "seek: SEEK_END, offset: " << offset;
+		from_file.seek_end(offset);
+		return from_file.tell();
+	}
+
+	ARCS_LOG(DEBUG3) << "seek_callback() call with unknown whence, return EOF";
+
+	return AVERROR_EOF;
+}
+
+
+// Make_AVIOContextPtr
+
+
+AVIOContextPtr Make_AVIOContextPtr::operator()(const std::size_t buf_size) const
+{
+	// From ffmpeg documentation for AVIOContext:
+	// Memory block for input/output operations via AVIOContext. The buffer must
+	// be allocated with av_malloc() and friends. It may be freed and replaced
+	// with a new buffer by libavformat. AVIOContext.buffer holds the buffer
+	// currently in use, which must be later freed with av_free().
+	uint8_t* buf = reinterpret_cast<uint8_t*>(::av_malloc(buf_size));
+
+	return AVIOContextPtr { ::avio_alloc_context(
+        buf,             // memory buffer
+        buf_size,        // memory buffer size
+        0,               // 0 for reading, 1 for writing. we're reading, so — 0.
+        nullptr,         // passed to the callbacks on each invocation
+        &read_callback,  // read  callback
+        nullptr,         // write callback is ignored
+        &seek_callback   // seek  callback
+    )};
 }
 
 
@@ -487,23 +606,39 @@ AVFramePtr FrameQueue::make_frame()
 }
 
 
-//
+// open_or_throw
 
 
-AVFormatContextPtr get_format_context0(const std::string& filename)
+void open_input_or_throw(::AVFormatContext** fctx, const std::string& filename)
 {
-	// Open input stream and read header
+	ARCS_LOG(DEBUG1) << "Try to open format context";
 
-	::AVFormatContext* fctx { nullptr };
 	::AVInputFormat* detect { nullptr }; // TODO Currently unused
 	::AVDictionary* options { nullptr }; // TODO Currently unused
 
-	const auto error_open { ::avformat_open_input(&fctx , filename.c_str(),
+	const auto error_open { ::avformat_open_input(fctx , filename.c_str(),
 			detect, &options) };
 
 	if (error_open != 0)
 	{
 		throw FFmpegException(error_open, "avformat_open_input");
+	}
+
+	ARCS_LOG(DEBUG1) << "Format context is open";
+}
+
+
+// find_stream_or_throw
+
+
+void find_stream_info_or_throw(::AVFormatContext* fctx)
+{
+	ARCS_LOG(DEBUG1) << "Try to get stream info from format context";
+
+	if (!fctx)
+	{
+		throw std::runtime_error("Cannot find any stream info when format "
+				"context is NULL");
 	}
 
 	// Read some packets to acquire information about the streams
@@ -518,15 +653,41 @@ AVFormatContextPtr get_format_context0(const std::string& filename)
 		throw FFmpegException(error_find, "avformat_find_stream_info");
 	}
 
-	return AVFormatContextPtr(fctx);
+	ARCS_LOG(DEBUG1) << "Got stream info";
 }
 
 
-AVFormatContextPtr get_format_context1(::AVIOContext* ioctx)
-{
-	ARCS_LOG(DEBUG1) << "Enter get_format_context1()";
+// create_format_context0()
 
-	auto fcontext { AVFormatContextPtr { ::avformat_alloc_context() } };
+
+AVFormatContextPtr create_format_context0(const std::string& filename)
+{
+	ARCS_LOG(DEBUG1) << "Create+configure format context for file " << filename;
+
+	//auto fcontext { AVFormatContextPtr {} };
+
+	//auto fctx = fcontext.get();
+
+	::AVFormatContext* fctx { nullptr };
+
+	open_input_or_throw(&fctx, filename);
+
+	ARCS_LOG(DEBUG1) << "Format context is created";
+
+	find_stream_info_or_throw(fctx);
+
+	return AVFormatContextPtr { fctx };
+}
+
+
+// create_format_context1()
+
+
+AVFormatContextPtr create_format_context1(::AVIOContext* ioctx)
+{
+	ARCS_LOG(DEBUG1) << "Create+configure format context with custom IO";
+
+	auto fcontext  { AVFormatContextPtr { ::avformat_alloc_context() }  };
 
 	if (!fcontext)
 	{
@@ -539,38 +700,18 @@ AVFormatContextPtr get_format_context1(::AVIOContext* ioctx)
     // Tell format context to use custom i/o and that there's no backing file
     fcontext->flags |= AVFMT_FLAG_CUSTOM_IO | AVFMT_NOFILE;
 
-	auto fctxptr = fcontext.get();
+	auto fctx = fcontext.get();
 
-	ARCS_LOG(DEBUG1) << "Format Context Created, try open_input()";
+	ARCS_LOG(DEBUG1) << "Format context created";
 
-	::AVInputFormat* detect { nullptr }; // TODO Currently unused
-	::AVDictionary* options { nullptr }; // TODO Currently unused
-    // Note "ignored_filename":
-	// ffmpeg requires it as some default non-empty placeholder
-    const auto error_open = ::avformat_open_input(&fctxptr, "ignored_filename",
-			detect, &options);
-
-	if (error_open != 0)
-	{
-		throw FFmpegException(error_open, "avformat_open_input");
-	}
-
-	// Read some packets to acquire information about the streams
-	// (This is useful for formats without a header)
-
-    const auto error_find = ::avformat_find_stream_info(fctxptr, nullptr);
-
-    if (error_find < 0)
-	{
-		::avformat_close_input(&fctxptr);
-
-		throw FFmpegException(error_find, "avformat_find_stream_info");
-    }
-
-	ARCS_LOG(DEBUG1) << "Leave get_format_context1()";
+	open_input_or_throw(&fctx, "ignored");
+	find_stream_info_or_throw(fctx);
 
 	return fcontext;
 }
+
+
+// get_audio_stream()
 
 
 int get_audio_stream(::AVFormatContext* fctx)
@@ -580,9 +721,14 @@ int get_audio_stream(::AVFormatContext* fctx)
 }
 
 
-AVCodecContextPtr get_audio_decoder(::AVFormatContext* fctx,
+// create_audio_decoder()
+
+
+AVCodecContextPtr create_audio_decoder(::AVFormatContext* fctx,
 		const int stream_idx)
 {
+	ARCS_LOG(DEBUG1) << "Create codec context for stream " << stream_idx;
+
 	if (!fctx)
 	{
 		throw std::invalid_argument("AVFormatContext is NULL");
@@ -704,8 +850,13 @@ AVCodecContextPtr get_audio_decoder(::AVFormatContext* fctx,
 		throw FFmpegException(error_open, "avcodec_open2");
 	}
 
+	ARCS_LOG(DEBUG1) << "Codec context created for stream " << stream_idx;
+
 	return ccontext;
 }
+
+
+// identify_stream()
 
 
 std::pair<int, const ::AVCodec*> identify_stream(
@@ -747,6 +898,9 @@ std::pair<int, const ::AVCodec*> identify_stream(
 }
 
 
+// get_total_samples()
+
+
 int64_t get_total_samples(::AVCodecContext* cctx, ::AVStream* stream)
 {
 	// Calculate number of samples from duration, which should be accurate
@@ -762,6 +916,28 @@ int64_t get_total_samples(::AVCodecContext* cctx, ::AVStream* stream)
 	ARCS_LOG_DEBUG << "Estimate duration:       " << duration_secs << " secs";
 
 	return duration_secs * cctx->sample_rate;
+}
+
+
+AudioSize get_declared_size(::AVFormatContext* fctx, ::AVCodecContext* cctx,
+		const int stream_idx)
+{
+	auto stream = fctx->streams[stream_idx];
+	ARCS_LOG(DEBUG1) << stream;
+
+	const auto total_samples = get_total_samples(cctx, stream);
+
+	ARCS_LOG(DEBUG1) << "Expect " << total_samples << " total samples";
+
+	if (total_samples> std::numeric_limits<int32_t>::max())
+	{
+		using std::to_string;
+		throw std::runtime_error("Number of samples too big: " +
+				to_string(total_samples));
+	}
+
+	return arcstk::AudioSize
+			{ static_cast<int32_t>(total_samples), UNIT::SAMPLES };
 }
 
 
@@ -842,28 +1018,42 @@ AudioValidator::codec_set_type FFmpegValidator::do_codecs() const
 // FFmpegFile
 
 
-FFmpegFile::FFmpegFile(const std::string& filename)
+FFmpegFile::FFmpegFile()
+	: filename_ {/* default */}
+	, in_       {/* default */}
 {
-	open(filename);
+	// empty
 }
 
 
 FFmpegFile::~FFmpegFile() noexcept
 {
-	close();
+	if (this->is_open())
+	{
+		this->close();
+	}
 }
 
 
 void FFmpegFile::open(const std::string& filename)
 {
-	input_file_.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+	filename_ = filename;
 
-	input_file_.open(filename, std::ifstream::binary | std::ifstream::in);
+	in_.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 
-	if(!input_file_.is_open())
-	{
-		// TODO throw
-	}
+	in_.open(filename, std::ifstream::binary | std::ifstream::in);
+}
+
+
+bool FFmpegFile::is_open() const
+{
+	return in_.is_open();
+}
+
+
+std::string FFmpegFile::filename() const
+{
+	return filename_;
 }
 
 
@@ -871,7 +1061,7 @@ int FFmpegFile::read(char* data, const int size, int* bytes_read)
 {
 	ARCS_LOG(DEBUG3) << "FFmpegFile::read() has to read " << size << " bytes";
 
-	if (input_file_.eof())
+	if (in_.eof())
 	{
 		*bytes_read = 0;
 		ARCS_LOG(DEBUG) << "Reached EOF";
@@ -880,28 +1070,27 @@ int FFmpegFile::read(char* data, const int size, int* bytes_read)
 
 	try
 	{
-		input_file_.read(data, size);
+		in_.read(data, size);
 	} catch (const std::ifstream::failure& f)
 	{
 		// Reading behind EOF sets the failbit
 
-		if (!input_file_.eof())
+		if (!in_.eof())
 		{
 			auto msg = std::ostringstream{};
 			msg << "Error while reading from input audio file: " << f.what();
 
-			*bytes_read = input_file_.gcount();
-			throw FileReadException(msg.str(), input_file_.gcount());
+			*bytes_read = in_.gcount();
+			throw FileReadException(msg.str(), in_.gcount());
 		}
 
-		*bytes_read = input_file_.gcount();
+		*bytes_read = in_.gcount();
 		ARCS_LOG(DEBUG) << "Reached EOF";
 		return EOF;
 	}
 
-	*bytes_read = input_file_.gcount();
-	ARCS_LOG(DEBUG3) << "FFmpegFile::read has read " << input_file_.gcount()
-		<< " bytes";
+	*bytes_read = in_.gcount();
+	ARCS_LOG(DEBUG3) << "FFmpegFile::read() read " << in_.gcount() << " bytes";
 
     return 0;
 }
@@ -909,7 +1098,7 @@ int FFmpegFile::read(char* data, const int size, int* bytes_read)
 
 void FFmpegFile::seek_set(const int64_t pos)
 {
-	input_file_.seekg(pos, std::ios_base::beg);
+	in_.seekg(pos, std::ios_base::beg);
 	// TODO Does this work on ifstream? No tellg?
 	// https://stackoverflow.com/a/31539278
 }
@@ -917,29 +1106,29 @@ void FFmpegFile::seek_set(const int64_t pos)
 
 void FFmpegFile::seek_cur(const int64_t pos)
 {
-	input_file_.seekg(pos, std::ios_base::cur);
+	in_.seekg(pos, std::ios_base::cur);
 }
 
 
 void FFmpegFile::seek_end(const int64_t pos)
 {
-	input_file_.seekg(pos, std::ios_base::end);
+	in_.seekg(pos, std::ios_base::end);
 }
 
 
 int64_t FFmpegFile::tell()
 {
-	ARCS_LOG(DEBUG1) << "pos (tellg):" << input_file_.tellg();
-	return input_file_.tellg();
+	ARCS_LOG(DEBUG1) << "pos (tellg):" << in_.tellg();
+	return in_.tellg();
 }
 
 
 int64_t FFmpegFile::size()
 {
-	input_file_.ignore( std::numeric_limits<std::streamsize>::max() );
-	const std::streamsize length = input_file_.gcount();
+	in_.ignore( std::numeric_limits<std::streamsize>::max() );
+	const std::streamsize length = in_.gcount();
 
-	input_file_.clear(); // Since ignore() will have set eof.
+	in_.clear(); // Since ignore() will have set eof.
 	this->seek_set(0); // Back to file start
 
 	return length;
@@ -948,92 +1137,7 @@ int64_t FFmpegFile::size()
 
 void FFmpegFile::close()
 {
-	input_file_.close();
-}
-
-
-// read_callback
-
-
-// Will be called by custom AVIOContext
-static int read_callback(void* opaque, uint8_t* buf, int buf_size)
-{
-	ARCS_LOG(DEBUG3) << "read_callback() called";
-
-	int total_bytes { 0 };
-
-    auto& from_file = *reinterpret_cast<FFmpegFile*>(opaque);
-
-    const int status = from_file.read((char*)buf, buf_size, &total_bytes);
-	// TODO Why is this C-style cast required?
-
-	ARCS_LOG(DEBUG3) << "Read " << total_bytes << " bytes from file";
-
-    if (EOF == status)
-	{
-		if (0 == total_bytes)
-		{
-			ARCS_LOG(DEBUG3) << "read_callback(): no bytes, return AVERROR_EOF";
-			return AVERROR_EOF; // Tell calling AVIOContext about EOF
-		}
-    }
-
-    return total_bytes;
-}
-
-
-// seek_callback
-
-
-// Will be called by custom AVIOContext
-static int64_t seek_callback(void* opaque, int64_t offset, int whence)
-{
-	ARCS_LOG(DEBUG3) << "seek_callback() called";
-
-    auto& from_file = *reinterpret_cast<FFmpegFile*>(opaque);
-
-	// Just tell size and do not seek anything (avio.h)
-	if (AVSEEK_SIZE == whence)
-	{
-		ARCS_LOG(DEBUG3) << "seek: AVSEEK_SIZE";
-		auto s { from_file.size() };
-		ARCS_LOG(DEBUG3) << "file size: " << s << " bytes";
-		return s;
-	}
-
-	// How to implement seek:
-	// https://stackoverflow.com/a/14528148
-	// https://stackoverflow.com/a/69095662
-
-	// Move file pointer position to the beginning of the file + offset bytes
-	// (like fseek).
-	if (SEEK_SET == whence)
-	{
-		ARCS_LOG(DEBUG3) << "seek: SEEK_SET, offset: " << offset;
-		from_file.seek_set(offset);
-		return from_file.tell();
-	}
-
-	// Move file pointer position to its current location + offset bytes
-	// (like fseek).
-	if (SEEK_CUR == whence)
-	{
-		ARCS_LOG(DEBUG3) << "seek: SEEK_CUR, offset: " << offset;
-		from_file.seek_cur(offset);
-		return from_file.tell();
-	}
-
-	// Move file pointer position to the end of file (like fseek).
-	if (SEEK_END == whence)
-	{
-		ARCS_LOG(DEBUG3) << "seek: SEEK_END, offset: " << offset;
-		from_file.seek_end(offset);
-		return from_file.tell();
-	}
-
-	ARCS_LOG(DEBUG3) << "seek_callback() call with unknown whence, return EOF";
-
-	return AVERROR_EOF;
+	in_.close();
 }
 
 
@@ -1041,41 +1145,15 @@ static int64_t seek_callback(void* opaque, int64_t offset, int whence)
 
 
 IOContext::IOContext(const std::string& filename, const std::size_t buffer_size)
-	: filename_     { filename }
-	, file_         { FFmpegFile { filename } }
-	, buffer_size_  { buffer_size }
-	, buf_          { reinterpret_cast<uint8_t*>(::av_malloc(buffer_size_)) }
-	, io_ctx_       { nullptr }
+	: file_     { FFmpegFile{/*default*/} }
+	, io_ctx_   { Make_AVIOContextPtr{/*default*/}(buffer_size) }
 {
-	// Regarding buf_:
-	// From ffmpeg documentation for AVIOContext:
-	// Memory block for input/output operations via AVIOContext. The buffer must
-	// be allocated with av_malloc() and friends. It may be freed and replaced
-	// with a new buffer by libavformat. AVIOContext.buffer holds the buffer
-	// currently in use, which must be later freed with av_free().
-
-	void* reader_ptr =
-		reinterpret_cast<void*>(static_cast<FFmpegFile*>(&file_));
-
-	io_ctx_ = AVIOContextPtr { ::avio_alloc_context(
-        buf_,            // memory buffer
-        buffer_size_,    // memory buffer size
-        0,               // 0 for reading, 1 for writing. we're reading, so — 0.
-        reader_ptr,      // pass FFmpegFile to read_callback on each invocation.
-        &read_callback,  // read callback
-        nullptr,         // write callback is ignored
-        &seek_callback   // seek callback
-    )};
+	file_.open(filename);
+	io_ctx_->opaque = reinterpret_cast<void*>(static_cast<FFmpegFile*>(&file_));
 }
 
 
-IOContext::~IOContext() noexcept
-{
-	// Since libavformat may or may not have messed with the actual buffer, we
-	// cannot simply free the original buffer pointer but the buffer actually
-	// hold by the AVIOContext!
-	::av_free(io_ctx_->buffer);
-}
+IOContext::~IOContext() noexcept = default;
 
 
 ::AVIOContext* IOContext::ptr()
@@ -1084,15 +1162,28 @@ IOContext::~IOContext() noexcept
 }
 
 
-std::string IOContext::filename() const
+std::size_t IOContext::buffer_size() const
 {
-	return filename_;
+	return io_ctx_->buffer_size;
 }
 
 
-std::size_t IOContext::buffer_size() const
+std::string IOContext::filename() const
 {
-	return buffer_size_;
+	return file_.filename();
+}
+
+
+// create_io_context()
+
+
+std::unique_ptr<IOContext> create_io_context(const std::string& filename,
+		const std::size_t buffer_size)
+{
+	ARCS_LOG(DEBUG1) << "Create custom IO context for file " << filename
+			<< " using buffer of size " << buffer_size << " bytes";
+
+	return std::make_unique<IOContext>(filename, buffer_size);
 }
 
 
@@ -1100,7 +1191,7 @@ std::size_t IOContext::buffer_size() const
 
 
 std::unique_ptr<FFmpegAudioStream> FFmpegAudioStreamLoader::load(
-		const std::string& filename) const
+		const std::string& filename, const std::size_t buffer_size) const
 {
 	ARCS_LOG_DEBUG << "Start to analyze audio file with ffmpeg";
 
@@ -1108,34 +1199,34 @@ std::unique_ptr<FFmpegAudioStream> FFmpegAudioStreamLoader::load(
 	static const bool registered = [](){ ::av_register_all(); return true; }();
 #endif
 
-	// Configure file object with ffmpeg properties
-
-	const std::size_t buffer_size = 16777216/*== 2^24*/; //8192;
-
 	auto stream { std::make_unique<FFmpegAudioStream>(FFmpegAudioStream{}) };
 
-	auto iocontext = std::make_unique<IOContext>(filename, buffer_size);
-	ARCS_LOG(DEBUG1) << "IOContext created for file: " << filename;
-	ARCS_LOG(DEBUG1) << "Buffer size: " << buffer_size;
+	// Configure file object with ffmpeg properties
 
-	//auto fcontext { get_format_context1(iocontext->ptr()) };
-	auto fcontext { get_format_context0(filename) };
+	std::unique_ptr<IOContext> iocontext = nullptr;
+	AVFormatContextPtr         fcontext  = nullptr;
 
-	auto fctxptr = fcontext.get();
-	ARCS_LOG(DEBUG1) << "FormatContext done";
-	ARCS_LOG(DEBUG1) << fctxptr;
+	if ( NO_BUFFER == buffer_size )
+	{
+		fcontext = create_format_context0(filename);
+	} else
+	{
+		// FIXME Custom I/O is currently unused and buggy!
+		// It will mess up results!
 
+		iocontext = create_io_context(filename, buffer_size);
+		fcontext  = create_format_context1(iocontext->ptr());
+	}
+
+	const auto fctxptr = fcontext.get();
+	ARCS_LOG(DEBUG4) << fctxptr;
 	const auto stream_idx { get_audio_stream(fctxptr) };
 	ARCS_LOG(DEBUG1) << "Choose audio stream " << stream_idx;
 
-	auto strm = fcontext->streams[stream_idx];
-	ARCS_LOG(DEBUG1) << strm;
+	auto ccontext = create_audio_decoder(fctxptr, stream_idx);
 
-	auto ccontext = get_audio_decoder(fctxptr, stream_idx);
-
-	auto cctxptr = ccontext.get();
-	ARCS_LOG(DEBUG1) << "CodecContext done for stream " << stream_idx;
-	ARCS_LOG_DEBUG << ccontext.get();
+	const auto cctxptr = ccontext.get();
+	ARCS_LOG(DEBUG2) << ccontext.get();
 
 	if (not IsSupported::format(ccontext->sample_fmt))
 	{
@@ -1159,9 +1250,7 @@ std::unique_ptr<FFmpegAudioStream> FFmpegAudioStreamLoader::load(
 		throw InvalidAudioException(msg.str());
 	}
 
-	const auto total_samples { get_total_samples(cctxptr, strm) };
-	ARCS_LOG_DEBUG << "Expect " << total_samples << " total samples";
-
+	const auto declared_size = get_declared_size(fctxptr, cctxptr, stream_idx);
 	// We have to update the expected AudioSize before the last block of samples
 	// is passed.
 	//
@@ -1181,7 +1270,7 @@ std::unique_ptr<FFmpegAudioStream> FFmpegAudioStreamLoader::load(
 	const auto num_planes {
 		::av_sample_fmt_is_planar(ccontext->sample_fmt) ? 2 : 1
 	};
-	ARCS_LOG_DEBUG << "Number of planes: " << num_planes;
+	ARCS_LOG(DEBUG1) << "Number of planes: " << num_planes;
 
 	const auto channels_swapped = bool {
 			!ChannelOrder::is_leftright(cctxptr)  &&
@@ -1189,17 +1278,17 @@ std::unique_ptr<FFmpegAudioStream> FFmpegAudioStreamLoader::load(
 	// We already have verified to have exactly 2 channels. If they are
 	// not FL+FR and not unspecified, they are considered to be swapped.
 	};
-	ARCS_LOG_DEBUG << "Channels swapped: " << channels_swapped;
+	ARCS_LOG(DEBUG1) << "Channels swapped: " << channels_swapped;
 
 	stream->ioContext_        = std::move(iocontext);
 	stream->formatContext_    = std::move(fcontext);
 	stream->stream_index_     = stream_idx;
 	stream->codecContext_     = std::move(ccontext);
-	stream->total_samples_declared_ = total_samples;
+	stream->size_             = declared_size;
 	stream->num_planes_       = num_planes;
 	stream->channels_swapped_ = channels_swapped;
 
-	ARCS_LOG_DEBUG << "Input stream ready";
+	ARCS_LOG_DEBUG << "Input stream configured";
 
 	return stream;
 }
@@ -1214,7 +1303,7 @@ FFmpegAudioStream::FFmpegAudioStream()
 	, stream_index_     { 0 }
 	, num_planes_       { 0 }
 	, channels_swapped_ { false }
-	, total_samples_declared_ { 0 }
+	, size_             { arcstk::EmptyAudioSize }
 	, start_input_      { /* empty */ }
 	, push_frame_       { /* empty */ }
 	, update_audiosize_ { /* empty */ }
@@ -1224,9 +1313,9 @@ FFmpegAudioStream::FFmpegAudioStream()
 }
 
 
-int64_t FFmpegAudioStream::total_samples_declared() const
+AudioSize FFmpegAudioStream::declared_size() const
 {
-	return total_samples_declared_;
+	return size_;
 }
 
 
@@ -1280,7 +1369,7 @@ int FFmpegAudioStream::num_planes() const
 }
 
 
-int64_t FFmpegAudioStream::traverse_samples()
+AudioSize FFmpegAudioStream::traverse_samples()
 {
 	auto queue = FrameQueue { 12 };
 	queue.set_source(formatContext_.get(), stream_index());
@@ -1380,8 +1469,7 @@ int64_t FFmpegAudioStream::traverse_samples()
 
 	// Update audiosize
 
-	AudioSize updated_size;
-	updated_size.set_samples(total_samples);
+	const auto updated_size = AudioSize { total_samples, UNIT::SAMPLES };
 
 	update_audiosize_(updated_size);
 
@@ -1392,7 +1480,7 @@ int64_t FFmpegAudioStream::traverse_samples()
 		this->push_frame_(std::move(f));
 	}
 
-	return total_samples;
+	return updated_size;
 }
 
 
@@ -1415,35 +1503,51 @@ std::unique_ptr<AudioSize> FFmpegAudioReaderImpl::do_acquire_size(
 	using arcstk::AudioSize;
 	using arcstk::UNIT;
 
-	const auto loader      { FFmpegAudioStreamLoader{} };
-	const auto audiostream { loader.load(filename) };
+	constexpr auto& NO_BUFFER = FFmpegAudioStreamLoader::NO_BUFFER;
+	const     auto  loader    { FFmpegAudioStreamLoader{} };
+
+	// Redirect ffmpeg logging to arcs logging
+
+	::av_log_set_callback(arcs_av_log);
+
+	// Load audiostream and get size
+
+	const auto audiostream { loader.load(filename, NO_BUFFER) };
 
 	if (!audiostream)
 	{
-		ARCS_LOG_ERROR << "Could not load audiostream, give up";
+		ARCS_LOG_ERROR << "Could not load audiostream, give up, size is zero";
+
 		return std::make_unique<AudioSize>(/* empty */);
 	}
 
-	auto s = std::make_unique<AudioSize>(
-				audiostream->total_samples_declared(), UNIT::SAMPLES);
+	ARCS_LOG(DEBUG1) << "Declared size (samples) is: "
+		<< audiostream->declared_size().samples();
 
-	ARCS_LOG(DEBUG1) << "Size ok: " << s->samples();
-
-	return s;
+	return std::make_unique<AudioSize>(audiostream->declared_size());
 }
 
 
 void FFmpegAudioReaderImpl::do_process_file(const std::string& filename)
 {
+	constexpr auto& NO_BUFFER = FFmpegAudioStreamLoader::NO_BUFFER;
+	const     auto  loader    { FFmpegAudioStreamLoader{} };
+
 	// Redirect ffmpeg logging to arcs logging
 
 	::av_log_set_callback(arcs_av_log);
 
-
 	// Plug file, buffer and processor together
 
-	const auto loader      { FFmpegAudioStreamLoader{} };
-	const auto audiostream { loader.load(filename) };
+	// FIXME Ignore buffer_size since custom I/O is currently broken
+	//const std::size_t buffer_size = 16777216;/*== 2^24 bytes*/ //was 8192;
+	//ARCS_LOG(DEBUG1) << "Buffer size: " << buffer_size;
+
+	const auto audiostream { loader.load(filename, NO_BUFFER) };
+
+	//Note: If we once intend to further test IOContext, which is buggy at the
+	//moment and currently much slower than just using no buffer, we can use a
+	//real buffer size here.
 
 	if (!audiostream)
 	{
@@ -1480,36 +1584,29 @@ void FFmpegAudioReaderImpl::do_process_file(const std::string& filename)
 
 	this->signal_startinput();
 
-	const auto total_samples_expected { audiostream->total_samples_declared() };
+	const auto declared_size { audiostream->declared_size() };
 
-	if (total_samples_expected > std::numeric_limits<int32_t>::max())
-	{
-		using std::to_string;
-		throw std::runtime_error("Number of samples too big: " +
-				to_string(total_samples_expected));
-	}
+	this->signal_updateaudiosize(declared_size);
 
-	using arcstk::UNIT;
-
-	this->signal_updateaudiosize(
-			{ static_cast<int32_t>(total_samples_expected), UNIT::SAMPLES });
-
-	const auto total_samples { audiostream->traverse_samples() };
+	const auto actual_size { audiostream->traverse_samples() };
 
 	this->signal_endinput();
 
 
 	// Do some logging
 
-	ARCS_LOG_DEBUG << "Respected samples: " << total_samples;
+	const auto declared = declared_size.samples();
+	const auto actual   = actual_size.samples();
 
-	if (total_samples != total_samples_expected)
+	ARCS_LOG_DEBUG << "Respected samples: " << actual;
+
+	if (actual != declared)
 	{
-		ARCS_LOG_INFO << "Expected " << total_samples_expected
-					<< " samples but encountered " << total_samples
+		ARCS_LOG_INFO << "Expected " << declared << " samples"
+					<< "but encountered " << actual
 					<< " ("
-					<< std::abs(total_samples_expected - total_samples)
-					<< ((total_samples_expected < total_samples)
+					<< std::abs(declared - actual)
+					<< ((declared < actual)
 							? " more"
 							: " less")
 					<< ")";

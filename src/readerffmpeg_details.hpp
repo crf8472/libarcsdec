@@ -203,6 +203,12 @@ using AVIOContextPtr =
 		std::unique_ptr<::AVIOContext, Free_AVIOContext>;
 
 
+struct Make_AVIOContextPtr
+{
+	AVIOContextPtr operator()(const std::size_t buffer_size) const;
+};
+
+
 /**
  * \brief Free AVPacket* instances.
  *
@@ -821,6 +827,24 @@ private:
 	std::size_t capacity_;
 };
 
+/**
+ * \brief Open format context for specified file or throw.
+ *
+ * \param[in,out] fctx     Format context, maybe null
+ * \param[in]     filename Name of file to open format context for
+ *
+ * \throw FFmpegException On error of ::avformat_open_input
+ */
+void open_input_or_throw(::AVFormatContext** fctx, const std::string& filename);
+
+/**
+ * \brief Find stream info or close format context and throw.
+ *
+ * \param[in,out] fctx Opened format context
+ *
+ * \throw FFmpegException On error of ::avformat_find_stream_info
+ */
+void find_stream_info_or_throw(::AVFormatContext* fctx);
 
 /**
  * \brief Open a media file.
@@ -831,18 +855,18 @@ private:
  *
  * \throws FFmpegException If the file could not be opened
  */
-AVFormatContextPtr get_format_context0(const std::string& filename);
+AVFormatContextPtr create_format_context0(const std::string& filename);
 
 /**
  * \brief Open a media file.
  *
- * \param[in] ioctx The AVIOContext to use
+ * \param[in] ioctx The custom AVIOContext to use
  *
  * \return The format context for the file.
  *
  * \throws FFmpegException If the file could not be opened
  */
-AVFormatContextPtr get_format_context1(::AVIOContext* ioctx);
+AVFormatContextPtr create_format_context1(::AVIOContext* ioctx);
 
 /**
  * \brief Acquire stream index of the audio stream.
@@ -863,7 +887,7 @@ int get_audio_stream(::AVFormatContext* fctx);
  * \throws runtime_error    If no decoder could be found for the stream
  * \throws FFmpegException  If the decoder could not be opened
  */
-AVCodecContextPtr get_audio_decoder(::AVFormatContext* fctx,
+AVCodecContextPtr create_audio_decoder(::AVFormatContext* fctx,
 		const int stream_idx);
 
 /**
@@ -901,10 +925,24 @@ std::pair<int, const ::AVCodec*> identify_stream(::AVFormatContext* fctx,
  *
  * \param[in] cctx   The ::AVCodecContext to analyze
  * \param[in] stream The ::AVStream to analyze
+ *
  * \return Estimated total number of 32 bit PCM samples
  */
 int64_t get_total_samples(::AVCodecContext* cctx, ::AVStream* stream);
 
+/**
+ * \brief Get the declared size of an audio stream.
+ *
+ * Uses get_total_samples() internally.
+ *
+ * \param[in] rctx       The ::AVFormatContext to use
+ * \param[in] cctx       The ::AVCodecContext to use
+ * \param[in] stream_idx The stream to analyze
+ *
+ * \return Declared audio size
+ */
+AudioSize get_declared_size(::AVFormatContext* fctx,
+		::AVCodecContext* cctx, const int stream_idx);
 
 /**
  * \brief Informs about the support for a specified sample format or codec.
@@ -967,19 +1005,24 @@ private:
 
 
 /**
- * \brief Represents a file read by ffmpeg.
+ * \brief Represents an input file read by ffmpeg.
  */
 class FFmpegFile final
 {
-	std::ifstream input_file_;
+	std::string   filename_;
+	std::ifstream in_;
 
 public:
 
-	FFmpegFile(const std::string& filename);
+	FFmpegFile();
 
 	~FFmpegFile() noexcept;
 
 	void open(const std::string& filename);
+
+	bool is_open() const;
+
+	std::string filename() const;
 
 	int read(char* data, const int size, int* bytes_read);
 
@@ -1013,13 +1056,6 @@ class IOContext final
 	FFmpegFile file_;
 
 	/**
-	 * \brief Internal size of the read buffer in bytes.
-	 */
-	std::size_t buffer_size_;
-
-	uint8_t* buf_;
-
-	/**
 	 * \brief Internal AVIOContext instance.
 	 */
 	AVIOContextPtr io_ctx_;
@@ -1047,19 +1083,31 @@ public:
 	::AVIOContext* ptr();
 
 	/**
-	 * \brief Filename of this IOContext.
-	 *
-	 * \return Filename
-	 */
-	std::string filename() const;
-
-	/**
 	 * \brief Buffer size of this IOContext.
 	 *
 	 * \return Buffer size in bytes
 	 */
 	std::size_t buffer_size() const;
+
+	/**
+	 * \brief Filename of this IOContext.
+	 *
+	 * \return Filename
+	 */
+	std::string filename() const;
 };
+
+
+/**
+ * \brief Create AVIOContext instance with specified buffer size.
+ *
+ * \param[in] filename    Filename to open
+ * \param[in] buffer_size Buffer size in bytes
+ *
+ * \return AVIOContext for the file
+ */
+std::unique_ptr<IOContext> create_io_context(const std::string& filename,
+		const std::size_t buffer_size);
 
 
 // forward declaration
@@ -1069,16 +1117,20 @@ class FFmpegAudioStream;
 /**
  * \brief Loads an audio file and returns a representation as FFmpegAudioStream.
  */
-class FFmpegAudioStreamLoader final
+struct FFmpegAudioStreamLoader final
 {
-public:
+	/**
+	 * \brief Indicates that no custom io buffering by ffmpeg is required.
+	 */
+	static constexpr std::size_t NO_BUFFER = 0;
 
 	/**
 	 * \brief Load a stream from a file with ffmpeg.
 	 *
 	 * \param[in] filename Filename
 	 */
-	std::unique_ptr<FFmpegAudioStream> load(const std::string& filename) const;
+	std::unique_ptr<FFmpegAudioStream> load(const std::string& filename,
+			const std::size_t buffer_size) const;
 };
 
 
@@ -1098,7 +1150,7 @@ public:
 class FFmpegAudioStream final
 {
 	friend std::unique_ptr<FFmpegAudioStream> FFmpegAudioStreamLoader::load(
-			const std::string& filename) const;
+			const std::string& filename, const std::size_t buffer_size) const;
 
 public:
 
@@ -1144,7 +1196,7 @@ public:
 	 * figured out how ffmpeg keeps this information after having read the CAF
 	 * file.)
 	 *
-	 * As a consequence, total_samples_declared() will yield only an estimation
+	 * As a consequence, declared_size() will yield only an estimation
 	 * of samples, i.e. the total number of samples as declared in the stream.
 	 *
 	 * The actual number of samples contributing to the ARCSs is returned by
@@ -1153,19 +1205,19 @@ public:
 	 * \return Total number of 32 bit PCM samples in file (including priming and
 	 * remainder frames)
 	 */
-	int64_t total_samples_declared() const;
+	AudioSize declared_size() const;
 
 	/**
 	 * \brief Traverse all 16 bit samples in the file, thereby accumulating 32
 	 * bit samples in a buffer and automatically flushing it once it is full.
 	 *
 	 * Returns the number of 32 bit samples processed. Note that this number may
-	 * differ from the number returned by total_samples_declared().
+	 * differ from the number returned by declared_size().
 	 *
 	 * \return Number of 32 bit PCM samples enumerated.
 	 * \throw FileReadException If an error occurrs while reading the file
 	 */
-	int64_t traverse_samples();
+	AudioSize traverse_samples();
 
 	/**
 	 * \brief Register the start_input() method.
@@ -1237,7 +1289,7 @@ private:
 	 * \brief Total number of 32 bit PCM samples in the file estimated by
 	 * duration.
 	 */
-	int64_t total_samples_declared_;
+	AudioSize size_;
 
 	/**
 	 * \brief Callback for starting input.
