@@ -588,10 +588,10 @@ int get_audio_stream(::AVFormatContext* fctx)
 }
 
 
-// create_audio_decoder()
+// create_codec_context()
 
 
-AVCodecContextPtr create_audio_decoder(::AVFormatContext* fctx,
+AVCodecContextPtr create_codec_context(::AVFormatContext* fctx,
 		const int stream_idx)
 {
 	ARCS_LOG(DEBUG1) << "Create codec context for stream " << stream_idx;
@@ -757,7 +757,7 @@ std::pair<int, const ::AVCodec*> identify_stream(
 		ARCS_LOG_ERROR << msg.str();
 
 		// This is not a problem since we will try to identify the codec
-		// with create_audio_decoder() and throw a proper exception there.
+		// with create_codec_context() and throw a proper exception there.
 		// Caller must check codec.
 	}
 
@@ -908,7 +908,7 @@ std::unique_ptr<FFmpegAudioStream> FFmpegAudioStreamLoader::load(
 	const auto stream_idx { get_audio_stream(fctxptr) };
 	ARCS_LOG(DEBUG1) << "Choose audio stream " << stream_idx;
 
-	auto ccontext = create_audio_decoder(fctxptr, stream_idx);
+	auto ccontext = create_codec_context(fctxptr, stream_idx);
 
 	const auto cctxptr = ccontext.get();
 	ARCS_LOG(DEBUG2) << ccontext.get();

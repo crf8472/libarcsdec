@@ -865,7 +865,7 @@ int get_audio_stream(::AVFormatContext* fctx);
  * \throws runtime_error    If no decoder could be found for the stream
  * \throws FFmpegException  If the decoder could not be opened
  */
-AVCodecContextPtr create_audio_decoder(::AVFormatContext* fctx,
+AVCodecContextPtr create_codec_context(::AVFormatContext* fctx,
 		const int stream_idx);
 
 /**
