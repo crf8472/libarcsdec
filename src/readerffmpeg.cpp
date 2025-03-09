@@ -145,12 +145,9 @@ arcstk::LOGLEVEL arcs_loglevel(const int lvl)
 
 FFmpegException::FFmpegException(const int error, const std::string& name)
 	: error_ { error }
-	, msg_   {/* empty */}
+	, msg_   { create_message(error, name) }
 {
-	auto msg = std::ostringstream{};
-	msg << "FFmpeg: Function " << name  << " returned error '"
-		<< av_err2str(error_) << "' ("  << error_ << ")";
-	msg_ = msg.str();
+	// empty
 }
 
 
@@ -163,6 +160,17 @@ int FFmpegException::error() const
 char const* FFmpegException::what() const noexcept
 {
 	return msg_.c_str();
+}
+
+
+std::string FFmpegException::create_message(const int error,
+		const std::string& name) const
+{
+	auto msg = std::ostringstream{};
+	msg << "FFmpeg: Function " << name
+		<< " returned error '" << av_err2str(error)
+		<< "' ("  << error << ")";
+	return msg.str();
 }
 
 
@@ -496,23 +504,39 @@ AVFramePtr FrameQueue::make_frame()
 }
 
 
-// FFmpegFile
+// open_or_throw
 
 
-AVFormatContextPtr FFmpegFile::format_context(const std::string& filename)
+void open_input_or_throw(::AVFormatContext** fctx, const std::string& filename)
 {
-	// Open input stream and read header
+	ARCS_LOG(DEBUG1) << "Try to open format context";
 
-	::AVFormatContext* fctx { nullptr };
 	::AVInputFormat* detect { nullptr }; // TODO Currently unused
 	::AVDictionary* options { nullptr }; // TODO Currently unused
 
-	const auto error_open { ::avformat_open_input(&fctx , filename.c_str(),
+	const auto error_open { ::avformat_open_input(fctx , filename.c_str(),
 			detect, &options) };
 
 	if (error_open != 0)
 	{
 		throw FFmpegException(error_open, "avformat_open_input");
+	}
+
+	ARCS_LOG(DEBUG1) << "Format context is open";
+}
+
+
+// find_stream_or_throw
+
+
+void find_stream_info_or_throw(::AVFormatContext* fctx)
+{
+	ARCS_LOG(DEBUG1) << "Try to get stream info from format context";
+
+	if (!fctx)
+	{
+		throw std::runtime_error("Cannot find any stream info when format "
+				"context is NULL");
 	}
 
 	// Read some packets to acquire information about the streams
@@ -527,20 +551,51 @@ AVFormatContextPtr FFmpegFile::format_context(const std::string& filename)
 		throw FFmpegException(error_find, "avformat_find_stream_info");
 	}
 
-	return AVFormatContextPtr(fctx);
+	ARCS_LOG(DEBUG1) << "Got stream info";
 }
 
 
-int FFmpegFile::audio_stream(::AVFormatContext* fctx)
+// create_format_context0()
+
+
+AVFormatContextPtr create_format_context0(const std::string& filename)
+{
+	ARCS_LOG(DEBUG1) << "Create+configure format context for file " << filename;
+
+	//auto fcontext { AVFormatContextPtr {} };
+
+	//auto fctx = fcontext.get();
+
+	::AVFormatContext* fctx { nullptr };
+
+	open_input_or_throw(&fctx, filename);
+
+	ARCS_LOG(DEBUG1) << "Format context is created";
+
+	find_stream_info_or_throw(fctx);
+
+	return AVFormatContextPtr { fctx };
+}
+
+
+// get_audio_stream()
+
+
+int get_audio_stream(::AVFormatContext* fctx)
 {
 	const auto stream_and_codec { identify_stream(fctx, ::AVMEDIA_TYPE_AUDIO) };
 	return stream_and_codec.first;
 }
 
 
-AVCodecContextPtr FFmpegFile::audio_decoder(::AVFormatContext* fctx,
+// create_audio_decoder()
+
+
+AVCodecContextPtr create_audio_decoder(::AVFormatContext* fctx,
 		const int stream_idx)
 {
+	ARCS_LOG(DEBUG1) << "Create codec context for stream " << stream_idx;
+
 	if (!fctx)
 	{
 		throw std::invalid_argument("AVFormatContext is NULL");
@@ -662,11 +717,16 @@ AVCodecContextPtr FFmpegFile::audio_decoder(::AVFormatContext* fctx,
 		throw FFmpegException(error_open, "avcodec_open2");
 	}
 
+	ARCS_LOG(DEBUG1) << "Codec context created for stream " << stream_idx;
+
 	return ccontext;
 }
 
 
-std::pair<int, const ::AVCodec*> FFmpegFile::identify_stream(
+// identify_stream()
+
+
+std::pair<int, const ::AVCodec*> identify_stream(
 		::AVFormatContext* fctx, const ::AVMediaType media_type)
 {
 #if LIBAVFORMAT_VERSION_INT < AV_VERSION_INT(59, 16, 100) //  < ffmpeg 5.0
@@ -705,7 +765,10 @@ std::pair<int, const ::AVCodec*> FFmpegFile::identify_stream(
 }
 
 
-int64_t FFmpegFile::total_samples(::AVCodecContext* cctx, ::AVStream* stream)
+// get_total_samples()
+
+
+int64_t get_total_samples(::AVCodecContext* cctx, ::AVStream* stream)
 {
 	// Calculate number of samples from duration, which should be accurate
 	// if stream metadata is intact
@@ -720,6 +783,31 @@ int64_t FFmpegFile::total_samples(::AVCodecContext* cctx, ::AVStream* stream)
 	ARCS_LOG_DEBUG << "Estimate duration:       " << duration_secs << " secs";
 
 	return duration_secs * cctx->sample_rate;
+}
+
+
+// get_declared_size()
+
+
+AudioSize get_declared_size(::AVFormatContext* fctx, ::AVCodecContext* cctx,
+		const int stream_idx)
+{
+	auto stream = fctx->streams[stream_idx];
+	ARCS_LOG(DEBUG1) << stream;
+
+	const auto total_samples = get_total_samples(cctx, stream);
+
+	ARCS_LOG(DEBUG1) << "Expect " << total_samples << " total samples";
+
+	if (total_samples> std::numeric_limits<int32_t>::max())
+	{
+		using std::to_string;
+		throw std::runtime_error("Number of samples too big: " +
+				to_string(total_samples));
+	}
+
+	return arcstk::AudioSize
+			{ static_cast<int32_t>(total_samples), UNIT::SAMPLES };
 }
 
 
@@ -809,15 +897,21 @@ std::unique_ptr<FFmpegAudioStream> FFmpegAudioStreamLoader::load(
 	static const bool registered = [](){ ::av_register_all(); return true; }();
 #endif
 
-	auto fcontext { FFmpegFile::format_context(filename) };
-	ARCS_LOG(DEBUG1) << fcontext.get();
+	auto stream { std::make_unique<FFmpegAudioStream>(FFmpegAudioStream{}) };
 
-	const auto stream_idx { FFmpegFile::audio_stream(fcontext.get()) };
-	ARCS_LOG(DEBUG1) << fcontext->streams[stream_idx];
+	// Configure file object with ffmpeg properties
 
-	auto ccontext { FFmpegFile::audio_decoder(fcontext.get(), stream_idx) };
-	ARCS_LOG_DEBUG << ccontext.get();
+	AVFormatContextPtr fcontext  = create_format_context0(filename);
 
+	const auto fctxptr = fcontext.get();
+	ARCS_LOG(DEBUG4) << fctxptr;
+	const auto stream_idx { get_audio_stream(fctxptr) };
+	ARCS_LOG(DEBUG1) << "Choose audio stream " << stream_idx;
+
+	auto ccontext = create_audio_decoder(fctxptr, stream_idx);
+
+	const auto cctxptr = ccontext.get();
+	ARCS_LOG(DEBUG2) << ccontext.get();
 
 	if (not IsSupported::format(ccontext->sample_fmt))
 	{
@@ -834,18 +928,14 @@ std::unique_ptr<FFmpegAudioStream> FFmpegAudioStreamLoader::load(
 		throw InvalidAudioException(msg.str());
 	}
 
-	if (not FFmpegValidator::cdda(ccontext.get()))
+	if (not FFmpegValidator::cdda(cctxptr))
 	{
 		auto msg = std::ostringstream{};
 		msg << "CDDA validation failed";
 		throw InvalidAudioException(msg.str());
 	}
 
-
-	const auto total_samples { FFmpegFile::total_samples(ccontext.get(),
-			fcontext->streams[stream_idx]) };
-	ARCS_LOG_DEBUG << "Expect " << total_samples << " total samples";
-
+	const auto declared_size = get_declared_size(fctxptr, cctxptr, stream_idx);
 	// We have to update the expected AudioSize before the last block of samples
 	// is passed.
 	//
@@ -862,26 +952,27 @@ std::unique_ptr<FFmpegAudioStream> FFmpegAudioStreamLoader::load(
 	// count the samples and correct the estimation before flushing the last
 	// relevant block.
 
+	const auto num_planes {
+		::av_sample_fmt_is_planar(ccontext->sample_fmt) ? 2 : 1
+	};
+	ARCS_LOG(DEBUG1) << "Number of planes: " << num_planes;
 
-	// Configure file object with ffmpeg properties
-
-	auto stream { std::make_unique<FFmpegAudioStream>(FFmpegAudioStream{}) };
-
-	stream->num_planes_ =
-		::av_sample_fmt_is_planar(ccontext->sample_fmt) ? 2 : 1;
-
-	stream->channels_swapped_ =
-			!ChannelOrder::is_leftright(ccontext.get())  &&
-			!ChannelOrder::is_unspecified(ccontext.get());
+	const auto channels_swapped = bool {
+			!ChannelOrder::is_leftright(cctxptr)  &&
+			!ChannelOrder::is_unspecified(cctxptr)
 	// We already have verified to have exactly 2 channels. If they are
 	// not FL+FR and not unspecified, they are considered to be swapped.
+	};
+	ARCS_LOG(DEBUG1) << "Channels swapped: " << channels_swapped;
 
-	stream->total_samples_declared_ = total_samples;
-	stream->stream_index_  = stream_idx;
-	stream->codecContext_  = std::move(ccontext);
-	stream->formatContext_ = std::move(fcontext);
+	stream->formatContext_    = std::move(fcontext);
+	stream->stream_index_     = stream_idx;
+	stream->codecContext_     = std::move(ccontext);
+	stream->size_             = declared_size;
+	stream->num_planes_       = num_planes;
+	stream->channels_swapped_ = channels_swapped;
 
-	ARCS_LOG_DEBUG << "Input stream ready";
+	ARCS_LOG_DEBUG << "Input stream configured";
 
 	return stream;
 }
@@ -891,24 +982,24 @@ std::unique_ptr<FFmpegAudioStream> FFmpegAudioStreamLoader::load(
 
 
 FFmpegAudioStream::FFmpegAudioStream()
-	: formatContext_ { nullptr }
-	, codecContext_  { nullptr }
+	: formatContext_    { nullptr }
+	, codecContext_     { nullptr }
 	, stream_index_     { 0 }
 	, num_planes_       { 0 }
 	, channels_swapped_ { false }
-	, total_samples_declared_ { 0 }
-	, start_input_      { }
-	, push_frame_       { }
-	, update_audiosize_ { }
-	, end_input_        { }
+	, size_             { arcstk::EmptyAudioSize }
+	, start_input_      { /* empty */ }
+	, push_frame_       { /* empty */ }
+	, update_audiosize_ { /* empty */ }
+	, end_input_        { /* empty */ }
 {
 	// empty
 }
 
 
-int64_t FFmpegAudioStream::total_samples_declared() const
+AudioSize FFmpegAudioStream::declared_size() const
 {
-	return total_samples_declared_;
+	return size_;
 }
 
 
@@ -962,7 +1053,7 @@ int FFmpegAudioStream::num_planes() const
 }
 
 
-int64_t FFmpegAudioStream::traverse_samples()
+AudioSize FFmpegAudioStream::traverse_samples()
 {
 	auto queue = FrameQueue { 12 };
 	queue.set_source(formatContext_.get(), stream_index());
@@ -1062,8 +1153,7 @@ int64_t FFmpegAudioStream::traverse_samples()
 
 	// Update audiosize
 
-	AudioSize updated_size;
-	updated_size.set_samples(total_samples);
+	const auto updated_size = AudioSize { total_samples, UNIT::SAMPLES };
 
 	update_audiosize_(updated_size);
 
@@ -1074,7 +1164,7 @@ int64_t FFmpegAudioStream::traverse_samples()
 		this->push_frame_(std::move(f));
 	}
 
-	return total_samples;
+	return updated_size;
 }
 
 
@@ -1097,11 +1187,26 @@ std::unique_ptr<AudioSize> FFmpegAudioReaderImpl::do_acquire_size(
 	using arcstk::AudioSize;
 	using arcstk::UNIT;
 
-	const auto loader    { FFmpegAudioStreamLoader{} };
-	const auto audiofile { loader.load(filename) };
+	// Redirect ffmpeg logging to arcs logging
 
-	return std::make_unique<AudioSize>(
-				audiofile->total_samples_declared(), UNIT::SAMPLES);
+	::av_log_set_callback(arcs_av_log);
+
+	// Load audiostream and get size
+
+	const auto loader      { FFmpegAudioStreamLoader{} };
+	const auto audiostream { loader.load(filename) };
+
+	if (!audiostream)
+	{
+		ARCS_LOG_ERROR << "Could not load audiostream, give up, size is zero";
+
+		return std::make_unique<AudioSize>(/* empty */);
+	}
+
+	ARCS_LOG(DEBUG1) << "Declared size (samples) is: "
+		<< audiostream->declared_size().samples();
+
+	return std::make_unique<AudioSize>(audiostream->declared_size());
 }
 
 
@@ -1111,11 +1216,16 @@ void FFmpegAudioReaderImpl::do_process_file(const std::string& filename)
 
 	::av_log_set_callback(arcs_av_log);
 
-
-	// Plug file, buffer and processor together
+	// Plug stream and processor together
 
 	const auto loader      { FFmpegAudioStreamLoader{} };
 	const auto audiostream { loader.load(filename) };
+
+	if (!audiostream)
+	{
+		ARCS_LOG_ERROR << "Could not load audiostream, give up";
+		return;
+	}
 
 	if (audiostream->channels_swapped())
 	{
@@ -1146,36 +1256,29 @@ void FFmpegAudioReaderImpl::do_process_file(const std::string& filename)
 
 	this->signal_startinput();
 
-	const auto total_samples_expected { audiostream->total_samples_declared() };
+	const auto declared_size { audiostream->declared_size() };
 
-	if (total_samples_expected > std::numeric_limits<int32_t>::max())
-	{
-		using std::to_string;
-		throw std::runtime_error("Number of samples too big: " +
-				to_string(total_samples_expected));
-	}
+	this->signal_updateaudiosize(declared_size);
 
-	using arcstk::UNIT;
-
-	this->signal_updateaudiosize(
-			{ static_cast<int32_t>(total_samples_expected), UNIT::SAMPLES });
-
-	const auto total_samples { audiostream->traverse_samples() };
+	const auto actual_size { audiostream->traverse_samples() };
 
 	this->signal_endinput();
 
 
 	// Do some logging
 
-	ARCS_LOG_DEBUG << "Respected samples: " << total_samples;
+	const auto declared = declared_size.samples();
+	const auto actual   = actual_size.samples();
 
-	if (total_samples != total_samples_expected)
+	ARCS_LOG_DEBUG << "Respected samples: " << actual;
+
+	if (actual != declared)
 	{
-		ARCS_LOG_INFO << "Expected " << total_samples_expected
-					<< " samples but encountered " << total_samples
+		ARCS_LOG_INFO << "Expected " << declared << " samples"
+					<< "but encountered " << actual
 					<< " ("
-					<< std::abs(total_samples_expected - total_samples)
-					<< ((total_samples_expected < total_samples)
+					<< std::abs(declared - actual)
+					<< ((declared < actual)
 							? " more"
 							: " less")
 					<< ")";

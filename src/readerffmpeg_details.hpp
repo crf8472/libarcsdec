@@ -33,6 +33,7 @@ extern "C"
 #include <libavutil/channel_layout.h>
 }
 
+#include <cstdarg>     // for va_list
 #include <cstddef>     // for size_t
 #include <exception>   // for exception
 #include <functional>  // for function
@@ -41,6 +42,7 @@ extern "C"
 #include <string>      // for string
 #include <type_traits> // for true_type, false_type
 #include <utility>     // for pair
+#include <fstream>
 
 
 namespace arcsdec
@@ -107,10 +109,11 @@ extern "C"
  * \relatesalso FFmpegAudioStream
  * \relatesalso FFmpegAudioStreamLoader
  *
- * \param[in] lvl The loglevel as defined by the ffmpeg API (e.g. AV_LOG_INFO)
- * \param[in] msg The message to log
+ * \param[in] lvl  The loglevel as defined by the ffmpeg API (e.g. AV_LOG_INFO)
+ * \param[in] fmt  The message format to log
+ * \param[in] args The arguments to be placed in \c fmt
  */
-void arcs_av_log(void* /*v*/, int lvl, const char* msg, va_list /*l*/);
+void arcs_av_log(void* /*v*/, int lvl, const char* fmt, std::va_list args);
 
 } // extern C
 
@@ -149,6 +152,8 @@ public:
 	char const* what() const noexcept final;
 
 private:
+
+	std::string create_message(const int error, const std::string& name) const;
 
 	int error_;
 
@@ -811,89 +816,111 @@ private:
 	std::size_t capacity_;
 };
 
+/**
+ * \brief Open format context for specified file or throw.
+ *
+ * \param[in,out] fctx     Format context, maybe null
+ * \param[in]     filename Name of file to open format context for
+ *
+ * \throw FFmpegException On error of ::avformat_open_input
+ */
+void open_input_or_throw(::AVFormatContext** fctx, const std::string& filename);
 
 /**
- * \brief Functions for analyzing a media file with FFmpeg.
+ * \brief Find stream info or close format context and throw.
+ *
+ * \param[in,out] fctx Opened format context
+ *
+ * \throw FFmpegException On error of ::avformat_find_stream_info
  */
-class FFmpegFile final
-{
-public:
+void find_stream_info_or_throw(::AVFormatContext* fctx);
 
-	/**
-	 * \brief Open a media file.
-	 *
-	 * \param[in] filename The file to open
-	 *
-	 * \return The format context for the file.
-	 *
-	 * \throws FFmpegException If the file could not be opened
-	 */
-	static AVFormatContextPtr format_context(const std::string& filename);
+/**
+ * \brief Open a media file.
+ *
+ * \param[in] filename The file to open
+ *
+ * \return The format context for the file.
+ *
+ * \throws FFmpegException If the file could not be opened
+ */
+AVFormatContextPtr create_format_context0(const std::string& filename);
 
-	/**
-	 * \brief Acquire stream index of the audio stream.
-	 *
-	 * \throws FFmpegException If the file could not be opened
-	 */
-	static int audio_stream(::AVFormatContext* fctx);
+/**
+ * \brief Acquire stream index of the audio stream.
+ *
+ * \throws FFmpegException If the file could not be opened
+ */
+int get_audio_stream(::AVFormatContext* fctx);
 
-	/**
-	 * \brief Create a decoder for the specified audio stream.
-	 *
-	 * \param[in] fctx       The FormatContext to use
-	 * \param[in] stream_idx The stream to decode
-	 *
-	 * \return A decoder for the specified stream
-	 *
-	 * \throws invalid_argument If stream does not exist or is not an audio stream
-	 * \throws runtime_error    If no decoder could be found for the stream
-	 * \throws FFmpegException  If the decoder could not be opened
-	 */
-	static AVCodecContextPtr audio_decoder(::AVFormatContext* fctx,
-			const int stream_idx);
+/**
+ * \brief Create a decoder for the specified audio stream.
+ *
+ * \param[in] fctx       The FormatContext to use
+ * \param[in] stream_idx The stream to decode
+ *
+ * \return A decoder for the specified stream
+ *
+ * \throws invalid_argument If stream does not exist or is not an audio stream
+ * \throws runtime_error    If no decoder could be found for the stream
+ * \throws FFmpegException  If the decoder could not be opened
+ */
+AVCodecContextPtr create_audio_decoder(::AVFormatContext* fctx,
+		const int stream_idx);
 
-	/**
-	 * \brief Estimate the total number of samples from the the information
-	 * provided by stream and codec context.
-	 *
-	 * Given a constant frame size, the estimation helps to recognize the last
-	 * frame. Without the estimation we could only check for a frame with a
-	 * different size and consider it to be the last. With an estimation, we can
-	 * check whether the sample count differs from the estimation by less than
-	 * the size of one frame. This seems to ensure a "better" decision than
-	 * just the comparison to the previous frame.
-	 *
-	 * \todo Is an estimation really required? To work correctly,
-	 * Calculation has to know about the last relevant block when it encounters
-	 * it. It is completely sufficient to know the correct total number of
-	 * samples BEFORE flushing the last block. For this, no estimation is
-	 * necessary.
-	 *
-	 * \param[in] cctx   The ::AVCodecContext to analyze
-	 * \param[in] stream The ::AVStream to analyze
-	 * \return Estimated total number of 32 bit PCM samples
-	 */
-	static int64_t total_samples(::AVCodecContext* cctx, ::AVStream* stream);
+/**
+ * \brief Identify the best stream of the specified media type.
+ *
+ * ::AVCodec has to be tested for NULL by the caller. Any error in respect to
+ * the stream index will indiciated by throwing.
+ *
+ * \param[in] fctx       The format context of the streams to inspect
+ * \param[in] media_type The stream type to identify
+ *
+ * \return Stream index and codec
+ *
+ * \throws FFmpegException If no stream could be identified
+ */
+std::pair<int, const ::AVCodec*> identify_stream(::AVFormatContext* fctx,
+		const ::AVMediaType media_type);
 
-private:
+/**
+ * \brief Estimate the total number of samples from the the information
+ * provided by stream and codec context.
+ *
+ * Given a constant frame size, the estimation helps to recognize the last
+ * frame. Without the estimation we could only check for a frame with a
+ * different size and consider it to be the last. With an estimation, we can
+ * check whether the sample count differs from the estimation by less than
+ * the size of one frame. This seems to ensure a "better" decision than
+ * just the comparison to the previous frame.
+ *
+ * \todo Is an estimation really required? To work correctly,
+ * Calculation has to know about the last relevant block when it encounters
+ * it. It is completely sufficient to know the correct total number of
+ * samples BEFORE flushing the last block. For this, no estimation is
+ * necessary.
+ *
+ * \param[in] cctx   The ::AVCodecContext to analyze
+ * \param[in] stream The ::AVStream to analyze
+ *
+ * \return Estimated total number of 32 bit PCM samples
+ */
+int64_t get_total_samples(::AVCodecContext* cctx, ::AVStream* stream);
 
-	/**
-	 * \brief Identify the best stream of the specified media type.
-	 *
-	 * ::AVCodec has to be tested for NULL by the caller. Any error in respect to
-	 * the stream index will indiciated by throwing.
-	 *
-	 * \param[in] fctx       The format context of the streams to inspect
-	 * \param[in] media_type The stream type to identify
-	 *
-	 * \return Stream index and codec
-	 *
-	 * \throws FFmpegException If no stream could be identified
-	 */
-	static std::pair<int, const ::AVCodec*> identify_stream(
-			::AVFormatContext* fctx, const ::AVMediaType media_type);
-};
-
+/**
+ * \brief Get the declared size of an audio stream.
+ *
+ * Uses get_total_samples() internally.
+ *
+ * \param[in] rctx       The ::AVFormatContext to use
+ * \param[in] cctx       The ::AVCodecContext to use
+ * \param[in] stream_idx The stream to analyze
+ *
+ * \return Declared audio size
+ */
+AudioSize get_declared_size(::AVFormatContext* fctx,
+		::AVCodecContext* cctx, const int stream_idx);
 
 /**
  * \brief Informs about the support for a specified sample format or codec.
@@ -962,10 +989,8 @@ class FFmpegAudioStream;
 /**
  * \brief Loads an audio file and returns a representation as FFmpegAudioStream.
  */
-class FFmpegAudioStreamLoader final
+struct FFmpegAudioStreamLoader final
 {
-public:
-
 	/**
 	 * \brief Load a stream from a file with ffmpeg.
 	 *
@@ -1037,7 +1062,7 @@ public:
 	 * figured out how ffmpeg keeps this information after having read the CAF
 	 * file.)
 	 *
-	 * As a consequence, total_samples_declared() will yield only an estimation
+	 * As a consequence, declared_size() will yield only an estimation
 	 * of samples, i.e. the total number of samples as declared in the stream.
 	 *
 	 * The actual number of samples contributing to the ARCSs is returned by
@@ -1046,19 +1071,19 @@ public:
 	 * \return Total number of 32 bit PCM samples in file (including priming and
 	 * remainder frames)
 	 */
-	int64_t total_samples_declared() const;
+	AudioSize declared_size() const;
 
 	/**
 	 * \brief Traverse all 16 bit samples in the file, thereby accumulating 32
 	 * bit samples in a buffer and automatically flushing it once it is full.
 	 *
 	 * Returns the number of 32 bit samples processed. Note that this number may
-	 * differ from the number returned by total_samples_declared().
+	 * differ from the number returned by declared_size().
 	 *
 	 * \return Number of 32 bit PCM samples enumerated.
 	 * \throw FileReadException If an error occurrs while reading the file
 	 */
-	int64_t traverse_samples();
+	AudioSize traverse_samples();
 
 	/**
 	 * \brief Register the start_input() method.
@@ -1125,7 +1150,7 @@ private:
 	 * \brief Total number of 32 bit PCM samples in the file estimated by
 	 * duration.
 	 */
-	int64_t total_samples_declared_;
+	AudioSize size_;
 
 	/**
 	 * \brief Callback for starting input.
