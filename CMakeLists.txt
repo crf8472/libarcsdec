@@ -454,9 +454,9 @@ target_link_libraries (${PROJECT_NAME} PRIVATE cuesheet )
 
 option (WITH_LIBCUE     "Add libcue parsing capability"       OFF )
 option (WITH_LIBCDIO    "Add libcdio parsing capabilities"    OFF )
+option (WITH_FFMPEG     "Add ffmpeg reading capabilities"      ON )
 option (WITH_FLAC       "Add FLAC reading capability"          ON )
 option (WITH_WAVPACK    "Add WavPack reading capability"       ON )
-option (WITH_FFMPEG     "Add ffmpeg reading capabilities"      ON )
 option (WITH_LIBSNDFILE "Add libsndfile reading capabilities" OFF )
 
 
