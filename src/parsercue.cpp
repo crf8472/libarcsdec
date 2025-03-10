@@ -44,6 +44,7 @@
 #include <string>    // for string
 #include <vector>    // for vector
 
+
 namespace arcsdec
 {
 inline namespace v_1_0_0
@@ -132,7 +133,6 @@ std::set<Format> DescriptorCuesheet::define_formats() const
 
 LibInfo DescriptorCuesheet::do_libraries() const
 {
-	//return { /* empty */ };
 	return { { "-genuine-",
 		details::first_libname_match(details::runtime_deps(""), LIBARCSDEC_NAME)
 	} };
