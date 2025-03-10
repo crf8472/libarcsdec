@@ -19,32 +19,32 @@
 
 The following features are planned, but not yet implemented:
 
-- Metadata parser for compact discs (based on libcdio).
-- Metadata parser for cdrdao's TOC format.
+- Metadata parser for cdrdao's .toc file format.
 - Add OGG support to the audio reader for FLAC/FLAC.
-- Add support for embedded CUE sheets to the audio reader for FLAC/FLAC.
 
 
-## Current codecs and formats
+### Current codecs and formats
 
 Libarcsdec contains:
 
-- TOC/Metadata parser for CUE sheets (based on libcue >= 2.0.0).
+- Generic parser for Cuesheets (builtin).
+- TOC/Metadata parser for Cuesheets (based on libcue >= 2.0.0).
 - Generic audio reader (based on ffmpeg >= 3.1, for any lossless codec in any
   container, e.g. ALAC/M4, ALAC/CAF, APE/APE, AIFF/AIFF, FLAC/OGG ... you name
   it).
 - Audio reader for FLAC/FLAC files (based on flac/libFLAC++).
 - Audio reader for lossless Wavpack/WV files (based on libwavpack).
-- Native audio reader for RIFFWAV/PCM files.
+- Generic audio reader (based on libsndfile).
+- Builtin audio reader for RIFFWAV/PCM files.
 
 
 ## What libarcsdec does not
 
-- Libarcsdec does not alter your files in any way and cannot be used for tagging
+- Libarcsdec will not alter your files in any way and cannot be used for tagging
   etc.
 - Libarcsdec does not contribute to tasks like verifying/matching, computing of
   the AccurateRip identifier, parsing the AccurateRip response etc. The API for
-  those things is already provided by [libarcstk][1].
+  those tasks is already provided by [libarcstk][1].
 - Libarcsdec does not rip CDs.
 - Libarcsdec offers no network facilities and is not supposed to do so. The
   actual HTTP request for fetching the reference values from AccurateRip is
@@ -66,22 +66,27 @@ Libarcsdec contains:
 ### Optional default build- and runtime dependencies:
 
 - libcue >= 2.0.0
+- ffmpeg >= 3.1
 - FLAC++ headers >= 1.3.1
 - libwavpack >= 5.0.0
-- ffmpeg >= 3.1
 - libsndfile >= 1.0.17
 
-If you do not need any of the optional default dependencies, you can switch them
-off independently from each other:
+If you do not need any of the default dependencies, you can switch them off
+independently from each other:
 
-- build without libcue support by ``-DWITH_LIBCUE=OFF``
+- build without ffmpeg support by ``-DWITH_FFMPEG=OFF``
 - build without FLAC support by ``-DWITH_FLAC=OFF``
 - build without WavPack support by ``-DWITH_WVPK=OFF``
-- build without ffmpeg support by ``-DWITH_FFMPEG=OFF``
-- build without libsndfile support by ``-DWITH_LIBSNDFILE=OFF``
 
-You cannot switch off libcue since this would leave libarcsdec unable to parse
-any TOC data, rendering it effectively useless.
+If you need any of the optional dependencies, you can switch them on
+independently from each other:
+
+- build without libcue support by ``-DWITH_LIBCUE=ON``
+- build without libsndfile support by ``-DWITH_LIBSNDFILE=ON``
+
+You can switch off each of these dependencies thereby leaving libarcstk as the
+only dependency. However, this entails that libarcsdec will only be able to read
+Cuesheets and WAVE-files with its respective builtin reading capabilities.
 
 ### Configure and start build
 
@@ -95,10 +100,11 @@ If this issues an error that reads
 
     "Could NOT find libarcstk (missing: LIBARCSTK_VERSION)",
 
-the cause may be that pkg-config is either not installed or cannot find the
-installed .pc-file of libarcstk. A possible cause for the latter could be that
-you have installed libarcstk to a directory that cmake does not respect while
-searching for files, e.g. ``/usr/local``. This can be fixed by giving
+the cause may be that either libarcstk is not installed. Or, cmake failed when
+trying to find libarcstk and pkg-config is either not installed or cannot find
+the installed .pc-file of libarcstk. A possible cause for the latter could be
+that you have installed libarcstk to a directory that cmake does not respect
+while searching for files, e.g. ``/usr/local``. This can be fixed by giving
 cmake a hint to your install directory like:
 
 	$ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/usr/local ..
@@ -115,8 +121,8 @@ build switches.
 
 ## How to Use
 
-- Consult the [example application](./examples/albumcalc). It illustrates how to
-  calculate checksums without caring about the details of input formats.
+- Consult the [example applications](./examples/README.md). They illustrate how
+  to calculate checksums without being affected by the details of input formats.
 - [Build the API documentation](BUILD.md#building-the-api-documentation) and
   view it in a browser
 

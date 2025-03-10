@@ -7,23 +7,23 @@ accompanied by a Cuesheet.
 This example implements the exact same usecase as
 [the example of the same name in libarcstk](
 https://github.com/crf8472/libarcstk/tree/main/examples/albumid/),
-but using the libarcsdec API instead of using libarcstk directly. If you compare
-the code of this example to the code of libarcstk's albumid example you get an
-illustration what libarcsdec adds to libarcstk.
+but utilizing the libarcsdec API instead of using libarcstk directly. If you
+compare the code of this example to the code of libarcstk's albumid example you
+get an illustration what libarcsdec adds to libarcstk.
 
 
 ## Requirements
 
 Dependencies for building and running:
 
-- libarcsdec.so in the ''build'' directory
-- libarcstk.so in the ''build/libs/libarcstk'' directory or installed in system
+- libarcsdec.so in the ``build`` directory
+- libarcstk.so in the ``build/libs/libarcstk`` directory or installed in system
 
 
 ## Build
 
 If you have initialized and updated the submodule and configured libarcsdec
-with the switch ''-DWITH_SUBMODULE=ON'', the dependency libarcstk will be
+with the switch ``-DWITH_SUBMODULE=ON``, the dependency libarcstk will be
 available in the build tree.
 
 In this case, build the application with just
