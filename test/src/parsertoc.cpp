@@ -25,7 +25,7 @@ TEST_CASE ("DescriptorToc", "[parsertoc]" )
 
 	SECTION ("Returns own name correctly")
 	{
-		CHECK ( "CDRDAO" == d.name() );
+		CHECK ( "CDRDAO/TOC" == d.name() );
 	}
 
 	SECTION ("Returns linked libraries correctly")
@@ -33,8 +33,6 @@ TEST_CASE ("DescriptorToc", "[parsertoc]" )
 		const auto libs = d.libraries();
 
 		CHECK ( libs.size() == 1 );
-		CHECK ( libs.front().first  == "libcdio" );
-		// TODO Test for libcdio++.so
 	}
 
 	SECTION ("Does not match any codecs not accepted by this descriptor")
@@ -111,7 +109,7 @@ TEST_CASE ("FileReaderSelection", "[filereaderselection]")
 
 	SECTION ( "Descriptor is registered" )
 	{
-		CHECK ( nullptr != arcsdec::FileReaderRegistry::reader("cdrdaotoc") );
+		CHECK ( nullptr != arcsdec::FileReaderRegistry::reader("cdrtoc") );
 	}
 }
 

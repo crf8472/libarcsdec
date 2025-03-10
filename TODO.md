@@ -19,10 +19,7 @@ expect that I really do anything of what I noted here any time soon.
 
 ## Features
 
-- Implement TOC metadata format used by cdrdao
 - Make selection of readers configurable (best, fastest, name...)
-- Select reader by name
-- Add libsndfile support
-- Add libcdio support
+- Add libcdio support (CUE/BIN, TOC/BIN)
 - endianess-independent reading?
 

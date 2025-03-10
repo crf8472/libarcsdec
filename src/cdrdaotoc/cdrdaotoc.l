@@ -1,0 +1,266 @@
+/* Flex specification file for C++-based CDRDAO/TOC lexer */
+
+/* Supports location tracking and can be combined with other flex C++-lexers */
+/* in the same compilation unit (due to using prefixes and namespaces).      */
+
+/* Generate a lexer in C++ */
+%option c++
+/* option 8bit is default except using options -Cf or -CF which we do not do */
+
+/* Warn about certain things. */
+%option warn
+
+/* Generate equivalence classes for characters with equivalent lexical props. */
+%option ecs
+
+/* Do not generate a default rule. A non-matching character is an error. */
+/* %option nodefault */
+
+/* Assume only one input file: do not call yywrap on EOF, just stop. */
+%option noyywrap
+
+/* Specify name of the generated lexer class */
+%option yyclass="arcsdec::details::cdrdaotoc::yytoc::Lexer"
+
+/* Maintain the lineno */
+%option yylineno
+
+/* We do not manipulate yytext */
+%option noinput nounput
+
+/* Write summary to stderr when generating the lexer. */
+/* %option verbose */
+
+/* See the defined macro of yyFlexLexer in cdrdaotoc_lexer.hpp */
+%option prefix="CDRDAOTOC_"
+/* Note: each flex-generated scanner inherits from a class whose name is      */
+/* specified by macro yyFlexLexer. This macro has to be present in each header*/
+/* that defines the flex-generated lexer class. Thus there is no obvious way  */
+/* to use different flex-generated lexers in the same compilation unit. The   */
+/* only trick to achieve that is to put the definition of each lexer class in */
+/* its own header file (for cdrdaotoc: cdrdaotoc_lexer_defs.hpp). Then, a     */
+/* wrapper header is defined that redefines yyFlexLexer according to the      */
+/* prefix above before including the defs header                              */
+/* (for cdrdaotoc: cdrdaotoc_lexer.hpp).                                      */
+/* */
+/* Cf. Flex Manual, Ch. 18 'Generating C++-Scanners' (very end of the chapter)*/
+
+%x COMMENT
+
+%{
+// from cdrdaotoc.l
+
+//  for clang++
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Winline-namespace-reopened-noninline"
+#pragma clang diagnostic ignored "-Wunknown-warning-option"
+
+//  for g++
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+#pragma GCC diagnostic ignored "-Wuseless-cast"
+#pragma GCC diagnostic ignored "-Weffc++"
+#pragma GCC diagnostic ignored "-Wstrict-overflow"
+#pragma GCC diagnostic ignored "-Wswitch-default"
+#pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
+
+
+#include <cstring>        /* for strncpy */
+#include <cstdlib>        /* for atoi */
+#include <iostream>       /* for cout */
+#include <iomanip>        /* for setw, setfill, left, right */
+
+#include "cdrdaotoc.tab.hpp"       /* auto-generated: bison token definitions */
+#include "cdrdaotoc_location.hpp"  /* auto-generated: position + location */
+
+#ifndef __LIBARCSDEC_CDRDAOTOC_LEXER_DEFS_HPP__
+#include "cdrdaotoc_lexer_defs.hpp" /* for Lexer */
+#endif
+#ifndef __LIBARCSDEC_CDRDAOTOC_DRIVER_HPP__
+#include "driver.hpp"              /* for Driver */
+#endif
+
+
+// Redefine calls of yyterminate():
+// Original yyterminate() macro returns int. Since we're using Bison 3 variants
+// as tokens, call context will expect `Parser::semantic_type` instead.
+#define yyterminate()       Parser::make_END(get().loc());
+
+// Track current lexer position + update driver location with it
+#define YY_USER_ACTION \
+		shift_pos(yylineno, yyleng); \
+		driver_.step_to(current_pos_);
+
+// Declare the symbols from yycdrdaotoc that are to be used in yylex().
+// (yylex() is in global namespace)
+using arcsdec::details::cdrdaotoc::yycdrdaotoc::Parser;
+using arcsdec::details::cdrdaotoc::yycdrdaotoc::location;
+using arcsdec::details::cdrdaotoc::yycdrdaotoc::position;
+
+// remove quotes from quoted string
+static std::string remove_quotes(const std::string& s)
+{
+	if (s.length() < 2)  { return s; };
+	if (s.length() == 2) { return std::string{}; };
+
+	return s.substr(1, s.length() - 2);
+}
+
+// end cdrdaotoc.l
+%}
+
+WHITESPACE      [ \t\r]+
+DIGITS          [[:digit:]]+
+GLYPHS          [[:graph:]]+
+CTRLCHARS       [[:cntrl:]]+
+QSTRING1        \'([^\'\n]|\\\')*\'
+QSTRING2        \"([^\"\n]|\\\")*\"
+
+COMMENT_START   //[[:blank:]]+
+COLON           :
+COMMA           ,
+HASH            #
+BRACE_OPEN      {
+BRACE_CLOSE     }
+
+%%
+
+<*>{WHITESPACE} { /* ignore */ }
+
+{DIGITS}    {
+				return Parser::make_NUMBER(YYText(), get().loc());
+			}
+
+CD_DA        { return Parser::make_CD_DA(get().loc());       }
+CD_ROM       { return Parser::make_CD_ROM(get().loc());      }
+CD_ROM_XA    { return Parser::make_CD_ROM_XA(get().loc());   }
+CD_I         { return Parser::make_CD_I(get().loc());        }
+
+CATALOG      { return Parser::make_CATALOG(get().loc());     }
+
+TRACK        { return Parser::make_TRACK(get().loc());       }
+ISRC         { return Parser::make_ISRC(get().loc());        }
+AUDIOFILE    { return Parser::make_AUDIOFILE(get().loc());   }
+FILE         { return Parser::make_FILETAG(get().loc());     }
+
+NO           { /* TODO */ }
+COPY         { /* TODO */ }
+PRE_EMPHASIS        { /* TODO */ }
+TWO_CHANNEL_AUDIO   { /* TODO */ }
+FOUR_CHANNEL_AUDIO  { /* TODO */ }
+PREGAP       { return Parser::make_PREGAP(get().loc());      }
+START        { /* TODO */ }
+END          { /* TODO */ }
+INDEX        { return Parser::make_INDEX(get().loc());       }
+
+SWAP         { /* TODO */ }
+DATAFILE     { return Parser::make_DATAFILE(get().loc());    }
+FIFO         { /* TODO */ }
+SILENCE      { /* TODO */ }
+ZERO         { /* TODO */ }
+
+AUDIO        { return Parser::make_AUDIO(get().loc());       }
+MODE0        { return Parser::make_MODE0(get().loc());       }
+MODE1        { return Parser::make_MODE1(get().loc());       }
+MODE1_RAW    { return Parser::make_MODE1_RAW(get().loc());   }
+MODE2        { return Parser::make_MODE2(get().loc());       }
+MODE2_RAW    { return Parser::make_MODE2_RAW(get().loc());   }
+MODE2_FORM1  { return Parser::make_MODE2_FORM1(get().loc()); }
+MODE2_FORM2  { return Parser::make_MODE2_FORM2(get().loc()); }
+MODE2_FORM_MIX { return Parser::make_MODE2_FORM_MIX(get().loc());   }
+
+RW           { return Parser::make_RW(get().loc());          }
+RW_RAW       { return Parser::make_RW_RAW(get().loc());      }
+
+CD_TEXT      { /* TODO */ }
+LANGUAGE     { /* TODO */ }
+LANGUAGE_MAP { /* TODO */ }
+TITLE        { return Parser::make_TITLE(get().loc());       }
+PERFORMER    { return Parser::make_PERFORMER(get().loc());   }
+SONGWRITER   { return Parser::make_SONGWRITER(get().loc());  }
+COMPOSER     { return Parser::make_COMPOSER(get().loc());    }
+ARRANGER     { return Parser::make_ARRANGER(get().loc());    }
+MESSAGE      { /* TODO */ }
+DISC_ID      { return Parser::make_DISC_ID(get().loc());     }
+GENRE        { /* TODO */ }
+TOC_INFO1    { /* TODO */ }
+TOC_INFO2    { /* TODO */ }
+RESERVED1    { /* TODO */ }
+RESERVED2    { /* TODO */ }
+RESERVED3    { /* TODO */ }
+RESERVED4    { /* TODO */ }
+CLOSED       { /* TODO */ }
+UPC_EAN      { return Parser::make_UPC_EAN(get().loc());    }
+SIZE_INFO    { return Parser::make_SIZE_INFO(get().loc());  }
+
+EN                  { /* TODO */ }
+ENCODING_ISO_8859_1 { /* TODO */ }
+ENCODING_ASCII      { /* TODO */ }
+ENCODING_MS_JIS     { /* TODO */ }
+ENCODING_KOREAN     { /* TODO */ }
+ENCODING_MANDARIN   { /* TODO */ }
+
+
+COMMENT_START   { BEGIN(COMMENT); }
+<COMMENT>[^\n]* { BEGIN(INITIAL); /* discard empty line */ }
+
+{QSTRING1}|{QSTRING2} {
+				return Parser::make_STRING(
+					remove_quotes(YYText()), get().loc());
+				}
+
+COLON           { return Parser::make_COLON(get().loc()); }
+
+COMMA           { return Parser::make_COMMA(get().loc()); }
+
+<INITIAL>{GLYPHS}     { return Parser::make_STRING(YYText(), get().loc()); }
+
+<INITIAL>{CTRLCHARS}  { /* ignore things like "ISRC ^\W" and other junk */ }
+
+<*>\n           { BEGIN(INITIAL); /* acts as delimiter */ }
+
+<<EOF>>         { return yyterminate(); }
+
+%%
+
+#pragma GCC diagnostic pop
+#pragma clang diagnostic pop
+
+namespace arcsdec { namespace details {
+namespace cdrdaotoc { namespace yycdrdaotoc {
+
+void Lexer::notify(const std::string& token_name, const std::string& chars)
+{
+	driver_.notify(YYSTATE, token_name, chars);
+}
+
+void Lexer::unexpected(const std::string& chars, const location& loc)
+{
+	driver_.unexpected(chars, loc);
+}
+
+void Lexer::shift_pos(const int line_no, const int token_length)
+{
+	// Current position is always the _end_ of the current token
+
+	if (line_no != current_pos_.line) // newline occurred?
+	{
+		current_pos_.lines(line_no - current_pos_.line);
+		current_pos_.column = 1; // Ignore newlines when stepping forward
+	} else
+	{
+		current_pos_.columns(token_length);
+	}
+
+	//std::cout << "Line " << line_no << ", token_length: " << token_length;
+	//std::cout << " - pos is now: " << current_pos_ << '\n';
+}
+
+Driver& Lexer::get()
+{
+	return driver_;
+}
+
+} /* namespace yycdrdaotoc */ } /* namespace cdrdaotoc */
+} /*details*/ } /*arcsdec*/
+

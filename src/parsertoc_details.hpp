@@ -35,7 +35,7 @@ namespace details
  *
  * \brief Implementation details of parsertoc.
  */
-namespace cdrdao
+namespace cdrdaotoc
 {
 
 using arcstk::ToC;
@@ -52,16 +52,10 @@ using arcstk::ToC;
  */
 
 /**
- * \brief Implementation for libcdio-based reading of CDRDAO/TOC files.
+ * \brief Implementation for parsing of CDRDAO/TOC files.
  */
 class TocParserImpl final : public MetadataParserImpl
 {
-public:
-
-	// TODO
-
-private:
-
 	std::unique_ptr<ToC> do_parse(const std::string& filename) final;
 
 	std::unique_ptr<FileReaderDescriptor> do_descriptor() const final;
@@ -70,7 +64,7 @@ private:
 /// @}
 
 
-} // namespace cdrdao
+} // namespace cdrdaotoc
 } // namespace details
 } // namespace v_1_0_0
 } // namespace arcsdec

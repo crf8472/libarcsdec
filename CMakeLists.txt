@@ -184,6 +184,9 @@ list (APPEND INTERFACE_HEADERS
 ## --- Add and configure project target
 
 add_library (${PROJECT_NAME} SHARED
+	"${PROJECT_SOURCE_DIR}/cdrdaotoc/driver.cpp"
+	"${PROJECT_SOURCE_DIR}/cdrdaotoc/handler.cpp"
+	"${PROJECT_SOURCE_DIR}/cdrdaotoc/tochandler.cpp"
 	"${PROJECT_SOURCE_DIR}/cuesheet/driver.cpp"
 	"${PROJECT_SOURCE_DIR}/cuesheet/handler.cpp"
 	"${PROJECT_SOURCE_DIR}/cuesheet/tochandler.cpp"
@@ -193,8 +196,8 @@ add_library (${PROJECT_NAME} SHARED
 	"${PROJECT_SOURCE_DIR}/libinspect.cpp"
 	"${PROJECT_SOURCE_DIR}/metaparser.cpp"
 	"${PROJECT_SOURCE_DIR}/parsercue.cpp"
+	"${PROJECT_SOURCE_DIR}/parsertoc.cpp"
 	## parserlibcue.cpp  is optional and default OFF, depends on libcue
-	## parsertoc.cpp     is optional and default OFF, depends on libcdio
 	## readerffmpeg.cpp  is optional and default ON,  depends on parts of ffmpeg
 	## readerflac.cpp    is optional and default ON,  depends on FLAC
 	## readersndfile.cpp is optional and default OFF, depends on libsndfile
@@ -411,10 +414,10 @@ else()
 endif()
 
 
-## --- Cuesheet parser and scanner
-
 find_package (BISON ) # 3.8.2
 find_package (FLEX  ) # 2.6.4
+
+## --- Cuesheet parser and scanner
 
 bison_target (cueparser
 	${PROJECT_SOURCE_DIR}/cuesheet/cuesheet.y
@@ -448,12 +451,45 @@ add_dependencies      (${PROJECT_NAME} cuesheet )
 target_link_libraries (${PROJECT_NAME} PRIVATE cuesheet )
 
 
+## -- CDRDAO/TOC parser and scanner
+
+bison_target (tocparser
+	${PROJECT_SOURCE_DIR}/cdrdaotoc/cdrdaotoc.y
+	${PROJECT_BUILD_SOURCE_DIR}/cdrdaotoc.tab.cpp
+	DEFINES_FILE ${PROJECT_BUILD_SOURCE_DIR}/cdrdaotoc.tab.hpp
+	COMPILE_FLAGS "--verbose -Wconflicts-sr -Wconflicts-rr -Wcounterexamples"
+	)
+
+flex_target (tocscanner
+	${PROJECT_SOURCE_DIR}/cdrdaotoc/cdrdaotoc.l
+	${PROJECT_BUILD_SOURCE_DIR}/cdrdaotoc.yy.cpp
+	COMPILE_FLAGS "--verbose"
+	)
+
+add_flex_bison_dependency (tocscanner tocparser )
+
+add_library (cdrdaotoc OBJECT
+	${BISON_tocparser_OUTPUTS}
+	${FLEX_tocscanner_OUTPUTS}
+	)
+
+set_property (TARGET cdrdaotoc PROPERTY POSITION_INDEPENDENT_CODE ON )
+
+target_include_directories (cdrdaotoc
+	PRIVATE ${PROJECT_LOCAL_INCLUDE_DIR}     ## public headers
+	PRIVATE ${PROJECT_SOURCE_DIR}/cdrdaotoc/ ## lexer.hpp + lexer_defs.hpp
+	PRIVATE ${PROJECT_BUILD_SOURCE_DIR}      ## generated sources
+	)
+
+add_dependencies      (${PROJECT_NAME} cdrdaotoc )
+target_link_libraries (${PROJECT_NAME} PRIVATE cdrdaotoc )
+
+
 ## --- Configure optional features
 
 ## Default configuration for optional features
 
 option (WITH_LIBCUE     "Add libcue parsing capability"       OFF )
-option (WITH_LIBCDIO    "Add libcdio parsing capabilities"    OFF )
 option (WITH_FLAC       "Add FLAC reading capability"          ON )
 option (WITH_WAVPACK    "Add WavPack reading capability"       ON )
 option (WITH_FFMPEG     "Add ffmpeg reading capabilities"      ON )
@@ -479,26 +515,6 @@ else (WITH_LIBCUE)
 
 	message (STATUS "Build without libcue parsing capability" )
 endif (WITH_LIBCUE)
-
-
-## --- Optional: Add CDRDAO/TOC (requires libcdio, default: OFF)
-
-if (WITH_LIBCDIO )
-
-	message (STATUS "Build with cdrdao/toc parsing capability" )
-	message (WARNING "There is currently no functional libcio support" )
-
-	find_package (libcdio 2.0.0 REQUIRED )
-	list (APPEND PKG_REQUIRE_ARRAY "libcdio >= 2.0.0" )
-
-	target_include_directories (${PROJECT_NAME}
-		PRIVATE ${libcdio_INCLUDE_DIRS} )
-
-	target_link_libraries (${PROJECT_NAME} PUBLIC ${libcdio_LIBRARIES} )
-
-	target_sources (${PROJECT_NAME}
-		PRIVATE ${PROJECT_SOURCE_DIR}/parsertoc.cpp )
-endif()
 
 
 ## --- Optional: Add FLAC (requires FLAC++, default: ON)

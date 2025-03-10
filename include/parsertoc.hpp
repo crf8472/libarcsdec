@@ -4,7 +4,7 @@
 /**
  * \file
  *
- * \brief Parser for cdrdao's toc files, implemented with libcdio.
+ * \brief Parser for cdrdao's toc files.
  */
 
 #ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
@@ -22,7 +22,7 @@ inline namespace v_1_0_0
 {
 
 /**
- * \brief A MetadataParser for CDRDAO/TOC files, implemented with libcdio.
+ * \brief A MetadataParser for CDRDAO/TOC files.
  */
 class DescriptorToc final : public FileReaderDescriptor
 {
@@ -36,6 +36,11 @@ public:
 
 private:
 
+	/**
+	 * \brief Returns "cdrtoc".
+	 *
+	 * \return "cdrtoc".
+	 */
 	std::string do_id() const final;
 
 	/**
