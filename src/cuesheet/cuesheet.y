@@ -109,7 +109,7 @@
 	 */
 	static arcsdec::v_1_0_0::details::cuesheet::yycuesheet::Parser::symbol_type
 	yylex(
-			arcsdec::v_1_0_0::details::cuesheet::yycuesheet::Lexer &lexer,
+			arcsdec::v_1_0_0::details::cuesheet::yycuesheet::Lexer& lexer,
 			arcsdec::v_1_0_0::details::cuesheet::Driver& /*driver*/)
 	{
 		return lexer.next_token(); // renamed yylex()

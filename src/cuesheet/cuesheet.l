@@ -101,7 +101,7 @@ using arcsdec::details::cuesheet::yycuesheet::location;
 using arcsdec::details::cuesheet::yycuesheet::position;
 
 // remove quotes from quoted string
-std::string remove_quotes(const std::string& s)
+static std::string remove_quotes(const std::string& s)
 {
 	if (s.length() < 2)  { return s; };
 	if (s.length() == 2) { return std::string{}; };
