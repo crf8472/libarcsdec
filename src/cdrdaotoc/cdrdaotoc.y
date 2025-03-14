@@ -36,12 +36,12 @@
 %locations
 
 /* Define parameters to pass to yylex() */
-%lex-param   { Lexer  &lexer }
-%lex-param   { Driver &driver }
+%lex-param   { Lexer&  lexer }
+%lex-param   { Driver& driver }
 
 /* Define parameters to pass to yyparse() */
-%parse-param { Lexer  &lexer }
-%parse-param { Driver &driver }
+%parse-param { Lexer&  lexer }
+%parse-param { Driver& driver }
 
 
 /* Goes to .tab.hpp header file (therefore included in source) */
@@ -186,6 +186,13 @@
 %token UPC_EAN
 %token SIZE_INFO
 
+%token EN
+%token ENCODING_ISO_8859_1
+%token ENCODING_ASCII
+%token ENCODING_MS_JIS
+%token ENCODING_KOREAN
+%token ENCODING_MANDARIN
+
 %token <std::string> NUMBER
 %token <std::string> STRING
 %token COMMENT_START
@@ -208,10 +215,15 @@
 
 
 cdrtoc
-	: global_statements cdtext_statement opt_rem_statements track_list
+	: opt_global_statements opt_global_cdtext_statement tracks
 		{
 			driver.get_handler()->end_input();
 		}
+	;
+
+opt_global_statements
+	: global_statements
+	| /* none */
 	;
 
 global_statements
@@ -225,45 +237,19 @@ global_statement
 			driver.get_handler()->catalog($2);
 		}
 	| toctype
-		{
-			// TODO
-		}
-	| rem_statement
 	;
 
 toctype
 	: CD_DA | CD_ROM | CD_ROM_XA | CD_I
-		{
-			// TODO
-		}
 	;
 
-opt_rem_statements
-	: rem_statements
+opt_global_cdtext_statement
+	: CD_TEXT  BRACE_OPEN  opt_language_map opt_cdtext_blocks  BRACE_CLOSE
+	;
+
+opt_language_map
+	: LANGUAGE_MAP  BRACE_OPEN  language_mappings  BRACE_CLOSE
 	| /* none */
-	;
-
-rem_statements
-	: rem_statements rem_statement
-	| rem_statement
-	;
-
-rem_statement
-	: COMMENT_START STRING
-	;
-
-cdtext_statement
-	: CD_TEXT BRACE_OPEN  language_map_statement opt_cdtext_block  BRACE_CLOSE
-		{
-			// TODO
-		}
-	;
-
-language_map_statement
-	: LANGUAGE_MAP BRACE_OPEN  language_mappings  BRACE_CLOSE
-		{
-			// TODO
-		}
 	;
 
 language_mappings
@@ -273,25 +259,35 @@ language_mappings
 
 language_mapping
 	: NUMBER COLON NUMBER
-	| NUMBER COLON ENDTAG
-		{
-			// TODO
-		}
+	| NUMBER COLON EN
 	;
 
-opt_cdtext_block
-	: LANGUAGE NUMBER BRACE_OPEN  cdtext_item  BRACE_CLOSE
-		{
-			// TODO
-		}
+opt_cdtext_blocks
+	: cdtext_blocks
 	| /* none */
+	;
+
+cdtext_blocks
+	: cdtext_blocks cdtext_block
+	| cdtext_block
+	;
+
+cdtext_block
+	: LANGUAGE NUMBER BRACE_OPEN  opt_cdtext_items  BRACE_CLOSE
+	;
+
+opt_cdtext_items
+	: cdtext_items
+	| /* none */
+	;
+
+cdtext_items
+	: cdtext_items cdtext_item
+	| cdtext_item
 	;
 
 cdtext_item
 	: pack_type cdtext_item_value
-		{
-			// TODO
-		}
 	;
 
 pack_type
@@ -322,21 +318,16 @@ cdtext_item_value
 numbers
 	: numbers COMMA NUMBER
 	| NUMBER
-		{
-			// TODO
-		}
 	;
 
-track_list
-	: track_list track
+tracks
+	: tracks track
 	| track
-		{
-			// TODO
-		}
 	;
 
 track
-	:  TRACK track_mode opt_subchannel_mode track_info
+	:  TRACK track_mode opt_subchannel_mode opt_track_flags opt_cdtext_track
+		opt_pregap trailing_track_info
 	;
 
 track_mode
@@ -360,21 +351,17 @@ opt_subchannel_mode
 	| /* none */
 	;
 
-track_info
-	: opt_tech cdtext_track pregap subtrack_statements opt_index_statements
-	;
-
-opt_tech
-	: track_statements_1
+opt_track_flags
+	: track_flags
 	| /* none */
 	;
 
-track_statements_1
-	: track_statements_1 track_statement_1
-	| track_statement_1
+track_flags
+	: track_flags track_flag
+	| track_flag
 	;
 
-track_statement_1
+track_flag
 	: ISRC STRING
 	| TWO_CHANNEL_AUDIO
 	| FOUR_CHANNEL_AUDIO
@@ -387,23 +374,38 @@ boolean_attr
 	| PRE_EMPHASIS
 	;
 
-cdtext_track
-	: CD_TEXT BRACE_OPEN opt_cdtext_block BRACE_CLOSE
+opt_cdtext_track
+	: cdtext_track
+	| /* none */
 	;
 
-pregap
+cdtext_track
+	: CD_TEXT BRACE_OPEN opt_cdtext_blocks BRACE_CLOSE
+	;
+
+opt_pregap
 	: PREGAP msf_time
 	| /* none */
 	;
 
-subtrack_statements
-	: subtrack_statement
-	| START msf_time
-	| END   msf_time
+trailing_track_info
+	: subtrack_or_start_or_ends /* FIXME Must be optional => */ index_statements
 	;
 
-subtrack_statement: audiofile STRING opt_swap opt_number_tag samples
-	| DATAFILE STRING opt_data_length
+subtrack_or_start_or_ends
+	: subtrack_or_start_or_ends subtrack_or_start_or_end
+	| subtrack_or_start_or_end
+	;
+
+subtrack_or_start_or_end
+	: subtrack_statement
+	| START opt_msf_time
+	| END   opt_msf_time
+	;
+
+subtrack_statement
+	: audiofile STRING opt_swap audiofile_statement_corpus
+	| DATAFILE STRING opt_time_spec
 	| FIFO STRING data_length
 	| SILENCE samples
 	| ZERO opt_data_mode opt_subchannel_mode data_length
@@ -414,13 +416,18 @@ audiofile
 	| FILETAG
 	;
 
+audiofile_statement_corpus
+	: samples opt_data_length
+	| number_tag samples
+	;
+
 opt_swap
 	: SWAP
 	| /* none */
 	;
 
-opt_number_tag
-	: number_tag
+opt_time_spec
+	: number_tag opt_data_length
 	| /* none */
 	;
 
@@ -434,8 +441,8 @@ samples
 	;
 
 opt_data_length
-	: number_tag data_length
-	| opt_number_tag
+	: data_length
+	| /* none */
 	;
 
 data_length
@@ -465,6 +472,11 @@ index_statements
 
 index_statement
 	: INDEX msf_time
+	;
+
+opt_msf_time
+	: msf_time
+	| /* none */
 	;
 
 msf_time

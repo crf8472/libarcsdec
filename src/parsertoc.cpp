@@ -64,6 +64,9 @@ std::unique_ptr<ToC> TocParserImpl::do_parse(const std::string& filename)
 	auto handler = ToCHandler{};
 	driver.set_handler(handler);
 
+	driver.set_lexer_debug_level(1);
+	driver.set_parser_debug_level(1);
+
 	std::ifstream file;
 	file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 	try
@@ -79,7 +82,7 @@ std::unique_ptr<ToC> TocParserImpl::do_parse(const std::string& filename)
 	if (driver.parse() != 0)
 	{
 		throw std::runtime_error(
-				std::string { "Faild to parse file " } + filename);
+				std::string { "Failed to parse file " } + filename);
 	}
 
 	return make_toc(handler.offsets(), handler.filenames());

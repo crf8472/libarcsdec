@@ -20,7 +20,7 @@
 %option noyywrap
 
 /* Specify name of the generated lexer class */
-%option yyclass="arcsdec::details::cdrdaotoc::yytoc::Lexer"
+%option yyclass="arcsdec::details::cdrdaotoc::yycdrdaotoc::Lexer"
 
 /* Maintain the lineno */
 %option yylineno
@@ -44,8 +44,6 @@
 /* (for cdrdaotoc: cdrdaotoc_lexer.hpp).                                      */
 /* */
 /* Cf. Flex Manual, Ch. 18 'Generating C++-Scanners' (very end of the chapter)*/
-
-%x COMMENT
 
 %{
 // from cdrdaotoc.l
@@ -120,106 +118,95 @@ COMMENT_START   //[[:blank:]]+
 COLON           :
 COMMA           ,
 HASH            #
-BRACE_OPEN      {
-BRACE_CLOSE     }
+BRACE_OPEN      \{
+BRACE_CLOSE     \}
 
 %%
 
 <*>{WHITESPACE} { /* ignore */ }
 
-{DIGITS}    {
-				return Parser::make_NUMBER(YYText(), get().loc());
-			}
+{DIGITS}       { return Parser::make_NUMBER(YYText(), get().loc()); }
 
-CD_DA        { return Parser::make_CD_DA(get().loc());       }
-CD_ROM       { return Parser::make_CD_ROM(get().loc());      }
-CD_ROM_XA    { return Parser::make_CD_ROM_XA(get().loc());   }
-CD_I         { return Parser::make_CD_I(get().loc());        }
+CD_DA          { return Parser::make_CD_DA(get().loc());          }
+CD_ROM         { return Parser::make_CD_ROM(get().loc());         }
+CD_ROM_XA      { return Parser::make_CD_ROM_XA(get().loc());      }
+CD_I           { return Parser::make_CD_I(get().loc());           }
 
-CATALOG      { return Parser::make_CATALOG(get().loc());     }
+CATALOG        { return Parser::make_CATALOG(get().loc());        }
 
-TRACK        { return Parser::make_TRACK(get().loc());       }
-ISRC         { return Parser::make_ISRC(get().loc());        }
-AUDIOFILE    { return Parser::make_AUDIOFILE(get().loc());   }
-FILE         { return Parser::make_FILETAG(get().loc());     }
+TRACK          { return Parser::make_TRACK(get().loc());          }
+ISRC           { return Parser::make_ISRC(get().loc());           }
+AUDIOFILE      { return Parser::make_AUDIOFILE(get().loc());      }
+FILE           { return Parser::make_FILETAG(get().loc());        }
 
-NO           { /* TODO */ }
-COPY         { /* TODO */ }
-PRE_EMPHASIS        { /* TODO */ }
-TWO_CHANNEL_AUDIO   { /* TODO */ }
-FOUR_CHANNEL_AUDIO  { /* TODO */ }
-PREGAP       { return Parser::make_PREGAP(get().loc());      }
-START        { /* TODO */ }
-END          { /* TODO */ }
-INDEX        { return Parser::make_INDEX(get().loc());       }
+NO                 { return Parser::make_NO(get().loc());                 }
+COPY               { return Parser::make_COPY(get().loc());               }
+PRE_EMPHASIS       { return Parser::make_PRE_EMPHASIS(get().loc());       }
+TWO_CHANNEL_AUDIO  { return Parser::make_TWO_CHANNEL_AUDIO(get().loc());  }
+FOUR_CHANNEL_AUDIO { return Parser::make_FOUR_CHANNEL_AUDIO(get().loc()); }
+PREGAP             { return Parser::make_PREGAP(get().loc());             }
+START              { return Parser::make_START(get().loc());              }
+END                { return Parser::make_ENDTAG(get().loc());             }
+INDEX              { return Parser::make_INDEX(get().loc());              }
 
-SWAP         { /* TODO */ }
-DATAFILE     { return Parser::make_DATAFILE(get().loc());    }
-FIFO         { /* TODO */ }
-SILENCE      { /* TODO */ }
-ZERO         { /* TODO */ }
+SWAP           { return Parser::make_SWAP(get().loc());           }
+DATAFILE       { return Parser::make_DATAFILE(get().loc());       }
+FIFO           { return Parser::make_FIFO(get().loc());           }
+SILENCE        { return Parser::make_SILENCE(get().loc());        }
+ZERO           { return Parser::make_ZERO(get().loc());           }
 
-AUDIO        { return Parser::make_AUDIO(get().loc());       }
-MODE0        { return Parser::make_MODE0(get().loc());       }
-MODE1        { return Parser::make_MODE1(get().loc());       }
-MODE1_RAW    { return Parser::make_MODE1_RAW(get().loc());   }
-MODE2        { return Parser::make_MODE2(get().loc());       }
-MODE2_RAW    { return Parser::make_MODE2_RAW(get().loc());   }
-MODE2_FORM1  { return Parser::make_MODE2_FORM1(get().loc()); }
-MODE2_FORM2  { return Parser::make_MODE2_FORM2(get().loc()); }
-MODE2_FORM_MIX { return Parser::make_MODE2_FORM_MIX(get().loc());   }
+AUDIO          { return Parser::make_AUDIO(get().loc());          }
+MODE0          { return Parser::make_MODE0(get().loc());          }
+MODE1          { return Parser::make_MODE1(get().loc());          }
+MODE1_RAW      { return Parser::make_MODE1_RAW(get().loc());      }
+MODE2          { return Parser::make_MODE2(get().loc());          }
+MODE2_RAW      { return Parser::make_MODE2_RAW(get().loc());      }
+MODE2_FORM1    { return Parser::make_MODE2_FORM1(get().loc());    }
+MODE2_FORM2    { return Parser::make_MODE2_FORM2(get().loc());    }
+MODE2_FORM_MIX { return Parser::make_MODE2_FORM_MIX(get().loc()); }
 
-RW           { return Parser::make_RW(get().loc());          }
-RW_RAW       { return Parser::make_RW_RAW(get().loc());      }
+RW             { return Parser::make_RW(get().loc());             }
+RW_RAW         { return Parser::make_RW_RAW(get().loc());         }
 
-CD_TEXT      { /* TODO */ }
-LANGUAGE     { /* TODO */ }
-LANGUAGE_MAP { /* TODO */ }
-TITLE        { return Parser::make_TITLE(get().loc());       }
-PERFORMER    { return Parser::make_PERFORMER(get().loc());   }
-SONGWRITER   { return Parser::make_SONGWRITER(get().loc());  }
-COMPOSER     { return Parser::make_COMPOSER(get().loc());    }
-ARRANGER     { return Parser::make_ARRANGER(get().loc());    }
-MESSAGE      { /* TODO */ }
-DISC_ID      { return Parser::make_DISC_ID(get().loc());     }
-GENRE        { /* TODO */ }
-TOC_INFO1    { /* TODO */ }
-TOC_INFO2    { /* TODO */ }
-RESERVED1    { /* TODO */ }
-RESERVED2    { /* TODO */ }
-RESERVED3    { /* TODO */ }
-RESERVED4    { /* TODO */ }
-CLOSED       { /* TODO */ }
-UPC_EAN      { return Parser::make_UPC_EAN(get().loc());    }
-SIZE_INFO    { return Parser::make_SIZE_INFO(get().loc());  }
+CD_TEXT        { return Parser::make_CD_TEXT(get().loc());        }
+LANGUAGE       { return Parser::make_LANGUAGE(get().loc());       }
+LANGUAGE_MAP   { return Parser::make_LANGUAGE_MAP(get().loc());   }
+TITLE          { return Parser::make_TITLE(get().loc());          }
+PERFORMER      { return Parser::make_PERFORMER(get().loc());      }
+SONGWRITER     { return Parser::make_SONGWRITER(get().loc());     }
+COMPOSER       { return Parser::make_COMPOSER(get().loc());       }
+ARRANGER       { return Parser::make_ARRANGER(get().loc());       }
+MESSAGE        { return Parser::make_MESSAGE(get().loc());        }
+DISC_ID        { return Parser::make_DISC_ID(get().loc());        }
+GENRE          { return Parser::make_GENRE(get().loc());          }
+TOC_INFO1      { return Parser::make_TOC_INFO1(get().loc());      }
+TOC_INFO2      { return Parser::make_TOC_INFO2(get().loc());      }
+RESERVED1      { return Parser::make_RESERVED1(get().loc());      }
+RESERVED2      { return Parser::make_RESERVED2(get().loc());      }
+RESERVED3      { return Parser::make_RESERVED3(get().loc());      }
+RESERVED4      { return Parser::make_RESERVED4(get().loc());      }
+CLOSED         { return Parser::make_CLOSED(get().loc());         }
+UPC_EAN        { return Parser::make_UPC_EAN(get().loc());        }
+SIZE_INFO      { return Parser::make_SIZE_INFO(get().loc());      }
 
-EN                  { /* TODO */ }
-ENCODING_ISO_8859_1 { /* TODO */ }
-ENCODING_ASCII      { /* TODO */ }
-ENCODING_MS_JIS     { /* TODO */ }
-ENCODING_KOREAN     { /* TODO */ }
-ENCODING_MANDARIN   { /* TODO */ }
+EN                  { return Parser::make_EN(get().loc());                  }
+ENCODING_ISO_8859_1 { return Parser::make_ENCODING_ISO_8859_1(get().loc()); }
+ENCODING_ASCII      { return Parser::make_ENCODING_ASCII(get().loc());      }
+ENCODING_MS_JIS     { return Parser::make_ENCODING_MS_JIS(get().loc());     }
+ENCODING_KOREAN     { return Parser::make_ENCODING_KOREAN(get().loc());     }
+ENCODING_MANDARIN   { return Parser::make_ENCODING_MANDARIN(get().loc());   }
 
-
-COMMENT_START   { BEGIN(COMMENT); }
-<COMMENT>[^\n]* { BEGIN(INITIAL); /* discard empty line */ }
+{BRACE_OPEN}   { return Parser::make_BRACE_OPEN(get().loc());     }
+{BRACE_CLOSE}  { return Parser::make_BRACE_CLOSE(get().loc());    }
+{COLON}        { return Parser::make_COLON(get().loc());          }
+{COMMA}        { return Parser::make_COMMA(get().loc());          }
 
 {QSTRING1}|{QSTRING2} {
-				return Parser::make_STRING(
-					remove_quotes(YYText()), get().loc());
-				}
+          return Parser::make_STRING(remove_quotes(YYText()), get().loc()); }
 
-COLON           { return Parser::make_COLON(get().loc()); }
+"//".*      { /* ignore */ }
 
-COMMA           { return Parser::make_COMMA(get().loc()); }
-
-<INITIAL>{GLYPHS}     { return Parser::make_STRING(YYText(), get().loc()); }
-
-<INITIAL>{CTRLCHARS}  { /* ignore things like "ISRC ^\W" and other junk */ }
-
-<*>\n           { BEGIN(INITIAL); /* acts as delimiter */ }
-
-<<EOF>>         { return yyterminate(); }
+<<EOF>>     { return yyterminate(); }
 
 %%
 

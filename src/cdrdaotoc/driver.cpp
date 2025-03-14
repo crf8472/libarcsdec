@@ -45,9 +45,9 @@ void Driver::set_lexer_debug_level(const int lvl)
 }
 
 
-void Driver::set_parser_debug_level(const int /*lvl*/)
+void Driver::set_parser_debug_level(const int lvl)
 {
-	//parser_->set_debug_level(lvl); // %define parse.trace
+	parser_->set_debug_level(lvl); // %define parse.trace
 }
 
 
