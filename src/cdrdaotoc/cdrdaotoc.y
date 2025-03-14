@@ -389,18 +389,19 @@ opt_pregap
 	;
 
 trailing_track_info
-	: subtrack_or_start_or_ends /* FIXME Must be optional => */ index_statements
+	: trailing_track_info index_statement
+	| opt_subtrack_or_start_or_ends subtrack_or_start_or_end
 	;
 
-subtrack_or_start_or_ends
-	: subtrack_or_start_or_ends subtrack_or_start_or_end
-	| subtrack_or_start_or_end
+opt_subtrack_or_start_or_ends
+	: opt_subtrack_or_start_or_ends subtrack_or_start_or_end
+	| /* none */
 	;
 
 subtrack_or_start_or_end
 	: subtrack_statement
-	| START opt_msf_time
-	| END   opt_msf_time
+	| START msf_time /* TODO msf_time is optional */
+	| END   msf_time /* TODO msf_time is optional */
 	;
 
 subtrack_statement
@@ -458,16 +459,6 @@ opt_data_mode
 data_mode
 	: track_mode
 	| MODE0
-	;
-
-opt_index_statements
-	: index_statements
-	| /* none */
-	;
-
-index_statements
-	: index_statements index_statement
-	| index_statement
 	;
 
 index_statement
