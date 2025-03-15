@@ -47,6 +47,12 @@ void Driver::set_lexer_debug_level(const int lvl)
 
 void Driver::set_parser_debug_level(const int /*lvl*/)
 {
+	// Commented out since parser_ does not have function set_debug_level()
+	// when bison is not called with parameter --debug.
+	// This parameter is deliberately missing for CMAKE_BUILD_TYPE=Release.
+	// For debugging, add --debug to COMPILE_FLAGS in CMakeLists.txt and
+	// uncomment the line below as well as parameter 'lvl'.
+
 	//parser_->set_debug_level(lvl); // %define parse.trace
 }
 
