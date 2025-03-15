@@ -6,7 +6,9 @@
 #include "handler.hpp"
 #endif
 
+#ifndef __LIBARCSDEC_CDRTOC_LEXER_HPP__
 #include "cdrtoc_lexer.hpp"   // includes also cdrtoc.tab.hpp
+#endif
 
 
 namespace arcsdec
@@ -20,16 +22,16 @@ namespace cdrtoc
 
 
 Driver::Driver()
-	: current_token_location_{}
-	, lexer_ (std::make_unique<yycdrtoc::Lexer>(*this))
-	, parser_(std::make_unique<yycdrtoc::Parser>(*lexer_, *this))
-	, handler_ {nullptr}
+	: current_token_location_ { /* empty */ }
+	, lexer_   { std::make_unique<yycdrtoc::Lexer>(*this) }
+	, parser_  { std::make_unique<yycdrtoc::Parser>(*lexer_, *this) }
+	, handler_ { nullptr }
 {
 	// empty
 }
 
 
-Driver::~Driver() = default;
+Driver::~Driver() noexcept = default;
 
 
 void Driver::set_input(std::istream& is)

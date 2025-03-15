@@ -24,7 +24,9 @@
 #include <FlexLexer.h>
 #undef yyFlexLexer
 
+#ifndef __LIBARCSDEC_CUESHEET_LEXER_DEFS_HPP__
 #include "cuesheet_lexer_defs.hpp"
+#endif
 
 
 #pragma GCC diagnostic pop
