@@ -21,7 +21,7 @@ inline namespace v_1_0_0
 {
 namespace details
 {
-namespace cdrdaotoc
+namespace cdrtoc
 {
 
 /**
@@ -115,7 +115,7 @@ public:
 	std::vector<std::string> filenames() const;
 };
 
-} // namespace cdrdaotoc
+} // namespace cdrtoc
 } // namespace details
 } // namespace v_1_0_0
 } // namespace arcsdec

@@ -184,9 +184,9 @@ list (APPEND INTERFACE_HEADERS
 ## --- Add and configure project target
 
 add_library (${PROJECT_NAME} SHARED
-	"${PROJECT_SOURCE_DIR}/cdrdaotoc/driver.cpp"
-	"${PROJECT_SOURCE_DIR}/cdrdaotoc/handler.cpp"
-	"${PROJECT_SOURCE_DIR}/cdrdaotoc/tochandler.cpp"
+	"${PROJECT_SOURCE_DIR}/cdrtoc/driver.cpp"
+	"${PROJECT_SOURCE_DIR}/cdrtoc/handler.cpp"
+	"${PROJECT_SOURCE_DIR}/cdrtoc/tochandler.cpp"
 	"${PROJECT_SOURCE_DIR}/cuesheet/driver.cpp"
 	"${PROJECT_SOURCE_DIR}/cuesheet/handler.cpp"
 	"${PROJECT_SOURCE_DIR}/cuesheet/tochandler.cpp"
@@ -454,35 +454,35 @@ target_link_libraries (${PROJECT_NAME} PRIVATE cuesheet )
 ## -- CDRDAO/TOC parser and scanner
 
 bison_target (tocparser
-	${PROJECT_SOURCE_DIR}/cdrdaotoc/cdrdaotoc.y
-	${PROJECT_BUILD_SOURCE_DIR}/cdrdaotoc.tab.cpp
-	DEFINES_FILE ${PROJECT_BUILD_SOURCE_DIR}/cdrdaotoc.tab.hpp
+	${PROJECT_SOURCE_DIR}/cdrtoc/cdrtoc.y
+	${PROJECT_BUILD_SOURCE_DIR}/cdrtoc.tab.cpp
+	DEFINES_FILE ${PROJECT_BUILD_SOURCE_DIR}/cdrtoc.tab.hpp
 	COMPILE_FLAGS "--verbose -Wconflicts-sr -Wconflicts-rr -Wcounterexamples"
 	)
 
 flex_target (tocscanner
-	${PROJECT_SOURCE_DIR}/cdrdaotoc/cdrdaotoc.l
-	${PROJECT_BUILD_SOURCE_DIR}/cdrdaotoc.yy.cpp
+	${PROJECT_SOURCE_DIR}/cdrtoc/cdrtoc.l
+	${PROJECT_BUILD_SOURCE_DIR}/cdrtoc.yy.cpp
 	COMPILE_FLAGS "--verbose"
 	)
 
 add_flex_bison_dependency (tocscanner tocparser )
 
-add_library (cdrdaotoc OBJECT
+add_library (cdrtoc OBJECT
 	${BISON_tocparser_OUTPUTS}
 	${FLEX_tocscanner_OUTPUTS}
 	)
 
-set_property (TARGET cdrdaotoc PROPERTY POSITION_INDEPENDENT_CODE ON )
+set_property (TARGET cdrtoc PROPERTY POSITION_INDEPENDENT_CODE ON )
 
-target_include_directories (cdrdaotoc
-	PRIVATE ${PROJECT_LOCAL_INCLUDE_DIR}     ## public headers
-	PRIVATE ${PROJECT_SOURCE_DIR}/cdrdaotoc/ ## lexer.hpp + lexer_defs.hpp
-	PRIVATE ${PROJECT_BUILD_SOURCE_DIR}      ## generated sources
+target_include_directories (cdrtoc
+	PRIVATE ${PROJECT_LOCAL_INCLUDE_DIR}  ## public headers
+	PRIVATE ${PROJECT_SOURCE_DIR}/cdrtoc/ ## lexer.hpp + lexer_defs.hpp
+	PRIVATE ${PROJECT_BUILD_SOURCE_DIR}   ## generated sources
 	)
 
-add_dependencies      (${PROJECT_NAME} cdrdaotoc )
-target_link_libraries (${PROJECT_NAME} PRIVATE cdrdaotoc )
+add_dependencies      (${PROJECT_NAME} cdrtoc )
+target_link_libraries (${PROJECT_NAME} PRIVATE cdrtoc )
 
 
 ## --- Configure optional features

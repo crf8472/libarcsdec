@@ -21,19 +21,19 @@ namespace details
 /**
  * \brief Main namespace for CDRDAO/TOC tool classes.
  */
-namespace cdrdaotoc
+namespace cdrtoc
 {
 
 /**
  * \internal
  *
- * \brief Namespace for implementation details of '::cdrdaotoc'.
+ * \brief Namespace for implementation details of '::cdrtoc'.
  */
-namespace yycdrdaotoc
+namespace yycdrtoc
 {
 
 // We cannot include 'lexer.hpp' since this would import yyFlexLexer into
-// cdrdaotoc.l/cdrdaotoc.yy.cpp (via this file, 'driver.hpp'). This must be avoided
+// cdrtoc.l/cdrtoc.yy.cpp (via this file, 'driver.hpp'). This must be avoided
 // since 'lexer.hpp' redefines yyFlexLexer.
 class Lexer;
 
@@ -42,12 +42,12 @@ class Parser;
 class location;
 class position;
 
-} // namespace yycdrdaotoc
+} // namespace yycdrtoc
 
-using yycdrdaotoc::Lexer;
-using yycdrdaotoc::Parser;
-using yycdrdaotoc::location;
-using yycdrdaotoc::position;
+using yycdrtoc::Lexer;
+using yycdrtoc::Parser;
+using yycdrtoc::location;
+using yycdrtoc::position;
 
 
 class Handler;
@@ -56,7 +56,7 @@ class Handler;
 #pragma GCC diagnostic ignored "-Weffc++"
 
 /**
- * \brief Interface to bison-generated cdrdaotoc parser.
+ * \brief Interface to bison-generated cdrtoc parser.
  *
  * It drives the lexer, keeps parsed content and is a good place to store
  * additional context data.
@@ -198,7 +198,7 @@ private:
 
 #pragma GCC diagnostic pop
 
-} // namespace cdrdaotoc
+} // namespace cdrtoc
 } // namespace details
 } // namespace v_1_0_0
 } // namespace arcsdec

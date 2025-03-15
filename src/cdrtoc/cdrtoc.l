@@ -20,7 +20,7 @@
 %option noyywrap
 
 /* Specify name of the generated lexer class */
-%option yyclass="arcsdec::details::cdrdaotoc::yycdrdaotoc::Lexer"
+%option yyclass="arcsdec::details::cdrtoc::yycdrtoc::Lexer"
 
 /* Maintain the lineno */
 %option yylineno
@@ -31,22 +31,22 @@
 /* Write summary to stderr when generating the lexer. */
 /* %option verbose */
 
-/* See the defined macro of yyFlexLexer in cdrdaotoc_lexer.hpp */
+/* See the defined macro of yyFlexLexer in cdrtoc_lexer.hpp */
 %option prefix="CDRDAOTOC_"
 /* Note: each flex-generated scanner inherits from a class whose name is      */
 /* specified by macro yyFlexLexer. This macro has to be present in each header*/
 /* that defines the flex-generated lexer class. Thus there is no obvious way  */
 /* to use different flex-generated lexers in the same compilation unit. The   */
 /* only trick to achieve that is to put the definition of each lexer class in */
-/* its own header file (for cdrdaotoc: cdrdaotoc_lexer_defs.hpp). Then, a     */
+/* its own header file (for cdrtoc: cdrtoc_lexer_defs.hpp). Then, a     */
 /* wrapper header is defined that redefines yyFlexLexer according to the      */
 /* prefix above before including the defs header                              */
-/* (for cdrdaotoc: cdrdaotoc_lexer.hpp).                                      */
+/* (for cdrtoc: cdrtoc_lexer.hpp).                                      */
 /* */
 /* Cf. Flex Manual, Ch. 18 'Generating C++-Scanners' (very end of the chapter)*/
 
 %{
-// from cdrdaotoc.l
+// from cdrtoc.l
 
 //  for clang++
 #pragma clang diagnostic push
@@ -68,11 +68,11 @@
 #include <iostream>       /* for cout */
 #include <iomanip>        /* for setw, setfill, left, right */
 
-#include "cdrdaotoc.tab.hpp"       /* auto-generated: bison token definitions */
-#include "cdrdaotoc_location.hpp"  /* auto-generated: position + location */
+#include "cdrtoc.tab.hpp"       /* auto-generated: bison token definitions */
+#include "cdrtoc_location.hpp"  /* auto-generated: position + location */
 
 #ifndef __LIBARCSDEC_CDRDAOTOC_LEXER_DEFS_HPP__
-#include "cdrdaotoc_lexer_defs.hpp" /* for Lexer */
+#include "cdrtoc_lexer_defs.hpp" /* for Lexer */
 #endif
 #ifndef __LIBARCSDEC_CDRDAOTOC_DRIVER_HPP__
 #include "driver.hpp"              /* for Driver */
@@ -89,11 +89,11 @@
 		shift_pos(yylineno, yyleng); \
 		driver_.step_to(current_pos_);
 
-// Declare the symbols from yycdrdaotoc that are to be used in yylex().
+// Declare the symbols from yycdrtoc that are to be used in yylex().
 // (yylex() is in global namespace)
-using arcsdec::details::cdrdaotoc::yycdrdaotoc::Parser;
-using arcsdec::details::cdrdaotoc::yycdrdaotoc::location;
-using arcsdec::details::cdrdaotoc::yycdrdaotoc::position;
+using arcsdec::details::cdrtoc::yycdrtoc::Parser;
+using arcsdec::details::cdrtoc::yycdrtoc::location;
+using arcsdec::details::cdrtoc::yycdrtoc::position;
 
 // remove quotes from quoted string
 static std::string remove_quotes(const std::string& s)
@@ -104,7 +104,7 @@ static std::string remove_quotes(const std::string& s)
 	return s.substr(1, s.length() - 2);
 }
 
-// end cdrdaotoc.l
+// end cdrtoc.l
 %}
 
 WHITESPACE      [ \t\r]+
@@ -214,7 +214,7 @@ ENCODING_MANDARIN   { return Parser::make_ENCODING_MANDARIN(get().loc());   }
 #pragma clang diagnostic pop
 
 namespace arcsdec { namespace details {
-namespace cdrdaotoc { namespace yycdrdaotoc {
+namespace cdrtoc { namespace yycdrtoc {
 
 void Lexer::notify(const std::string& token_name, const std::string& chars)
 {
@@ -248,6 +248,6 @@ Driver& Lexer::get()
 	return driver_;
 }
 
-} /* namespace yycdrdaotoc */ } /* namespace cdrdaotoc */
+} /* namespace yycdrtoc */ } /* namespace cdrtoc */
 } /*details*/ } /*arcsdec*/
 

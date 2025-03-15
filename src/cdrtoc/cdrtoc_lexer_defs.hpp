@@ -16,7 +16,7 @@
  *
  * We also rename yylex() to Lexer::next_token().
 */
-#define YY_DECL arcsdec::details::cdrdaotoc::yycdrdaotoc::Parser::symbol_type arcsdec::details::cdrdaotoc::yycdrdaotoc::Lexer::next_token()
+#define YY_DECL arcsdec::details::cdrtoc::yycdrtoc::Parser::symbol_type arcsdec::details::cdrtoc::yycdrtoc::Lexer::next_token()
 
 
 #include <memory>
@@ -27,31 +27,31 @@
 #pragma clang diagnostic ignored "-Winline-namespace-reopened-noninline"
 #endif
 
-// From cdrdaotoc.y:
+// From cdrtoc.y:
 // Include the Token definitions as well as the redefined yylex()
 // in section "code top" (that calls get_next_token())
-#include "cdrdaotoc.tab.hpp"
+#include "cdrtoc.tab.hpp"
 
 #if defined(__clang__)
 #pragma clang diagnostic pop
 #endif
 
-/* NOTE that Lexer is part of v_1_0_0! File cdrdaotoc.l does always refer to */
+/* NOTE that Lexer is part of v_1_0_0! File cdrtoc.l does always refer to */
 /* the Lexer class without specifiying the inline namespace for version!    */
 
 namespace arcsdec { inline namespace v_1_0_0 { namespace details {
-namespace cdrdaotoc
+namespace cdrtoc
 {
 
 
 class Driver;
 
 
-namespace yycdrdaotoc
+namespace yycdrtoc
 {
 
 // NOTE What is declared here receives its implementation from the third
-// section in cdrdaotoc.l.
+// section in cdrtoc.l.
 
 
 /**
@@ -77,7 +77,7 @@ public:
 	/**
 	 * \brief Constructor for CDRDAO/TOC lexer.
 	 *
-	 * \param[in] driver The cdrdaotoc::Driver that constructed this lexer.
+	 * \param[in] driver The cdrtoc::Driver that constructed this lexer.
 	 */
 	explicit Lexer(Driver &driver)
 		: current_pos_ {}
@@ -139,8 +139,8 @@ private:
 	Driver& get();
 };
 
-} // namespace yycdrdaotoc
-} // namespace cdrdaotoc
+} // namespace yycdrtoc
+} // namespace cdrtoc
 } /*details*/ } /*v_1_0_0*/ } /*arcsdec*/
 
 #endif // __LIBARCSDEC_CDRDAOTOC_LEXER_DEFS_HPP__

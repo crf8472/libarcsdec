@@ -6,7 +6,7 @@
 #include "handler.hpp"
 #endif
 
-#include "cdrdaotoc_lexer.hpp"   // includes also cdrdaotoc.tab.hpp
+#include "cdrtoc_lexer.hpp"   // includes also cdrtoc.tab.hpp
 
 
 namespace arcsdec
@@ -15,14 +15,14 @@ inline namespace v_1_0_0
 {
 namespace details
 {
-namespace cdrdaotoc
+namespace cdrtoc
 {
 
 
 Driver::Driver()
 	: current_token_location_{}
-	, lexer_ (std::make_unique<yycdrdaotoc::Lexer>(*this))
-	, parser_(std::make_unique<yycdrdaotoc::Parser>(*lexer_, *this))
+	, lexer_ (std::make_unique<yycdrtoc::Lexer>(*this))
+	, parser_(std::make_unique<yycdrtoc::Parser>(*lexer_, *this))
 	, handler_ {nullptr}
 {
 	// empty
@@ -45,9 +45,15 @@ void Driver::set_lexer_debug_level(const int lvl)
 }
 
 
-void Driver::set_parser_debug_level(const int lvl)
+void Driver::set_parser_debug_level(const int /*lvl*/)
 {
-	parser_->set_debug_level(lvl); // %define parse.trace
+	// Commented out since parser_ does not have function set_debug_level()
+	// when bison is not called with parameter --debug.
+	// This parameter is deliberately missing for CMAKE_BUILD_TYPE=Release.
+	// For debugging, add --debug to COMPILE_FLAGS in CMakeLists.txt and
+	// uncomment the line below as well as parameter 'lvl'.
+
+	//parser_->set_debug_level(lvl); // %define parse.trace
 }
 
 
@@ -96,14 +102,14 @@ void Driver::reset_loc()
 }
 
 
-void Driver::step_to(const yycdrdaotoc::position& lexer_pos)
+void Driver::step_to(const yycdrtoc::position& lexer_pos)
 {
 	current_token_location_->step(); // set begin to end
 	current_token_location_->end = lexer_pos; // set end to current
 }
 
 
-yycdrdaotoc::location Driver::loc() const
+yycdrtoc::location Driver::loc() const
 {
 	return *current_token_location_;
 }
@@ -120,7 +126,7 @@ Handler* Driver::get_handler()
 	return handler_;
 }
 
-} // namespace cdrdaotoc
+} // namespace cdrtoc
 } // namespace details
 } // namespace v_1_0_0
 } // namespace arcsdec

@@ -6,7 +6,7 @@
 
 
 /* Namespace for generated parser class */
-%define api.namespace          {arcsdec::v_1_0_0::details::cdrdaotoc::yycdrdaotoc}
+%define api.namespace          {arcsdec::v_1_0_0::details::cdrtoc::yycdrtoc}
 
 /* Classname for generated parser class */
 %define api.parser.class       {Parser}
@@ -30,7 +30,7 @@
 %define parse.error verbose
 
 /* Define filename for location header (instead of location.hh) */
-%define api.location.file "cdrdaotoc_location.hpp"
+%define api.location.file "cdrtoc_location.hpp"
 
 /* Location tracking */
 %locations
@@ -61,24 +61,24 @@
 
 	// Forward declarations
 	namespace arcsdec { inline namespace v_1_0_0 { namespace details {
-	namespace cdrdaotoc {
+	namespace cdrtoc {
 
 		class Driver;
 
 		/**
 		 * \brief Namespace for flex- and bison generated sources for parsercue.
 		 */
-		namespace yycdrdaotoc {
+		namespace yycdrtoc {
 
 			class Lexer;
-		} // namespace yycdrdaotoc
+		} // namespace yycdrtoc
 
-	} // namespace cdrdaotoc
+	} // namespace cdrtoc
 	} /*details*/ } /*v_1_0_0*/ } /*arcsdec*/
 }
 
 
-/* Goes to source file _before_ cdrdaotoc.tab.hpp is included */
+/* Goes to source file _before_ cdrtoc.tab.hpp is included */
 %code top
 {
 	//  for clang++
@@ -95,10 +95,10 @@
 	#include <tuple>   // for tuple
 
 	#ifndef __LIBARCSDEC_CDRDAOTOC_LEXER_HPP__
-	#include "cdrdaotoc_lexer.hpp"               // user-defined
+	#include "cdrtoc_lexer.hpp"               // user-defined
 	#endif
 
-	#include "cdrdaotoc_location.hpp"            // auto-generated
+	#include "cdrtoc_location.hpp"            // auto-generated
 
 	#ifndef __LIBARCSDEC_CDRDAOTOC_DRIVER_HPP__
 	#include "driver.hpp"                        // user-defined
@@ -107,10 +107,10 @@
 	/**
 	 * \brief Override yylex() to be called in Parser::parse()
 	 */
-	static arcsdec::v_1_0_0::details::cdrdaotoc::yycdrdaotoc::Parser::symbol_type
+	static arcsdec::v_1_0_0::details::cdrtoc::yycdrtoc::Parser::symbol_type
 	yylex(
-			arcsdec::v_1_0_0::details::cdrdaotoc::yycdrdaotoc::Lexer& lexer,
-			arcsdec::v_1_0_0::details::cdrdaotoc::Driver& /*driver*/)
+			arcsdec::v_1_0_0::details::cdrtoc::yycdrtoc::Lexer& lexer,
+			arcsdec::v_1_0_0::details::cdrtoc::Driver& /*driver*/)
 	{
 		return lexer.next_token(); // renamed yylex()
 	}
@@ -488,8 +488,8 @@ msf_time
 
 /* Bison expects us to provide implementation, otherwise linker complains */
 namespace arcsdec { inline namespace v_1_0_0 { namespace details {
-namespace cdrdaotoc {
-namespace yycdrdaotoc {
+namespace cdrtoc {
+namespace yycdrtoc {
 
 void Parser::error(const location &loc, const std::string &message)
 {
@@ -518,7 +518,7 @@ void Parser::error(const location &loc, const std::string &message)
 	}
 }
 
-} // namespace yycdrdaotoc
-} // namespace cdrdaotoc
+} // namespace yycdrtoc
+} // namespace cdrtoc
 } /*details*/ } /*v_1_0_0*/ } /*arcsdec*/
 

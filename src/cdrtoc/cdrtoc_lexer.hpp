@@ -24,7 +24,7 @@
 #include <FlexLexer.h>
 #undef yyFlexLexer
 
-#include "cdrdaotoc_lexer_defs.hpp"
+#include "cdrtoc_lexer_defs.hpp"
 
 
 #pragma GCC diagnostic pop

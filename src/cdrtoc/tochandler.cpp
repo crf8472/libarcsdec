@@ -14,7 +14,7 @@ inline namespace v_1_0_0
 {
 namespace details
 {
-namespace cdrdaotoc
+namespace cdrtoc
 {
 
 //ToCHandlerState
@@ -209,7 +209,7 @@ std::vector<std::string> ToCHandler::filenames() const
 	return state_.filenames();
 }
 
-} // namespace cdrdaotoc
+} // namespace cdrtoc
 } // namespace details
 } // namespace v_1_0_0
 } // namespace arcsdec

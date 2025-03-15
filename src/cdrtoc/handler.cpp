@@ -8,7 +8,7 @@ inline namespace v_1_0_0
 {
 namespace details
 {
-namespace cdrdaotoc
+namespace cdrtoc
 {
 
 
@@ -128,7 +128,7 @@ void Handler::do_end_input()
 	// empty
 }
 
-} // namespace cdrdaotoc
+} // namespace cdrtoc
 } // namespace details
 } // namespace v_1_0_0
 } // namespace arcsdec

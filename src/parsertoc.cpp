@@ -12,10 +12,10 @@
 #endif
 
 #ifndef __LIBARCSDEC_CDRDAOTOC_DRIVER_HPP__
-#include "cdrdaotoc/driver.hpp"
+#include "cdrtoc/driver.hpp"
 #endif
 #ifndef __LIBARCSDEC_CDRDAOTOC_TOCHANDLER_HPP__
-#include "cdrdaotoc/tochandler.hpp"
+#include "cdrtoc/tochandler.hpp"
 #endif
 #ifndef __LIBARCSDEC_LIBINSPECT_HPP__
 #include "libinspect.hpp"      // for first_libname_match
@@ -51,7 +51,7 @@ inline namespace v_1_0_0
 {
 namespace details
 {
-namespace cdrdaotoc
+namespace cdrtoc
 {
 
 using arcstk::ToC;
@@ -97,7 +97,7 @@ std::unique_ptr<FileReaderDescriptor> TocParserImpl::do_descriptor() const
 }
 
 
-} // namespace cdrdaotoc
+} // namespace cdrtoc
 } // namespace details
 
 
@@ -147,7 +147,7 @@ LibInfo DescriptorToc::do_libraries() const
 
 std::unique_ptr<FileReader> DescriptorToc::do_create_reader() const
 {
-	auto impl = std::make_unique<details::cdrdaotoc::TocParserImpl>();
+	auto impl = std::make_unique<details::cdrtoc::TocParserImpl>();
 	return std::make_unique<MetadataParser>(std::move(impl));
 }
 

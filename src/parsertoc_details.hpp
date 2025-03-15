@@ -35,7 +35,7 @@ namespace details
  *
  * \brief Implementation details of parsertoc.
  */
-namespace cdrdaotoc
+namespace cdrtoc
 {
 
 using arcstk::ToC;
@@ -64,7 +64,7 @@ class TocParserImpl final : public MetadataParserImpl
 /// @}
 
 
-} // namespace cdrdaotoc
+} // namespace cdrtoc
 } // namespace details
 } // namespace v_1_0_0
 } // namespace arcsdec
