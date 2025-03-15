@@ -134,7 +134,7 @@
 %token TRACK
 %token ISRC
 %token AUDIOFILE
-%token FILETAG
+%token FILE_TOKEN
 
 %token NO
 %token COPY
@@ -143,7 +143,7 @@
 %token FOUR_CHANNEL_AUDIO
 %token PREGAP
 %token START
-%token ENDTAG
+%token END_TOKEN
 %token INDEX
 
 %token SWAP
@@ -327,7 +327,7 @@ tracks
 
 track
 	:  TRACK track_mode opt_subchannel_mode opt_track_flags opt_cdtext_track
-		opt_pregap trailing_track_info
+		opt_pregap subtrack_or_start_or_ends opt_index_statements
 	;
 
 track_mode
@@ -388,20 +388,15 @@ opt_pregap
 	| /* none */
 	;
 
-trailing_track_info
-	: trailing_track_info index_statement
-	| opt_subtrack_or_start_or_ends subtrack_or_start_or_end
-	;
-
-opt_subtrack_or_start_or_ends
-	: opt_subtrack_or_start_or_ends subtrack_or_start_or_end
-	| /* none */
+subtrack_or_start_or_ends
+	: subtrack_or_start_or_ends subtrack_or_start_or_end
+	| subtrack_or_start_or_end
 	;
 
 subtrack_or_start_or_end
 	: subtrack_statement
-	| START msf_time /* TODO msf_time is optional */
-	| END   msf_time /* TODO msf_time is optional */
+	| START     opt_msf_time
+	| END_TOKEN opt_msf_time
 	;
 
 subtrack_statement
@@ -414,7 +409,7 @@ subtrack_statement
 
 audiofile
 	: AUDIOFILE
-	| FILETAG
+	| FILE_TOKEN
 	;
 
 audiofile_statement_corpus
@@ -459,6 +454,11 @@ opt_data_mode
 data_mode
 	: track_mode
 	| MODE0
+	;
+
+opt_index_statements
+	: opt_index_statements index_statement
+	| /* none */
 	;
 
 index_statement

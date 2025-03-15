@@ -137,7 +137,7 @@ CATALOG        { return Parser::make_CATALOG(get().loc());        }
 TRACK          { return Parser::make_TRACK(get().loc());          }
 ISRC           { return Parser::make_ISRC(get().loc());           }
 AUDIOFILE      { return Parser::make_AUDIOFILE(get().loc());      }
-FILE           { return Parser::make_FILETAG(get().loc());        }
+FILE           { return Parser::make_FILE_TOKEN(get().loc());     }
 
 NO                 { return Parser::make_NO(get().loc());                 }
 COPY               { return Parser::make_COPY(get().loc());               }
@@ -146,7 +146,7 @@ TWO_CHANNEL_AUDIO  { return Parser::make_TWO_CHANNEL_AUDIO(get().loc());  }
 FOUR_CHANNEL_AUDIO { return Parser::make_FOUR_CHANNEL_AUDIO(get().loc()); }
 PREGAP             { return Parser::make_PREGAP(get().loc());             }
 START              { return Parser::make_START(get().loc());              }
-END                { return Parser::make_ENDTAG(get().loc());             }
+END                { return Parser::make_END_TOKEN(get().loc());          }
 INDEX              { return Parser::make_INDEX(get().loc());              }
 
 SWAP           { return Parser::make_SWAP(get().loc());           }
