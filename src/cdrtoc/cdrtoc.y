@@ -117,7 +117,7 @@
 	// Only called inside bison, so make it static to limit visibility.
 	// Namespaces are required since yylex() is in global namespace.
 	// Note: could also be achieved by doing:
-    // #define yylex(Lexer &l, Driver &d) lexer.get_next_token()
+    // #define yylex(Lexer& l, Driver& d) lexer.get_next_token()
 	// But let's avoid macros if we can.
 }
 
