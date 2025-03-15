@@ -1,5 +1,5 @@
-#ifndef __LIBARCSDEC_CDRDAOTOC_HANDLER_HPP__
-#define __LIBARCSDEC_CDRDAOTOC_HANDLER_HPP__
+#ifndef __LIBARCSDEC_CDRTOC_HANDLER_HPP__
+#define __LIBARCSDEC_CDRTOC_HANDLER_HPP__
 
 /**
  * \file
@@ -168,5 +168,5 @@ private:
 } // namespace v_1_0_0
 } // namespace arcsdec
 
-#endif // __LIBARCSDEC_CDRDAOTOC_HANDLER_HPP__
+#endif // __LIBARCSDEC_CDRTOC_HANDLER_HPP__
 

@@ -1,4 +1,4 @@
-#ifndef __LIBARCSDEC_CDRDAOTOC_HANDLER_HPP__
+#ifndef __LIBARCSDEC_CDRTOC_HANDLER_HPP__
 #include "handler.hpp"
 #endif
 

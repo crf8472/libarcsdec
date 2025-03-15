@@ -51,7 +51,7 @@
 	#include "version.hpp" // for v_1_0_0
 	#endif
 
-	#ifndef __LIBARCSDEC_CDRDAOTOC_HANDLER_HPP__
+	#ifndef __LIBARCSDEC_CDRTOC_HANDLER_HPP__
 	#include "handler.hpp"                      // user-defined
 	#endif
 
@@ -94,13 +94,13 @@
 	#include <string>  // for string
 	#include <tuple>   // for tuple
 
-	#ifndef __LIBARCSDEC_CDRDAOTOC_LEXER_HPP__
+	#ifndef __LIBARCSDEC_CDRTOC_LEXER_HPP__
 	#include "cdrtoc_lexer.hpp"               // user-defined
 	#endif
 
 	#include "cdrtoc_location.hpp"            // auto-generated
 
-	#ifndef __LIBARCSDEC_CDRDAOTOC_DRIVER_HPP__
+	#ifndef __LIBARCSDEC_CDRTOC_DRIVER_HPP__
 	#include "driver.hpp"                        // user-defined
 	#endif
 

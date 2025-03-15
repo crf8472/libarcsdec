@@ -1,5 +1,5 @@
-#ifndef __LIBARCSDEC_CDRDAOTOC_LEXER_DEFS_HPP__
-#define __LIBARCSDEC_CDRDAOTOC_LEXER_DEFS_HPP__
+#ifndef __LIBARCSDEC_CDRTOC_LEXER_DEFS_HPP__
+#define __LIBARCSDEC_CDRTOC_LEXER_DEFS_HPP__
 
 /**
  * \file
@@ -60,7 +60,7 @@ namespace yycdrtoc
  * Subclass of the flex provided lexer interface. Provides interface to the
  * flex-generated lexing routines.
  */
-class Lexer final : public CDRDAOTOC_FlexLexer
+class Lexer final : public CDRTOC_FlexLexer
 {
 	/**
 	 * \brief Internal token position.
@@ -143,5 +143,5 @@ private:
 } // namespace cdrtoc
 } /*details*/ } /*v_1_0_0*/ } /*arcsdec*/
 
-#endif // __LIBARCSDEC_CDRDAOTOC_LEXER_DEFS_HPP__
+#endif // __LIBARCSDEC_CDRTOC_LEXER_DEFS_HPP__
 

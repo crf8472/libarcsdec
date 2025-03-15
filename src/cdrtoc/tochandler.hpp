@@ -1,5 +1,5 @@
-#ifndef __LIBARCSDEC_CDRDAOTOC_TOCHANDLER_HPP__
-#define __LIBARCSDEC_CDRDAOTOC_TOCHANDLER_HPP__
+#ifndef __LIBARCSDEC_CDRTOC_TOCHANDLER_HPP__
+#define __LIBARCSDEC_CDRTOC_TOCHANDLER_HPP__
 
 /**
  * \file
@@ -7,7 +7,7 @@
  * \brief Public header for a handler that constructs a ToC.
  */
 
-#ifndef __LIBARCSDEC_CDRDAOTOC_HANDLER_HPP__
+#ifndef __LIBARCSDEC_CDRTOC_HANDLER_HPP__
 #include "handler.hpp"
 #endif
 

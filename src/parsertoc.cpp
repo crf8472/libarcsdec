@@ -11,10 +11,10 @@
 #include "parsertoc_details.hpp"  // for TocParserImpl
 #endif
 
-#ifndef __LIBARCSDEC_CDRDAOTOC_DRIVER_HPP__
+#ifndef __LIBARCSDEC_CDRTOC_DRIVER_HPP__
 #include "cdrtoc/driver.hpp"
 #endif
-#ifndef __LIBARCSDEC_CDRDAOTOC_TOCHANDLER_HPP__
+#ifndef __LIBARCSDEC_CDRTOC_TOCHANDLER_HPP__
 #include "cdrtoc/tochandler.hpp"
 #endif
 #ifndef __LIBARCSDEC_LIBINSPECT_HPP__

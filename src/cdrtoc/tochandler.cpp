@@ -1,4 +1,4 @@
-#ifndef __LIBARCSDEC_CDRDAOTOC_TOCHANDLER_HPP__
+#ifndef __LIBARCSDEC_CDRTOC_TOCHANDLER_HPP__
 #include "tochandler.hpp"
 #endif
 

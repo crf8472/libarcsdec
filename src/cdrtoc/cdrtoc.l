@@ -32,7 +32,7 @@
 /* %option verbose */
 
 /* See the defined macro of yyFlexLexer in cdrtoc_lexer.hpp */
-%option prefix="CDRDAOTOC_"
+%option prefix="CDRTOC_"
 /* Note: each flex-generated scanner inherits from a class whose name is      */
 /* specified by macro yyFlexLexer. This macro has to be present in each header*/
 /* that defines the flex-generated lexer class. Thus there is no obvious way  */
@@ -71,10 +71,10 @@
 #include "cdrtoc.tab.hpp"       /* auto-generated: bison token definitions */
 #include "cdrtoc_location.hpp"  /* auto-generated: position + location */
 
-#ifndef __LIBARCSDEC_CDRDAOTOC_LEXER_DEFS_HPP__
+#ifndef __LIBARCSDEC_CDRTOC_LEXER_DEFS_HPP__
 #include "cdrtoc_lexer_defs.hpp" /* for Lexer */
 #endif
-#ifndef __LIBARCSDEC_CDRDAOTOC_DRIVER_HPP__
+#ifndef __LIBARCSDEC_CDRTOC_DRIVER_HPP__
 #include "driver.hpp"              /* for Driver */
 #endif
 

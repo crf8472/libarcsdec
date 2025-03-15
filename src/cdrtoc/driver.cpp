@@ -1,8 +1,8 @@
-#ifndef __LIBARCSDEC_CDRDAOTOC_DRIVER_HPP__
+#ifndef __LIBARCSDEC_CDRTOC_DRIVER_HPP__
 #include "driver.hpp"
 #endif
 
-#ifndef __LIBARCSDEC_CDRDAOTOC_HANDLER_HPP__
+#ifndef __LIBARCSDEC_CDRTOC_HANDLER_HPP__
 #include "handler.hpp"
 #endif
 
