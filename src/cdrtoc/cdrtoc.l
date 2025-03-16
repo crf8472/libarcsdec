@@ -70,7 +70,10 @@
 #include "cdrtoc_lexer_defs.hpp"   /* for Lexer (user-defined) */
 #endif
 
-#include "cdrtoc.tab.hpp"       /* auto-generated: bison token definitions */
+#ifndef __LIBARCSDEC_CDRTOC_TAB_HPP__
+#include "cdrtoc_tab.hpp"       /* auto-generated: bison token definitions */
+#endif
+
 #include "cdrtoc_location.hpp"  /* auto-generated: position + location */
 
 #ifndef __LIBARCSDEC_FLEXBISONDRIVER_HPP__

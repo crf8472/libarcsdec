@@ -30,7 +30,9 @@
 // From cdrtoc.y:
 // Include the Token definitions as well as the redefined yylex()
 // in section "code top" (that calls get_next_token())
-#include "cdrtoc.tab.hpp"
+#ifndef __LIBARCSDEC_CDRTOC_TAB_HPP__
+#include "cdrtoc_tab.hpp"
+#endif
 
 #if defined(__clang__)
 #pragma clang diagnostic pop

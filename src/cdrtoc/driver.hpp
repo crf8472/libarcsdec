@@ -10,7 +10,9 @@
 #include "cdrtoc_lexer.hpp" // for Lexer declaration
 #endif
 
-#include "cdrtoc.tab.hpp" // auto-generated
+#ifndef __LIBARCSDEC_CDRTOC_TAB_HPP__
+#include "cdrtoc_tab.hpp"   // auto-generated
+#endif
 
 #ifndef __LIBARCSDEC_FLEXBISONDRIVER_HPP__
 #include "flexbisondriver.hpp"
@@ -22,16 +24,6 @@ inline namespace v_1_0_0
 {
 namespace details
 {
-
-// forward declase auto-generated classes
-namespace cdrtoc {
-namespace yycdrtoc {
-	class Lexer;
-	class Parser;
-	class location;
-	class position;
-} /* namespace yycdrtoc */
-} /* namespace cdrtoc */
 
 // provide Driver class for namespace
 using CdrtocDriver = Driver<

@@ -76,27 +76,12 @@
 /* Goes to source file _before_ cdrtoc.tab.hpp is included */
 %code top
 {
-	//  for clang++
-	#if defined(__clang__)
-	#pragma clang diagnostic push
-	#pragma clang diagnostic ignored "-Winline-namespace-reopened-noninline"
-	#endif
-
-	//  for g++
-	#if defined(__GNUG__)
-	#pragma GCC diagnostic push
-	#pragma GCC diagnostic ignored "-Weffc++"
-	#endif
-
-
 	#ifndef __LIBARCSDEC_CDRTOC_LEXER_HPP__
 	#include "cdrtoc_lexer.hpp"               // user-defined
 	#endif
 
-	#include "cdrtoc_location.hpp"            // auto-generated
-
 	#ifndef __LIBARCSDEC_FLEXBISONDRIVER_HPP__
-	#include "flexbisondriver.hpp"            // for TokenLocation
+	#include "../src/flexbisondriver.hpp"     // for TokenLocation
 	#endif
 
 	#include <cstdlib> // for atoi
@@ -120,6 +105,18 @@
 	// Note: could also be achieved by doing:
     // #define yylex(Lexer& l, Driver& d) lexer.next_token()
 	// But let's avoid macros if we can.
+
+	//  for clang++
+	#if defined(__clang__)
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Winline-namespace-reopened-noninline"
+	#endif
+
+	//  for g++
+	#if defined(__GNUG__)
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Weffc++"
+	#endif
 }
 
 
