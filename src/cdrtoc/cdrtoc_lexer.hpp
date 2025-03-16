@@ -15,9 +15,11 @@
  * [1] GNU Flex manual, section: "Generating C++ Scanners".
  * [2] https://stackoverflow.com/q/35606354
  */
-#pragma GCC diagnostic push
 
+#if defined(__GNUG__)
+#pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Weffc++"
+#endif
 
 
 #define yyFlexLexer CDRTOC_FlexLexer
@@ -29,7 +31,9 @@
 #endif
 
 
+#if defined(__GNUG__)
 #pragma GCC diagnostic pop
+#endif
 
 #endif // __LIBARCSDEC_CDRTOC_LEXER_HPP__
 

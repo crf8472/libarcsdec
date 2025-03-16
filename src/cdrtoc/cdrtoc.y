@@ -36,23 +36,20 @@
 %locations
 
 /* Define parameters to pass to yylex() */
-%lex-param   { Lexer&  lexer }
-%lex-param   { Driver& driver }
+%lex-param { Lexer* lexer } // to apply token rules
+%lex-param { arcsdec::details::TokenLocation<position, location>* loc }
 
-/* Define parameters to pass to yyparse() */
-%parse-param { Lexer&  lexer }
-%parse-param { Driver& driver }
+/* Define parameters to pass to Parser::Parser() */
+%parse-param { arcsdec::details::TokenLocation<position, location>* loc }
+%parse-param { Lexer* lexer } // to call parser
+%parse-param { ParserHandler* handler } // to implement parser rules
 
 
 /* Goes to .tab.hpp header file (therefore included in source) */
 %code requires
 {
-	#ifndef __LIBARCSDEC_VERSION_HPP__
-	#include "version.hpp" // for v_1_0_0
-	#endif
-
-	#ifndef __LIBARCSDEC_CDRTOC_HANDLER_HPP__
-	#include "handler.hpp"                      // user-defined
+	#ifndef __LIBARCSDEC_FLEXBISONDRIVER_HPP__
+	#include "../src/flexbisondriver.hpp"  // for ParserHandler
 	#endif
 
 	// Forward declare what we are about to use
@@ -62,8 +59,6 @@
 	// Forward declarations
 	namespace arcsdec { inline namespace v_1_0_0 { namespace details {
 	namespace cdrtoc {
-
-		class Driver;
 
 		/**
 		 * \brief Namespace for flex- and bison generated sources for parsercue.
@@ -82,17 +77,17 @@
 %code top
 {
 	//  for clang++
+	#if defined(__clang__)
 	#pragma clang diagnostic push
 	#pragma clang diagnostic ignored "-Winline-namespace-reopened-noninline"
+	#endif
 
 	//  for g++
+	#if defined(__GNUG__)
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Weffc++"
+	#endif
 
-
-	#include <cstdlib> // for atoi
-	#include <string>  // for string
-	#include <tuple>   // for tuple
 
 	#ifndef __LIBARCSDEC_CDRTOC_LEXER_HPP__
 	#include "cdrtoc_lexer.hpp"               // user-defined
@@ -100,24 +95,30 @@
 
 	#include "cdrtoc_location.hpp"            // auto-generated
 
-	#ifndef __LIBARCSDEC_CDRTOC_DRIVER_HPP__
-	#include "driver.hpp"                        // user-defined
+	#ifndef __LIBARCSDEC_FLEXBISONDRIVER_HPP__
+	#include "flexbisondriver.hpp"            // for TokenLocation
 	#endif
+
+	#include <cstdlib> // for atoi
+	#include <string>  // for string
+	#include <tuple>   // for tuple
+
+	using arcsdec::details::cdrtoc::yycdrtoc::location;
+	using arcsdec::details::cdrtoc::yycdrtoc::position;
 
 	/**
 	 * \brief Override yylex() to be called in Parser::parse()
 	 */
-	static arcsdec::v_1_0_0::details::cdrtoc::yycdrtoc::Parser::symbol_type
-	yylex(
-			arcsdec::v_1_0_0::details::cdrtoc::yycdrtoc::Lexer& lexer,
-			arcsdec::v_1_0_0::details::cdrtoc::Driver& /*driver*/)
+	static auto yylex(arcsdec::details::cdrtoc::yycdrtoc::Lexer* lexer,
+		arcsdec::details::TokenLocation<position, location>* /* loc */)
+		-> arcsdec::details::cdrtoc::yycdrtoc::Parser::symbol_type
 	{
-		return lexer.next_token(); // renamed yylex()
+		return lexer->next_token(); // renamed yylex()
 	}
 	// Only called inside bison, so make it static to limit visibility.
 	// Namespaces are required since yylex() is in global namespace.
 	// Note: could also be achieved by doing:
-    // #define yylex(Lexer& l, Driver& d) lexer.get_next_token()
+    // #define yylex(Lexer& l, Driver& d) lexer.next_token()
 	// But let's avoid macros if we can.
 }
 
@@ -199,8 +200,8 @@
 %token COLON
 %token COMMA
 %token HASH
-%token BRACE_OPEN
-%token BRACE_CLOSE
+%token BRACE_LEFT
+%token BRACE_RIGHT
 
 %token END 0 "End of file"
 
@@ -215,26 +216,21 @@
 
 
 cdrtoc
-	: opt_global_statements opt_global_cdtext_statement tracks
+	: opt_catalog_or_toctype_statements opt_global_cdtext_statement tracks
 		{
-			driver.get_handler()->end_input();
+			//handler->end_input();
 		}
 	;
 
-opt_global_statements
-	: global_statements
+opt_catalog_or_toctype_statements
+	: opt_catalog_or_toctype_statements catalog_or_toctype_statement
 	| /* none */
 	;
 
-global_statements
-	: global_statements global_statement
-	| global_statement
-	;
-
-global_statement
+catalog_or_toctype_statement
 	: CATALOG NUMBER
 		{   /* MCN: [0-9]{13} */
-			driver.get_handler()->catalog($2);
+			//handler->catalog($2);
 		}
 	| toctype
 	;
@@ -244,11 +240,11 @@ toctype
 	;
 
 opt_global_cdtext_statement
-	: CD_TEXT  BRACE_OPEN  opt_language_map opt_cdtext_blocks  BRACE_CLOSE
+	: CD_TEXT  BRACE_LEFT  opt_language_map opt_cdtext_blocks  BRACE_RIGHT
 	;
 
 opt_language_map
-	: LANGUAGE_MAP  BRACE_OPEN  language_mappings  BRACE_CLOSE
+	: LANGUAGE_MAP  BRACE_LEFT  language_mappings  BRACE_RIGHT
 	| /* none */
 	;
 
@@ -273,7 +269,7 @@ cdtext_blocks
 	;
 
 cdtext_block
-	: LANGUAGE NUMBER BRACE_OPEN  opt_cdtext_items  BRACE_CLOSE
+	: LANGUAGE NUMBER BRACE_LEFT  opt_cdtext_items  BRACE_RIGHT
 	;
 
 opt_cdtext_items
@@ -311,7 +307,7 @@ pack_type
 	;
 
 cdtext_item_value
-	: BRACE_OPEN numbers BRACE_CLOSE
+	: BRACE_LEFT numbers BRACE_RIGHT
 	| STRING
 	;
 
@@ -380,7 +376,7 @@ opt_cdtext_track
 	;
 
 cdtext_track
-	: CD_TEXT BRACE_OPEN opt_cdtext_blocks BRACE_CLOSE
+	: CD_TEXT BRACE_LEFT opt_cdtext_blocks BRACE_RIGHT
 	;
 
 opt_pregap
@@ -414,6 +410,9 @@ audiofile
 
 audiofile_statement_corpus
 	: samples opt_data_length
+		{
+			//handler->offset($1);
+		}
 	| number_tag samples
 	;
 
@@ -483,39 +482,22 @@ msf_time
 %%
 
 
+#if defined(__GNUG__)
 #pragma GCC diagnostic pop
+#endif
+
+#if defined(__clang__)
 #pragma clang diagnostic pop
+#endif
 
 /* Bison expects us to provide implementation, otherwise linker complains */
 namespace arcsdec { inline namespace v_1_0_0 { namespace details {
 namespace cdrtoc {
 namespace yycdrtoc {
 
-void Parser::error(const location &loc, const std::string &message)
+void Parser::error(const location& loc, const std::string& message)
 {
-	if (loc.begin.line == loc.end.line)
-	{
-		if (loc.end.column - 1 == loc.begin.column)
-		{
-			std::cerr << "Parser error at line " << loc.begin.line
-				<< ", char " << loc.begin.column
-				<< ": " << message << std::endl;
-		} else
-		{
-			std::cerr << "Parser error at line " << loc.begin.line
-				<< " chars " << loc.begin.column
-				<< "-" << loc.end.column - 1
-				<< ": " << message << std::endl;
-		}
-	} else
-	{
-		std::cerr << "Parser error from line " << loc.begin.line
-			<< ", char " << loc.begin.column
-			<< " till line " << loc.end.line
-			<< ", char " << loc.end.column - 1
-			<< ": " << message << std::endl;
-
-	}
+	parser_error(loc, message, std::cerr);
 }
 
 } // namespace yycdrtoc

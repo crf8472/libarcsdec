@@ -184,15 +184,13 @@ list (APPEND INTERFACE_HEADERS
 ## --- Add and configure project target
 
 add_library (${PROJECT_NAME} SHARED
-	"${PROJECT_SOURCE_DIR}/cdrtoc/driver.cpp"
-	"${PROJECT_SOURCE_DIR}/cdrtoc/handler.cpp"
-	"${PROJECT_SOURCE_DIR}/cdrtoc/tochandler.cpp"
 	"${PROJECT_SOURCE_DIR}/cuesheet/driver.cpp"
 	"${PROJECT_SOURCE_DIR}/cuesheet/handler.cpp"
 	"${PROJECT_SOURCE_DIR}/cuesheet/tochandler.cpp"
 	"${PROJECT_SOURCE_DIR}/audioreader.cpp"
 	"${PROJECT_SOURCE_DIR}/calculators.cpp"
 	"${PROJECT_SOURCE_DIR}/descriptor.cpp"
+	"${PROJECT_SOURCE_DIR}/flexbisondriver.cpp"
 	"${PROJECT_SOURCE_DIR}/libinspect.cpp"
 	"${PROJECT_SOURCE_DIR}/metaparser.cpp"
 	"${PROJECT_SOURCE_DIR}/parsercue.cpp"
@@ -210,7 +208,8 @@ add_library (${PROJECT_NAME} SHARED
 if (HAS_PARENT )
 	## Make project's includes available to PARENT
 	target_include_directories (${PROJECT_NAME}
-		INTERFACE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
+		INTERFACE
+			$<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
 	)
 
 	## Provide a namespaced target also when added by add_subdirectory
@@ -222,6 +221,7 @@ target_include_directories (${PROJECT_NAME}
 		$<BUILD_INTERFACE:${PROJECT_INCLUDE_DIR}>
 		$<INSTALL_INTERFACE:${PROJECT_INSTALL_INCLUDES_SUBDIR}>
 	PRIVATE
+		$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}> ## for flexbisondriver.hpp
 		$<BUILD_INTERFACE:${PROJECT_BUILD_SOURCE_DIR}>
 		## for generated sources
 	)
@@ -457,13 +457,13 @@ bison_target (tocparser
 	${PROJECT_SOURCE_DIR}/cdrtoc/cdrtoc.y
 	${PROJECT_BUILD_SOURCE_DIR}/cdrtoc.tab.cpp
 	DEFINES_FILE ${PROJECT_BUILD_SOURCE_DIR}/cdrtoc.tab.hpp
-	COMPILE_FLAGS "--verbose -Wconflicts-sr -Wconflicts-rr -Wcounterexamples"
+	COMPILE_FLAGS "--verbose --debug -Wconflicts-sr -Wconflicts-rr -Wcounterexamples"
 	)
 
 flex_target (tocscanner
 	${PROJECT_SOURCE_DIR}/cdrtoc/cdrtoc.l
 	${PROJECT_BUILD_SOURCE_DIR}/cdrtoc.yy.cpp
-	COMPILE_FLAGS "--verbose"
+	COMPILE_FLAGS "--verbose --debug"
 	)
 
 add_flex_bison_dependency (tocscanner tocparser )

@@ -4,6 +4,7 @@
  * \brief Implements a parser for CDRDAO/TOC files.
  */
 
+#include "flexbisondriver.hpp"
 #ifndef __LIBARCSDEC_PARSERTOC_HPP__
 #include "parsertoc.hpp"
 #endif
@@ -13,9 +14,6 @@
 
 #ifndef __LIBARCSDEC_CDRTOC_DRIVER_HPP__
 #include "cdrtoc/driver.hpp"
-#endif
-#ifndef __LIBARCSDEC_CDRTOC_TOCHANDLER_HPP__
-#include "cdrtoc/tochandler.hpp"
 #endif
 #ifndef __LIBARCSDEC_LIBINSPECT_HPP__
 #include "libinspect.hpp"      // for first_libname_match
@@ -33,6 +31,10 @@
 #ifndef __LIBARCSTK_LOGGING_HPP__
 #include <arcstk/logging.hpp>
 #endif
+#ifndef __LIBARCSDEC_VERSION_HPP__
+#include "version.hpp"         // for LIBARCSDEC_NAME
+#endif
+
 
 #include <cstdint>   // for uint64_t
 #include <iomanip>   // for setw
@@ -60,32 +62,18 @@ using arcstk::make_toc;
 
 std::unique_ptr<ToC> TocParserImpl::do_parse(const std::string& filename)
 {
-	auto driver  = Driver{};
-	auto handler = ToCHandler{};
-	driver.set_handler(handler);
+	DefaultLexerHandler  l_handler;
+	DefaultParserHandler p_handler;
 
-	driver.set_lexer_debug_level(1);
-	driver.set_parser_debug_level(1);
+	{
+		auto driver = CdrtocDriver { &l_handler, &p_handler };
 
-	std::ifstream file;
-	file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-	try
-	{
-		file.open(filename, std::ifstream::in);
-	} catch (const std::ifstream::failure& f)
-	{
-		throw std::runtime_error(std::string { "Failed to open file " }
-				+ filename + ". Message: " + f.what());
-	}
-	driver.set_input(file);
-
-	if (driver.parse() != 0)
-	{
-		throw std::runtime_error(
-				std::string { "Failed to parse file " } + filename);
+		driver.set_lexer_debug_level(1);
+		driver.set_parser_debug_level(1);
+		driver.parse(filename);
 	}
 
-	return make_toc(handler.offsets(), handler.filenames());
+	//return make_toc(p_handler->offsets(), p_handler->filenames());
 
 	return nullptr;
 }
