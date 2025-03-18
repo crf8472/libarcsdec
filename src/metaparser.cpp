@@ -102,7 +102,7 @@ long msf_to_frames(const int m, const int s, const int f)
 }
 
 
-void frames_to_msg(long frames, int* m, int* s, int* f)
+void frames_to_msf(long frames, int* m, int* s, int* f)
 {
 	*f = frames % 75;
 	frames /= 75;

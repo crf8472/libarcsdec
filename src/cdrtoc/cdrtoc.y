@@ -1,9 +1,18 @@
 /* Bison grammar file for C++-based CDRDAO/TOC parser */
 
-%skeleton "lalr1.cc" /* recommended newer parser skeleton for 3.2 */
+/* Sources: */
+/* [1] $ man 1 cdrdao */
+
 %require  "3.2"
 %language "c++"
+%skeleton "lalr1.cc" /* recommended newer parser skeleton for 3.2 */
 
+/* Avoid name conflicts with other parsers by prefixing this parser's names */
+/* %define api.prefix             {toc} */
+/* https://www.gnu.org/software/bison/manual/bison.html#Multiple-Parsers */
+
+/* Define filename for location header (instead of location.hh) */
+%define api.location.file      "cdrtoc_location.hpp"
 
 /* Namespace for generated parser class */
 %define api.namespace          {arcsdec::v_1_0_0::details::cdrtoc::yycdrtoc}
@@ -21,28 +30,24 @@
 /* % define api.value.automove */
 
 /* Use bison variants as token types (requires token.constructor) */
-%define api.value.type variant
+%define api.value.type         variant
 
 /* Runtime assertions to check proper destruction of tokens (requires RTTI) */
 %define parse.assert
 
 /* Report unexpected token as well as expected ones. */
-%define parse.error verbose
-
-/* Define filename for location header (instead of location.hh) */
-%define api.location.file "cdrtoc_location.hpp"
+%define parse.error            verbose
 
 /* Location tracking */
 %locations
 
 /* Define parameters to pass to yylex() */
-%lex-param { Lexer* lexer } // to apply token rules
-%lex-param { arcsdec::details::TokenLocation<position, location>* loc }
+%lex-param   { Lexer* lexer } /* to apply token rules */
 
 /* Define parameters to pass to Parser::Parser() */
-%parse-param { arcsdec::details::TokenLocation<position, location>* loc }
-%parse-param { Lexer* lexer } // to call parser
-%parse-param { ParserHandler* handler } // to implement parser rules
+%parse-param { arcsdec::details::TokenLocation<position,location>* loc }
+%parse-param { Lexer* lexer } /* to call parser */
+%parse-param { ParserHandler* handler } /* to implement parser rules */
 
 
 /* Goes to .tab.hpp header file (therefore included in source) */
@@ -56,20 +61,17 @@
 	int yylex (void);
 	int yyerror (const char *s);
 
-	// Forward declarations
-	namespace arcsdec { inline namespace v_1_0_0 { namespace details {
-	namespace cdrtoc {
-
-		/**
-		 * \brief Namespace for flex- and bison generated sources for parsercue.
-		 */
-		namespace yycdrtoc {
-
-			class Lexer;
-		} // namespace yycdrtoc
-
-	} // namespace cdrtoc
-	} /*details*/ } /*v_1_0_0*/ } /*arcsdec*/
+	// Forward declarations (require C++17)
+	namespace arcsdec
+	{
+	inline namespace v_1_0_0
+	{
+	namespace details::cdrtoc::yycdrtoc
+	{
+		class Lexer;
+	}
+	} // namespace v_1_0_0
+	} // namespace arcsdec
 }
 
 
@@ -77,33 +79,28 @@
 %code top
 {
 	#ifndef __LIBARCSDEC_CDRTOC_LEXER_HPP__
-	#include "cdrtoc_lexer.hpp"               // user-defined
+	#include "cdrtoc_lexer.hpp"            // for Lexer
 	#endif
 
 	#ifndef __LIBARCSDEC_FLEXBISONDRIVER_HPP__
-	#include "../src/flexbisondriver.hpp"     // for TokenLocation
+	#include "../src/flexbisondriver.hpp"  // for ParserHandler
 	#endif
 
+	// Required in the implementation of production rules
 	#include <cstdlib> // for atoi
 	#include <string>  // for string
 	#include <tuple>   // for tuple
 
-	using arcsdec::details::cdrtoc::yycdrtoc::location;
-	using arcsdec::details::cdrtoc::yycdrtoc::position;
-
-	/**
-	 * \brief Override yylex() to be called in Parser::parse()
-	 */
-	static auto yylex(arcsdec::details::cdrtoc::yycdrtoc::Lexer* lexer,
-		arcsdec::details::TokenLocation<position, location>* /* loc */)
+	// Override yylex() to be called in Parser::parse().
+	// Only called inside bison, so make it static to limit visibility to TU.
+	// Namespaces are required since yylex() is in global namespace.
+	static auto yylex(arcsdec::details::cdrtoc::yycdrtoc::Lexer* lexer)
 		-> arcsdec::details::cdrtoc::yycdrtoc::Parser::symbol_type
 	{
 		return lexer->next_token(); // renamed yylex()
 	}
-	// Only called inside bison, so make it static to limit visibility.
-	// Namespaces are required since yylex() is in global namespace.
-	// Note: could also be achieved by doing:
-    // #define yylex(Lexer& l, Driver& d) lexer.next_token()
+	// Note: could also be achieved by doing something like:
+    // #define yylex(Lexer* l, Location* loc) lexer.next_token()
 	// But let's avoid macros if we can.
 
 	//  for clang++
@@ -180,7 +177,6 @@
 %token RESERVED2
 %token RESERVED3
 %token RESERVED4
-%token CLOSED
 %token UPC_EAN
 %token SIZE_INFO
 
@@ -191,23 +187,25 @@
 %token ENCODING_KOREAN
 %token ENCODING_MANDARIN
 
-%token <std::string> NUMBER
 %token <std::string> STRING
+%token <std::string> NUMBER
 %token COMMENT_START
 %token COLON
 %token COMMA
 %token HASH
 %token BRACE_LEFT
 %token BRACE_RIGHT
+%token EMPTY_STRING
 
 %token END 0 "End of file"
 
 /* Non-Terminals */
-%nterm <std::tuple<int, int, int>> msf_time
 
+%nterm <uint64_t> u_long	msf_time opt_msf_time data_length opt_data_length
+							samples
+%nterm  <int64_t> s_long	tagged_number opt_start_offset
 
 %start cdrtoc
-
 
 %%
 
@@ -284,6 +282,15 @@ cdtext_item
 	;
 
 pack_type
+	: pack_type_str
+	| pack_type_bin
+	| RESERVED1
+	| RESERVED2
+	| RESERVED3
+	| RESERVED4
+	;
+
+pack_type_str /* requires value as STRING or EMPTY_STRING */
 	: TITLE
 	| PERFORMER
 	| SONGWRITER
@@ -292,24 +299,28 @@ pack_type
 	| MESSAGE
 	| DISC_ID
 	| GENRE
-	| TOC_INFO1
-	| TOC_INFO2
-	| RESERVED1
-	| RESERVED2
-	| RESERVED3
-	| RESERVED4
 	| UPC_EAN
 	| ISRC
+	;
+
+pack_type_bin /* requires value as binary_data */
+	: TOC_INFO1
+	| TOC_INFO2
 	| SIZE_INFO
 	;
 
 cdtext_item_value
-	: BRACE_LEFT numbers BRACE_RIGHT
+	: binary_data
 	| STRING
+	| EMPTY_STRING
 	;
 
-numbers
-	: numbers COMMA NUMBER
+binary_data
+	: BRACE_LEFT  sequence_of_numbers  BRACE_RIGHT
+	;
+
+sequence_of_numbers
+	: sequence_of_numbers COMMA NUMBER
 	| NUMBER
 	;
 
@@ -319,16 +330,17 @@ tracks
 	;
 
 track
-	:  TRACK track_mode opt_subchannel_mode opt_track_flags opt_cdtext_track
-		opt_pregap subtrack_or_start_or_ends opt_index_statements
+	:  TRACK track_mode opt_subchannel_mode opt_track_flags
+		opt_track_cdtext_statement opt_pregap subtrack_or_start_or_ends
+		opt_index_statements
 	;
 
 track_mode
-	: AUDIO          { /* $$ = MODE::BINARY;   */ }
-	| MODE1          { /* $$ = MODE::AIFF;     */ }
-	| MODE1_RAW      { /* $$ = MODE::WAVE;     */ }
-	| MODE2          { /* $$ = MODE::MP3;      */ }
-	| MODE2_RAW      { /* $$ = MODE::FLAC;     */ }
+	: AUDIO
+	| MODE1
+	| MODE1_RAW
+	| MODE2
+	| MODE2_RAW
 	| MODE2_FORM1
 	| MODE2_FORM2
 	| MODE2_FORM_MIX
@@ -356,6 +368,14 @@ track_flags
 
 track_flag
 	: ISRC STRING
+		{
+			// STRING has to be a length of 12 and format 'CCOOOYYSSSSS'
+			//C: country code (upper case letters or digits)
+			//O: owner code (upper case letters or digits)
+			//Y: year (digits)
+			//S: serial number (digits)
+			// therefore [0-9A-Z]{5}[0-9]{7}
+		}
 	| TWO_CHANNEL_AUDIO
 	| FOUR_CHANNEL_AUDIO
 	| boolean_attr
@@ -367,13 +387,9 @@ boolean_attr
 	| PRE_EMPHASIS
 	;
 
-opt_cdtext_track
-	: cdtext_track
-	| /* none */
-	;
-
-cdtext_track
+opt_track_cdtext_statement
 	: CD_TEXT BRACE_LEFT opt_cdtext_blocks BRACE_RIGHT
+	| /* none */
 	;
 
 opt_pregap
@@ -389,12 +405,15 @@ subtrack_or_start_or_ends
 subtrack_or_start_or_end
 	: subtrack_statement
 	| START     opt_msf_time
+		{
+			std::cout << "START: " << $2 << '\n';
+		}
 	| END_TOKEN opt_msf_time
 	;
 
 subtrack_statement
-	: audiofile STRING opt_swap audiofile_statement_corpus
-	| DATAFILE STRING opt_time_spec
+	: audiofile STRING opt_swap audiofile_offset_and_length
+	| DATAFILE STRING opt_start_length
 	| FIFO STRING data_length
 	| SILENCE samples
 	| ZERO opt_data_mode opt_subchannel_mode data_length
@@ -405,12 +424,12 @@ audiofile
 	| FILE_TOKEN
 	;
 
-audiofile_statement_corpus
-	: samples opt_data_length
+audiofile_offset_and_length
+	: opt_start_offset samples /* TODO + opt_samples ? */ samples
 		{
+			std::cout << "FILE: " << $2 << " / " << $3 << '\n';
 			//handler->offset($1);
 		}
-	| number_tag samples
 	;
 
 opt_swap
@@ -418,28 +437,56 @@ opt_swap
 	| /* none */
 	;
 
-opt_time_spec
-	: number_tag opt_data_length
+opt_start_length
+	: tagged_number opt_data_length
 	| /* none */
 	;
 
-number_tag
-	: HASH NUMBER
+opt_start_offset
+	: tagged_number
+	| /* none */
+		{
+			$$ = 0;
+		}
 	;
 
-samples
-	: msf_time
-	| NUMBER
+tagged_number
+	: HASH s_long
+		{
+			$$ = $2;
+		}
+	;
+
+s_long
+	: NUMBER
+		{
+			$$ = std::atoi($1.c_str());
+		}
 	;
 
 opt_data_length
 	: data_length
 	| /* none */
+		{
+			$$ = 0;
+		}
 	;
 
 data_length
 	: msf_time
-	| NUMBER
+	| u_long
+	;
+
+samples
+	: msf_time
+	| u_long
+	;
+
+u_long
+	: NUMBER
+		{
+			$$ = std::atoi($1.c_str());
+		}
 	;
 
 opt_data_mode
@@ -453,26 +500,38 @@ data_mode
 	;
 
 opt_index_statements
-	: opt_index_statements index_statement
+	: opt_index_statements INDEX msf_time
 	| /* none */
-	;
-
-index_statement
-	: INDEX msf_time
 	;
 
 opt_msf_time
 	: msf_time
 	| /* none */
+		{
+			$$ = 0;
+		}
 	;
 
 msf_time
 	: NUMBER COLON NUMBER COLON NUMBER
 		{
-			$$ = std::make_tuple(
-					std::atoi(&$1[0]),
-					std::atoi(&$3[0]),
-					std::atoi(&$5[0]));
+			const auto m { std::atoi($1.c_str()) };
+			const auto s { std::atoi($3.c_str()) };
+			const auto f { std::atoi($5.c_str()) };
+
+			//std::cout << "M: "  << m << " (" << std::atoi(m.c_str()) << ")";
+			//std::cout << " S: " << s << " (" << std::atoi(s.c_str()) << ")";
+			//std::cout << " F: " << f << " (" << std::atoi(f.c_str()) << ")";
+			//std::cout << '\n';
+
+			$$ = static_cast<uint64_t>(to_frames(m, s, f));
+			//$$ = static_cast<uint64_t>(
+			//	to_frames(std::atoi(m), std::atoi(s), std::atoi(f)));
+
+			//$$ = std::make_tuple(
+			//		std::atoi($1),
+			//		std::atoi($3),
+			//		std::atoi($5));
 		}
 	;
 

@@ -101,8 +101,11 @@ WHITESPACE      [ \t\r]+
 DIGITS          [[:digit:]]+
 GLYPHS          [[:graph:]]+
 CTRLCHARS       [[:cntrl:]]+
-QSTRING1        \'([^\'\n]|\\\')*\'
-QSTRING2        \"([^\"\n]|\\\")*\"
+
+DQ_STRING       \"([^\"\n]|\\\")+\"
+EMPTY_DQ_STRING \"\"
+SQ_STRING       \'([^\'\n]|\\\')+\'
+EMPTY_SQ_STRING \'\'
 
 COMMENT_START   //[[:blank:]]+
 COLON           :
@@ -125,25 +128,27 @@ CD_I                { return Parser::make_CD_I(loc());                }
 CATALOG             { return Parser::make_CATALOG(loc());             }
 
 TRACK               { return Parser::make_TRACK(loc());               }
-ISRC                { return Parser::make_ISRC(loc());                }
-AUDIOFILE           { return Parser::make_AUDIOFILE(loc());           }
-FILE                { return Parser::make_FILE_TOKEN(loc());          }
 
+RW                  { return Parser::make_RW(loc());                  }
+RW_RAW              { return Parser::make_RW_RAW(loc());              }
+
+ISRC                { return Parser::make_ISRC(loc());                }
 NO                  { return Parser::make_NO(loc());                  }
 COPY                { return Parser::make_COPY(loc());                }
 PRE_EMPHASIS        { return Parser::make_PRE_EMPHASIS(loc());        }
 TWO_CHANNEL_AUDIO   { return Parser::make_TWO_CHANNEL_AUDIO(loc());   }
 FOUR_CHANNEL_AUDIO  { return Parser::make_FOUR_CHANNEL_AUDIO(loc());  }
+AUDIOFILE           { return Parser::make_AUDIOFILE(loc());           }
+FILE                { return Parser::make_FILE_TOKEN(loc());          }
 PREGAP              { return Parser::make_PREGAP(loc());              }
-START               { return Parser::make_START(loc());               }
-END                 { return Parser::make_END_TOKEN(loc());           }
-INDEX               { return Parser::make_INDEX(loc());               }
-
 SWAP                { return Parser::make_SWAP(loc());                }
 DATAFILE            { return Parser::make_DATAFILE(loc());            }
 FIFO                { return Parser::make_FIFO(loc());                }
 SILENCE             { return Parser::make_SILENCE(loc());             }
 ZERO                { return Parser::make_ZERO(loc());                }
+START               { return Parser::make_START(loc());               }
+END                 { return Parser::make_END_TOKEN(loc());           }
+INDEX               { return Parser::make_INDEX(loc());               }
 
 AUDIO               { return Parser::make_AUDIO(loc());               }
 MODE0               { return Parser::make_MODE0(loc());               }
@@ -154,9 +159,6 @@ MODE2_RAW           { return Parser::make_MODE2_RAW(loc());           }
 MODE2_FORM1         { return Parser::make_MODE2_FORM1(loc());         }
 MODE2_FORM2         { return Parser::make_MODE2_FORM2(loc());         }
 MODE2_FORM_MIX      { return Parser::make_MODE2_FORM_MIX(loc());      }
-
-RW                  { return Parser::make_RW(loc());                  }
-RW_RAW              { return Parser::make_RW_RAW(loc());              }
 
 CD_TEXT             { return Parser::make_CD_TEXT(loc());             }
 LANGUAGE            { return Parser::make_LANGUAGE(loc());            }
@@ -175,7 +177,6 @@ RESERVED1           { return Parser::make_RESERVED1(loc());           }
 RESERVED2           { return Parser::make_RESERVED2(loc());           }
 RESERVED3           { return Parser::make_RESERVED3(loc());           }
 RESERVED4           { return Parser::make_RESERVED4(loc());           }
-CLOSED              { return Parser::make_CLOSED(loc());              }
 UPC_EAN             { return Parser::make_UPC_EAN(loc());             }
 SIZE_INFO           { return Parser::make_SIZE_INFO(loc());           }
 
@@ -186,16 +187,21 @@ ENCODING_MS_JIS     { return Parser::make_ENCODING_MS_JIS(loc());     }
 ENCODING_KOREAN     { return Parser::make_ENCODING_KOREAN(loc());     }
 ENCODING_MANDARIN   { return Parser::make_ENCODING_MANDARIN(loc());   }
 
-{BRACE_LEFT}        { return Parser::make_BRACE_LEFT(loc());          }
-{BRACE_RIGHT}       { return Parser::make_BRACE_RIGHT(loc());         }
 {COLON}             { return Parser::make_COLON(loc());               }
 {COMMA}             { return Parser::make_COMMA(loc());               }
+{HASH}              { return Parser::make_HASH(loc());                }
+{BRACE_LEFT}        { return Parser::make_BRACE_LEFT(loc());          }
+{BRACE_RIGHT}       { return Parser::make_BRACE_RIGHT(loc());         }
 
-{QSTRING1}|{QSTRING2} {
+{DQ_STRING}|{SQ_STRING} {
                       return Parser::make_STRING(strip_quotes(YYText()), loc());
 					}
 
-"//".*              { /* ignore */ }
+{EMPTY_DQ_STRING}|{EMPTY_SQ_STRING} {
+                      return Parser::make_EMPTY_STRING(loc());
+					}
+
+"//".*              { /* ignore line comments */ }
 \n                  { /* ignore, but required for line count */ }
 <<EOF>>             { return yyterminate(); }
 
@@ -209,8 +215,15 @@ ENCODING_MANDARIN   { return Parser::make_ENCODING_MANDARIN(loc());   }
 #pragma clang diagnostic pop
 #endif
 
-namespace arcsdec { namespace details {
-namespace cdrtoc { namespace yycdrtoc {
+namespace arcsdec
+{
+namespace details
+{
+namespace cdrtoc
+{
+namespace yycdrtoc
+{
+
 
 LexerHandler* Lexer::handler()
 {
@@ -226,7 +239,7 @@ void Lexer::notify(const std::string& token_name, const std::string& chars)
 
 void Lexer::unexpected(const std::string& chars, const location& loc)
 {
-	// Commented out, not implemented
+	// Commented out, not implemented in handler
 	//handler()->unexpected(chars, loc);
 }
 
@@ -245,6 +258,9 @@ Parser::location_type Lexer::loc() const
 	return current_loc_->loc();
 }
 
-} /* namespace yycdrtoc */ } /* namespace cdrtoc */
-} /*details*/ } /*arcsdec*/
+
+} // namespace yycdrtoc
+} // namespace cdrtoc
+} // namespace details
+} // namespace arcsdec
 

@@ -143,6 +143,27 @@ auto shift_lexer_pos(POSITION current, const int line_no, const int col_no)
 std::string strip_quotes(const std::string& s);
 
 /**
+ * \brief Convert MSF time to CDDA frames.
+ *
+ * \param[in] m Minutes
+ * \param[in] s Seconds
+ * \param[in] f Frames
+ *
+ * \return Number of frames
+ */
+long to_frames(const int m, const int s, const int f);
+
+/**
+ * \brief Convert CDDA frames to MSF frames.
+ *
+ * \param[in]  frames Input frames
+ * \param[out] m      Minutes
+ * \param[out] s      Seconds
+ * \param[out] f      Frames
+ */
+//void frames_to_msf(long frames, int* m, int* s, int* f);
+
+/**
  * \brief Report a parser error to a specified output stream.
  *
  * \param[in] loc     Error location

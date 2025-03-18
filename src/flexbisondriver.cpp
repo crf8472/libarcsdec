@@ -96,6 +96,19 @@ std::string strip_quotes(const std::string& s)
 	return s.substr(1, s.length() - 2);
 }
 
+
+// msf_to_frames
+
+
+long to_frames(const int m, const int s, const int f)
+{
+	if (m < 0 || m > 99 || s < 0 || s >= 60 || f < 0 || f >= 75) {
+		return -1;
+	}
+
+	return (m * 60 + s) * 75 + f;
+}
+
 } // namespace details
 } // namespace v_1_0_0
 } // namespace arcsdec

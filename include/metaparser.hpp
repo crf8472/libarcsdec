@@ -250,7 +250,7 @@ long msf_to_frames(const int m, const int s, const int f);
 /**
  * \brief Convert CDDA frames to MSF frames.
  */
-void frames_to_msg(long frames, int* m, int* s, int* f);
+void frames_to_msf(long frames, int* m, int* s, int* f);
 
 } // namespace details
 
