@@ -58,43 +58,11 @@ class DefaultLexerHandler final : public LexerHandler
 
 
 /**
- * \brief Interface: parser handler defines reaction on grammar symbols.
+ * \brief Interface: parser handler defines reaction on the occurence of symbols.
  */
 class ParserHandler
 {
-	virtual std::vector<int32_t> do_offsets() const
-	= 0;
-
-	virtual std::vector<std::string> do_filenames() const
-	= 0;
-
-public:
-
-	virtual ~ParserHandler() noexcept;
-
-	std::vector<int32_t> offsets() const;
-
-	std::vector<std::string> filenames() const;
-};
-
-
-/**
- * \brief Default parser handler that does not do anything when notified.
- */
-class DefaultParserHandler final : public ParserHandler
-{
-	std::vector<int32_t> do_offsets() const final;
-
-	std::vector<std::string> do_filenames() const final;
-
-
-	std::vector<int32_t> offsets_;
-
-	std::vector<std::string> filenames_;
-
-public:
-
-	DefaultParserHandler();
+	// empty
 };
 
 
@@ -141,27 +109,6 @@ auto shift_lexer_pos(POSITION current, const int line_no, const int col_no)
  * \return String without quotes
  */
 std::string strip_quotes(const std::string& s);
-
-/**
- * \brief Convert MSF time to CDDA frames.
- *
- * \param[in] m Minutes
- * \param[in] s Seconds
- * \param[in] f Frames
- *
- * \return Number of frames
- */
-long to_frames(const int m, const int s, const int f);
-
-/**
- * \brief Convert CDDA frames to MSF frames.
- *
- * \param[in]  frames Input frames
- * \param[out] m      Minutes
- * \param[out] s      Seconds
- * \param[out] f      Frames
- */
-//void frames_to_msf(long frames, int* m, int* s, int* f);
 
 /**
  * \brief Report a parser error to a specified output stream.

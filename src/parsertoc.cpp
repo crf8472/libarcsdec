@@ -63,7 +63,7 @@ using arcstk::make_toc;
 std::unique_ptr<ToC> TocParserImpl::do_parse(const std::string& filename)
 {
 	DefaultLexerHandler  l_handler;
-	DefaultParserHandler p_handler;
+	ParserToCHandler p_handler;
 
 	{
 		auto driver = CdrtocDriver { &l_handler, &p_handler };

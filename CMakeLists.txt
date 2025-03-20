@@ -190,6 +190,7 @@ add_library (${PROJECT_NAME} SHARED
 	"${PROJECT_SOURCE_DIR}/audioreader.cpp"
 	"${PROJECT_SOURCE_DIR}/calculators.cpp"
 	"${PROJECT_SOURCE_DIR}/descriptor.cpp"
+	"${PROJECT_SOURCE_DIR}/flexbison.cpp"
 	"${PROJECT_SOURCE_DIR}/flexbisondriver.cpp"
 	"${PROJECT_SOURCE_DIR}/libinspect.cpp"
 	"${PROJECT_SOURCE_DIR}/metaparser.cpp"
@@ -447,8 +448,12 @@ target_include_directories (cuesheet
 	PRIVATE ${PROJECT_BUILD_SOURCE_DIR}     ## generated sources
 	)
 
-add_dependencies      (${PROJECT_NAME} cuesheet )
 target_link_libraries (${PROJECT_NAME} PRIVATE cuesheet )
+
+if (WITH_SUBMODULES )
+	# force to compile libarcstk before cuesheet
+	target_link_libraries (cuesheet PRIVATE libarcstk::libarcstk )
+endif ()
 
 
 ## -- CDRDAO/TOC parser and scanner
@@ -481,8 +486,12 @@ target_include_directories (cdrtoc
 	PRIVATE ${PROJECT_BUILD_SOURCE_DIR}   ## generated sources
 	)
 
-add_dependencies      (${PROJECT_NAME} cdrtoc )
 target_link_libraries (${PROJECT_NAME} PRIVATE cdrtoc )
+
+if (WITH_SUBMODULES )
+	# force to compile libarcstk before any cdrtoc
+	target_link_libraries (cdrtoc PRIVATE libarcstk::libarcstk )
+endif ()
 
 
 ## --- Configure optional features

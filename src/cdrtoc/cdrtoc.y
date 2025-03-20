@@ -57,6 +57,10 @@
 	#include "../src/flexbisondriver.hpp"  // for ParserHandler
 	#endif
 
+	#ifndef __LIBARCSDEC_FLEXBISON_HPP__
+	#include "../src/flexbison.hpp"        // for to_frames
+	#endif
+
 	// Forward declare what we are about to use
 	int yylex (void);
 	int yyerror (const char *s);
@@ -84,6 +88,10 @@
 
 	#ifndef __LIBARCSDEC_FLEXBISONDRIVER_HPP__
 	#include "../src/flexbisondriver.hpp"  // for ParserHandler
+	#endif
+
+	#ifndef __LIBARCSDEC_FLEXBISON_HPP__
+	#include "../src/flexbison.hpp"        // for to_frames, ParserTocHandler
 	#endif
 
 	// Required in the implementation of production rules
@@ -202,13 +210,13 @@
 /* Non-Terminals */
 
 %nterm <uint64_t> u_long	msf_time opt_msf_time data_length opt_data_length
-							samples
+							samples opt_samples
 %nterm  <int64_t> s_long	tagged_number opt_start_offset
 
 %start cdrtoc
 
-%%
 
+%%
 
 cdrtoc
 	: opt_catalog_or_toctype_statements opt_global_cdtext_statement tracks
@@ -404,9 +412,11 @@ subtrack_or_start_or_ends
 
 subtrack_or_start_or_end
 	: subtrack_statement
-	| START     opt_msf_time
+	| START opt_msf_time
 		{
-			std::cout << "START: " << $2 << '\n';
+			const auto o { $2 };
+
+			std::cout << "START: " << o << '\n';
 		}
 	| END_TOKEN opt_msf_time
 	;
@@ -425,9 +435,12 @@ audiofile
 	;
 
 audiofile_offset_and_length
-	: opt_start_offset samples /* TODO + opt_samples ? */ samples
+	: opt_start_offset samples /* TODO $3 is not in grammar */ opt_samples
 		{
-			std::cout << "FILE: " << $2 << " / " << $3 << '\n';
+			const auto o { $2 };
+			const auto l { $3 };
+
+			std::cout << "FILE: " << o << " / " << l << '\n';
 			//handler->offset($1);
 		}
 	;
@@ -475,6 +488,14 @@ opt_data_length
 data_length
 	: msf_time
 	| u_long
+	;
+
+opt_samples
+	: samples
+	| /* none */
+		{
+			$<uint64_t>$ = 0;
+		}
 	;
 
 samples
@@ -525,13 +546,6 @@ msf_time
 			//std::cout << '\n';
 
 			$$ = static_cast<uint64_t>(to_frames(m, s, f));
-			//$$ = static_cast<uint64_t>(
-			//	to_frames(std::atoi(m), std::atoi(s), std::atoi(f)));
-
-			//$$ = std::make_tuple(
-			//		std::atoi($1),
-			//		std::atoi($3),
-			//		std::atoi($5));
 		}
 	;
 
