@@ -371,7 +371,6 @@ track
 		opt_track_cdtext_statement opt_pregap subtrack_or_start_or_ends
 		opt_index_statements
 		{
-			ARCS_LOG_DEBUG << "track";
 			handler->inc_current_track();
 		}
 	;
