@@ -462,13 +462,15 @@ bison_target (tocparser
 	${PROJECT_SOURCE_DIR}/cdrtoc/cdrtoc.y
 	${PROJECT_BUILD_SOURCE_DIR}/cdrtoc.tab.cpp
 	DEFINES_FILE ${PROJECT_BUILD_SOURCE_DIR}/cdrtoc.tab.hpp
-	COMPILE_FLAGS "--verbose --debug -Wconflicts-sr -Wconflicts-rr -Wcounterexamples"
+	#COMPILE_FLAGS "--verbose --debug -Wconflicts-sr -Wconflicts-rr -Wcounterexamples"
+	COMPILE_FLAGS "--verbose -Wconflicts-sr -Wconflicts-rr -Wcounterexamples"
 	)
 
 flex_target (tocscanner
 	${PROJECT_SOURCE_DIR}/cdrtoc/cdrtoc.l
 	${PROJECT_BUILD_SOURCE_DIR}/cdrtoc.yy.cpp
-	COMPILE_FLAGS "--verbose --debug"
+	#COMPILE_FLAGS "--verbose --debug"
+	COMPILE_FLAGS "--verbose"
 	)
 
 add_flex_bison_dependency (tocscanner tocparser )
