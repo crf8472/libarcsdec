@@ -53,8 +53,8 @@
 /* Goes to .tab.hpp header file (therefore included in source) */
 %code requires
 {
-	#ifndef __LIBARCSDEC_FLEXBISON_HPP__
-	#include "../src/flexbison.hpp"        // for to_frames
+	#ifndef __LIBARCSDEC_TOCHANDLER_HPP__
+	#include "../src/tochandler.hpp"        // for to_frames
 	#endif
 
 	// Forward declare what we are about to use
@@ -82,8 +82,8 @@
 	#include "cdrtoc_lexer.hpp"            // for Lexer
 	#endif
 
-	#ifndef __LIBARCSDEC_FLEXBISON_HPP__
-	#include "../src/flexbison.hpp"        // for ParserTocHandler, ...
+	#ifndef __LIBARCSDEC_TOCHANDLER_HPP__
+	#include "../src/tochandler.hpp"       // for ParserTocHandler, ...
 	#endif
 
 	// Required in the implementation of production rules

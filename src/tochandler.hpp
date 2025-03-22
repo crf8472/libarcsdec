@@ -1,9 +1,9 @@
-#ifndef __LIBARCSDEC_FLEXBISON_HPP__
-#define __LIBARCSDEC_FLEXBISON_HPP__
+#ifndef __LIBARCSDEC_TOCHANDLER_HPP__
+#define __LIBARCSDEC_TOCHANDLER_HPP__
 /**
  * \file
  *
- * \brief Tools for flex scanners and bison parsers.
+ * \brief Tools for bison parsers for compact disc toc files.
  */
 
 #ifndef __LIBARCSTK_METADATA_HPP__
@@ -11,10 +11,10 @@
 #endif
 
 #ifndef __LIBARCSDEC_FLEXBISONDRIVER_HPP__
-#include "flexbisondriver.hpp"
+#include "flexbisondriver.hpp"    // for ParserHandler
 #endif
 
-#include <cstdint>  // for uint32_t, int32_t
+#include <cstdint>  // for uint64_t, int32_t
 #include <string>   // for string
 #include <vector>   // for vector
 

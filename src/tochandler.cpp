@@ -1,11 +1,11 @@
 /**
  * \file
  *
- * \brief Implementations to flexbison.hpp.
+ * \brief Implementations to tochandler.hpp.
  */
 
-#ifndef __LIBARCSDEC_FLEXBISON_HPP__
-#include "flexbison.hpp"
+#ifndef __LIBARCSDEC_TOCHANDLER_HPP__
+#include "tochandler.hpp"
 #endif
 
 #ifndef __LIBARCSTK_METADATA_HPP__
