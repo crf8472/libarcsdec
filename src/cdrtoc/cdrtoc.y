@@ -27,7 +27,7 @@
 %define api.token.prefix       {TOKEN_}
 
 /* Move tokens (instead of copy) when passing them to make_<TOKENNAME>() */
-/* % define api.value.automove */
+%define api.value.automove
 
 /* Use bison variants as token types (requires token.constructor) */
 %define api.value.type         variant
@@ -109,6 +109,22 @@
 	// Note: could also be achieved by doing something like:
     // #define yylex(Lexer* l, Location* loc) lexer.next_token()
 	// But let's avoid macros if we can.
+
+	// Convert to the type of non-terminal 'u_long'.
+	// Inteded for converting NUMBER tokens.
+	// Requires 'api.value.automove'
+	static auto to_unsigned_long(std::string&& s) -> uint64_t
+	{
+		return std::stoul(s.c_str());
+	}
+
+	// Convert to the type of non-terminal 's_long'.
+	// Inteded for converting NUMBER tokens.
+	// Requires 'api.value.automove'
+	static auto to_signed_long(std::string&& s) -> int64_t
+	{
+		return std::stol(s.c_str());
+	}
 
 	//  for clang++
 	#if defined(__clang__)
@@ -432,9 +448,11 @@ subtrack_or_start_or_end
 				} catch (const std::exception& e)
 				{
 					using std::to_string;
-					std::runtime_error(std::string("Error: Tried to ")
+					auto message = std::string("Error: Tried to ")
 						+ " update offset for track " + to_string(track)
-						+ " but no offset available.");
+						+ " but no offset available.";
+
+					// TODO Use combination of yyerror() + YYERROR
 				}
 			}
 		}
@@ -460,12 +478,21 @@ audiofile
 	;
 
 audiofile_offset_and_length
-	: opt_start_offset samples /* TODO $3 is not in grammar */ opt_samples
+	: opt_start_offset samples /* FIXME $3 is not in grammar */ opt_samples
 		{
-			const auto offset { $2 };
-			//const auto length { $3 }; /* commented: unused, documentation */
+			// This rule parses things like
+			// AUDIOFILE 00:00:00 00:00:33
+			// AUDIOFILE 00:00:00
+			// (audiofile followed by offset + optional length)
+			// which occurr in the wild, e.g. produce by cdrdao's own cue2toc.
+			// However, it is a deviation from the grammar, that specifies
+			// AUDIOFILE #0 00:00:33
+			// (audiofile followed by optional offset + mandatory length).
+			// (Or I just do not understand the grammar.)
 
-			handler->append_offset(offset);
+			handler->append_offset($2);
+
+			//const auto length { $3 }; /* commented: unused, documentation */
 		}
 	;
 
@@ -497,7 +524,7 @@ tagged_number
 s_long
 	: NUMBER
 		{
-			$$ = std::stol($1.c_str());
+			$$ = to_signed_long($1);
 		}
 	;
 
@@ -505,7 +532,7 @@ opt_data_length
 	: data_length
 	| /* none */
 		{
-			$$ = 0;
+			$$ = 0u;
 		}
 	;
 
@@ -518,7 +545,7 @@ opt_samples
 	: samples
 	| /* none */
 		{
-			$$ = 0;
+			$$ = 0u;
 		}
 	;
 
@@ -530,7 +557,7 @@ samples
 u_long
 	: NUMBER
 		{
-			$$ = std::stoul($1.c_str());
+			$$ = to_unsigned_long($1);
 		}
 	;
 
@@ -553,18 +580,17 @@ opt_msf_time
 	: msf_time
 	| /* none */
 		{
-			$$ = 0;
+			$$ = 0u;
 		}
 	;
 
 msf_time
 	: NUMBER COLON NUMBER COLON NUMBER
 		{
-			const auto m { std::stoul($1.c_str()) };
-			const auto s { std::stoul($3.c_str()) };
-			const auto f { std::stoul($5.c_str()) };
-
-			$$ = to_uframes(m, s, f);
+			$$ = to_uframes(
+					to_unsigned_long($1),
+					to_unsigned_long($3),
+					to_unsigned_long($5));
 		}
 	;
 
