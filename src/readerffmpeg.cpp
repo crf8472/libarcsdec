@@ -36,6 +36,14 @@ extern "C"
 #include <libavutil/avutil.h>
 }
 
+// required for using <string.h>
+#ifdef __STDC_ALLOC_LIB__
+	#define __STDC_WANT_LIB_EXT2__ 1
+#else
+	#define _POSIX_C_SOURCE 200809L
+#endif
+#include <string.h>   // for strdup (C)
+
 #include <algorithm>  // for remove
 #include <cerrno>     // for EAGAIN
 #include <climits>    // for CHAR_BIT
@@ -87,13 +95,46 @@ void arcs_av_log(void* /*v*/, int level, const char* fmt, std::va_list args)
 	std::string text { "[FFMPEG] " };
 
 	{
-		// args may have up to 200 chs
-		const auto max_chars { 200 + std::strlen(fmt) };
+		char buf[384];
 
-		char buf[max_chars];
-		const auto result { std::vsnprintf(buf, max_chars, fmt, args) };
+		// print to local buffer
+		auto length { std::vsnprintf(buf, sizeof buf, fmt, args) };
 
-		text += buf;
+		if (length < 0) {
+			// formatting error, abort logging
+			ARCS_LOG_ERROR << "Failed to format message from FFMPEG";
+			return;
+		} else
+		{
+			char* msg;
+
+			if (static_cast<unsigned>(length) < sizeof buf)
+			{
+				// message was successfully formatted, allocate a copy
+				msg = ::strdup(buf);
+			} else
+			{
+				// message was truncated, allocate a buffer that is large enough
+				msg = static_cast<char*>(::malloc(length + 1U));
+			}
+
+			if (!msg)
+			{
+				// allocation error, abort logging
+				ARCS_LOG_ERROR << "Failed to log message from FFMPEG";
+				return;
+			}
+
+			// format the message again if buffer is large enought this time
+			if (static_cast<unsigned>(length) >= sizeof buf)
+			{
+				length = std::vsnprintf(msg, length + 1U, fmt, args);
+			}
+
+			text += msg;
+
+			::free(msg);
+		}
 	}
 
 	// Remove newline(s) from message text
@@ -135,7 +176,7 @@ arcstk::LOGLEVEL arcs_loglevel(const int lvl)
 
 	if (AV_LOG_TRACE   == lvl) { return LOGLEVEL::DEBUG4;  }
 
-	// if there would be more than TRACE, we are not interested
+	// if there would be more than TRACE, we were not interested
 	return LOGLEVEL::NONE;
 }
 
