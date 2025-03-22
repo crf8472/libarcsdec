@@ -4,13 +4,16 @@
  * \file
  *
  * \brief A driver class for flex/bison based parsers.
+ *
+ * Provides some functionalities for reuse with different flex/bison parser
+ * classes.
  */
 
-#include <fstream>   // for ifstream
-#include <memory>    // for unique_ptr
-#include <ostream>   // for ostream
-#include <stdexcept> // for runtime_error
-#include <string>    // for string
+#include <fstream>     // for ifstream
+#include <memory>      // for unique_ptr
+#include <ostream>     // for ostream
+#include <stdexcept>   // for runtime_error
+#include <string>      // for string
 #include <type_traits> // for void_t
 
 
@@ -45,6 +48,8 @@ public:
 	 * \param[in] chars      Chars that form the token
 	 */
 	void notify(const std::string& token_name, const std::string& chars);
+
+	// TODO Provide unexpected() which is dependent from location type
 };
 
 
@@ -59,27 +64,6 @@ class DefaultLexerHandler final : public LexerHandler
 
 
 /**
- * \brief Interface: parser handler defines reaction on the occurence of symbols.
- */
-class ParserHandler
-{
-	virtual void do_start_input()
-	= 0;
-
-	virtual void do_end_input()
-	= 0;
-
-public:
-
-	virtual ~ParserHandler() noexcept;
-
-	void start_input();
-
-	void end_input();
-};
-
-
-/**
  * \brief Shift position \c current to new position with possible newline.
  *
  * \param[in] current The current position
@@ -89,7 +73,7 @@ public:
  * \tparam POSITION Position type of lexer
  */
 template<class POSITION>
-auto shift_lexer_pos(POSITION current, const int line_no, const int col_no)
+auto lexer_shift_pos(POSITION current, const int line_no, const int col_no)
 	-> POSITION
 {
 	// Current position is always the _end_ of the current token
@@ -121,7 +105,37 @@ auto shift_lexer_pos(POSITION current, const int line_no, const int col_no)
  *
  * \return String without quotes
  */
-std::string strip_quotes(const std::string& s);
+std::string lexer_strip_quotes(const std::string& s);
+
+
+/**
+ * \brief Interface: parser handler defines reaction on the occurence of symbols.
+ */
+class ParserHandler
+{
+	virtual void do_start_input()
+	= 0;
+
+	virtual void do_end_input()
+	= 0;
+
+public:
+
+	/**
+	 * \brief Virtual default destructor.
+	 */
+	virtual ~ParserHandler() noexcept;
+
+	/**
+	 * \brief To be called before the first token.
+	 */
+	void start_input();
+
+	/**
+	 * \brief To be called after the last token.
+	 */
+	void end_input();
+};
 
 /**
  * \brief Report a parser error to a specified output stream.
@@ -160,12 +174,20 @@ void parser_error(const LOCATION& loc, const std::string& message,
 
 /**
  * \brief Wrapper for the auto-generated class 'location'.
+ *
+ * Provides facility to reset() and to step_to() a position.
  */
 template<class POSITION, class LOCATION>
 class TokenLocation
 {
+	/**
+	 * \brief Internal location.
+	 */
 	LOCATION current_token_location_;
 
+	/**
+	 * \brief Create an initial location.
+	 */
 	LOCATION create_initial_loc() const
 	{
 		return LOCATION( nullptr, 1, 1 );
@@ -173,24 +195,45 @@ class TokenLocation
 
 public:
 
+	/**
+	 * \brief Constructor.
+	 */
 	TokenLocation()
 		: current_token_location_ { /* empty */ }
 	{
 		// empty
 	}
 
+	/**
+	 * \brief Reset this location to its initial value.
+	 */
 	void reset()
 	{
 		this->current_token_location_ = this->create_initial_loc();
 	}
 
+	/**
+	 * \brief Provide this location in the lexer/parser specific format.
+	 *
+	 * \return Current location in the input file
+	 */
 	LOCATION loc() const
 	{
 		return this->current_token_location_;
 	}
 
+
 	// used as lexer callback
 
+
+	/**
+	 * \brief Step to the specified position.
+	 *
+	 * The specified position will become the new end position. The current end
+	 * position becomes the new start position.
+	 *
+	 * \param[in] lexer_pos The new end position.
+	 */
 	void step_to(const POSITION& lexer_pos)
 	{
 		this->current_token_location_.step(); // set begin <- end
@@ -199,13 +242,19 @@ public:
 };
 
 
-
 template <typename PARSER, typename = std::void_t<>>
 struct IsDebugEnabled : std::false_type
 {
-	void set_debug_level(PARSER*, const int)
+	using debug_level_type = int;
+
+	debug_level_type debug_level(std::unique_ptr<PARSER>&) const
 	{
-		// empty
+		return 0;
+	}
+
+	void set_debug_level(std::unique_ptr<PARSER>&, const debug_level_type) const
+	{
+		// do nothing
 	}
 };
 
@@ -217,10 +266,85 @@ struct IsDebugEnabled <PARSER,
 		std::void_t<decltype(std::declval<PARSER>().set_debug_level(1))>
 	> : std::true_type
 {
-	void set_debug_level(PARSER* parser,
-			const typename PARSER::debug_level_type lvl)
+	using debug_level_type = typename PARSER::debug_level_type;
+
+	debug_level_type debug_level(std::unique_ptr<PARSER>& p) const
 	{
-		parser->set_debug_level(lvl);
+		return p->debug_level();
+	}
+
+	void set_debug_level(std::unique_ptr<PARSER>& p, const debug_level_type l)
+		const
+	{
+		p->set_debug_level(l);
+	}
+};
+
+
+/**
+ * \brief Wrapper for managing a bison parser instance.
+ *
+ * The wrapper provides default implementations for the member functions
+ * of the bison parser that are only available when YYDEBUG is set.
+ */
+template <class PARSER>
+class BisonParser
+{
+	/**
+	 * \brief Internal bison parser instance.
+	 */
+	std::unique_ptr<PARSER> parser_;
+
+	/**
+	 * \brief Debug wrapper.
+	 */
+	IsDebugEnabled<PARSER>  debug_;
+
+public:
+
+	/**
+	 * \brief Type to represent the internal parsers debug level.
+	 */
+	using debug_level_type = typename IsDebugEnabled<PARSER>::debug_level_type;
+
+	/**
+	 * \brief Constructor.
+	 *
+	 * \param[in] parser Parser to wrap
+	 */
+	explicit BisonParser(std::unique_ptr<PARSER> parser)
+		: parser_ { std::move(parser) }
+		, debug_  { /* default */ }
+	{
+		// empty
+	}
+
+	/**
+	 * \brief TRUE iff debug capability is enabled, otherwise FALSE.
+	 *
+	 * \return TRUE iff debug capability is enabled
+	 */
+	bool debug_enabled() const
+	{
+		return IsDebugEnabled<PARSER>::value;
+	}
+
+
+	// pass-through functions
+
+	void set_debug_level(const debug_level_type lvl)
+	{
+		this->debug_.set_debug_level(parser_, lvl);
+	}
+
+	debug_level_type debug_level() const
+	{
+		return this->debug_.debug_level(parser_);
+	}
+
+	int parse()
+	{
+		return this->parser_->parse();
 	}
 };
 
@@ -245,7 +369,7 @@ class FlexBisonDriver final
 
 	std::unique_ptr<LEXER> lexer_;
 
-	std::unique_ptr<PARSER> parser_;
+	BisonParser<PARSER>    parser_;
 
 public:
 
@@ -277,7 +401,7 @@ public:
 	void set_input(std::istream& is)
 	{
 		this->reset();
-		lexer_->switch_streams(&is, nullptr);
+		this->lexer_->switch_streams(&is, nullptr);
 	}
 
 	/**
@@ -285,9 +409,9 @@ public:
 	 *
 	 * Passing '0' deactivates debug output, any other value sets the level.
 	 */
-	void set_lexer_debug_level(const int lvl) const
+	void set_lexer_debug_level(const int lvl)
 	{
-		lexer_->set_debug(lvl);
+		this->lexer_->set_debug(lvl);
 	}
 
 	/**
@@ -295,10 +419,9 @@ public:
 	 *
 	 * Passing '0' deactivates debug output, any other value sets the level.
 	 */
-	void set_parser_debug_level(const int lvl) const
+	void set_parser_debug_level(const int lvl)
 	{
-		auto debug_interface = IsDebugEnabled<PARSER>{};
-		debug_interface.set_debug_level(parser_.get(), lvl);
+		this->parser_.set_debug_level(lvl);
 	}
 
 	/**
@@ -320,7 +443,7 @@ public:
 		}
 		this->set_input(file);
 
-		if (this->parser_->parse() != 0)
+		if (this->parser_.parse() != 0)
 		{
 			file.close();
 			throw std::runtime_error(

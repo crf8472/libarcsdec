@@ -194,7 +194,8 @@ ENCODING_MANDARIN   { return Parser::make_ENCODING_MANDARIN(loc());   }
 {BRACE_RIGHT}       { return Parser::make_BRACE_RIGHT(loc());         }
 
 {DQ_STRING}|{SQ_STRING} {
-                      return Parser::make_STRING(strip_quotes(YYText()), loc());
+                      return Parser::make_STRING(
+							lexer_strip_quotes(YYText()), loc());
 					}
 
 {EMPTY_DQ_STRING}|{EMPTY_SQ_STRING} {
@@ -246,7 +247,7 @@ void Lexer::unexpected(const std::string& chars, const location& loc)
 void Lexer::shift_pos(const int line_no, const int token_length)
 {
 	// Current position is always the _end_ of the current token
-	current_pos_ = shift_lexer_pos(current_pos_, line_no, token_length);
+	current_pos_ = lexer_shift_pos(current_pos_, line_no, token_length);
 
 	//std::cout << "Line " << std::setw(3) << line_no;
 	//std::cout << ", token_length: " << std::setw(2) << token_length;

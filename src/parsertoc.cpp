@@ -35,15 +35,9 @@
 #endif
 
 
-#include <cstdint>   // for uint64_t
-#include <iomanip>   // for setw
-#include <fstream>   // for ifstream
 #include <memory>    // for unique_ptr
 #include <set>       // for set
-#include <sstream>   // for ostringstream
-#include <stdexcept> // for invalid_argument
 #include <string>    // for string
-#include <vector>    // for vector
 
 
 namespace arcsdec
@@ -74,7 +68,10 @@ std::unique_ptr<ToC> TocParserImpl::do_parse(const std::string& filename)
 		ARCS_LOG_DEBUG << "Set parser debug level: " << parser_level;
 #else
 		const auto lexer_level  = 0;
+		ARCS_LOG_DEBUG << "Lexer debug info is deactivated";
+
 		const auto parser_level = 0;
+		ARCS_LOG_DEBUG << "Parser debug info is deactivated";
 #endif
 
 		driver.set_lexer_debug_level(lexer_level);

@@ -71,7 +71,7 @@ void ParserHandler::end_input()
 // remove_quotes
 
 
-std::string strip_quotes(const std::string& s)
+std::string lexer_strip_quotes(const std::string& s)
 {
 	if (s.length()  < 2) { return s; };
 	if (s.length() == 2) { return std::string{}; };
