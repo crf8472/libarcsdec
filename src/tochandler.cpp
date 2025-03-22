@@ -178,7 +178,6 @@ ParserToCHandler::ParserToCHandler()
 	, filenames_     { /* empty */ }
 	, isrcs_         { /* empty */ }
 	, current_track_ { 0 }
-	, leadout_       { 0 }
 	, mcn_           { /* empty */ }
 	, disc_id_       { /* empty */ }
 {

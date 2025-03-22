@@ -95,8 +95,6 @@ class ParserToCHandler final : public ParserHandler
 
 	std::size_t current_track_;
 
-	int32_t leadout_;
-
 	std::string mcn_;
 
 	std::string disc_id_;
