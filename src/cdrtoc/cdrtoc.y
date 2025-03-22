@@ -24,7 +24,7 @@
 %define api.token.constructor
 
 /* Add prefix to token name */
-%define api.token.prefix       {TOKEN_}
+%define api.token.prefix       {CDRTOC_}
 
 /* Move tokens (instead of copy) when passing them to make_<TOKENNAME>() */
 %define api.value.automove
