@@ -53,8 +53,14 @@
 /* Goes to .tab.hpp header file (therefore included in source) */
 %code requires
 {
+	// Declaration of class 'Parser' refers to 'TokenLocation' in constructor
+	#ifndef __LIBARCSDEC_FLEXBISONDRIVER_HPP__
+	#include "../src/flexbisondriver.hpp"   // for TokenLocation
+	#endif
+
+	// Declaration of class 'Parser' refers to 'ParserTocHandler' in constructor
 	#ifndef __LIBARCSDEC_TOCHANDLER_HPP__
-	#include "../src/tochandler.hpp"        // for to_frames
+	#include "../src/tochandler.hpp"        // for ParserTocHandler
 	#endif
 
 	// Forward declare what we are about to use
@@ -78,12 +84,15 @@
 /* Goes to source file _before_ cdrtoc.tab.hpp is included */
 %code top
 {
-	#ifndef __LIBARCSDEC_CDRTOC_LEXER_HPP__
-	#include "cdrtoc_lexer.hpp"            // for Lexer
-	#endif
-
+	// To use member functions of 'ParserTocHandler' in production rule actions
+	// (Include also required in cdrtoc.tab.hpp)
 	#ifndef __LIBARCSDEC_TOCHANDLER_HPP__
 	#include "../src/tochandler.hpp"       // for ParserTocHandler, ...
+	#endif
+
+	// Re-declaration of yylex() below requires declaration of class 'Lexer'
+	#ifndef __LIBARCSDEC_CDRTOC_LEXER_HPP__
+	#include "cdrtoc_lexer.hpp"            // for Lexer
 	#endif
 
 	// Required in the implementation of production rules
@@ -199,11 +208,12 @@
 
 /* Non-Terminals */
 
-%nterm <uint64_t> u_long	msf_time opt_msf_time data_length opt_data_length
-							samples opt_samples
-%nterm  <int64_t> s_long	tagged_number opt_start_offset
+/* unsigned long number format */
+%nterm <uint64_t> u_long msf_time opt_msf_time data_length opt_data_length
+						samples opt_samples
 
-%start cdrtoc
+/* signed long number format */
+%nterm  <int64_t> s_long tagged_number opt_start_offset
 
 
 %%
