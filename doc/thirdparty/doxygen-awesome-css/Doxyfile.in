@@ -1,0 +1,6 @@
+## Doxygen configuration file for doxygen HTML based output with awesome_css
+
+@INCLUDE = @DOC_DOXYFILE_BASE@
+
+HTML_EXTRA_STYLESHEET = @TARGET_CSS_DIR@/doxygen-awesome.css
+
