@@ -7,15 +7,15 @@
  */
 
 #ifndef __LIBARCSDEC_CDRTOC_LEXER_HPP__
-#include "cdrtoc_lexer.hpp" // for Lexer declaration
+#include "cdrtoc_lexer.hpp"     // for Lexer declaration
 #endif
 
 #ifndef __LIBARCSDEC_CDRTOC_TAB_HPP__
-#include "cdrtoc_tab.hpp"   // auto-generated
+#include "cdrtoc_tab.hpp"       // auto-generated
 #endif
 
 #ifndef __LIBARCSDEC_FLEXBISONDRIVER_HPP__
-#include "flexbisondriver.hpp"
+#include "flexbisondriver.hpp"  // for FlexBisonDriver
 #endif
 
 namespace arcsdec
@@ -24,15 +24,18 @@ inline namespace v_1_0_0
 {
 namespace details
 {
+namespace cdrtoc
+{
 
-// provide Driver class for namespace
-using CdrtocDriver = Driver<
-	cdrtoc::yycdrtoc::Lexer,
-	cdrtoc::yycdrtoc::Parser,
-	cdrtoc::yycdrtoc::location,
-	cdrtoc::yycdrtoc::position
+using Driver = FlexBisonDriver<
+	yycdrtoc::Lexer,
+	yycdrtoc::Parser,
+	yycdrtoc::location,
+	yycdrtoc::position,
+	ParserToCHandler
 >;
 
+} // namespace cdrtoc
 } // namespace details
 } // namespace V_1_0_0
 } // namespace arcsdec

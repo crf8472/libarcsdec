@@ -44,6 +44,24 @@ void DefaultLexerHandler::do_notify(const std::string& /* token_name */,
 }
 
 
+// ParserHandler
+
+
+ParserHandler::~ParserHandler() noexcept = default;
+
+
+void ParserHandler::start_input()
+{
+	do_start_input();
+}
+
+
+void ParserHandler::end_input()
+{
+	do_end_input();
+}
+
+
 // remove_quotes
 
 

@@ -47,16 +47,12 @@
 /* Define parameters to pass to Parser::Parser() */
 %parse-param { arcsdec::details::TokenLocation<position,location>* loc }
 %parse-param { Lexer* lexer } /* to call parser */
-%parse-param { ParserHandler* handler } /* to implement parser rules */
+%parse-param { ParserToCHandler* handler } /* to implement parser rules */
 
 
 /* Goes to .tab.hpp header file (therefore included in source) */
 %code requires
 {
-	#ifndef __LIBARCSDEC_FLEXBISONDRIVER_HPP__
-	#include "../src/flexbisondriver.hpp"  // for ParserHandler
-	#endif
-
 	#ifndef __LIBARCSDEC_FLEXBISON_HPP__
 	#include "../src/flexbison.hpp"        // for to_frames
 	#endif
@@ -86,18 +82,12 @@
 	#include "cdrtoc_lexer.hpp"            // for Lexer
 	#endif
 
-	#ifndef __LIBARCSDEC_FLEXBISONDRIVER_HPP__
-	#include "../src/flexbisondriver.hpp"  // for ParserHandler
-	#endif
-
 	#ifndef __LIBARCSDEC_FLEXBISON_HPP__
-	#include "../src/flexbison.hpp"        // for to_frames, ParserTocHandler
+	#include "../src/flexbison.hpp"        // for ParserTocHandler, ...
 	#endif
 
 	// Required in the implementation of production rules
-	#include <cstdlib> // for atoi
-	#include <string>  // for string
-	#include <tuple>   // for tuple
+	#include <string>  // for string, stol, stoul
 
 	// Override yylex() to be called in Parser::parse().
 	// Only called inside bison, so make it static to limit visibility to TU.
@@ -221,7 +211,7 @@
 cdrtoc
 	: opt_catalog_or_toctype_statements opt_global_cdtext_statement tracks
 		{
-			//handler->end_input();
+			handler->end_input();
 		}
 	;
 
@@ -232,8 +222,8 @@ opt_catalog_or_toctype_statements
 
 catalog_or_toctype_statement
 	: CATALOG NUMBER
-		{   /* MCN: [0-9]{13} */
-			//handler->catalog($2);
+		{
+			handler->set_mcn($2);
 		}
 	| toctype
 	;
@@ -286,7 +276,11 @@ cdtext_items
 	;
 
 cdtext_item
-	: pack_type cdtext_item_value
+	: pack_type cdtext_item_value /* default for all pack_values */
+	| DISC_ID STRING /* DISC_ID is the only pack_value we want to react on */
+		{
+			handler->set_disc_id($2);
+		}
 	;
 
 pack_type
@@ -305,7 +299,7 @@ pack_type_str /* requires value as STRING or EMPTY_STRING */
 	| COMPOSER
 	| ARRANGER
 	| MESSAGE
-	| DISC_ID
+	/* | DISC_ID */ /* by separate rule in production 'cdtext_item' */
 	| GENRE
 	| UPC_EAN
 	| ISRC
@@ -341,6 +335,9 @@ track
 	:  TRACK track_mode opt_subchannel_mode opt_track_flags
 		opt_track_cdtext_statement opt_pregap subtrack_or_start_or_ends
 		opt_index_statements
+		{
+			handler->inc_current_track();
+		}
 	;
 
 track_mode
@@ -377,12 +374,9 @@ track_flags
 track_flag
 	: ISRC STRING
 		{
-			// STRING has to be a length of 12 and format 'CCOOOYYSSSSS'
-			//C: country code (upper case letters or digits)
-			//O: owner code (upper case letters or digits)
-			//Y: year (digits)
-			//S: serial number (digits)
-			// therefore [0-9A-Z]{5}[0-9]{7}
+			const auto isrc { $2 };
+
+			handler->append_isrc(isrc);
 		}
 	| TWO_CHANNEL_AUDIO
 	| FOUR_CHANNEL_AUDIO
@@ -414,15 +408,36 @@ subtrack_or_start_or_end
 	: subtrack_statement
 	| START opt_msf_time
 		{
-			const auto o { $2 };
+			const auto start { $2 };
 
-			std::cout << "START: " << o << '\n';
+			if (start)
+			{
+				const auto track  { handler->current_track() };
+
+				try
+				{
+					const auto offset { handler->offset(track) };
+					handler->set_offset(track, offset + start);
+
+				} catch (const std::exception& e)
+				{
+					using std::to_string;
+					std::runtime_error(std::string("Error: Tried to ")
+						+ " update offset for track " + to_string(track)
+						+ " but no offset available.");
+				}
+			}
 		}
 	| END_TOKEN opt_msf_time
 	;
 
 subtrack_statement
 	: audiofile STRING opt_swap audiofile_offset_and_length
+		{
+			const auto filename { $2 };
+
+			handler->append_filename(filename);
+		}
 	| DATAFILE STRING opt_start_length
 	| FIFO STRING data_length
 	| SILENCE samples
@@ -437,11 +452,10 @@ audiofile
 audiofile_offset_and_length
 	: opt_start_offset samples /* TODO $3 is not in grammar */ opt_samples
 		{
-			const auto o { $2 };
-			const auto l { $3 };
+			const auto offset { $2 };
+			//const auto length { $3 }; /* commented: unused, documentation */
 
-			std::cout << "FILE: " << o << " / " << l << '\n';
-			//handler->offset($1);
+			handler->append_offset(offset);
 		}
 	;
 
@@ -473,7 +487,7 @@ tagged_number
 s_long
 	: NUMBER
 		{
-			$$ = std::atoi($1.c_str());
+			$$ = std::stol($1.c_str());
 		}
 	;
 
@@ -494,7 +508,7 @@ opt_samples
 	: samples
 	| /* none */
 		{
-			$<uint64_t>$ = 0;
+			$$ = 0;
 		}
 	;
 
@@ -506,7 +520,7 @@ samples
 u_long
 	: NUMBER
 		{
-			$$ = std::atoi($1.c_str());
+			$$ = std::stoul($1.c_str());
 		}
 	;
 
@@ -536,16 +550,11 @@ opt_msf_time
 msf_time
 	: NUMBER COLON NUMBER COLON NUMBER
 		{
-			const auto m { std::atoi($1.c_str()) };
-			const auto s { std::atoi($3.c_str()) };
-			const auto f { std::atoi($5.c_str()) };
+			const auto m { std::stoul($1.c_str()) };
+			const auto s { std::stoul($3.c_str()) };
+			const auto f { std::stoul($5.c_str()) };
 
-			//std::cout << "M: "  << m << " (" << std::atoi(m.c_str()) << ")";
-			//std::cout << " S: " << s << " (" << std::atoi(s.c_str()) << ")";
-			//std::cout << " F: " << f << " (" << std::atoi(f.c_str()) << ")";
-			//std::cout << '\n';
-
-			$$ = static_cast<uint64_t>(to_frames(m, s, f));
+			$$ = to_uframes(m, s, f);
 		}
 	;
 

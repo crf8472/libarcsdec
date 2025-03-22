@@ -62,7 +62,19 @@ class DefaultLexerHandler final : public LexerHandler
  */
 class ParserHandler
 {
-	// empty
+	virtual void do_start_input()
+	= 0;
+
+	virtual void do_end_input()
+	= 0;
+
+public:
+
+	virtual ~ParserHandler() noexcept;
+
+	void start_input();
+
+	void end_input();
 };
 
 
@@ -194,12 +206,13 @@ public:
 /**
  * \brief .
  */
-template<class LEXER, class PARSER, class LOCATION, class POSITION>
-class Driver final
+template<class LEXER, class PARSER, class LOCATION, class POSITION,
+	class HANDLER>
+class FlexBisonDriver final
 {
 	LexerHandler* l_handler_;
 
-	ParserHandler* p_handler_;
+	HANDLER* p_handler_;
 
 	TokenLocation<POSITION, LOCATION> current_loc_;
 
@@ -214,13 +227,13 @@ public:
 	 *
 	 * \param[in] handler Parse handler
 	 */
-	explicit Driver(LexerHandler* l_handler, ParserHandler* p_handler)
+	explicit FlexBisonDriver(LexerHandler* l_handler, HANDLER* p_handler)
 		: l_handler_   { l_handler }
 		, p_handler_   { p_handler }
 		, current_loc_ { /* empty */ }
-		, lexer_       { std::make_unique<LEXER>(&current_loc_, l_handler) }
+		, lexer_       { std::make_unique<LEXER>(&current_loc_, l_handler_) }
 		, parser_      { std::make_unique<PARSER>(
-								&current_loc_, lexer_.get(), p_handler) }
+								&current_loc_, lexer_.get(), p_handler_) }
 	{
 		// empty
 	}
@@ -279,6 +292,7 @@ public:
 		}
 		this->set_input(file);
 
+		this->p_handler_->start_input(); // TODO Move this to .y file
 		if (this->parser_->parse() != 0)
 		{
 			file.close();

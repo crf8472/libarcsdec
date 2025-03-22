@@ -57,25 +57,23 @@ namespace cdrtoc
 {
 
 using arcstk::ToC;
-using arcstk::make_toc;
 
 
 std::unique_ptr<ToC> TocParserImpl::do_parse(const std::string& filename)
 {
-	DefaultLexerHandler  l_handler;
-	ParserToCHandler p_handler;
+	auto p_handler = ParserToCHandler{};
 
 	{
-		auto driver = CdrtocDriver { &l_handler, &p_handler };
+		auto l_handler = DefaultLexerHandler { /* default */ } ;
+		auto driver    = Driver { &l_handler, &p_handler };
 
-		driver.set_lexer_debug_level(1);
-		driver.set_parser_debug_level(1);
+		//driver.set_lexer_debug_level(1);
+		//driver.set_parser_debug_level(1);
+
 		driver.parse(filename);
 	}
 
-	//return make_toc(p_handler->offsets(), p_handler->filenames());
-
-	return nullptr;
+	return p_handler.get_toc();
 }
 
 
