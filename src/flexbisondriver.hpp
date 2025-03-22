@@ -11,7 +11,8 @@
 #include <ostream>   // for ostream
 #include <stdexcept> // for runtime_error
 #include <string>    // for string
-#include <vector>    // for vector
+#include <type_traits> // for void_t
+
 
 namespace arcsdec
 {
@@ -198,6 +199,32 @@ public:
 };
 
 
+
+template <typename PARSER, typename = std::void_t<>>
+struct IsDebugEnabled : std::false_type
+{
+	void set_debug_level(PARSER*, const int)
+	{
+		// empty
+	}
+};
+
+
+// Check whether parser class has function 'set_debug_level()' and
+// defines a debug_level_type
+template <typename PARSER>
+struct IsDebugEnabled <PARSER,
+		std::void_t<decltype(std::declval<PARSER>().set_debug_level(1))>
+	> : std::true_type
+{
+	void set_debug_level(PARSER* parser,
+			const typename PARSER::debug_level_type lvl)
+	{
+		parser->set_debug_level(lvl);
+	}
+};
+
+
 #if defined(__GNUG__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Weffc++"
@@ -270,7 +297,8 @@ public:
 	 */
 	void set_parser_debug_level(const int lvl) const
 	{
-		parser_->set_debug_level(lvl);
+		auto debug_interface = IsDebugEnabled<PARSER>{};
+		debug_interface.set_debug_level(parser_.get(), lvl);
 	}
 
 	/**

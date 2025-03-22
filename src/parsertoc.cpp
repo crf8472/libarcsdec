@@ -4,7 +4,6 @@
  * \brief Implements a parser for CDRDAO/TOC files.
  */
 
-#include "flexbisondriver.hpp"
 #ifndef __LIBARCSDEC_PARSERTOC_HPP__
 #include "parsertoc.hpp"
 #endif
@@ -67,8 +66,19 @@ std::unique_ptr<ToC> TocParserImpl::do_parse(const std::string& filename)
 		auto l_handler = DefaultLexerHandler { /* default */ } ;
 		auto driver    = Driver { &l_handler, &p_handler };
 
-		//driver.set_lexer_debug_level(1);
-		//driver.set_parser_debug_level(1);
+#ifdef YYDEBUG
+		const auto lexer_level  = 1;
+		ARCS_LOG_DEBUG << "Set lexer debug level: " << lexer_level;
+
+		const auto parser_level = 1;
+		ARCS_LOG_DEBUG << "Set parser debug level: " << parser_level;
+#else
+		const auto lexer_level  = 0;
+		const auto parser_level = 0;
+#endif
+
+		driver.set_lexer_debug_level(lexer_level);
+		driver.set_parser_debug_level(parser_level);
 
 		driver.parse(filename);
 	}
