@@ -8,6 +8,10 @@
 #include "flexbisondriver.hpp"
 #endif
 
+#ifndef __LIBARCSTK_LOGGING_HPP__
+#include <arcstk/logging.hpp>
+#endif
+
 #include <fstream>     // for ifstream
 #include <stdexcept>   // for invalid_argument
 #include <string>      // for vector
@@ -52,13 +56,15 @@ ParserHandler::~ParserHandler() noexcept = default;
 
 void ParserHandler::start_input()
 {
-	do_start_input();
+	ARCS_LOG_DEBUG << "Start parsing";
+	this->do_start_input();
 }
 
 
 void ParserHandler::end_input()
 {
-	do_end_input();
+	this->do_end_input();
+	ARCS_LOG_DEBUG << "End parsing";
 }
 
 

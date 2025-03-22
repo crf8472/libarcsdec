@@ -292,7 +292,6 @@ public:
 		}
 		this->set_input(file);
 
-		this->p_handler_->start_input(); // TODO Move this to .y file
 		if (this->parser_->parse() != 0)
 		{
 			file.close();

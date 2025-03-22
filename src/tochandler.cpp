@@ -243,6 +243,7 @@ void ParserToCHandler::dump_log() const
 void ParserToCHandler::do_start_input()
 {
 	current_track_ = 1;
+	ARCS_LOG(DEBUG3) << "Set current track to 1";
 }
 
 

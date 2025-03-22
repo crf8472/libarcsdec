@@ -95,6 +95,10 @@
 	#include "cdrtoc_lexer.hpp"            // for Lexer
 	#endif
 
+	#ifndef __LIBARCSTK_LOGGING_HPP__
+	#include <arcstk/logging.hpp>
+	#endif
+
 	// Required in the implementation of production rules
 	#include <string>  // for string, stol, stoul
 
@@ -235,7 +239,12 @@
 %%
 
 cdrtoc
-	: opt_catalog_or_toctype_statements opt_global_cdtext_statement tracks
+	:   /* start hook */
+		{
+			handler->start_input();
+		}
+
+		opt_catalog_or_toctype_statements opt_global_cdtext_statement tracks
 		{
 			handler->end_input();
 		}
@@ -243,7 +252,7 @@ cdrtoc
 
 opt_catalog_or_toctype_statements
 	: opt_catalog_or_toctype_statements catalog_or_toctype_statement
-	| /* none */
+	| /* empty */
 	;
 
 catalog_or_toctype_statement
@@ -264,7 +273,7 @@ opt_global_cdtext_statement
 
 opt_language_map
 	: LANGUAGE_MAP  BRACE_LEFT  language_mappings  BRACE_RIGHT
-	| /* none */
+	| /* empty */
 	;
 
 language_mappings
@@ -279,7 +288,7 @@ language_mapping
 
 opt_cdtext_blocks
 	: cdtext_blocks
-	| /* none */
+	| /* empty */
 	;
 
 cdtext_blocks
@@ -293,7 +302,7 @@ cdtext_block
 
 opt_cdtext_items
 	: cdtext_items
-	| /* none */
+	| /* empty */
 	;
 
 cdtext_items
@@ -362,6 +371,7 @@ track
 		opt_track_cdtext_statement opt_pregap subtrack_or_start_or_ends
 		opt_index_statements
 		{
+			ARCS_LOG_DEBUG << "track";
 			handler->inc_current_track();
 		}
 	;
@@ -384,12 +394,12 @@ subchannel_mode
 
 opt_subchannel_mode
 	: subchannel_mode
-	| /* none */
+	| /* empty */
 	;
 
 opt_track_flags
 	: track_flags
-	| /* none */
+	| /* empty */
 	;
 
 track_flags
@@ -417,12 +427,12 @@ boolean_attr
 
 opt_track_cdtext_statement
 	: CD_TEXT BRACE_LEFT opt_cdtext_blocks BRACE_RIGHT
-	| /* none */
+	| /* empty */
 	;
 
 opt_pregap
 	: PREGAP msf_time
-	| /* none */
+	| /* empty */
 	;
 
 subtrack_or_start_or_ends
@@ -498,17 +508,17 @@ audiofile_offset_and_length
 
 opt_swap
 	: SWAP
-	| /* none */
+	| /* empty */
 	;
 
 opt_start_length
 	: tagged_number opt_data_length
-	| /* none */
+	| /* empty */
 	;
 
 opt_start_offset
 	: tagged_number
-	| /* none */
+	| /* empty */
 		{
 			$$ = 0;
 		}
@@ -530,7 +540,7 @@ s_long
 
 opt_data_length
 	: data_length
-	| /* none */
+	| /* empty */
 		{
 			$$ = 0u;
 		}
@@ -543,7 +553,7 @@ data_length
 
 opt_samples
 	: samples
-	| /* none */
+	| /* empty */
 		{
 			$$ = 0u;
 		}
@@ -563,7 +573,7 @@ u_long
 
 opt_data_mode
 	: data_mode
-	| /* none */
+	| /* empty */
 	;
 
 data_mode
@@ -573,12 +583,12 @@ data_mode
 
 opt_index_statements
 	: opt_index_statements INDEX msf_time
-	| /* none */
+	| /* empty */
 	;
 
 opt_msf_time
 	: msf_time
-	| /* none */
+	| /* empty */
 		{
 			$$ = 0u;
 		}
