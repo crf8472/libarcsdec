@@ -196,6 +196,12 @@ std::size_t ParserToCHandler::to_index(const std::size_t track) const
 
 void ParserToCHandler::dump_log() const
 {
+	if (arcstk::Logging::instance().level() < arcstk::LOGLEVEL::DEBUG2)
+	{
+		// Nothing would be really logged, just skip
+		return;
+	}
+
 	const auto no_value = std::string {"(none)"};
 
 	ARCS_LOG(DEBUG2) << "MCN: " << (mcn_.empty() ? no_value : mcn_);
@@ -242,7 +248,6 @@ void ParserToCHandler::do_start_input()
 
 void ParserToCHandler::do_end_input()
 {
-	// TODO Check loglevel and call dump_log only if it would print sth
 	this->dump_log();
 }
 
