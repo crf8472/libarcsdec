@@ -311,7 +311,7 @@ if (NOT LOAD_GENERATORS )
 	## Comment or uncomment this line to use a alternative layouts to the
 	## doxygen stock HTML layout. The subscope may re-set DOC_DOXYFILE_INPUT
 	## and add dependencies to target 'libarcsdec_doxygen_create_html'.
-	add_subdirectory ("thirdparty/doxygen-awesome-css" )
+	#add_subdirectory ("thirdparty/doxygen-awesome-css" )
 
 	message (STATUS "Use doxygen file: ${DOC_DOXYFILE_INPUT}" )
 
