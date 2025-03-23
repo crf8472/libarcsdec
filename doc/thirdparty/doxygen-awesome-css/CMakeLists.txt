@@ -36,18 +36,19 @@ set (TARGET_CSS_DIR    "${DOXYGEN_OUTPUT_DIRECTORY}/html/css" )
 ## Github Repo URL
 set (AWESOME_GITHUB_URL "https://github.com/jothepro/doxygen-awesome-css" )
 
-## --- Define m.css to be checked out/updated while configuring
+
+## --- Define doxygen-awesome-css to be checked out/updated while configuring
 
 if (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.11.0" )
 
 	## --- Use FetchContent if possible
 
-	## This will NOT update the cloned m.css on build!
+	## This will NOT update the cloned doxygen-awesome-css site on build!
 
 	include (FetchContent )
 
 	FetchContent_Declare (doxygen-awesome-css
-		URL                "${AWESOME_GITHUB_URL}/archive/refs/heads/main.zip"
+		URL "${AWESOME_GITHUB_URL}/archive/refs/heads/main.zip"
 	)
 
 	if (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.14" )
@@ -72,23 +73,16 @@ endif()
 ## Create Doxyfile for doxygen-awesome-css
 configure_file ("${DOXYFILE_TEMPLATE}"  "${DOXYFILE}"  @ONLY )
 
-## Pass doxyfile to parent
-set (DOC_DOXYFILE_INPUT "${DOXYFILE}" PARENT_SCOPE )
 
-
-## --- Deploy style files
+## --- list of style files
 
 ## Create list of theme files required to deploy
 ## TODO Select only those files required for the concrete style
 file (GLOB STYLE_FILES RELATIVE "${SOURCE_CSS_DIR}"
 	"${SOURCE_CSS_DIR}/*.css" "${SOURCE_CSS_DIR}/*.js" )
 
-add_custom_command (
-	OUTPUT  ${TARGET_CSS_DIR}
-	COMMAND ${CMAKE_COMMAND}
-	ARGS    -E make_directory ${TARGET_CSS_DIR} )
 
-add_custom_target (libarcstk_create_css_dir ALL DEPENDS ${TARGET_CSS_DIR} )
+## --- target: deploy style files
 
 foreach (FILE ${STYLE_FILES} )
 	add_custom_command(
@@ -101,8 +95,24 @@ endforeach (FILE )
 ## Make list of source files to a list of target files
 list(TRANSFORM STYLE_FILES PREPEND "${TARGET_CSS_DIR}/" )
 
-add_custom_target (libarcstk_deploy_css_files ALL DEPENDS ${STYLE_FILES} )
+add_custom_target (libarcsdec_deploy_css_files ALL DEPENDS ${STYLE_FILES} )
 
-add_dependencies  (libarcstk_deploy_css_files libarcstk_create_css_dir   )
-add_dependencies  (libarcstk_doc              libarcstk_deploy_css_files )
+
+## --- target: create css directory
+
+add_custom_command (
+	OUTPUT  ${TARGET_CSS_DIR}
+	COMMAND ${CMAKE_COMMAND}
+	ARGS    -E make_directory ${TARGET_CSS_DIR} )
+
+add_custom_target (libarcsdec_create_css_dir ALL DEPENDS ${TARGET_CSS_DIR} )
+
+add_dependencies  (libarcsdec_deploy_css_files libarcsdec_create_css_dir )
+
+
+## -- Pass results to parent
+
+set (DOC_DOXYFILE_INPUT "${DOXYFILE}" PARENT_SCOPE )
+
+add_dependencies  (libarcsdec_doxygen_create_html libarcsdec_deploy_css_files )
 

@@ -294,16 +294,29 @@ if (NOT LOAD_GENERATORS )
 
 	message (STATUS "Will build documentation with pure doxygen (HTML)" )
 
+
+	## -- Target for output mainpage
+
+	set (DOC_OUTPUT_MAINPAGE ${DOXYGEN_OUTPUT_DIRECTORY}/html/index.html )
+
+	add_custom_target (libarcsdec_doxygen_create_html
+		DEPENDS ${DOC_OUTPUT_MAINPAGE} )
+
+
+	## -- Load stylesheets if any
+
 	## Fallback in case subdirectory does not overwrite it
 	set (DOC_DOXYFILE_INPUT ${DOC_DOXYFILE_BASE} )
 
 	## Comment or uncomment this line to use a alternative layouts to the
-	## doxygen stock HTML layout. The subscope may re-set DOC_DOXYFILE_INPUT.
-	#add_subdirectory  ("thirdparty/doxygen-awesome-css" )
-
-	set (DOC_OUTPUT_MAINPAGE ${DOXYGEN_OUTPUT_DIRECTORY}/html/index.html )
+	## doxygen stock HTML layout. The subscope may re-set DOC_DOXYFILE_INPUT
+	## and add dependencies to target 'libarcsdec_doxygen_create_html'.
+	add_subdirectory ("thirdparty/doxygen-awesome-css" )
 
 	message (STATUS "Use doxygen file: ${DOC_DOXYFILE_INPUT}" )
+
+
+	## -- Add commands + organize targets
 
 	add_custom_command (
 		OUTPUT  ${DOC_OUTPUT_MAINPAGE}
@@ -314,11 +327,11 @@ if (NOT LOAD_GENERATORS )
 		VERBATIM
 	)
 
-	add_custom_target (libarcsdec_plain_doc DEPENDS ${DOC_OUTPUT_MAINPAGE} )
-	add_dependencies  (libarcsdec_plain_doc
-		libarcsdec_create_log_dir libarcsdec_create_output_dir )
+	add_dependencies  (libarcsdec_doxygen_create_html
+							libarcsdec_create_log_dir
+							libarcsdec_create_output_dir )
 
-	add_dependencies  (libarcsdec_doc libarcsdec_plain_doc )
+	add_dependencies  (libarcsdec_doc libarcsdec_doxygen_create_html )
 
 endif()
 
