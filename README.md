@@ -61,7 +61,7 @@ Libarcsdec contains:
 
 ### Mandatory build- and runtime dependencies:
 
-- libarcstk >= 0.2.0-alpha.1
+- libarcstk >= 0.3.0-alpha.1
 
 ### Optional default build- and runtime dependencies:
 
