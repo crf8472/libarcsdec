@@ -355,21 +355,39 @@ public:
 #endif
 
 /**
- * \brief .
+ * \brief Driver for a flex-bison lexer-parser combination.
+ *
+ * This class ties the auto-generated classes together and provides a unified
+ * public interface for their management.
  */
 template<class LEXER, class PARSER, class LOCATION, class POSITION,
 	class HANDLER>
 class FlexBisonDriver final
 {
+	/**
+	 * \brief Internal pointer to LexerHandler.
+	 */
 	LexerHandler* l_handler_;
 
+	/**
+	 * \brief Internal pointer to ParserHandler.
+	 */
 	HANDLER* p_handler_;
 
+	/**
+	 * \brief Internal token location.
+	 */
 	TokenLocation<POSITION, LOCATION> current_loc_;
 
+	/**
+	 * \brief Internal lexer instance.
+	 */
 	std::unique_ptr<LEXER> lexer_;
 
-	BisonParser<PARSER>    parser_;
+	/**
+	 * \brief Internal parser instance.
+	 */
+	BisonParser<PARSER> parser_;
 
 public:
 
@@ -387,21 +405,6 @@ public:
 								&current_loc_, lexer_.get(), p_handler_) }
 	{
 		// empty
-	}
-
-	/**
-	 * \brief Set lexer input stream.
-	 *
-	 * Default is standard input. Stream has to be opened.
-	 *
-	 * Implies reset().
-	 *
-	 * \param[in] is Input stream to use
-	 */
-	void set_input(std::istream& is)
-	{
-		this->reset();
-		this->lexer_->switch_streams(&is, nullptr);
 	}
 
 	/**
@@ -425,6 +428,32 @@ public:
 	}
 
 	/**
+	 * \brief Set lexer input stream.
+	 *
+	 * Default is standard input. Stream has to be opened.
+	 *
+	 * Implies reset(). Function parse() can only be run after set_input() has
+	 * been performed.
+	 *
+	 * \param[in] is Input stream to use
+	 */
+	void set_input(std::istream& is)
+	{
+		this->reset();
+		this->lexer_->switch_streams(&is, nullptr);
+	}
+
+	/**
+	 * \brief Run parser.
+	 *
+	 * \return 0 for success or error code
+	 */
+	int parse()
+	{
+		return this->parser_.parse();
+	}
+
+	/**
 	 * \brief Run parser.
 	 *
 	 * \param[in] filename File to parse
@@ -443,7 +472,7 @@ public:
 		}
 		this->set_input(file);
 
-		if (this->parser_.parse() != 0)
+		if (this->parse() != 0)
 		{
 			file.close();
 			throw std::runtime_error(
@@ -460,6 +489,16 @@ public:
 	}
 
 	/**
+	 * \brief Return current location.
+	 *
+	 * \returns Current location
+	 */
+	LOCATION current_location() const
+	{
+		return this->current_loc_.loc();
+	}
+
+	/**
 	 * \brief Returns the lexer handler used.
 	 */
 	const LexerHandler* lexer_handler()
@@ -470,19 +509,9 @@ public:
 	/**
 	 * \brief Returns the parser handler used.
 	 */
-	const ParserHandler* parser_handler()
+	const HANDLER* parser_handler()
 	{
 		return this->p_handler_;
-	}
-
-	/**
-	 * \brief Return current location.
-	 *
-	 * \returns Current location
-	 */
-	LOCATION current_location() const
-	{
-		return this->current_loc_.loc();
 	}
 
 	// lexer callback

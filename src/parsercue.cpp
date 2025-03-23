@@ -14,9 +14,6 @@
 #ifndef __LIBARCSDEC_CUESHEET_DRIVER_HPP__
 #include "cuesheet/driver.hpp"
 #endif
-#ifndef __LIBARCSDEC_CUESHEET_TOCHANDLER_HPP__
-#include "cuesheet/tochandler.hpp"
-#endif
 #ifndef __LIBARCSDEC_LIBINSPECT_HPP__
 #include "libinspect.hpp"      // for first_libname_match
 #endif
@@ -33,16 +30,13 @@
 #ifndef __LIBARCSTK_LOGGING_HPP__
 #include <arcstk/logging.hpp>
 #endif
+#ifndef __LIBARCSDEC_VERSION_HPP__
+#include "version.hpp"         // for LIBARCSDEC_NAME
+#endif
 
-#include <cstdio>    // for fopen, fclose, FILE
-#include <iomanip>   // for setw
-#include <fstream>
 #include <memory>    // for unique_ptr
 #include <set>       // for set
-#include <sstream>   // for ostringstream
-#include <stdexcept> // for invalid_argument
 #include <string>    // for string
-#include <vector>    // for vector
 
 
 namespace arcsdec
@@ -60,29 +54,33 @@ using arcstk::make_toc;
 
 std::unique_ptr<ToC> CuesheetParserImpl::do_parse(const std::string& filename)
 {
-	auto driver  = Driver{};
-	auto handler = ToCHandler{};
-	driver.set_handler(handler);
+	auto p_handler = ParserToCHandler{};
 
-	std::ifstream file;
-	file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-	try
 	{
-		file.open(filename, std::ifstream::in);
-	} catch (const std::ifstream::failure& f)
-	{
-		throw std::runtime_error(std::string { "Failed to open file " }
-				+ filename + ". Message: " + f.what());
+		auto l_handler = DefaultLexerHandler { /* default */ } ;
+		auto driver    = Driver { &l_handler, &p_handler };
+
+#ifdef YYDEBUG
+		const auto lexer_level  = 1;
+		ARCS_LOG_DEBUG << "Set lexer debug level: " << lexer_level;
+
+		const auto parser_level = 1;
+		ARCS_LOG_DEBUG << "Set parser debug level: " << parser_level;
+#else
+		const auto lexer_level  = 0;
+		ARCS_LOG_DEBUG << "Lexer debug info is deactivated";
+
+		const auto parser_level = 0;
+		ARCS_LOG_DEBUG << "Parser debug info is deactivated";
+#endif
+
+		driver.set_lexer_debug_level(lexer_level);
+		driver.set_parser_debug_level(parser_level);
+
+		driver.parse(filename);
 	}
-	driver.set_input(file);
 
-	if (driver.parse() != 0)
-	{
-		throw std::runtime_error(
-				std::string { "Failed to parse file " } + filename);
-	}
-
-	return make_toc(handler.offsets(), handler.filenames());
+	return p_handler.get_toc();
 }
 
 std::unique_ptr<FileReaderDescriptor> CuesheetParserImpl::do_descriptor() const

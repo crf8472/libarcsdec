@@ -20,7 +20,7 @@
 %option noyywrap
 
 /* Specify name of the generated lexer class */
-%option yyclass="arcsdec::details::cuesheet::yycue::Lexer"
+%option yyclass="arcsdec::details::cuesheet::yycuesheet::Lexer"
 
 /* Maintain the lineno */
 %option yylineno
@@ -51,14 +51,17 @@
 %x REM
 
 %{
-// from cuesheet.l
+// start: from cuesheet.l
 
 //  for clang++
+#if defined(__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Winline-namespace-reopened-noninline"
 #pragma clang diagnostic ignored "-Wunknown-warning-option"
+#endif
 
 //  for g++
+#if defined(__GNUG__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
 #pragma GCC diagnostic ignored "-Wuseless-cast"
@@ -66,50 +69,35 @@
 #pragma GCC diagnostic ignored "-Wstrict-overflow"
 #pragma GCC diagnostic ignored "-Wswitch-default"
 #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
-
-
-#include <cstring>        /* for strncpy */
-#include <cstdlib>        /* for atoi */
-#include <iostream>       /* for cout */
-#include <iomanip>        /* for setw, setfill, left, right */
-
-#include "cuesheet.tab.hpp"       /* auto-generated: bison token definitions */
-#include "cuesheet_location.hpp"  /* auto-generated: position + location */
+#endif
 
 #ifndef __LIBARCSDEC_CUESHEET_LEXER_DEFS_HPP__
-#include "cuesheet_lexer_defs.hpp" /* for Lexer */
+#include "cuesheet_lexer_defs.hpp" /* for Lexer (user-defined) */
 #endif
-#ifndef __LIBARCSDEC_CUESHEET_DRIVER_HPP__
-#include "driver.hpp"              /* for Driver */
+
+#ifndef __LIBARCSDEC_CUESHEET_TAB_HPP__
+#include "cuesheet.tab.hpp"       /* auto-generated: bison token definitions */
+#endif
+
+#include "cuesheet_location.hpp"  /* auto-generated: position + location */
+
+#ifndef __LIBARCSDEC_FLEXBISONDRIVER_HPP__
+#include "flexbisondriver.hpp"  /* for LexerHandler,... */
 #endif
 
 
 // Redefine calls of yyterminate():
 // Original yyterminate() macro returns int. Since we're using Bison 3 variants
 // as tokens, call context will expect `Parser::semantic_type` instead.
-#define yyterminate()       Parser::make_END(get().loc());
+#define yyterminate()       Parser::make_END(loc());
 
 // Track current lexer position + update driver location with it
+// (will be called from the inner scope of Lexer class)
 #define YY_USER_ACTION \
 		shift_pos(yylineno, yyleng); \
-		driver_.step_to(current_pos_);
+		current_loc_->step_to(current_pos_);
 
-// Declare the symbols from yycuesheet that are to be used in yylex().
-// (yylex() is in global namespace)
-using arcsdec::details::cuesheet::yycuesheet::Parser;
-using arcsdec::details::cuesheet::yycuesheet::location;
-using arcsdec::details::cuesheet::yycuesheet::position;
-
-// remove quotes from quoted string
-static std::string remove_quotes(const std::string& s)
-{
-	if (s.length() < 2)  { return s; };
-	if (s.length() == 2) { return std::string{}; };
-
-	return s.substr(1, s.length() - 2);
-}
-
-// end cuesheet.l
+// end: from cuesheet.l
 %}
 
 WHITESPACE      [ \t\r]+
@@ -125,123 +113,160 @@ REM             REM[[:blank:]]+
 <*>{WHITESPACE} { /* ignore */ }
 
 {DIGITS}    {
-				return Parser::make_NUMBER(YYText(), get().loc());
+				return Parser::make_NUMBER(YYText(), loc());
 			}
 
-CATALOG     { return Parser::make_CATALOG(get().loc());    }
-FILE        { return Parser::make_FILETAG(get().loc());    }
-CDTEXTFILE  { return Parser::make_CDTEXTFILE(get().loc()); }
-TITLE       { return Parser::make_TITLE(get().loc());      }
-PERFORMER   { return Parser::make_PERFORMER(get().loc());  }
-SONGWRITER  { return Parser::make_SONGWRITER(get().loc()); }
-TRACK       { return Parser::make_TRACK(get().loc());      }
-FLAGS       { return Parser::make_FLAGS(get().loc());      }
-PREGAP      { return Parser::make_PREGAP(get().loc());     }
-POSTGAP     { return Parser::make_POSTGAP(get().loc());    }
-ISRC        { return Parser::make_ISRC(get().loc());       }
-INDEX       { BEGIN(INDEX); return Parser::make_INDEX(get().loc()); }
+CATALOG     { return Parser::make_CATALOG(loc());             }
+FILE        { return Parser::make_FILE_TOKEN(loc());          }
+CDTEXTFILE  { return Parser::make_CDTEXTFILE(loc());          }
+TITLE       { return Parser::make_TITLE(loc());               }
+PERFORMER   { return Parser::make_PERFORMER(loc());           }
+SONGWRITER  { return Parser::make_SONGWRITER(loc());          }
+TRACK       { return Parser::make_TRACK(loc());               }
+FLAGS       { return Parser::make_FLAGS(loc());               }
+PREGAP      { return Parser::make_PREGAP(loc());              }
+POSTGAP     { return Parser::make_POSTGAP(loc());             }
+ISRC        { return Parser::make_ISRC(loc());                }
+INDEX       { BEGIN(INDEX); return Parser::make_INDEX(loc()); }
 
-BINARY      { return Parser::make_BINARY(get().loc());   }
-MOTOROLA    { return Parser::make_MOTOROLA(get().loc()); }
-AIFF        { return Parser::make_AIFF(get().loc());     }
-WAVE        { return Parser::make_WAVE(get().loc());     }
-MP3         { return Parser::make_MP3(get().loc());      }
-FLAC        { return Parser::make_FLAC(get().loc());     }
+BINARY      { return Parser::make_BINARY(loc());				}
+MOTOROLA    { return Parser::make_MOTOROLA(loc());			}
+AIFF        { return Parser::make_AIFF(loc());				}
+WAVE        { return Parser::make_WAVE(loc());				}
+MP3         { return Parser::make_MP3(loc());					}
+FLAC        { return Parser::make_FLAC(loc());				}
 
-AUDIO       { return Parser::make_AUDIO(get().loc());      }
-MODE1_2048  { /**/ return Parser::make_MODE1_2048(get().loc()); }
-MODE1_2352  { return Parser::make_MODE1_2352(get().loc()); }
-MODE2_2048  { return Parser::make_MODE2_2048(get().loc()); }
-MODE2_2324  { /* ? return Parser::make_MODE2_2324(get().loc()); */ }
-MODE2_2332  { /* ? */ return Parser::make_MODE2_2332(get().loc()); }
-MODE2_2336  { return Parser::make_MODE2_2336(get().loc()); }
-MODE2_2342  { /* ? */ return Parser::make_MODE2_2342(get().loc()); }
-MODE2_2352  { return Parser::make_MODE2_2352(get().loc()); }
+AUDIO       { return Parser::make_AUDIO(loc());               }
+MODE1_2048  { /**/ return Parser::make_MODE1_2048(loc());     }
+MODE1_2352  { return Parser::make_MODE1_2352(loc());          }
+MODE2_2048  { return Parser::make_MODE2_2048(loc());          }
+MODE2_2324  { /* ? return Parser::make_MODE2_2324(loc()); */  }
+MODE2_2332  { /* ? */ return Parser::make_MODE2_2332(loc());  }
+MODE2_2336  { return Parser::make_MODE2_2336(loc());          }
+MODE2_2342  { /* ? */ return Parser::make_MODE2_2342(loc());  }
+MODE2_2352  { return Parser::make_MODE2_2352(loc());          }
 
-PRE         { return Parser::make_PRE(get().loc());        }
-DCP         { return Parser::make_DCP(get().loc());        }
-4CH         { return Parser::make_FOUR_CH(get().loc());    }
-SCMS        { return Parser::make_SCMS(get().loc());       }
+PRE         { return Parser::make_PRE(loc());                 }
+DCP         { return Parser::make_DCP(loc());                 }
+4CH         { return Parser::make_FOUR_CH(loc());             }
+SCMS        { return Parser::make_SCMS(loc());                }
 
-COMPOSER    { return Parser::make_COMPOSER(get().loc());   }
-ARRANGER    { return Parser::make_ARRANGER(get().loc());   }
-MESSAGE     { return Parser::make_MESSAGE(get().loc());   }
-DISC_ID     { return Parser::make_DISC_ID(get().loc());    }
-GENRE       { return Parser::make_GENRE(get().loc());      }
-TOC_INFO1   { return Parser::make_TOC_INFO1(get().loc());  }
-TOC_INFO2   { return Parser::make_TOC_INFO2(get().loc());  }
-UPC_EAN     { return Parser::make_UPC_EAN(get().loc());    }
-SIZE_INFO   { return Parser::make_SIZE_INFO(get().loc());  }
+COMPOSER    { return Parser::make_COMPOSER(loc());            }
+ARRANGER    { return Parser::make_ARRANGER(loc());            }
+MESSAGE     { return Parser::make_MESSAGE(loc());             }
+DISC_ID     { return Parser::make_DISC_ID(loc());             }
+GENRE       { return Parser::make_GENRE(loc());               }
+TOC_INFO1   { return Parser::make_TOC_INFO1(loc());           }
+TOC_INFO2   { return Parser::make_TOC_INFO2(loc());           }
+UPC_EAN     { return Parser::make_UPC_EAN(loc());             }
+SIZE_INFO   { return Parser::make_SIZE_INFO(loc());           }
 
 
-{REM}DATE                  { BEGIN(REMVAL); return Parser::make_DATE(get().loc());                  }
-{REM}GENRE                 { BEGIN(REMVAL); return Parser::make_REMGENRE(get().loc());              }
-{REM}REPLAYGAIN_ALBUM_GAIN { BEGIN(REMVAL); return Parser::make_RPG_ALBUM_GAIN(get().loc()); }
-{REM}REPLAYGAIN_ALBUM_PEAK { BEGIN(REMVAL); return Parser::make_RPG_ALBUM_PEAK(get().loc()); }
-{REM}REPLAYGAIN_TRACK_GAIN { BEGIN(REMVAL); return Parser::make_RPG_TRACK_GAIN(get().loc()); }
-{REM}REPLAYGAIN_TRACK_PEAK { BEGIN(REMVAL); return Parser::make_RPG_TRACK_PEAK(get().loc()); }
+{REM}DATE   { BEGIN(REMVAL); return Parser::make_DATE(loc());     }
 
-<REMVAL>[^\n]* { return Parser::make_STRING(YYText(), get().loc()); }
+{REM}GENRE  { BEGIN(REMVAL); return Parser::make_REMGENRE(loc()); }
 
+{REM}REPLAYGAIN_ALBUM_GAIN {
+			BEGIN(REMVAL);
+			return Parser::make_RPG_ALBUM_GAIN(loc());
+			}
+
+{REM}REPLAYGAIN_ALBUM_PEAK {
+			BEGIN(REMVAL);
+			return Parser::make_RPG_ALBUM_PEAK(loc());
+			}
+
+{REM}REPLAYGAIN_TRACK_GAIN {
+			BEGIN(REMVAL);
+			return Parser::make_RPG_TRACK_GAIN(loc());
+			}
+
+{REM}REPLAYGAIN_TRACK_PEAK {
+			BEGIN(REMVAL);
+			return Parser::make_RPG_TRACK_PEAK(loc());
+			}
+
+<REMVAL>[^\n]* {
+			return Parser::make_STRING(YYText(), loc());
+			}
 
 {REM}       { BEGIN(REM);     /* REM: discard everything from here */ }
-<REM>[^\n]* { BEGIN(INITIAL); /* REM: discard rest of line */  }
 
+<REM>[^\n]* { BEGIN(INITIAL); /* REM: discard rest of line */         }
 
-{QSTRING1}|{QSTRING2} { return Parser::make_STRING(remove_quotes(YYText()), get().loc()); }
+{QSTRING1}|{QSTRING2} {
+			return Parser::make_STRING(
+				lexer_strip_quotes(YYText()), loc());
+			}
 
-:			{ return Parser::make_COLON(get().loc()); }
+:			{ return Parser::make_COLON(loc()); }
 
-<INITIAL>{GLYPHS}     { return Parser::make_STRING(YYText(), get().loc()); }
+<INITIAL>{GLYPHS}  {
+			return Parser::make_STRING(YYText(), loc());
+			}
 
 <INITIAL>{CTRLCHARS}  { /* ignore things like "ISRC ^\W" and other junk */ }
 
-<*>\n        { BEGIN(INITIAL); /* acts as delimiter */ }
+<*>\n       { BEGIN(INITIAL); /* acts as delimiter */ }
 
-<INDEX>[^[:blank:][:digit:]:\n]+   { /* rule out from INDEX */ BEGIN(INITIAL); return Parser::make_STRING(YYText(), get().loc()); }
+<INDEX>[^[:blank:][:digit:]:\n]+  {
+			/* rule out from INDEX */
+			BEGIN(INITIAL);
+			return Parser::make_STRING(YYText(), loc());
+			}
 
-<<EOF>>      { return yyterminate(); }
+<<EOF>>     { return yyterminate(); }
 
 %%
 
+#if defined(__GNUG__)
 #pragma GCC diagnostic pop
-#pragma clang diagnostic pop
+#endif
 
-namespace arcsdec { namespace details {
-namespace cuesheet { namespace yycuesheet {
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
+
+namespace arcsdec
+{
+namespace details
+{
+namespace cuesheet
+{
+namespace yycuesheet
+{
+
+
+LexerHandler* Lexer::handler()
+{
+	return lexer_handler_;
+}
 
 void Lexer::notify(const std::string& token_name, const std::string& chars)
 {
-	driver_.notify(YYSTATE, token_name, chars);
+	//driver_.notify(YYSTATE, token_name, chars);
 }
 
 void Lexer::unexpected(const std::string& chars, const location& loc)
 {
-	driver_.unexpected(chars, loc);
+	//driver_.unexpected(chars, loc);
 }
 
 void Lexer::shift_pos(const int line_no, const int token_length)
 {
 	// Current position is always the _end_ of the current token
+	current_pos_ = lexer_shift_pos(current_pos_, line_no, token_length);
 
-	if (line_no != current_pos_.line) // newline occurred?
-	{
-		current_pos_.lines(line_no - current_pos_.line);
-		current_pos_.column = 1; // Ignore newlines when stepping forward
-	} else
-	{
-		current_pos_.columns(token_length);
-	}
-
-	//std::cout << "Line " << line_no << ", token_length: " << token_length;
-	//std::cout << " - pos is now: " << current_pos_ << '\n';
 }
 
-Driver& Lexer::get()
+Parser::location_type Lexer::loc() const
 {
-	return driver_;
+	return current_loc_->loc();
 }
 
-} /* namespace yycuesheet */ } /* namespace cuesheet */
-} /*details*/ } /*arcsdec*/
+
+} // namespace yycuesheet
+} // namespace cuesheet
+} // namespace details
+} // namespace arcsdec
 

@@ -19,8 +19,7 @@
 #define YY_DECL arcsdec::details::cuesheet::yycuesheet::Parser::symbol_type arcsdec::details::cuesheet::yycuesheet::Lexer::next_token()
 
 
-#include <memory>
-#include <ostream>
+#include <string>
 
 #if defined(__clang__)
 #pragma clang diagnostic push
@@ -30,7 +29,9 @@
 // From cuesheet.y:
 // Include the Token definitions as well as the redefined yylex()
 // in section "code top" (that calls get_next_token())
+#ifndef __LIBARCSDEC_CUESHEET_TAB_HPP__
 #include "cuesheet.tab.hpp"
+#endif
 
 #if defined(__clang__)
 #pragma clang diagnostic pop
@@ -40,13 +41,20 @@
 /* the Lexer class without specifiying the inline namespace for version!    */
 
 namespace arcsdec { inline namespace v_1_0_0 { namespace details {
+
+// forward declared from flexbisondriver.hpp
+
+class LexerHandler;
+
+template <class POSITION, class LOCATION>
+class TokenLocation;
+
+using cuesheet::yycuesheet::position;
+using cuesheet::yycuesheet::location;
+using LocationClass = TokenLocation<position, location>;
+
 namespace cuesheet
 {
-
-
-class Driver;
-
-
 namespace yycuesheet
 {
 
@@ -68,20 +76,26 @@ class Lexer final : public Cuesheet_FlexLexer
 	position current_pos_;
 
 	/**
+	 * \brief Internal token location.
+	 */
+	LocationClass* current_loc_;
+
+	/**
 	 * \brief Class for interfacing the lexer from calling code.
 	 */
-	Driver &driver_;
+	LexerHandler* lexer_handler_;
 
 public:
 
 	/**
-	 * \brief Constructor for Cuesheet lexer.
+	 * \brief Constructor for CDRDAO/TOC lexer.
 	 *
-	 * \param[in] driver The cuesheet::Driver that constructed this lexer.
+	 * \param[in] driver The cdrtoc::Driver that constructed this lexer.
 	 */
-	explicit Lexer(Driver &driver)
-		: current_pos_ {}
-		, driver_ { driver }
+	explicit Lexer(LocationClass* loc, LexerHandler* handler)
+		: current_pos_   { /* empty */ }
+		, current_loc_   { loc }
+		, lexer_handler_ { handler }
 	{
 		/* empty */
 	}
@@ -90,6 +104,32 @@ public:
 	 * \brief Destructor.
 	 */
 	~Lexer() noexcept = default;
+
+	/**
+	 * \brief Return next token.
+	 *
+	 * This is the function signature declared by redefined YY_DECL. The
+	 * implementation is yylex().
+	 *
+	 * Implementation will be provided by flex.
+	 *
+	 * \return Next token
+	 */
+	Parser::symbol_type next_token();
+
+	/**
+	 * \brief Provide current location.
+	 *
+	 * \return Current token location
+	 */
+	Parser::location_type loc() const;
+
+	/**
+	 * \brief Get the driver to start some user action.
+	 *
+	 * \return The Driver of this Lexer
+	 */
+	LexerHandler* handler();
 
 	/**
 	 * \brief Called by yylex() to notify Lexer about current token.
@@ -108,35 +148,12 @@ public:
 	void unexpected(const std::string& chars, const location& loc);
 
 	/**
-	 * \brief Return next token.
-	 *
-	 * This is the function signature declared by redefined YY_DECL. The
-	 * implementation is yylex().
-	 *
-	 * Implementation will be provided by flex.
-	 *
-	 * \return Next token
-	 */
-	Parser::symbol_type next_token();
-
-private:
-
-	/**
-	 * \brief Sets the internal position to the end of the current token.
-	 *
-	 * Called by yylex() to update the position in the file.
+	 * \brief Called by yylex() to update the position in the file.
 	 *
 	 * \param[in] line_no      Current line number (e.g. yylineno)
 	 * \param[in] token_length Length of the current token (eg. yyleng)
 	 */
 	void shift_pos(const int line_no, const int token_length);
-
-	/**
-	 * \brief Get the driver to start some user action.
-	 *
-	 * \return The Driver of this Lexer
-	 */
-	Driver& get();
 };
 
 } // namespace yycuesheet
