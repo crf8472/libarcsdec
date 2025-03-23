@@ -80,8 +80,6 @@
 #include "flexbisondriver.hpp"  /* for LexerHandler,... */
 #endif
 
-//#include <iostream>       /* for cout */
-//#include <iomanip>        /* for setw, setfill, left, right */
 
 // Redefine calls of yyterminate():
 // Original yyterminate() macro returns int. Since we're using Bison 3 variants

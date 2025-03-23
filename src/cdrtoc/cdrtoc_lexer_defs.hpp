@@ -19,8 +19,7 @@
 #define YY_DECL arcsdec::details::cdrtoc::yycdrtoc::Parser::symbol_type arcsdec::details::cdrtoc::yycdrtoc::Lexer::next_token()
 
 
-#include <memory>
-#include <ostream>
+#include <string>
 
 #if defined(__clang__)
 #pragma clang diagnostic push

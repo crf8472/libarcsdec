@@ -3,9 +3,9 @@
 /* Sources: */
 /* [1] $ man 1 cdrdao */
 
+%skeleton "lalr1.cc" /* recommended newer parser skeleton for 3.2 */
 %require  "3.2"
 %language "c++"
-%skeleton "lalr1.cc" /* recommended newer parser skeleton for 3.2 */
 
 /* Avoid name conflicts with other parsers by prefixing this parser's names */
 /* %define api.prefix             {toc} */
@@ -200,12 +200,12 @@
 %token GENRE
 %token TOC_INFO1
 %token TOC_INFO2
+%token UPC_EAN
+%token SIZE_INFO
 %token RESERVED1
 %token RESERVED2
 %token RESERVED3
 %token RESERVED4
-%token UPC_EAN
-%token SIZE_INFO
 
 %token EN
 %token ENCODING_ISO_8859_1
@@ -409,9 +409,7 @@ track_flags
 track_flag
 	: ISRC STRING
 		{
-			const auto isrc { $2 };
-
-			handler->append_isrc(isrc);
+			handler->append_isrc($2);
 		}
 	| TWO_CHANNEL_AUDIO
 	| FOUR_CHANNEL_AUDIO
@@ -471,9 +469,7 @@ subtrack_or_start_or_end
 subtrack_statement
 	: audiofile STRING opt_swap audiofile_offset_and_length
 		{
-			const auto filename { $2 };
-
-			handler->append_filename(filename);
+			handler->append_filename($2);
 		}
 	| DATAFILE STRING opt_start_length
 	| FIFO STRING data_length
