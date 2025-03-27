@@ -155,8 +155,8 @@ if (DOXYGEN_NEEDS_XML_DEDUP )
 	)
 else()
 
-#	add_dependencies (libarcsdec_mcss_doc
-#		libarcsdec_create_output_dir libarcsdec_create_log_dir )
+	add_dependencies (libarcsdec_mcss_doc
+		libarcsdec_create_output_dir libarcsdec_create_log_dir )
 
 	## Doxygen is called by m.css.
 
