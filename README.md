@@ -1,17 +1,28 @@
 # Audio decoder and TOC parser adapters for libarcstk
 
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
-[![C++14](https://img.shields.io/badge/C++-14-darkred.svg)](./API.md)
+[![C++14](https://img.shields.io/badge/C++-14-darkred.svg)](./DESIGN.md)
 [![Release](https://img.shields.io/github/v/release/crf8472/libarcsdec?display_name=tag&include_prereleases)](https://github.com/crf8472/libarcsdec/releases)
 
-## Version 0.2 introduces breaking changes
+**This branch contains an outdated version that is not developed any more!**
 
-- Libarcsdec 0.2 requires libarcstk >= 0.3
-- Libarcsdec 0.2 will be compileable as C++17 only. Support for C++14 is dropped.
-- Versions 0.1.x will move to a dedicated branch. Compiling libarcsdec against
-  libarcstk 0.2.x will require to use the code from this aforementioned 0.1
-  branch of libarcsdec.
-- Support for libarcsdec 0.1.x will be dropped in the future.
+
+## Version 0.1.x
+
+This branch hosts version 0.1.x of libarcsdec which is outdated and will not see
+any development anymore.
+
+- Libarcsdec 0.1.1 compiles against libarcstk 0.2.1. Earlier commits may require
+  earlier versions of libarcstk.
+- Libarcsdec 0.1.1 is compileable as C++14 only.
+
+The latest release with this API was 0.1.1-alpha.1 (Apr 4, 2024). You will find
+the API documentation for this version [here][2].
+
+This branch should not be used for new projects. If your project requires
+version 0.1.x consider upgrading to the latest release of libarcstk.
+
+
 
 ## What libarcsdec does
 
@@ -158,4 +169,4 @@ build switches.
 
 
 [1]: https://github.com/crf8472/libarcstk
-
+[2]: https://crf8472.github.io/libarcsdec/0.1.1/
