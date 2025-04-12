@@ -75,14 +75,13 @@ set (DOXYGEN_STRIP_FROM_PATH        "${PROJECT_LOCAL_INCLUDE_DIR}/" )
 string (REPLACE ";" " " DOXYGEN_INPUT
 	"${PROJECT_LOCAL_INCLUDE_DIR}/;${DOC_TEXTS_GEN_DIR}/" )
 
-if (WITH_INTERNAL_DOCS )
-	set (DOXYGEN_INPUT "${DOXYGEN_INPUT} ${DOC_GEN_DIR}/cuesheet/" )
-endif()
-
 
 ## Build internal docs if requested
 
-if (WITH_INTERNAL_DOCS)
+if (WITH_INTERNAL_DOCS )
+
+	set (DOXYGEN_INPUT "${DOXYGEN_INPUT} ${DOC_GEN_DIR}/cuesheet/" )
+	set (DOXYGEN_INPUT "${DOXYGEN_INPUT} ${DOC_GEN_DIR}/cdrtoc/" )
 
 	message (STATUS "Will build documentation also for internal APIs" )
 
@@ -159,12 +158,9 @@ unset (GENERATOR_DIR )
 ## DOXYGEN_NEEDS_XML_DEDUP indicates that XML output requires post processing.
 ## It also indicates that not only plain doxygen HTML is requested.
 
-if (LOAD_GENERATORS AND DOXYGEN_VERSION VERSION_GREATER_EQUAL 1.8.16
-                    AND DOXYGEN_VERSION VERSION_LESS_EQUAL    1.13.2 )
+if (LOAD_GENERATORS AND DOXYGEN_VERSION VERSION_GREATER_EQUAL 1.8.16 )
 
-	## TODO Not sure which doxygen version fixes the "duplication bug"
-	## that was introduced in 1.8.16, but 1.13.2 seems to not contain it
-	## anymore.
+	## The "duplication bug" was introduced in 1.8.16
 
 	set (DOXYGEN_NEEDS_XML_DEDUP TRUE ) ## Use this in subdirectories!
 endif()
