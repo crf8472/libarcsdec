@@ -123,6 +123,7 @@ configure_file ( ${DOC_DOXYFILE_BASE_TEMPLATE} ${DOC_DOXYFILE_BASE} @ONLY )
 configure_file (${DOC_TEXTS_SOURCE_DIR}/MAINPAGE.md.in ${DOC_MAINPAGE} @ONLY )
 
 
+
 ## --- Activate requested documentation targets
 
 ## Add default doc target.
