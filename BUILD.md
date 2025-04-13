@@ -298,6 +298,7 @@ settings to your requirements.
 |WITH_FLAC           |Build with FLAC support by libflac              |ON     |
 |WITH_WAVPACK        |Build with Wavpack support by libwavpack        |ON     |
 |WITH_FFMPEG         |Build with ffmpeg support                       |ON     |
+|WITH_LIBCUE         |Build with libcue support                       |OFF    |
 |WITH_SUBMODULES     |Build with libarcstk as a submodule             |OFF    |
 |USE_DOC_TOOL        |Use ``MCSS`` when building the documentation. Activates ``WITH_DOCS=ON``.                          |       |
 
@@ -357,7 +358,7 @@ The [public APIdoc of libarcsdec is build with m.css][10].
 This APIdoc can be built locally by the following steps:
 
 	$ cd build
-	$ cmake -DWITH_DOCS=ON -DUSE_DOC_TOOL=ON ..
+	$ cmake -DWITH_DOCS=ON -DUSE_DOC_TOOL=MCSS ..
 	$ cmake --build . --target doc
 
 CMake then creates a local python sandbox in ``build`` with ``virtualenv``,
@@ -368,9 +369,6 @@ not work.)
 
 Documentation is generated in ``build/generated-docs/mcss`` and you can
 load ``build/generated-docs/mcss/html/index.html`` in your browser.
-
-Note that ``-DUSE_DOC_TOOL=ON`` turns off the LaTeX output! You cannot generate
-m.css and LaTeX output in the same build.
 
 
 ### Manual: PDF by LaTeX (smoke-tested, more or less)
