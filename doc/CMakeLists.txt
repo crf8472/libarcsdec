@@ -123,7 +123,6 @@ configure_file ( ${DOC_DOXYFILE_BASE_TEMPLATE} ${DOC_DOXYFILE_BASE} @ONLY )
 configure_file (${DOC_TEXTS_SOURCE_DIR}/MAINPAGE.md.in ${DOC_MAINPAGE} @ONLY )
 
 
-
 ## --- Activate requested documentation targets
 
 ## Add default doc target.
@@ -133,6 +132,24 @@ configure_file (${DOC_TEXTS_SOURCE_DIR}/MAINPAGE.md.in ${DOC_MAINPAGE} @ONLY )
 ## HTML output that gives as this nice, cosy feeling of the Nineties.
 
 add_custom_target (libarcsdec_doc )
+
+
+## --- Provide other markdown texts
+
+add_custom_target (libarcsdec_text_files )
+
+## Copy text files to generated docs
+foreach (FILE IN LISTS PROJECT_TEXT_FILES )
+
+	add_custom_command(
+		TARGET libarcsdec_text_files PRE_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy
+			${PROJECT_TEXT_SOURCE_DIR}/${FILE}
+			${DOC_TEXTS_GEN_DIR}/${FILE} )
+endforeach()
+
+add_dependencies (libarcsdec_text_files libarcsdec_create_output_dir )
+add_dependencies (libarcsdec_doc        libarcsdec_text_files )
 
 
 ## --- If some thirdparty documentation tool was requested, use it
