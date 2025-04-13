@@ -114,7 +114,7 @@ add_custom_command (
 	COMMAND ${CMAKE_COMMAND}
 	ARGS    -E make_directory ${PROJECT_LOG_DIR} )
 
-add_custom_target (libarcsdec_create_log_dir DEPENDS ${PROJECT_LOG_DIR} )
+add_custom_target (libarcsdec_create_log_dir ALL DEPENDS ${PROJECT_LOG_DIR} )
 
 ## include directory + link
 
