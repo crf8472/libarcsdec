@@ -292,14 +292,14 @@ settings to your requirements.
 |WITH_DOCS           |Configure for [documentation](#building-the-api-documentation)                                     |OFF    |
 |WITH_INTERNAL_DOCS  |Configure for [documentation](#building-the-api-documentation) for internal APIs                   |OFF    |
 |WITH_NATIVE         |Use platform [specific optimization](#turn-optimizing-on-off) on compiling                         |       |
-|                    |CMAKE_BUILD_TYPE=Debug                          |OFF    |
-|                    |CMAKE_BUILD_TYPE=Release                        |ON     |
+|                    |CMAKE_BUILD_TYPE=Debug                                                                             |OFF    |
+|                    |CMAKE_BUILD_TYPE=Release                                                                           |ON     |
 |WITH_TESTS          |Compile [tests](#run-unit-tests) (but don't run them)                                              |OFF    |
-|WITH_FLAC           |Build with FLAC support by libflac              |ON     |
-|WITH_WAVPACK        |Build with Wavpack support by libwavpack        |ON     |
-|WITH_FFMPEG         |Build with ffmpeg support                       |ON     |
-|WITH_LIBCUE         |Build with libcue support                       |OFF    |
-|WITH_SUBMODULES     |Build with libarcstk as a submodule             |OFF    |
+|WITH_FLAC           |Build with FLAC support by libflac                                                                 |ON     |
+|WITH_WAVPACK        |Build with Wavpack support by libwavpack                                                           |ON     |
+|WITH_FFMPEG         |Build with ffmpeg support                                                                          |ON     |
+|WITH_LIBCUE         |Build with libcue support                                                                          |OFF    |
+|WITH_SUBMODULES     |Build with libarcstk as a submodule                                                                |OFF    |
 |USE_DOC_TOOL        |Use ``MCSS`` when building the documentation. Activates ``WITH_DOCS=ON``.                          |       |
 
 Note that there is no option to deactivate libcue since libcue is currently the
@@ -428,9 +428,7 @@ In fact, as a lack of requirement, libarcsdec has not yet even been tried to be
 built on Windows.
 
 To avoid any show-stoppers for porting libarcsdec to Windows or other platforms,
-libarcsdec tries to avoid Linux-specific calls almost completely. (In
-[readerwav.cpp](./src/readerwav.cpp), POSIX's ``stat()`` is used to retrieve the
-file size.)
+libarcsdec tries to avoid Linux-specific calls almost completely.
 
 Of course it cannot be guaranteed that any dependency of libarcsdec is available
 for your platform. The Fauxdacious project has documented [how to get each of
@@ -440,10 +438,11 @@ the dependencies to work (also including pkg-config)][4] on Windows using MinGW.
 [1]: https://include-what-you-use.org/
 [2]: https://github.com/catchorg/Catch2
 [3]: https://mcss.mosra.cz/doxygen/
-[4]: http://phoenixcomm.net/~jturner/fauxdacious_buildnotes.htm
+[4]: https://github.com/wildstar84/fauxdacious/blob/master/contrib/win32/fauxdacious_buildnotes.htm
 [5]: https://github.com/libnitsk/libcue
 [6]: https://github.com/crf8472/libarcstk
 [7]: https://xiph.org/flac/api/group__flacpp.html
-[8]: http://www.wavpack.com/
+[8]: https://www.wavpack.com/
 [9]: http://ffmpeg.org/
 [10]: https://crf8472.github.io/crf8472/libarcsdec/current/
+
