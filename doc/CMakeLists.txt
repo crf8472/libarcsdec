@@ -150,7 +150,6 @@ foreach (FILE IN LISTS PROJECT_TEXT_FILES )
 endforeach()
 
 add_dependencies (libarcsdec_text_files libarcsdec_create_output_dir )
-add_dependencies (libarcsdec_doc        libarcsdec_text_files )
 
 
 ## --- If some thirdparty documentation tool was requested, use it
@@ -259,7 +258,10 @@ macro (add_doxygen_target DOXY_TARGET DOXYFILE INDEXFILE )
 		## Setup doxygen run target
 		add_custom_target (${DOXY_TARGET}_run DEPENDS ${INDEXFILE} )
 		add_dependencies  (${DOXY_TARGET}_run
-			libarcsdec_create_log_dir libarcsdec_create_output_dir )
+			libarcsdec_create_log_dir
+			libarcsdec_create_output_dir
+			libarcsdec_text_files
+		)
 
 		set (STAMP_FILE ${INDEXFILE}.deduplicated )
 
@@ -293,7 +295,10 @@ macro (add_doxygen_target DOXY_TARGET DOXYFILE INDEXFILE )
 
 		add_custom_target (${DOXY_TARGET} DEPENDS ${INDEXFILE} )
 		add_dependencies  (${DOXY_TARGET}
-			libarcsdec_create_log_dir libarcsdec_create_output_dir )
+			libarcsdec_create_log_dir
+			libarcsdec_create_output_dir
+			libarcsdec_text_files
+		)
 	endif()
 endmacro()
 
