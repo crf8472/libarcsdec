@@ -794,25 +794,38 @@ endif (WITH_TESTS)
 
 option (WITH_DOCS          "Build documentation for public API"           OFF )
 option (WITH_INTERNAL_DOCS "Build documentation also for internal APIs"   OFF )
-option (USE_MCSS           "Build documentation using m.css"              OFF )
 option (USE_DOC_TOOL       "Build documentation using specified tool"     OFF )
-
-## Auto-activate WITH_DOCS if settings for documentation are present
-if (WITH_INTERNAL_DOCS )
-
-	set (WITH_DOCS ON CACHE BOOL "Build documentation for public API" FORCE )
-endif()
+## TODO Remove the following line
+option (USE_MCSS           "Build documentation using m.css"              OFF )
 
 ## Process configuration for building the documentation
 if (WITH_DOCS )
 
 	add_subdirectory (${CMAKE_CURRENT_SOURCE_DIR}/doc )
+else ()
+
+	if (USE_DOC_TOOL )
+		message (FATAL_ERROR "-DWITH_DOCS=ON is required to set USE_DOC_TOOL." )
+	endif()
 endif (WITH_DOCS )
+
+## Require WITH_DOCS to use WITH_INTERNAL_DOCS
+if (WITH_INTERNAL_DOCS )
+
+	set (WITH_DOCS ON CACHE BOOL "Build documentation for public API" FORCE )
+	if (NOT WITH_DOCS )
+		message (FATAL_ERROR
+			"-DWITH_DOCS=ON is required to set -DWITH_INTERNAL_DOCS."
+			" Auto-set it now, but this will be an error in future versions." )
+	endif()
+endif()
 
 ## For backwards compatibility
 if (USE_MCSS )
 
-	list (APPEND USE_DOC_TOOL "MCSS" )
+	if (NOT "MCSS" IN_LIST USE_DOC_TOOL )
+		list (APPEND USE_DOC_TOOL "MCSS" )
+	endif()
 	unset (USE_MCSS )
 	message (WARNING "Option USE_MCSS is deprecated and will be removed soon!"
 		" Use -DUSE_DOC_TOOL=MCSS instead." )
