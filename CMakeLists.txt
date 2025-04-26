@@ -1,21 +1,22 @@
 ## Root CMake file for libarcsdec
+## vim:fdm=marker
 
 cmake_minimum_required (VERSION 3.14.0 )
+## --- Policies {{{1
 
-## Set variables corresponding to unspecified versions to the empty string
-## Required for specifying the project version along with the name in project()
+## Set variables corresponding to unspecified versions to the empty string.
+## Required for specifying the project version along with the name in project().
 cmake_policy (SET CMP0048 NEW )
 
 ## 3.14: Make bison run in CMAKE_CURRENT_BINARY_DIR
 cmake_policy (SET CMP0088 NEW )
+## 1}}}
 
 
 project (libarcsdec VERSION 0.2.0 LANGUAGES CXX )
 
-get_directory_property (HAS_PARENT PARENT_DIRECTORY )
 
-
-## --- Setup Version Information
+## --- Setup Short Description, URL and Version Information {{{1
 
 set (PROJECT_BRIEF_DESC "Audio decoder and TOC parser adapters for libarcstk" )
 
@@ -40,7 +41,7 @@ message (STATUS "Building ${PROJECT_NAME} ${PROJECT_VERSION_STRING}" )
 
 
 
-## --- Setup Default Build Type
+## --- Setup Default Build Type {{{1
 
 if (NOT CMAKE_BUILD_TYPE )
 
@@ -54,11 +55,14 @@ message (STATUS "Build type: ${CMAKE_BUILD_TYPE}" )
 
 
 
-## --- Global settings
+## --- Trigger Configuration Step Whenever Git Index Changes {{{1
 
-## Trigger configuration phase whenever git index changes
 set_property (DIRECTORY APPEND
 	PROPERTY CMAKE_CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/.git/index )
+
+
+
+## --- CMake Modules Setup {{{1
 
 ## Tell find_package to first try locating libarcstk via system-installed
 ## .config file instead of project's FindLibarcstk.cmake module
@@ -70,29 +74,32 @@ message (STATUS "Changed CMAKE_MODULE_PATH to: ${CMAKE_MODULE_PATH}" )
 
 
 
-## --- Project Directory Layout
+## --- Project Directory Layout {{{1
 
-## "Root directory for sources"
-set (PROJECT_SOURCE_DIR        "${CMAKE_CURRENT_SOURCE_DIR}/src" )
+## Root directory for sources
+set (PROJECT_SOURCE_DIR         "${CMAKE_CURRENT_SOURCE_DIR}/src" )
 
-## "Root directory for public/exported headers"
-set (PROJECT_LOCAL_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include" )
+## Root directory for public/exported headers
+set (PROJECT_LOCAL_INCLUDE_DIR  "${CMAKE_CURRENT_SOURCE_DIR}/include" )
+
+## Source directory for markdown files
+set (PROJECT_TEXT_SOURCE_DIR    "${CMAKE_CURRENT_SOURCE_DIR}" )
 
 
-## "Root directory for out-of-source build"
-set (PROJECT_BINARY_DIR       "${CMAKE_CURRENT_BINARY_DIR}" )
-
-## "Target directory for public/exported headers"
-set (PROJECT_INCLUDE_DIR      "${PROJECT_BINARY_DIR}/include/arcsdec" )
-
-## "Target directory for non-cmake logs"
-set (PROJECT_LOG_DIR          "${PROJECT_BINARY_DIR}/log" )
-
-## "Target directory for generated sources and configuration"
-set (PROJECT_BUILD_SOURCE_DIR "${PROJECT_BINARY_DIR}/generated-sources" )
+## Root directory for out-of-source build
+set (PROJECT_BINARY_DIR         "${CMAKE_CURRENT_BINARY_DIR}" )
 
 ## Subdir for installing includes
-set (PROJECT_INSTALL_INCLUDES_SUBDIR "include/arcsdec" )
+set (PROJECT_INCLUDE_INSTALL_SUBDIR "include/arcsdec" )
+
+## Target directory for public/exported headers
+set (PROJECT_INCLUDE_BINARY_DIR "${PROJECT_BINARY_DIR}/${PROJECT_INCLUDE_INSTALL_SUBDIR}" )
+
+## Target directory for non-cmake logs
+set (PROJECT_LOG_DIR            "${PROJECT_BINARY_DIR}/log" )
+
+## Target directory for generated sources and configuration
+set (PROJECT_GEN_SOURCES_DIR   "${PROJECT_BINARY_DIR}/generated-sources" )
 
 ## List of markdown files
 foreach (FILE IN ITEMS "BUILD" "CODING" )
@@ -100,14 +107,11 @@ foreach (FILE IN ITEMS "BUILD" "CODING" )
 	list (APPEND PROJECT_TEXT_FILES "${FILE}.md" )
 endforeach()
 
-# Source directory for markdown files
-set (PROJECT_TEXT_SOURCE_DIR   "${CMAKE_CURRENT_SOURCE_DIR}" )
 
 
+## --- Create build-tree directories {{{1
 
-## --- Create build-tree directories
-
-## Log directory
+## -- Log Directory {{{2
 
 add_custom_command (
 	OUTPUT  ${PROJECT_LOG_DIR}
@@ -116,7 +120,8 @@ add_custom_command (
 
 add_custom_target (libarcsdec_create_log_dir ALL DEPENDS ${PROJECT_LOG_DIR} )
 
-## include directory + link
+
+## -- Include Directory + Link {{{2
 
 add_custom_command (
 	OUTPUT  ${PROJECT_BINARY_DIR}/include
@@ -130,13 +135,13 @@ add_custom_target (libarcsdec_create_include_dir
 ## This is useful for finding the includes when used as a subproject.
 add_custom_target (libarcsdec_link_to_headers
 	COMMAND ${CMAKE_COMMAND} -E create_symlink
-	${CMAKE_CURRENT_SOURCE_DIR}/include ${PROJECT_INCLUDE_DIR} )
+	${CMAKE_CURRENT_SOURCE_DIR}/include ${PROJECT_INCLUDE_BINARY_DIR} )
 
 add_dependencies (libarcsdec_link_to_headers libarcsdec_create_include_dir )
 
 
 
-## --- Update version.cpp with info from git
+## --- Update version.cpp with info from git {{{1
 
 find_package (Git QUIET REQUIRED )
 
@@ -174,12 +179,15 @@ endif()
 
 ## This presupposes having CMAKE_CONFIGURE_DEPENDS set to .git/index
 configure_file (${PROJECT_SOURCE_DIR}/version.cpp.in
-	${PROJECT_BUILD_SOURCE_DIR}/version.cpp
+	${PROJECT_GEN_SOURCES_DIR}/version.cpp
 	@ONLY )
 
 
 
-## --- Specify Exported Headers
+
+## --- Define Project Target {{{1
+
+## -- Specify Exported Headers {{{2
 
 list (APPEND INTERFACE_HEADERS
 	${PROJECT_LOCAL_INCLUDE_DIR}/audioreader.hpp
@@ -190,7 +198,7 @@ list (APPEND INTERFACE_HEADERS
 	${PROJECT_LOCAL_INCLUDE_DIR}/selection.hpp
 	${PROJECT_LOCAL_INCLUDE_DIR}/version.hpp )
 
-## --- Add and configure project target
+## -- Specify Sources {{{2
 
 add_library (${PROJECT_NAME} SHARED
 	"${PROJECT_SOURCE_DIR}/audioreader.cpp"
@@ -210,7 +218,11 @@ add_library (${PROJECT_NAME} SHARED
 	## readerwvpk.cpp    is optional and default ON,  depends on libwavpack
 	"${PROJECT_SOURCE_DIR}/sampleproc.cpp"
 	"${PROJECT_SOURCE_DIR}/selection.cpp"
-	"${PROJECT_BUILD_SOURCE_DIR}/version.cpp" )
+	"${PROJECT_GEN_SOURCES_DIR}/version.cpp" )
+
+## -- Configure Target {{{2
+
+get_directory_property (HAS_PARENT PARENT_DIRECTORY )
 
 if (HAS_PARENT )
 	## Make project's includes available to PARENT
@@ -224,11 +236,11 @@ endif()
 
 target_include_directories (${PROJECT_NAME}
 	PUBLIC
-		$<BUILD_INTERFACE:${PROJECT_INCLUDE_DIR}>
-		$<INSTALL_INTERFACE:${PROJECT_INSTALL_INCLUDES_SUBDIR}>
+		$<BUILD_INTERFACE:${PROJECT_INCLUDE_BINARY_DIR}>
+		$<INSTALL_INTERFACE:${PROJECT_INCLUDE_INSTALL_SUBDIR}>
 	PRIVATE
 		$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}> ## for flexbisondriver.hpp
-		$<BUILD_INTERFACE:${PROJECT_BUILD_SOURCE_DIR}>
+		$<BUILD_INTERFACE:${PROJECT_GEN_SOURCES_DIR}>
 		## for generated sources
 	)
 
@@ -245,7 +257,9 @@ add_dependencies (${PROJECT_NAME} libarcsdec_link_to_headers )
 
 
 
-## --- Compiler Specific Settings
+## --- Compiler Specific Settings {{{1
+
+## -- Define Warning and Optimization Flags for g++ and clang++ {{{2
 
 ## g++: Warnings
 set (PROJECT_CXX_GNU_FLAGS_WARNINGS
@@ -302,7 +316,7 @@ set (PROJECT_CXX_CLANG_FLAGS_WARNINGS
 set (PROJECT_CXX_CLANG_FLAGS_OPTIMIZE -march=native -mtune=generic )
 
 
-## Compiler: apply specific flags
+## -- Select Warning and Optimization Flags for Actual Compiler {{{2
 
 if (CMAKE_COMPILER_IS_GNUCXX ) ## for g++
 
@@ -328,9 +342,11 @@ else()
 endif()
 
 
-## Compiler: Activate Warnings on library sources
+## -- Activate Compiler Warnings on Library Sources  {{{2
+
 ## We do not use target_compile_options since those flags should not be
 ## applied to Catch2 and tests.
+## TODO Find a way to use target_compile_options
 
 get_target_property (PROJECT_SOURCES ${PROJECT_NAME} SOURCES )
 
@@ -344,7 +360,9 @@ foreach (_sourcefile ${PROJECT_SOURCES} )
 endforeach()
 
 
-## Compiler: Add optimization flags (always in the same way)
+## -- Manage Optimization Flags  {{{2
+
+## - Macro add_cxx_flags_optimize(): Add Optimization Flags {{{3
 
 macro (add_cxx_flags_optimize )
 
@@ -354,17 +372,18 @@ macro (add_cxx_flags_optimize )
 		PRIVATE ${PROJECT_CXX_FLAGS_OPTIMIZE} )
 endmacro()
 
-
-## Compiler: Activate Optimizations (default ON for Release, otherwise OFF)
+## - Optional: Activate Optimization Option (default ON for Release only) {{{3
 
 option (WITH_NATIVE "Use platform specific optimization on compiling" OFF )
 
+## For 'Release', Set Default ON
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
 
 	set (WITH_NATIVE ON CACHE BOOL
 			"Release: Force platform specific optimization" FORCE )
 endif ()
 
+## - If Optimization Option Activated, Add Flags {{{3
 if (WITH_NATIVE )
 
 	add_cxx_flags_optimize()
@@ -374,12 +393,13 @@ else()
 
 endif (WITH_NATIVE )
 
-get_target_property (PROJECT_CXX_FLAGS ${PROJECT_NAME} COMPILE_OPTIONS )
+## - Status Message About Compile Flags {{{3
 
+get_target_property (PROJECT_CXX_FLAGS ${PROJECT_NAME} COMPILE_OPTIONS )
 message (STATUS "Compile flags: ${PROJECT_CXX_FLAGS}" )
 
 
-## --- Setup Dependencies
+## --- Setup Dependencies {{{1
 
 set (PKG_REQUIRE_ARRAY )
 
@@ -427,15 +447,15 @@ find_package (FLEX  ) # 2.6.4
 
 bison_target (cueparser
 	${PROJECT_SOURCE_DIR}/cuesheet/cuesheet.y
-	${PROJECT_BUILD_SOURCE_DIR}/cuesheet.tab.cpp
-	DEFINES_FILE ${PROJECT_BUILD_SOURCE_DIR}/cuesheet.tab.hpp
+	${PROJECT_GEN_SOURCES_DIR}/cuesheet.tab.cpp
+	DEFINES_FILE ${PROJECT_GEN_SOURCES_DIR}/cuesheet.tab.hpp
 	#COMPILE_FLAGS "--verbose --debug -Wconflicts-sr -Wconflicts-rr -Wcounterexamples"
 	COMPILE_FLAGS "--verbose -Wconflicts-sr -Wconflicts-rr -Wcounterexamples"
 	)
 
 flex_target (cuescanner
 	${PROJECT_SOURCE_DIR}/cuesheet/cuesheet.l
-	${PROJECT_BUILD_SOURCE_DIR}/cuesheet.yy.cpp
+	${PROJECT_GEN_SOURCES_DIR}/cuesheet.yy.cpp
 	#COMPILE_FLAGS "--verbose --debug"
 	COMPILE_FLAGS "--verbose"
 	)
@@ -452,7 +472,7 @@ set_property (TARGET cuesheet PROPERTY POSITION_INDEPENDENT_CODE ON )
 target_include_directories (cuesheet
 	PRIVATE ${PROJECT_LOCAL_INCLUDE_DIR}    ## public headers
 	PRIVATE ${PROJECT_SOURCE_DIR}/cuesheet/ ## lexer.hpp + lexer_defs.hpp
-	PRIVATE ${PROJECT_BUILD_SOURCE_DIR}     ## generated sources
+	PRIVATE ${PROJECT_GEN_SOURCES_DIR}     ## generated sources
 	)
 
 target_link_libraries (${PROJECT_NAME} PRIVATE cuesheet )
@@ -467,15 +487,15 @@ endif ()
 
 bison_target (tocparser
 	${PROJECT_SOURCE_DIR}/cdrtoc/cdrtoc.y
-	${PROJECT_BUILD_SOURCE_DIR}/cdrtoc.tab.cpp
-	DEFINES_FILE ${PROJECT_BUILD_SOURCE_DIR}/cdrtoc.tab.hpp
+	${PROJECT_GEN_SOURCES_DIR}/cdrtoc.tab.cpp
+	DEFINES_FILE ${PROJECT_GEN_SOURCES_DIR}/cdrtoc.tab.hpp
 	#COMPILE_FLAGS "--verbose --debug -Wconflicts-sr -Wconflicts-rr -Wcounterexamples"
 	COMPILE_FLAGS "--verbose -Wconflicts-sr -Wconflicts-rr -Wcounterexamples"
 	)
 
 flex_target (tocscanner
 	${PROJECT_SOURCE_DIR}/cdrtoc/cdrtoc.l
-	${PROJECT_BUILD_SOURCE_DIR}/cdrtoc.yy.cpp
+	${PROJECT_GEN_SOURCES_DIR}/cdrtoc.yy.cpp
 	#COMPILE_FLAGS "--verbose --debug"
 	COMPILE_FLAGS "--verbose"
 	)
@@ -492,7 +512,7 @@ set_property (TARGET cdrtoc PROPERTY POSITION_INDEPENDENT_CODE ON )
 target_include_directories (cdrtoc
 	PRIVATE ${PROJECT_LOCAL_INCLUDE_DIR}  ## public headers
 	PRIVATE ${PROJECT_SOURCE_DIR}/cdrtoc/ ## lexer.hpp + lexer_defs.hpp
-	PRIVATE ${PROJECT_BUILD_SOURCE_DIR}   ## generated sources
+	PRIVATE ${PROJECT_GEN_SOURCES_DIR}   ## generated sources
 	)
 
 target_link_libraries (${PROJECT_NAME} PRIVATE cdrtoc )
@@ -698,7 +718,7 @@ endif (WITH_LIBSNDFILE )
 
 
 
-## --- Install binary and exported header files
+## --- Installation {{{1
 
 if (NOT SKIP_INSTALL_ALL )
 
@@ -712,7 +732,7 @@ if (NOT SKIP_INSTALL_ALL )
 		EXPORT "${PROJECT_EXPORT_SET}"
 		LIBRARY       DESTINATION "${CMAKE_INSTALL_PREFIX}/lib"
 		PUBLIC_HEADER DESTINATION
-				"${CMAKE_INSTALL_PREFIX}/${PROJECT_INSTALL_INCLUDES_SUBDIR}" )
+				"${CMAKE_INSTALL_PREFIX}/${PROJECT_INCLUDE_INSTALL_SUBDIR}" )
 
 	install (EXPORT ${PROJECT_EXPORT_SET}
 		NAMESPACE libarcsdec::
@@ -727,14 +747,14 @@ if (NOT SKIP_INSTALL_ALL )
 
 		configure_file (
 			"${CMAKE_CURRENT_SOURCE_DIR}/libarcsdec.pc.in"
-			"${PROJECT_BUILD_SOURCE_DIR}/libarcsdec.pc"
+			"${PROJECT_GEN_SOURCES_DIR}/libarcsdec.pc"
 			@ONLY
 		)
 
 		unset (PKG_REQUIRE )
 		unset (PKG_BIND_NAME )
 
-		install (FILES "${PROJECT_BUILD_SOURCE_DIR}/libarcsdec.pc"
+		install (FILES "${PROJECT_GEN_SOURCES_DIR}/libarcsdec.pc"
 			DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig" )
 
 		## Support CMake Packaging
@@ -747,19 +767,19 @@ if (NOT SKIP_INSTALL_ALL )
 
 		configure_package_config_file (
 			"${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_CONFIG_FILE}.in"
-			"${PROJECT_BUILD_SOURCE_DIR}/${PROJECT_CONFIG_FILE}"
+			"${PROJECT_GEN_SOURCES_DIR}/${PROJECT_CONFIG_FILE}"
 			INSTALL_DESTINATION "${INSTALL_CMAKECONFIG_DIR}"
 		)
 
 		write_basic_package_version_file (
-			"${PROJECT_BUILD_SOURCE_DIR}/${PROJECT_CONFIG_VERSION_FILE}"
+			"${PROJECT_GEN_SOURCES_DIR}/${PROJECT_CONFIG_VERSION_FILE}"
 			VERSION        ${PROJECT_VERSION_STRING_WITHOUT_SUFFIX}
 			COMPATIBILITY  SameMajorVersion
 		)
 
 		install (FILES
-			"${PROJECT_BUILD_SOURCE_DIR}/${PROJECT_CONFIG_FILE}"
-			"${PROJECT_BUILD_SOURCE_DIR}/${PROJECT_CONFIG_VERSION_FILE}"
+			"${PROJECT_GEN_SOURCES_DIR}/${PROJECT_CONFIG_FILE}"
+			"${PROJECT_GEN_SOURCES_DIR}/${PROJECT_CONFIG_VERSION_FILE}"
 			DESTINATION "${INSTALL_CMAKECONFIG_DIR}"
 		)
 
@@ -769,7 +789,7 @@ endif (NOT SKIP_INSTALL_ALL)
 
 
 
-## --- Optional: Build tests, using Catch2 testing framework (default: OFF)
+## --- Optional: Build Tests (default: OFF) {{{1
 
 option (WITH_TESTS "Build unit tests" OFF )
 
@@ -790,7 +810,8 @@ if (WITH_TESTS)
 endif (WITH_TESTS)
 
 
-## --- Optional: Build documentation (default: OFF)
+
+## --- Optional: Build documentation (default: OFF) {{{1
 
 option (WITH_DOCS          "Build documentation for public API"           OFF )
 option (WITH_INTERNAL_DOCS "Build documentation also for internal APIs"   OFF )
@@ -798,7 +819,8 @@ option (USE_DOC_TOOL       "Build documentation using specified tool"     OFF )
 ## TODO Remove the following line
 option (USE_MCSS           "Build documentation using m.css"              OFF )
 
-## Process configuration for building the documentation
+
+## -- Process configuration for building the documentation
 if (WITH_DOCS )
 
 	add_subdirectory (${CMAKE_CURRENT_SOURCE_DIR}/doc )
@@ -809,7 +831,8 @@ else ()
 	endif()
 endif (WITH_DOCS )
 
-## Require WITH_DOCS to use WITH_INTERNAL_DOCS
+
+## -- Require WITH_DOCS to use WITH_INTERNAL_DOCS
 if (WITH_INTERNAL_DOCS )
 
 	set (WITH_DOCS ON CACHE BOOL "Build documentation for public API" FORCE )
@@ -820,8 +843,9 @@ if (WITH_INTERNAL_DOCS )
 	endif()
 endif()
 
-## For backwards compatibility
-if (USE_MCSS )
+
+## -- For backwards compatibility
+if (USE_MCSS ) # TODO Remove that
 
 	if (NOT "MCSS" IN_LIST USE_DOC_TOOL )
 		list (APPEND USE_DOC_TOOL "MCSS" )
