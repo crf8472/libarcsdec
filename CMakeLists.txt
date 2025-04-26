@@ -80,7 +80,7 @@ message (STATUS "Changed CMAKE_MODULE_PATH to: ${CMAKE_MODULE_PATH}" )
 set (PROJECT_SOURCE_DIR         "${CMAKE_CURRENT_SOURCE_DIR}/src" )
 
 ## Root directory for public/exported headers
-set (PROJECT_LOCAL_INCLUDE_DIR  "${CMAKE_CURRENT_SOURCE_DIR}/include" )
+set (PROJECT_INCLUDE_SOURCE_DIR  "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 
 ## Source directory for markdown files
 set (PROJECT_TEXT_SOURCE_DIR    "${CMAKE_CURRENT_SOURCE_DIR}" )
@@ -99,7 +99,7 @@ set (PROJECT_INCLUDE_BINARY_DIR "${PROJECT_BINARY_DIR}/${PROJECT_INCLUDE_INSTALL
 set (PROJECT_LOG_DIR            "${PROJECT_BINARY_DIR}/log" )
 
 ## Target directory for generated sources and configuration
-set (PROJECT_GEN_SOURCES_DIR   "${PROJECT_BINARY_DIR}/generated-sources" )
+set (PROJECT_GEN_SOURCES_DIR    "${PROJECT_BINARY_DIR}/generated-sources" )
 
 ## List of markdown files
 foreach (FILE IN ITEMS "BUILD" "CODING" )
@@ -190,13 +190,13 @@ configure_file (${PROJECT_SOURCE_DIR}/version.cpp.in
 ## -- Specify Exported Headers {{{2
 
 list (APPEND INTERFACE_HEADERS
-	${PROJECT_LOCAL_INCLUDE_DIR}/audioreader.hpp
-	${PROJECT_LOCAL_INCLUDE_DIR}/calculators.hpp
-	${PROJECT_LOCAL_INCLUDE_DIR}/descriptor.hpp
-	${PROJECT_LOCAL_INCLUDE_DIR}/metaparser.hpp
-	${PROJECT_LOCAL_INCLUDE_DIR}/sampleproc.hpp
-	${PROJECT_LOCAL_INCLUDE_DIR}/selection.hpp
-	${PROJECT_LOCAL_INCLUDE_DIR}/version.hpp )
+	${PROJECT_INCLUDE_SOURCE_DIR}/audioreader.hpp
+	${PROJECT_INCLUDE_SOURCE_DIR}/calculators.hpp
+	${PROJECT_INCLUDE_SOURCE_DIR}/descriptor.hpp
+	${PROJECT_INCLUDE_SOURCE_DIR}/metaparser.hpp
+	${PROJECT_INCLUDE_SOURCE_DIR}/sampleproc.hpp
+	${PROJECT_INCLUDE_SOURCE_DIR}/selection.hpp
+	${PROJECT_INCLUDE_SOURCE_DIR}/version.hpp )
 
 ## -- Specify Sources {{{2
 
@@ -219,6 +219,7 @@ add_library (${PROJECT_NAME} SHARED
 	"${PROJECT_SOURCE_DIR}/sampleproc.cpp"
 	"${PROJECT_SOURCE_DIR}/selection.cpp"
 	"${PROJECT_GEN_SOURCES_DIR}/version.cpp" )
+
 
 ## -- Configure Target {{{2
 
@@ -470,7 +471,7 @@ add_library (cuesheet OBJECT
 set_property (TARGET cuesheet PROPERTY POSITION_INDEPENDENT_CODE ON )
 
 target_include_directories (cuesheet
-	PRIVATE ${PROJECT_LOCAL_INCLUDE_DIR}    ## public headers
+	PRIVATE ${PROJECT_INCLUDE_SOURCE_DIR}    ## public headers
 	PRIVATE ${PROJECT_SOURCE_DIR}/cuesheet/ ## lexer.hpp + lexer_defs.hpp
 	PRIVATE ${PROJECT_GEN_SOURCES_DIR}     ## generated sources
 	)
@@ -510,7 +511,7 @@ add_library (cdrtoc OBJECT
 set_property (TARGET cdrtoc PROPERTY POSITION_INDEPENDENT_CODE ON )
 
 target_include_directories (cdrtoc
-	PRIVATE ${PROJECT_LOCAL_INCLUDE_DIR}  ## public headers
+	PRIVATE ${PROJECT_INCLUDE_SOURCE_DIR}  ## public headers
 	PRIVATE ${PROJECT_SOURCE_DIR}/cdrtoc/ ## lexer.hpp + lexer_defs.hpp
 	PRIVATE ${PROJECT_GEN_SOURCES_DIR}   ## generated sources
 	)
