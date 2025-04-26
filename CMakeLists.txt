@@ -204,7 +204,6 @@ add_library (${PROJECT_NAME} SHARED
 	"${PROJECT_SOURCE_DIR}/audioreader.cpp"
 	"${PROJECT_SOURCE_DIR}/calculators.cpp"
 	"${PROJECT_SOURCE_DIR}/descriptor.cpp"
-	"${PROJECT_SOURCE_DIR}/tochandler.cpp"
 	"${PROJECT_SOURCE_DIR}/flexbisondriver.cpp"
 	"${PROJECT_SOURCE_DIR}/libinspect.cpp"
 	"${PROJECT_SOURCE_DIR}/metaparser.cpp"
@@ -218,6 +217,7 @@ add_library (${PROJECT_NAME} SHARED
 	## readerwvpk.cpp    is optional and default ON,  depends on libwavpack
 	"${PROJECT_SOURCE_DIR}/sampleproc.cpp"
 	"${PROJECT_SOURCE_DIR}/selection.cpp"
+	"${PROJECT_SOURCE_DIR}/tochandler.cpp"
 	"${PROJECT_GEN_SOURCES_DIR}/version.cpp" )
 
 
@@ -539,17 +539,8 @@ option (WITH_LIBSNDFILE "Add libsndfile reading capabilities" OFF )
 
 if (WITH_LIBCUE )
 
-	message (STATUS "Build with libcue parsing capability for cuesheets" )
+	add_subdirectory (${PROJECT_SOURCE_DIR}/parserlibcue )
 
-	find_package (libcue 2.0.0 REQUIRED )
-	list (APPEND PKG_REQUIRE_ARRAY "libcue >= 2.0.0" )
-
-	target_include_directories (${PROJECT_NAME} PRIVATE ${libcue_INCLUDE_DIRS} )
-
-	target_link_libraries (${PROJECT_NAME} PRIVATE ${libcue_LIBRARIES} )
-
-	target_sources (${PROJECT_NAME}
-		PRIVATE ${PROJECT_SOURCE_DIR}/parserlibcue.cpp )
 else (WITH_LIBCUE)
 
 	message (STATUS "Build without libcue parsing capability" )
@@ -560,26 +551,7 @@ endif (WITH_LIBCUE)
 
 if (WITH_FLAC )
 
-	message (STATUS "Build with fLaC reading capability for fLaC audio" )
-
-	find_package (Threads       REQUIRED )
-	find_package (FLAC    1.3.1 REQUIRED ) ## checks libFLAC and libFLAC++
-
-	list (APPEND PKG_REQUIRE_ARRAY "flac++ >= 1.3.1" )
-
-	if (TARGET FLAC::FLAC++ )
-		## found by flac's cmake config
-		target_link_libraries (${PROJECT_NAME} PRIVATE FLAC::FLAC++ )
-	else()
-		## found by cmake/Modules/FindFLAC
-		target_include_directories (${PROJECT_NAME}
-			PRIVATE ${LIBFLACPP_INCLUDE_DIRS} )
-		target_link_libraries (${PROJECT_NAME}
-			PRIVATE ${LIBFLACPP_LIBRARIES} )
-	endif()
-
-	target_sources (${PROJECT_NAME}
-		PRIVATE ${PROJECT_SOURCE_DIR}/readerflac.cpp )
+	add_subdirectory (${PROJECT_SOURCE_DIR}/readerflac )
 
 else (WITH_FLAC)
 
@@ -591,19 +563,7 @@ endif (WITH_FLAC)
 
 if (WITH_WAVPACK)
 
-	message (STATUS "Build with WavPack reading capability for wavpack audio" )
-
-	find_package (libwavpack 5.0.0 REQUIRED )
-
-	list (APPEND PKG_REQUIRE_ARRAY "wavpack >= 5.0.0" )
-
-	target_include_directories (${PROJECT_NAME}
-		PRIVATE ${libwavpack_INCLUDE_DIRS} )
-
-	target_link_libraries (${PROJECT_NAME} PUBLIC ${libwavpack_LIBRARIES} )
-
-	target_sources (${PROJECT_NAME}
-		PRIVATE ${PROJECT_SOURCE_DIR}/readerwvpk.cpp )
+	add_subdirectory (${PROJECT_SOURCE_DIR}/readerwvpk )
 
 else (WITH_WAVPACK)
 
@@ -615,66 +575,7 @@ endif (WITH_WAVPACK)
 
 if (WITH_FFMPEG)
 
-	message (STATUS "Build with ffmpeg support for audio" )
-
-	## find_package does not respect versions for components but the ffmpeg
-	## version is not trivial to access in a Find module.
-	## Thus, instead of REQUIREing the lib versions, we verify them manually.
-
-	find_package (ffmpeg REQUIRED COMPONENTS avcodec avformat avutil )
-
-	## Verify the required versions of ffmpeg libs
-	macro (at_least_version _required _actual )
-
-		if (${_actual} VERSION_LESS ${_required})
-
-			message (FATAL_ERROR
-			"Actual version is ${_actual}, required is at least ${_required}." )
-
-		endif()
-
-	endmacro()
-
-	## ffmpeg 3.1 < x < 4.0:
-	## API Change: deprecated avcodec_decode_audio4() from ffmpeg 0.9 in favor
-	## of avcodec_send_packet()/avcodec_receive_frame()
-	at_least_version ("57.37.100" ${avcodec_VERSION}  ) ## 2016-04-21
-	at_least_version ("57.33.100" ${avformat_VERSION} ) ## 2016-04-11
-	at_least_version ("55.22.100" ${avutil_VERSION}   ) ## 2016-04-14
-	list (APPEND PKG_REQUIRE_ARRAY "libavcodec >= 57.37.100" )
-	list (APPEND PKG_REQUIRE_ARRAY "libavformat >= 57.33.100" )
-	list (APPEND PKG_REQUIRE_ARRAY "libavutil >= 55.22.100" )
-
-	## Commented out, API change is small, can be distinguished in source.
-	## ffmpeg x >= 4.0:
-	## API Change: deprecated av_register_all() in favor of av_muxer_iterate()
-	## and av_demuxer_iterate(), registering is obsolete
-	#at_least_version ("58.17.100" ${avcodec_VERSION} )  ## 2018-04-11
-	#at_least_version ("58.9.100"  ${avformat_VERSION} ) ## 2018-04-01
-	#at_least_version ("56.13.100" ${avutil_VERSION} )   ## 2018-04-03
-
-	## TODO
-	## ffmpeg x >= 5.1:
-	## AVFrame::channels, AVFrame::channel_layout is deprecated in favor of
-	## AVFrame::ch_layout (nb_channels and ch_layout).
-	## AVCodecContext::channels, AVCodecContext::channel_layout is deprecated
-	## in favor of AVCodecContext::ch_layout (nb_channels and ch_layout).
-	#at_least_version ("59.24.100" ${avcodec_VERSION} )  ## 2022-03-15
-	#at_least_version ("59.19.100" ${avformat_VERSION} ) ## 2022-03-15
-	#at_least_version ("57.24.100" ${avutil_VERSION} )   ## 2022-03-15
-
-	target_include_directories (${PROJECT_NAME}
-		PRIVATE ${avcodec_INCLUDE_DIRS}
-		PRIVATE ${avformat_INCLUDE_DIRS}
-		PRIVATE ${avutil_INCLUDE_DIRS} )
-
-	target_link_libraries (${PROJECT_NAME}
-		PUBLIC ${avcodec_LIBRARIES}
-		PUBLIC ${avformat_LIBRARIES}
-		PUBLIC ${avutil_LIBRARIES} )
-
-	target_sources (${PROJECT_NAME}
-		PRIVATE ${PROJECT_SOURCE_DIR}/readerffmpeg.cpp )
+	add_subdirectory (${PROJECT_SOURCE_DIR}/readerffmpeg )
 
 else (WITH_FFMPEG)
 
@@ -686,31 +587,7 @@ endif (WITH_FFMPEG)
 
 if (WITH_LIBSNDFILE )
 
-	message (STATUS "Build with libsndfile support for audio" )
-
-	find_package (SndFile 1.0.17 REQUIRED )
-
-	list (APPEND PKG_REQUIRE_ARRAY "sndfile >= 1.0.17" )
-
-	if (TARGET SndFile::sndfile )
-		## found by libsndfile's cmake config
-		target_link_libraries (${PROJECT_NAME} PRIVATE SndFile::sndfile )
-	else()
-		## found by cmake/Modules/Findlibsndfile.cmake
-
-		if (NOT libsndfile_LIBRARIES )
-			find_package (libsndfile 1.0.17 REQUIRED )
-		endif()
-
-		target_include_directories (${PROJECT_NAME}
-			PRIVATE ${libsndfile_INCLUDE_DIRS} )
-
-		target_link_libraries (${PROJECT_NAME}
-			PUBLIC ${libsndfile_LIBRARIES} )
-	endif()
-
-	target_sources (${PROJECT_NAME}
-		PRIVATE ${PROJECT_SOURCE_DIR}/readersndfile.cpp )
+	add_subdirectory (${PROJECT_SOURCE_DIR}/readersndfile )
 
 else (WITH_LIBSNDFILE )
 
