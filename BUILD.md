@@ -415,6 +415,25 @@ If this all sounds odd for you, it is completely safe to skip this paragraph,
 ignore the ``.clang`` file and just feel good. It will not get in your way.
 
 
+## Cleaning the project
+
+Clean only the shared library binaries (when in directory ``build``):
+
+	$ cmake -P CMakeFiles/libarcsdec.dir/cmake_clean.cmake
+
+Clean the project entirely:
+
+	$ cmake --build . --target clean
+
+Note that this forces to recompile everything including Catch2 if
+``-DWITH_TESTS`` is configured.
+
+Completely wipe everything configured and built locally (when in top-level
+directory):
+
+	$ rm -rf build
+
+
 ## Build on Windows ... duh!
 
 No Windows port yet :-(
