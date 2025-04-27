@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
 {
 	if (argc != 3)
 	{
-		std::cout << "Usage: albumcalc <cuesheet> <audiofile>" << std::endl;
+		std::cout << "Usage: albumcalc <cuesheet> <audiofile>" << '\n';
 		return EXIT_SUCCESS;
 	}
 
@@ -69,10 +69,10 @@ int main(int argc, char* argv[])
 	// libarcstk's Matchers or just parse them to plaintext.
 
 	// Print the ARId.
-	std::cout << "AccurateRip URL: " << arid.url() << std::endl;
+	std::cout << "AccurateRip URL: " << arid.url() << '\n';
 
 	// Print the actual checksums.
-	std::cout << "Track  ARCSv1    ARCSv2" << std::endl;
+	std::cout << "Track  ARCSv1    ARCSv2" << '\n';
 	int trk_no = 1;
 
 	using arcstk::checksum::type;
@@ -87,7 +87,7 @@ int main(int argc, char* argv[])
 			<< std::setw(8) << std::setfill('0') << arcs1.value()
 			<< "  "
 			<< std::setw(8) << std::setfill('0') << arcs2.value()
-			<< std::endl;
+			<< '\n';
 
 		++trk_no;
 	}
