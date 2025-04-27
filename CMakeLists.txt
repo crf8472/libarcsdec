@@ -101,12 +101,6 @@ set (PROJECT_LOG_DIR            "${PROJECT_BINARY_DIR}/log" )
 ## Target directory for generated sources and configuration
 set (PROJECT_GEN_SOURCES_DIR    "${PROJECT_BINARY_DIR}/generated-sources" )
 
-## List of markdown files
-foreach (FILE IN ITEMS "BUILD" "CODING" )
-
-	list (APPEND PROJECT_TEXT_FILES "${FILE}.md" )
-endforeach()
-
 
 
 ## --- Create build-tree directories {{{1

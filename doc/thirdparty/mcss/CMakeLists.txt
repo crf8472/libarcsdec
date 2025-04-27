@@ -171,7 +171,7 @@ else()
 		## add deps from PARENT
 		libarcsdec_create_output_dir
 		libarcsdec_create_log_dir
-		libarcsdec_text_files
+		libarcsdec_static_pages_files
 		## add deps from here
 		libarcsdec_mcss_requirements
 	)
