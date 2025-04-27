@@ -196,30 +196,25 @@ list (APPEND INTERFACE_HEADERS
 	${PROJECT_INCLUDE_SOURCE_DIR}/metaparser.hpp
 	${PROJECT_INCLUDE_SOURCE_DIR}/sampleproc.hpp
 	${PROJECT_INCLUDE_SOURCE_DIR}/selection.hpp
-	${PROJECT_INCLUDE_SOURCE_DIR}/version.hpp )
+	${PROJECT_INCLUDE_SOURCE_DIR}/version.hpp
+)
 
 ## -- Specify Sources {{{2
 
 add_library (${PROJECT_NAME} SHARED
+	# api
 	"${PROJECT_SOURCE_DIR}/audioreader.cpp"
 	"${PROJECT_SOURCE_DIR}/calculators.cpp"
 	"${PROJECT_SOURCE_DIR}/descriptor.cpp"
-	"${PROJECT_SOURCE_DIR}/flexbisondriver.cpp"
-	"${PROJECT_SOURCE_DIR}/libinspect.cpp"
 	"${PROJECT_SOURCE_DIR}/metaparser.cpp"
-	"${PROJECT_SOURCE_DIR}/parsercue.cpp"
-	"${PROJECT_SOURCE_DIR}/parsertoc.cpp"
-	## parserlibcue.cpp  is optional and default OFF, depends on libcue
-	## readerffmpeg.cpp  is optional and default ON,  depends on parts of ffmpeg
-	## readerflac.cpp    is optional and default ON,  depends on FLAC
-	## readersndfile.cpp is optional and default OFF, depends on libsndfile
-	"${PROJECT_SOURCE_DIR}/readerwav.cpp"
-	## readerwvpk.cpp    is optional and default ON,  depends on libwavpack
 	"${PROJECT_SOURCE_DIR}/sampleproc.cpp"
 	"${PROJECT_SOURCE_DIR}/selection.cpp"
+	"${PROJECT_GEN_SOURCES_DIR}/version.cpp"
+	# internal
+	"${PROJECT_SOURCE_DIR}/flexbisondriver.cpp"
+	"${PROJECT_SOURCE_DIR}/libinspect.cpp"
 	"${PROJECT_SOURCE_DIR}/tochandler.cpp"
-	"${PROJECT_GEN_SOURCES_DIR}/version.cpp" )
-
+)
 
 ## -- Configure Target {{{2
 
@@ -404,7 +399,8 @@ message (STATUS "Compile flags: ${PROJECT_CXX_FLAGS}" )
 
 set (PKG_REQUIRE_ARRAY )
 
-## --- Required: libarcstk
+
+## -- Required dependency: libarcstk {{{2
 
 if (WITH_SUBMODULES )
 
@@ -441,92 +437,26 @@ else()
 endif()
 
 
-find_package (BISON ) # 3.8.2
-find_package (FLEX  ) # 2.6.4
 
-## --- Cuesheet parser and scanner
+## -- Required features {{{2
 
-bison_target (cueparser
-	${PROJECT_SOURCE_DIR}/cuesheet/cuesheet.y
-	${PROJECT_GEN_SOURCES_DIR}/cuesheet.tab.cpp
-	DEFINES_FILE ${PROJECT_GEN_SOURCES_DIR}/cuesheet.tab.hpp
-	#COMPILE_FLAGS "--verbose --debug -Wconflicts-sr -Wconflicts-rr -Wcounterexamples"
-	COMPILE_FLAGS "--verbose -Wconflicts-sr -Wconflicts-rr -Wcounterexamples"
-	)
+foreach (FILEREADER IN ITEMS "readerwav" "parsercue" "parsertoc")
 
-flex_target (cuescanner
-	${PROJECT_SOURCE_DIR}/cuesheet/cuesheet.l
-	${PROJECT_GEN_SOURCES_DIR}/cuesheet.yy.cpp
-	#COMPILE_FLAGS "--verbose --debug"
-	COMPILE_FLAGS "--verbose"
-	)
-
-add_flex_bison_dependency (cuescanner cueparser )
-
-add_library (cuesheet OBJECT
-	${BISON_cueparser_OUTPUTS}
-	${FLEX_cuescanner_OUTPUTS}
-	)
-
-set_property (TARGET cuesheet PROPERTY POSITION_INDEPENDENT_CODE ON )
-
-target_include_directories (cuesheet
-	PRIVATE ${PROJECT_INCLUDE_SOURCE_DIR}    ## public headers
-	PRIVATE ${PROJECT_SOURCE_DIR}/cuesheet/ ## lexer.hpp + lexer_defs.hpp
-	PRIVATE ${PROJECT_GEN_SOURCES_DIR}     ## generated sources
-	)
-
-target_link_libraries (${PROJECT_NAME} PRIVATE cuesheet )
-
-if (WITH_SUBMODULES )
-	# force to compile libarcstk before cuesheet
-	target_link_libraries (cuesheet PRIVATE libarcstk::libarcstk )
-endif ()
+	add_subdirectory (${PROJECT_SOURCE_DIR}/${FILEREADER} )
+endforeach()
 
 
-## -- CDRDAO/TOC parser and scanner
 
-bison_target (tocparser
-	${PROJECT_SOURCE_DIR}/cdrtoc/cdrtoc.y
-	${PROJECT_GEN_SOURCES_DIR}/cdrtoc.tab.cpp
-	DEFINES_FILE ${PROJECT_GEN_SOURCES_DIR}/cdrtoc.tab.hpp
-	#COMPILE_FLAGS "--verbose --debug -Wconflicts-sr -Wconflicts-rr -Wcounterexamples"
-	COMPILE_FLAGS "--verbose -Wconflicts-sr -Wconflicts-rr -Wcounterexamples"
-	)
+## -- Optional features {{{2
 
-flex_target (tocscanner
-	${PROJECT_SOURCE_DIR}/cdrtoc/cdrtoc.l
-	${PROJECT_GEN_SOURCES_DIR}/cdrtoc.yy.cpp
-	#COMPILE_FLAGS "--verbose --debug"
-	COMPILE_FLAGS "--verbose"
-	)
+## Default configuration for optional features (TODO)
 
-add_flex_bison_dependency (tocscanner tocparser )
+#option (WITH_CAPABILITIES "Add capabilities" "FFMPEG;FLAC;WAVPACK" )
 
-add_library (cdrtoc OBJECT
-	${BISON_tocparser_OUTPUTS}
-	${FLEX_tocscanner_OUTPUTS}
-	)
+#foreach (_capability WITH_CAPABILITIES )
+#endforeach()
 
-set_property (TARGET cdrtoc PROPERTY POSITION_INDEPENDENT_CODE ON )
-
-target_include_directories (cdrtoc
-	PRIVATE ${PROJECT_INCLUDE_SOURCE_DIR}  ## public headers
-	PRIVATE ${PROJECT_SOURCE_DIR}/cdrtoc/ ## lexer.hpp + lexer_defs.hpp
-	PRIVATE ${PROJECT_GEN_SOURCES_DIR}   ## generated sources
-	)
-
-target_link_libraries (${PROJECT_NAME} PRIVATE cdrtoc )
-
-if (WITH_SUBMODULES )
-	# force to compile libarcstk before any cdrtoc
-	target_link_libraries (cdrtoc PRIVATE libarcstk::libarcstk )
-endif ()
-
-
-## --- Configure optional features
-
-## Default configuration for optional features
+##
 
 option (WITH_LIBCUE     "Add libcue parsing capability"       OFF )
 option (WITH_FFMPEG     "Add ffmpeg reading capabilities"      ON )
