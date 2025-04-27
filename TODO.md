@@ -14,7 +14,6 @@ expect that I really do anything of what I noted here any time soon.
 ## Technical
 
 - Make project compileable on Windows
-- Python bindings ?
 
 
 ## Features
