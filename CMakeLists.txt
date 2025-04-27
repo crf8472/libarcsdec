@@ -223,6 +223,7 @@ get_directory_property (HAS_PARENT PARENT_DIRECTORY )
 if (HAS_PARENT )
 	## Make project's includes available to PARENT
 	target_include_directories (${PROJECT_NAME}
+		## public headers:
 		INTERFACE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
 	)
 
@@ -235,9 +236,8 @@ target_include_directories (${PROJECT_NAME}
 		$<BUILD_INTERFACE:${PROJECT_INCLUDE_BINARY_DIR}>
 		$<INSTALL_INTERFACE:${PROJECT_INCLUDE_INSTALL_SUBDIR}>
 	PRIVATE
-		$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}> ## for flexbisondriver.hpp
-		$<BUILD_INTERFACE:${PROJECT_GEN_SOURCES_DIR}>
-		## for generated sources
+		$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>      ## private headers
+		$<BUILD_INTERFACE:${PROJECT_GEN_SOURCES_DIR}> ## generated sources TODO
 	)
 
 set_target_properties (${PROJECT_NAME} PROPERTIES

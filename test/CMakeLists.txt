@@ -137,9 +137,9 @@ foreach (_testcase ${TEST_SETS} )
 	set_property (TARGET ${_testcase}_test PROPERTY CXX_STANDARD 17 )
 
 	target_include_directories (${_testcase}_test
-		PRIVATE ${PROJECT_INCLUDE_BINARY_DIR} ## public headers
-		PRIVATE ${COMPONENT_SOURCE_DIR}       ## private headers
-		PRIVATE ${PROJECT_GEN_SOURCES_DIR}    ## generated sources
+		PRIVATE ${PROJECT_INCLUDE_BINARY_DIR}      ##  public libarcsdec headers
+		PRIVATE ${COMPONENT_SOURCE_DIR}            ## private libarcsdec headers
+		PRIVATE ${PROJECT_GEN_SOURCES_DIR}         ## generated sources
 		PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include" ## test headers
 	)
 
