@@ -437,7 +437,8 @@ using FunctionReturningUniquePtr = std::unique_ptr<T>(*)();
  * Format type.
  *
  * \note
- * This class is non-final but does not support polymorphic deletion.
+ * This class does not support polymorphic deletion. It is not suitable to
+ * derive subclasses from it.
  *
  * \see RegisterDescriptor
  * \see RegisterFormat
