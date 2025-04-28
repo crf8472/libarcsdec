@@ -474,7 +474,7 @@ MinGW.
 [1]: https://include-what-you-use.org/
 [2]: https://github.com/catchorg/Catch2
 [3]: https://mcss.mosra.cz/doxygen/
-[4]: https://crf8472.github.io/crf8472/libarcsdec/current/
+[4]: https://crf8472.github.io/libarcsdec/current/
 [5]: https://github.com/crf8472/libarcstk
 [6]: https://en.wikipedia.org/wiki/Compact_Disc_Digital_Audio
 [7]: https://github.com/libnitsk/libcue
