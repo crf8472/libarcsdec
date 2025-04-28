@@ -140,7 +140,7 @@ private:
 
 
 /**
- * \brief Inteface for providers of sample sequences.
+ * \brief Interface for providers of sample sequences.
  *
  * A SampleProvider is a source for sample sequences and updated AudioSize
  * values. It can signal different events while processing the audio input.
