@@ -5,15 +5,14 @@
 message (STATUS "Doxygen version requires index deduplication" )
 
 
-set (DOXYGEN_XML_DEDUP_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/dedup_index.py"
-	PARENT_SCOPE )
-
+set (DOXYGEN_XML_DEDUP_SCRIPT ${CMAKE_CURRENT_BINARY_DIR}/dedup_index.py )
+set (DOXYGEN_XML_DEDUP_SCRIPT ${DOXYGEN_XML_DEDUP_SCRIPT} PARENT_SCOPE )
 
 ## --- Setup deduplication script
 
 configure_file (
 	"${CMAKE_CURRENT_SOURCE_DIR}/dedup_index.py.in"
-	"${DOXYGEN_XML_DEDUP_SCRIPT}"
+	${DOXYGEN_XML_DEDUP_SCRIPT}
 	@ONLY
 )
 

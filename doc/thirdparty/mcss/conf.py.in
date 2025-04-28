@@ -18,7 +18,7 @@ LINKS_NAVBAR2    = [
 ]
 
 ## custom, not m.css
-my_CUSTOM_STYLESHEET = '@CUSTOM_STYLESHEET@'
+my_CUSTOM_STYLESHEET = '@MCSS_CUSTOM_STYLESHEET@'
 
 ## Reset m.css stylesheets option only if a stylesheet was explicitly defined
 if not my_CUSTOM_STYLESHEET=='':

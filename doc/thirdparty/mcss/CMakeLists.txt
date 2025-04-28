@@ -1,4 +1,5 @@
-## CMake file for m.css
+## CMake file for building the documentation with m.css
+## vim:fdm=marker
 ##
 ## Use HTML5/CSS3 from m.css for generating HTML from Doxygen XML output
 ##
@@ -50,7 +51,7 @@ add_custom_target (libarcsdec_mcss_create_html DEPENDS ${OUTPUT_MAINPAGE} )
 add_dependencies  (libarcsdec_mcss_doc libarcsdec_mcss_create_html )
 
 
-## --- Define m.css to be checked out/updated while configuring
+## --- Define m.css to be checked out/updated while configuring {{{1
 
 if (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.11.0" )
 
@@ -116,8 +117,14 @@ endif()
 
 
 
+## --- Configure Doxyfile, conf.py and custom config {{{1
+
 ## Create Doxyfile for m.css
 configure_file ("${DOXYFILE_TEMPLATE}"  "${DOXYFILE}"  @ONLY )
+
+
+## Configure custom colors
+#add_subdirectory (custom-colors )
 
 
 ## Create conf.py for m.css
@@ -125,13 +132,8 @@ set (CONFPY_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/conf.py.in" )
 configure_file ("${CONFPY_SOURCE}" "${CONFPY}"  @ONLY )
 
 
-## --- Configure custom colors
-#add_subdirectory (custom-colors )
-## TODO Activate this for custom colors
 
-
-
-## --- Set up python environment
+## --- Set up python environment {{{1
 
 add_requirements_target (libarcsdec_mcss_requirements
 	"${CMAKE_CURRENT_SOURCE_DIR}/requirements.txt"
@@ -141,7 +143,7 @@ add_dependencies (libarcsdec_mcss_create_html libarcsdec_mcss_requirements )
 
 
 
-## --- Build rule for running m.css
+## --- Build rule for running m.css {{{1
 
 if (DOXYGEN_NEEDS_XML_DEDUP )
 
@@ -154,9 +156,9 @@ if (DOXYGEN_NEEDS_XML_DEDUP )
 
 	add_custom_command (
 		OUTPUT  "${OUTPUT_MAINPAGE}"
-		COMMAND "${PYTHON_CMD}" "${MCSS_CMD}" --no-doxygen "${CONFPY}"
-				2> "${PROJECT_LOG_DIR}/MCSS.log"
 		DEPENDS ${OUTPUT_INDEX} ${DOC_SOURCES}
+		COMMAND "${PYTHON_CMD}"
+		ARGS    "${MCSS_CMD}" --no-doxygen "${CONFPY}" 2> "${PROJECT_LOG_DIR}/MCSS.log"
 		WORKING_DIRECTORY "${DOC_GEN_DIR}"
 		COMMENT "${DOC_COMMENT}"
 		VERBATIM
@@ -178,11 +180,11 @@ else()
 
 	add_custom_command (
 		OUTPUT  "${OUTPUT_MAINPAGE}"
-		COMMAND "${PYTHON_CMD}" "${MCSS_CMD}" "${CONFPY}"
-				2> "${PROJECT_LOG_DIR}/MCSS.log"
 		DEPENDS "${DOC_DOXYFILE_BASE}"
 				"${DOXYFILE}"
 				${DOC_SOURCES}
+		COMMAND "${PYTHON_CMD}"
+		ARGS    "${MCSS_CMD}" "${CONFPY}" 2> "${PROJECT_LOG_DIR}/MCSS.log"
 		WORKING_DIRECTORY "${DOC_GEN_DIR}"
 		COMMENT "${DOC_COMMENT}"
 		VERBATIM
