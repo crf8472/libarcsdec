@@ -12,6 +12,8 @@ find_package (Doxygen )
 #find_package (Doxygen 1.9.1...<1.9.7 ) # 1.9.7 crashes m.css
 #find_package (Doxygen 1.8.15...1.8.20 ) # OK too
 
+add_custom_target (doc )
+
 ## --- Some Variables {{{1
 
 ## Target directory for generated documentation
