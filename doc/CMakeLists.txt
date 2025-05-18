@@ -12,8 +12,6 @@ find_package (Doxygen )
 #find_package (Doxygen 1.9.1...<1.9.7 ) # 1.9.7 crashes m.css
 #find_package (Doxygen 1.8.15...1.8.20 ) # OK too
 
-add_custom_target (doc )
-
 ## --- Some Variables {{{1
 
 ## Target directory for generated documentation
@@ -312,6 +310,11 @@ if (NOT LOAD_GENERATORS )
 endif()
 
 ## 1}}}
+
+## Add doc if it was not already added by libarcstk-submodule
+if (NOT TARGET doc)
+	add_custom_target (doc )
+endif()
 
 add_dependencies (doc libarcsdec_create_log_dir libarcsdec_doc )
 
