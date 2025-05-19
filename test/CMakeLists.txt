@@ -1,4 +1,5 @@
 ## CMake build script for configuring and building tests
+##
 ## vim:fdm=marker
 
 cmake_minimum_required (VERSION 3.10 )
@@ -9,6 +10,7 @@ cmake_minimum_required (VERSION 3.10 )
 cmake_policy (SET CMP0003 NEW )
 
 ## Link libraries by full path even in implicit directories.
+## See: https://cmake.org/cmake/help/latest/policy/CMP0060.html
 cmake_policy (SET CMP0060 NEW )
 ## 1}}}
 
@@ -164,9 +166,9 @@ foreach (_testcase ${TEST_SETS} )
 	## Add test to ctest set
 	add_test (
 		NAME    ${_testcase}_test
-		COMMAND ${_testcase}_test
-			-o "${PROJECT_BINARY_DIR}/report.${_testcase}.xml"
-			-r junit
+		COMMAND "${_testcase}_test"
+				-o "${PROJECT_BINARY_DIR}/report.${_testcase}.xml"
+				-r junit
 		WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/data"
 	)
 
