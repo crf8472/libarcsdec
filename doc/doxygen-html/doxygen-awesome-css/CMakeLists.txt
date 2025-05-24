@@ -1,4 +1,6 @@
-## CMake file for doxygen-awesome-css
+## CMake script for doxygen-awesome-css
+##
+## vim:fdm=marker
 ##
 ## CSS files for Doxygen HTML output
 ##
@@ -10,36 +12,39 @@
 ## Provides:
 ## -
 
-
 cmake_minimum_required (VERSION 3.10 )
+## --- Policies {{{1
 
+## Set the timestamps of downloaded files to their respective server time.
+## https://cmake.org/cmake/help/latest/policy/CMP0135.html
 cmake_policy (SET CMP0135 NEW )
+## 1}}}
 
-message (STATUS "Will use doxygen-awesome-css for themeing doxygen HTML" )
+message (STATUS "Use doxygen-awesome-css for themeing doxygen HTML" )
 
 find_package (Git REQUIRED )
 
 
-## --- Overwrite default values from parent
+## --- Overwrite Default Values From Parent {{{1
 
 set (DOC_COMMENT       "${DOC_COMMENT}, using doxygen-awesome-css" )
 
+
 ## --- Some variables
 
-set (OUTPUT_MAINPAGE   "${DOXYGEN_OUTPUT_DIRECTORY}/html/index.html" )
 set (DOXYFILE_TEMPLATE "${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in" )
 set (DOXYFILE          "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile" )
 
 set (TARGET_CSS_DIR    "${DOXYGEN_OUTPUT_DIRECTORY}/html/css" )
 
 
-## Github Repo URL
+## --- Github Repo URL
 set (AWESOME_GITHUB_URL "https://github.com/jothepro/doxygen-awesome-css" )
 
 
-## --- Define doxygen-awesome-css to be checked out/updated while configuring
+## --- Define doxygen-awesome-css to be checked out/updated on configure {{{1
 
-if (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.11.0" )
+if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.11.0" )
 
 	## --- Use FetchContent if possible
 
@@ -51,7 +56,7 @@ if (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.11.0" )
 		URL "${AWESOME_GITHUB_URL}/archive/refs/heads/main.zip"
 	)
 
-	if (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.14" )
+	if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.14.0" )
 
 		FetchContent_MakeAvailable (doxygen-awesome-css )
 
@@ -70,11 +75,11 @@ if (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.11.0" )
 
 endif()
 
-## Create Doxyfile for doxygen-awesome-css
+## --- Configure Doxyfile for doxygen-awesome-css {{{1
 configure_file ("${DOXYFILE_TEMPLATE}"  "${DOXYFILE}"  @ONLY )
 
 
-## --- list of style files
+## --- List of Style Files {{{1
 
 ## Create list of theme files required to deploy
 ## TODO Select only those files required for the concrete style
@@ -82,14 +87,17 @@ file (GLOB STYLE_FILES RELATIVE "${SOURCE_CSS_DIR}"
 	"${SOURCE_CSS_DIR}/*.css" "${SOURCE_CSS_DIR}/*.js" )
 
 
-## --- target: deploy style files
+## --- Target: Deploy Style Files {{{1
 
 foreach (FILE ${STYLE_FILES} )
 	add_custom_command(
-		OUTPUT  ${TARGET_CSS_DIR}/${FILE}
-		COMMAND ${CMAKE_COMMAND} -E copy
+		OUTPUT  "${TARGET_CSS_DIR}/${FILE}"
+		COMMAND "${CMAKE_COMMAND}"
+		ARGS    -E copy
 				"${SOURCE_CSS_DIR}/${FILE}"
-				"${TARGET_CSS_DIR}/${FILE}" )
+				"${TARGET_CSS_DIR}/${FILE}"
+		VERBATIM
+	)
 endforeach (FILE )
 
 ## Make list of source files to a list of target files
@@ -98,21 +106,25 @@ list(TRANSFORM STYLE_FILES PREPEND "${TARGET_CSS_DIR}/" )
 add_custom_target (libarcsdec_deploy_css_files ALL DEPENDS ${STYLE_FILES} )
 
 
-## --- target: create css directory
+## --- Target: Create CSS Directory {{{1
 
 add_custom_command (
-	OUTPUT  ${TARGET_CSS_DIR}
-	COMMAND ${CMAKE_COMMAND}
-	ARGS    -E make_directory ${TARGET_CSS_DIR} )
+	OUTPUT  "${TARGET_CSS_DIR}"
+	COMMAND "${CMAKE_COMMAND}"
+	ARGS    -E make_directory "${TARGET_CSS_DIR}"
+	VERBATIM
+)
 
-add_custom_target (libarcsdec_create_css_dir ALL DEPENDS ${TARGET_CSS_DIR} )
+add_custom_target (libarcsdec_create_css_dir ALL DEPENDS "${TARGET_CSS_DIR}" )
 
 add_dependencies  (libarcsdec_deploy_css_files libarcsdec_create_css_dir )
 
 
-## -- Pass results to parent
+## --- Pass results to parent {{{1
 
 set (DOC_DOXYFILE_INPUT "${DOXYFILE}" PARENT_SCOPE )
+## 1}}}
 
-add_dependencies  (libarcsdec_doxygen_create_html libarcsdec_deploy_css_files )
+add_custom_target (libarcsdec_doxygen_awesome_css )
+add_dependencies  (libarcsdec_doxygen_awesome_css libarcsdec_deploy_css_files )
 

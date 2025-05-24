@@ -8,7 +8,7 @@
 <!-- and a second time for inline namespace as arcstk::v_1_0_0::Class while-->
 <!-- the content of these compounds is identical. This script respects the -->
 <!-- first occurrence for each refid and removes all following duplicates. -->
-<!-- Thus, the version without the inline namespace is kept.	           -->
+<!-- Thus, the version without the inline namespace is kept.               -->
 
 <!-- Required for doxygen >= 1.8.16.                                       -->
 
@@ -21,6 +21,8 @@
 <xsl:output method="xml" standalone="yes" indent="yes" />
 <xsl:strip-space elements="*"/>
 
+<!-- Just copy everything -->
+
 <xsl:key name="keyCompoundById" match="compound" use="@refid"/>
 
 <xsl:template match="node()|@*">
@@ -28,6 +30,8 @@
 		<xsl:apply-templates select="node()|@*"/>
 	</xsl:copy>
 </xsl:template>
+
+<!-- Remove any compound with the same refid, keep the last occurrence. -->
 
 <xsl:template match="compound[
 	not(generate-id() = generate-id(key('keyCompoundById', @refid)[1]))

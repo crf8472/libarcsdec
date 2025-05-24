@@ -1,21 +1,36 @@
-## CMake file for building the documentation
+## CMake script for building the documentation
+##
 ## vim:fdm=marker
+##
+## Prerequisites:
+## - target libarcsdec_create_log_dir
+##
+## Provides:
+## - targets: doc, libarcsdec_doc, libarcsdec_create_output_dir,
+##            libarcsdec_doc_generate_html, libarcsdec_doc_generate_pdf
 
 cmake_minimum_required (VERSION 3.12 )
 ## --- Policies {{{1
 
 ## Support IN_LIST if() operator required by FindDoxygen.cmake
+## https://cmake.org/cmake/help/latest/policy/CMP0057.html
 cmake_policy (SET CMP0057 NEW )
 ## 1}}}
 
-find_package (Doxygen )
-#find_package (Doxygen 1.9.1...<1.9.7 ) # 1.9.7 crashes m.css
-#find_package (Doxygen 1.8.15...1.8.20 ) # OK too
+message (STATUS "Build documentation" )
+
+
+find_package (Doxygen ) ## must be >= 1.9.8
+
+
+## --- Provide target
+add_custom_target (doc )
+
 
 ## --- Some Variables {{{1
 
 ## Target directory for generated documentation
-set (DOC_GEN_DIR          ${PROJECT_BINARY_DIR}/generated-docs )
+set (DOC_GEN_DIR          "${PROJECT_BINARY_DIR}/generated-docs" )
 
 ## Construct comment for doc target
 set (DOC_COMMENT          "Build documentation for APIs" )
@@ -24,27 +39,30 @@ set (DOC_COMMENT          "Build documentation for APIs" )
 set (DOC_SOURCES          ${INTERFACE_HEADERS} )
 
 ## Define the target name and location of the base Doxyfile to be included
-set (DOC_DOXYFILE_BASE_TEMPLATE ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in )
+set (DOC_DOXYFILE_BASE_TEMPLATE "${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in" )
 
 ## Define the target name and location of the base Doxyfile to be included
-set (DOC_DOXYFILE_BASE    ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile-base )
+set (DOC_DOXYFILE_BASE    "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile-base" )
 
 
 
 ## --- Add Default 'doc' Target {{{1
 
 add_custom_target (libarcsdec_doc )
+add_dependencies  (libarcsdec_doc libarcsdec_create_log_dir )
 
 
 
 ## --- Generate Documentation Output Directory {{{1
 
 add_custom_command (
-	OUTPUT  ${DOC_GEN_DIR}
-	COMMAND ${CMAKE_COMMAND}
-	ARGS    -E make_directory ${DOC_GEN_DIR} )
+	OUTPUT  "${DOC_GEN_DIR}"
+	COMMAND "${CMAKE_COMMAND}"
+	ARGS    -E make_directory "${DOC_GEN_DIR}"
+	VERBATIM
+)
 
-add_custom_target (libarcsdec_create_output_dir DEPENDS ${DOC_GEN_DIR} )
+add_custom_target (libarcsdec_create_output_dir DEPENDS "${DOC_GEN_DIR}" )
 
 
 
@@ -68,7 +86,7 @@ add_subdirectory (texts ) ## Will update DOXYGEN_* variables or add more
 
 
 
-## --- Setup Building Internal Docs if Requested {{{1
+## --- Setup Building Internal Docs if Requested (TODO broken) {{{1
 
 if (WITH_INTERNAL_DOCS )
 
@@ -107,7 +125,7 @@ endif (WITH_INTERNAL_DOCS)
 ## Normalize DOXYGEN_INPUT list
 string (REPLACE ";" " " DOXYGEN_INPUT "${DOXYGEN_INPUT}/" )
 
-configure_file ( ${DOC_DOXYFILE_BASE_TEMPLATE} ${DOC_DOXYFILE_BASE} @ONLY )
+configure_file ( "${DOC_DOXYFILE_BASE_TEMPLATE}" "${DOC_DOXYFILE_BASE}" @ONLY )
 
 
 
@@ -126,6 +144,9 @@ foreach (_generator IN LISTS USE_DOC_TOOL )
 		message (STATUS "Generate documentation by ${_generator_dir}" )
 
 		list (APPEND LOAD_GENERATORS "${_generator_dir}" )
+	else()
+
+		message (WARNING "DOC_TOOL \"${_generator}\" not found, ignore" )
 	endif()
 
 	unset (_generator_dir )
@@ -135,186 +156,72 @@ unset (_generator )
 
 
 
+## --- Declare doc targets for HTML and PDF {{{1
 
+## FIXME Activate only those targets whose format is actually requested
 
+add_custom_target (libarcsdec_doc_generate_html )
+add_dependencies  (libarcsdec_doc libarcsdec_doc_generate_html )
 
-## --- Configure Python Sandbox Used by Some Generators {{{1
-
-if (LOAD_GENERATORS )
-
-	## Configure virtual Python Sandbox
-	add_subdirectory (thirdparty/python-virtualenv EXCLUDE_FROM_ALL )
-	## Now, PYTHON_ENV_AVAILABLE is "YES"
-endif()
-
-
-
-## --- Setup Deduplication for Doxygen's XML if Required {{{1
-
-## Variable DOXYGEN_NEEDS_XML_DEDUP can be used in subdirectory scopes.
-
-## DOXYGEN_NEEDS_XML_DEDUP indicates that:
-##   - XML output is requested (hence at least one thirdparty tool is used)
-##   - XML output requires post processing
-##
-## Note: DOXYGEN_NEEDS_XML_DEDUP must be set _before_ actually loading the
-## CMAKE scripts for generators with add_subdirectory()!
-
-if (LOAD_GENERATORS AND DOXYGEN_VERSION VERSION_GREATER_EQUAL 1.8.16 )
-
-	## The "duplication bug" was introduced in 1.8.16
-
-	set (DOXYGEN_NEEDS_XML_DEDUP TRUE ) ## Use this in subdirectories!
-endif()
-
-
-if (DOXYGEN_NEEDS_XML_DEDUP )
-
-	add_subdirectory (thirdparty/doxygen-dedup EXCLUDE_FROM_ALL )
-
-else()
-
-	if (NOT LOAD_GENERATORS )
-
-		message (STATUS "No index deduplication since no generators requested" )
-	else()
-
-		message (STATUS "Doxygen version does not require index deduplication" )
-	endif()
-endif()
+add_custom_target (libarcsdec_doc_generate_pdf )
+add_dependencies  (libarcsdec_doc libarcsdec_doc_generate_pdf )
 
 
 
 ## --- Provide Macro for Subdir CMake Scripts to Request Doxygen Runs {{{1
+## Note that this target can produce XML as well as HTML, depends on Doxyfile.
 
-macro (add_doxygen_target DOXY_TARGET DOXYFILE INDEXFILE )
+function (add_doxygen_target DOXY_TARGET DOXYFILE INDEXFILE )
 
+	add_custom_target (${DOXY_TARGET} DEPENDS "${INDEXFILE}" )
+
+	add_dependencies  (${DOXY_TARGET}
+			libarcsdec_create_log_dir
+			libarcsdec_create_output_dir
+			libarcsdec_static_pages_files
+	)
+
+	## Produce INDEXFILE (either XML or HTML) by running doxygen
 	add_custom_command (
-		OUTPUT  ${INDEXFILE}
-		COMMAND Doxygen::doxygen ${DOXYFILE}
-		DEPENDS ${DOC_DOXYFILE_BASE} ${DOXYFILE} ${DOC_SOURCES}
-		WORKING_DIRECTORY ${DOC_GEN_DIR}
+		OUTPUT  "${INDEXFILE}"
+		DEPENDS "${DOC_DOXYFILE_BASE}" "${DOXYFILE}" ${DOC_SOURCES}
+		COMMAND Doxygen::doxygen
+		ARGS    "${DOXYFILE}"
+		WORKING_DIRECTORY "${DOC_GEN_DIR}"
 		COMMENT "Run doxygen for target ${DOXY_TARGET}"
 		VERBATIM
 	)
-
-	## Handle possible deduplication requirement
-	if (DOXYGEN_NEEDS_XML_DEDUP )
-
-		## Setup doxygen run target
-		add_custom_target (${DOXY_TARGET}_run DEPENDS ${INDEXFILE} )
-		add_dependencies  (${DOXY_TARGET}_run
-			libarcsdec_create_log_dir
-			libarcsdec_create_output_dir
-			libarcsdec_static_pages_files
-		)
-
-		set (STAMP_FILE ${INDEXFILE}.deduplicated )
-
-		add_custom_command (
-			OUTPUT  ${STAMP_FILE}
-			COMMAND ${PYTHON_CMD}
-			ARGS    ${DOXYGEN_XML_DEDUP_SCRIPT} ${INDEXFILE}
-			COMMAND ${CMAKE_COMMAND}
-			ARGS    -E touch ${STAMP_FILE}
-			DEPENDS ${INDEXFILE}
-			WORKING_DIRECTORY "${DOC_GEN_DIR}"
-			COMMENT "Remove duplicate compounds in ${INDEXFILE}"
-			VERBATIM
-		)
-
-		## Setup deduplication target
-		add_custom_target (${DOXY_TARGET}_dedup DEPENDS ${STAMP_FILE} )
-		add_dependencies  (${DOXY_TARGET}_dedup ${DOXY_TARGET}_run )
-		if (PYTHON_ENV_AVAILABLE )
-
-			add_dependencies  (${DOXY_TARGET}_dedup
-				libarcsdec_doxygen-dedup_requirements )
-		endif()
-
-		## Setup doxygen target
-		add_custom_target (${DOXY_TARGET} )
-		add_dependencies  (${DOXY_TARGET} ${DOXY_TARGET}_dedup )
-
-		unset (STAMPFILE )
-	else()
-
-		add_custom_target (${DOXY_TARGET} DEPENDS ${INDEXFILE} )
-		add_dependencies  (${DOXY_TARGET}
-			libarcsdec_create_log_dir
-			libarcsdec_create_output_dir
-			libarcsdec_static_pages_files
-		)
-	endif()
-endmacro()
+endfunction()
 
 
 
-## --- Actually Load Generators {{{1
+## --- Prepare Actual Generators or Stock HTML {{{1
 
-foreach (_generator IN ITEMS ${LOAD_GENERATORS} )
+if (LOAD_GENERATORS )
 
-	## Subdir CMake can attach target "python-virtualenv" as requirement
-	add_subdirectory ("thirdparty/${_generator}" EXCLUDE_FROM_ALL )
-endforeach()
-unset (_generator )
+	## Configure virtual Python Sandbox
+	add_subdirectory (python-virtualenv EXCLUDE_FROM_ALL )
+	## Now, PYTHON_ENV_AVAILABLE is "YES"
 
+	## Each generator requires XML (FIXME: no, lualatex doesn't)
+	## TODO: Check: is doxygen-xml required by at least one generator?
+	add_subdirectory (doxygen-xml )
+	## Now, list DOXYGEN_XML_POSTPROCESSING_TASKS is provided (maybe empty)
 
+	foreach (_generator IN ITEMS ${LOAD_GENERATORS} )
 
-## --- Define libarcsdec_doxygen_create_html for Doxygen Stock HTML {{{1
+		add_subdirectory ("thirdparty/${_generator}" EXCLUDE_FROM_ALL )
+	endforeach()
+	unset (_generator )
 
-## If no generator is requested, just produce stock HTML
+else() # If no Generators are Specified, Just Use Doxygen's Stock HTML
 
-if (NOT LOAD_GENERATORS )
-
-	message (STATUS "Will build documentation with pure doxygen (HTML)" )
-
-
-	## -- Target for output mainpage
-
-	set (_index_html ${DOXYGEN_OUTPUT_DIRECTORY}/html/index.html )
-
-	add_custom_target (libarcsdec_doxygen_create_html DEPENDS ${_index_html} )
-
-
-	## -- Load stylesheets if any
-
-	## Fallback in case subdirectory does not overwrite it
-	set (DOC_DOXYFILE_INPUT ${DOC_DOXYFILE_BASE} )
-
-	## Comment or uncomment this line to use a alternative layouts to the
-	## doxygen stock HTML layout. The subscope may re-set DOC_DOXYFILE_INPUT
-	## and add dependencies to target 'libarcsdec_doxygen_create_html'.
-	#add_subdirectory ("thirdparty/doxygen-awesome-css" )
-
-	message (STATUS "Use doxygen file: ${DOC_DOXYFILE_INPUT}" )
-
-
-	## -- Add commands + organize targets
-
-	add_custom_command (
-		OUTPUT  ${_index_html}
-		COMMAND Doxygen::doxygen ${DOC_DOXYFILE_INPUT}
-		DEPENDS ${DOC_DOXYFILE_INPUT} ${DOC_SOURCES}
-		WORKING_DIRECTORY ${DOC_GEN_DIR}
-		COMMENT "Run doxygen to create HTML"
-		VERBATIM
-	)
-
-	add_dependencies  (libarcsdec_doxygen_create_html
-							libarcsdec_create_log_dir
-							libarcsdec_create_output_dir )
-
-	add_dependencies  (libarcsdec_doc libarcsdec_doxygen_create_html )
-
+	add_subdirectory (doxygen-html )
 endif()
-
 ## 1}}}
 
 ## Add doc if it was not already added by libarcstk-submodule
 if (NOT TARGET doc)
 	add_custom_target (doc )
 endif()
-
-add_dependencies (doc libarcsdec_create_log_dir libarcsdec_doc )
 

@@ -1,14 +1,20 @@
 ## CMake file for sphinx/exhale
 ##
+## vim:fdm=marker
+##
 ## Use sphinx to build the Read-the-docs documentation from Doxygen XML output
 ##
 ## Prerequisites from PARENT:
 ## - Targets:   'doc'
 ## - Variables: DOC_COMMENT, DOC_DOXYFILE_BASE, DOC_DOXYFILE_BASE_TEMPLATE,
-##              DOC_GEN_DIR, DOC_SOURCES, DOXYGEN_NEEDS_XML_DEDUP
+##              DOC_GEN_DIR, DOC_SOURCES
 ##
 ## Provides:
-## - Targets: 'libarcstk_rtd_doc'
+## - Targets: 'libarcsdec_rtd_doc'
+
+cmake_minimum_required (VERSION 3.10 )
+
+message (STATUS "Will build documentation with sphinx" )
 
 if (WIN32 )
 
@@ -16,42 +22,37 @@ if (WIN32 )
 		"Sphinx support is currently not available for Windows" )
 endif()
 
-
-cmake_minimum_required (VERSION 3.10 )
-
-message (STATUS "Will build documentation with sphinx" )
 message (WARNING "Sphinx support for Read-the-docs is experimental and broken" )
 
 
-
-## --- Overwrite default values from parent
+## --- Overwrite Default Values From Parent {{{1
 
 set (DOXYGEN_OUTPUT_DIRECTORY "${DOC_GEN_DIR}/read-the-docs" )
 set (DOC_COMMENT              "${DOC_COMMENT}, using sphinx" )
 
-## --- Some variables
 
-set (OUTPUT_MAINPAGE   "${DOXYGEN_OUTPUT_DIRECTORY}/html/index.html" )
-set (OUTPUT_INDEX      "${DOXYGEN_OUTPUT_DIRECTORY}/xml/index.xml" )
-set (DOXYFILE_TEMPLATE "${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in" )
 
+## --- Some Variables {{{1
+
+set (INDEX_HTML               "${DOXYGEN_OUTPUT_DIRECTORY}/html/index.html" )
+set (INDEX_XML                "${DOXYGEN_OUTPUT_DIRECTORY}/xml/index.xml" )
+set (DOXYFILE_TEMPLATE        "${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in" )
 set (SPHINX_BINARY_DIR        "${DOXYGEN_OUTPUT_DIRECTORY}" )
 set (SPHINX_LIBRARY_ROOT_PAGE "${SPHINX_BINARY_DIR}/html/api/library_root.html" )
 
 
 
-## --- Set up targets
+## --- Set up Targets {{{1
 
-add_custom_target (libarcsdec_rtd_doc )
+add_custom_target (libarcsdec_rtd_generate_html DEPENDS "${INDEX_HTML}" )
+add_dependencies  (libarcsdec_doc_generate_html libarcsdec_rtd_generate_html )
 
-add_custom_target (libarcsdec_rtd_create_html DEPENDS "${OUTPUT_MAINPAGE}" )
-add_dependencies  (libarcsdec_rtd_doc libarcsdec_rtd_create_html )
 
-## --- Install files and directories in sphinx build directory
+
+## --- Install Files and Directories in Sphinx Build Directory {{{1
 
 file (MAKE_DIRECTORY "${SPHINX_BINARY_DIR}/source/_static" )
 file (MAKE_DIRECTORY "${SPHINX_BINARY_DIR}/source/_templates" )
-#file (MAKE_DIRECTORY "${SPHINX_BINARY_DIR}/build" )
 
 configure_file ("docroot/Makefile.in"
 	"${SPHINX_BINARY_DIR}/Makefile"
@@ -65,21 +66,24 @@ configure_file ("docroot/source/index.rst.in"
 
 
 
-## --- Set up python environment
+## --- Set up Python Environment {{{1
 
 add_requirements_target (libarcsdec_rtd_requirements
 	"${CMAKE_CURRENT_SOURCE_DIR}/requirements.txt"
 )
 
-add_dependencies  (libarcsdec_rtd_create_html libarcsdec_rtd_requirements )
+add_dependencies  (libarcsdec_rtd_generate_html
+	libarcsdec_rtd_requirements
+	libarcsdec_doxygen_provide_xml
+)
 
 
 
-## --- Build rule for running exhale
+## --- Build Rule for Running Exhale {{{1
 
 set (EXHALE_EXECUTES_DOXYGEN "True" )
 
-if (DOXYGEN_NEEDS_XML_DEDUP )
+if (DOXYGEN_XML_POSTPROCESSING_TASKS )
 
 	## Doxygen needs to run separately from exhale since we want to post-process
 	## its XML output.
@@ -88,14 +92,13 @@ if (DOXYGEN_NEEDS_XML_DEDUP )
 	set (EXHALE_EXECUTES_DOXYGEN "False" )
 	set (DOXYFILE "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile" )
 
-	add_doxygen_target (libarcsdec_rtd_create_xml ${DOXYFILE} ${OUTPUT_INDEX} )
-
-	add_dependencies (libarcsdec_rtd_doc libarcsdec_rtd_create_xml )
+	add_doxygen_xml_target (libarcsdec_rtd_generate_xml
+		"${DOXYFILE}" "${INDEX_XML}" )
 
 	add_custom_command (
-		OUTPUT  "${OUTPUT_MAINPAGE}" "${SPHINX_LIBRARY_ROOT_PAGE}"
+		OUTPUT  "${INDEX_HTML}" "${SPHINX_LIBRARY_ROOT_PAGE}"
 		COMMAND make html
-		DEPENDS "${OUTPUT_INDEX}"
+		DEPENDS "${INDEX_XML}"
 				"${SPHINX_BINARY_DIR}/Makefile"
 				"${SPHINX_BINARY_DIR}/source/index.rst"
 				"${SPHINX_BINARY_DIR}/source/conf.py"
@@ -114,8 +117,19 @@ else()
 
 	set (DOXYFILE "${SPHINX_BINARY_DIR}/source/Doxyfile" )
 
+	## Since we do not use add_doxygen_target, we have to take care for the
+	## dependencies manually
+	add_dependencies (libarcsdec_rtd_generate_html
+		## add deps from PARENT
+		libarcsdec_create_output_dir
+		libarcsdec_create_log_dir
+		libarcsdec_static_pages_files
+		## add deps from here
+		libarcsdec_mcss_requirements
+	)
+
 	add_custom_command (
-		OUTPUT  "${OUTPUT_MAINPAGE}" "${SPHINX_LIBRARY_ROOT_PAGE}"
+		OUTPUT  "${INDEX_HTML}" "${SPHINX_LIBRARY_ROOT_PAGE}"
 		COMMAND make html
 		DEPENDS "${SPHINX_BINARY_DIR}/Makefile"
 				"${SPHINX_BINARY_DIR}/source/index.rst"
@@ -132,15 +146,13 @@ else()
 endif()
 
 
-## Create Doxyfile for sphinx
+## --- Configure Doxyfile for sphinx {{{1
 configure_file ("${DOXYFILE_TEMPLATE}" "${DOXYFILE}" @ONLY )
 
 
-## Create conf.py for sphinx
+## --- Configure conf.py for sphinx {{{1
 configure_file ("docroot/source/conf.py.in"
 	"${SPHINX_BINARY_DIR}/source/conf.py"
 	@ONLY
 )
-
-add_dependencies  (libarcsdec_doc libarcsdec_rtd_doc )
 

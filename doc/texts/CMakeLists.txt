@@ -1,4 +1,5 @@
-## CMake
+## CMake script for providing the main page and all static page files
+##
 ## vim:fdm=marker
 ##
 ## Provides:
@@ -6,28 +7,34 @@
 ## - Target: libarcsdec_static_pages_files
 
 
-set (DOC_TEXTS_MAINPAGE        "${CMAKE_CURRENT_BINARY_DIR}/MAINPAGE.md" )
-
-
-## --- Provide Static Mainpage
-
-configure_file (MAINPAGE.md.in ${DOC_TEXTS_MAINPAGE} @ONLY )
-
+cmake_minimum_required (VERSION 3.12 )
 
 add_custom_target (libarcsdec_static_pages_files )
 add_dependencies  (libarcsdec_static_pages_files libarcsdec_create_output_dir )
 
 
-## --- Provide Markdown Files from Project Root Folder {{{1
+## --- Configure Static Mainpage {{{1
+
+set (DOC_TEXTS_MAINPAGE        "${CMAKE_CURRENT_BINARY_DIR}/MAINPAGE.md" )
+
+configure_file (MAINPAGE.md.in "${DOC_TEXTS_MAINPAGE}" @ONLY )
+
+
+
+## --- Provide Text Files from Project Root Folder {{{1
 
 foreach (FILE IN ITEMS "BUILD" "CODING" )
 
+	set (DOC_SOURCES  ${DOC_SOURCES} "${PROJECT_ROOT_DIR}/${FILE}.md" )
+
 	add_custom_command(
 		TARGET libarcsdec_static_pages_files PRE_BUILD
-		COMMAND ${CMAKE_COMMAND}
+		COMMAND "${CMAKE_COMMAND}"
 		ARGS -E copy
-			"${CMAKE_SOURCE_DIR}/${FILE}.md"
-			"${CMAKE_CURRENT_BINARY_DIR}/${FILE}.md" )
+			"${PROJECT_ROOT_DIR}/${FILE}.md"
+			"${CMAKE_CURRENT_BINARY_DIR}/${FILE}.md"
+		VERBATIM
+	)
 endforeach()
 
 
@@ -35,27 +42,27 @@ endforeach()
 
 foreach (FILE IN ITEMS "How_to_use" )
 
+	set (DOC_SOURCES  ${DOC_SOURCES} "${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.md" )
+
 	add_custom_command(
 		TARGET libarcsdec_static_pages_files PRE_BUILD
-		COMMAND ${CMAKE_COMMAND}
+		COMMAND "${CMAKE_COMMAND}"
 		ARGS -E copy
 			"${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.md"
 			"${CMAKE_CURRENT_BINARY_DIR}/${FILE}.md"
+		VERBATIM
 	)
 endforeach()
 
+set (DOC_SOURCES ${DOC_SOURCES} "${DOC_TEXTS_MAINPAGE}" )
 
 
-## --- Add Static Page Folder to DOXYGEN_INPUT {{{1
 
-set (DOXYGEN_USE_MDFILE_AS_MAINPAGE
-	"${DOC_TEXTS_MAINPAGE}" PARENT_SCOPE )
+## --- Update Doxygen Configuration Variables {{{1
 
-set (DOXYGEN_INPUT
-	"${DOXYGEN_INPUT} ${CMAKE_CURRENT_BINARY_DIR}" PARENT_SCOPE )
+set (DOXYGEN_USE_MDFILE_AS_MAINPAGE "${DOC_TEXTS_MAINPAGE}" PARENT_SCOPE )
 
-set (DOC_SOURCES
-	${DOC_SOURCES} ${DOC_TEXTS_MAINPAGE} PARENT_SCOPE )
+set (DOXYGEN_INPUT "${DOXYGEN_INPUT} ${CMAKE_CURRENT_BINARY_DIR}" PARENT_SCOPE )
 
 ## 1}}}
 
