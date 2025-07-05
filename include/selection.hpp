@@ -339,6 +339,8 @@ public:
 	/**
 	 * \brief Constructor.
 	 *
+	 * \param[in] args Arguments passed to the constructor
+	 *
 	 * \tparam Args Arguments passed to the selector's constructor.
 	 */
 	template <typename... Args>
@@ -694,6 +696,8 @@ struct CreateReader final
 	 * \param[in] selection FileReaderSelection to select from
 	 * \param[in] formats   Set of supported formats
 	 * \param[in] readers   Set of available file readers
+	 *
+	 * \return Instance of the specified ReaderType
 	 */
 	auto operator()(const std::string& filename,
 			const FileReaderSelection& selection,
@@ -734,8 +738,12 @@ struct CreateReader final
 /**
  * \brief Instantiate FileReaderDescriptor.
  *
+ * \param[in] args Input arguments
+ *
  * \tparam T    The type to instantiate
  * \tparam Args The constructor arguments
+ *
+ * \return FileReaderDescriptor
  */
 template <class T, typename... Args>
 std::unique_ptr<FileReaderDescriptor> make_descriptor(Args&&... args)

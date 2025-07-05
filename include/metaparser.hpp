@@ -243,12 +243,23 @@ inline auto cast_or_throw(const T value) -> S
 
 /**
  * \brief Convert MSF time to CDDA frames.
+ *
+ * \param[in] m Minutes
+ * \param[in] s Seconds
+ * \param[in] f Frames
+ *
+ * \return Total number of CDDA frames
  */
 long msf_to_frames(const int m, const int s, const int f);
 
 
 /**
- * \brief Convert CDDA frames to MSF frames.
+ * \brief Convert CDDA frames to MSF.
+ *
+ * \param[in]  frames Total number of CDDA frames to convert
+ * \param[out] m      Minutes
+ * \param[out] s      Seconds
+ * \param[out] f      Frames
  */
 void frames_to_msf(long frames, int* m, int* s, int* f);
 

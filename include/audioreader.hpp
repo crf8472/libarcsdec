@@ -163,11 +163,15 @@ protected:
 
 	/**
 	 * \brief Default implementation of attach_processor().
+	 *
+	 * \param[in] processor The processor to attach
 	 */
 	void attach_processor_impl(SampleProcessor& processor);
 
 	/**
 	 * \brief Use the internal SampleProcessor.
+	 *
+	 * \return Use the internal SampleProcessor
 	 */
 	SampleProcessor* use_processor();
 
@@ -423,6 +427,8 @@ public:
 
 	/**
 	 * \brief Returns the codec to validate.
+	 *
+	 * \return Codecs validated by this instance
 	 */
 	codec_set_type codecs() const;
 

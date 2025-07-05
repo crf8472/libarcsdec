@@ -422,6 +422,8 @@ public:
 	 * \param[in] types         Requested checksum types
 	 * \param[in,out] leadout   Leadout
 	 * \param[in] offsets       Offsets
+	 *
+	 * \return Calculated checksums
 	 */
 	Checksums calculate(const std::string& audiofilename,
 			const Settings& settings, const ChecksumtypeSet& types,

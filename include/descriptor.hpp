@@ -305,6 +305,9 @@ public:
 	/**
 	 * \brief TRUE if byte on position \c i of the sequence has value \c b.
 	 *
+	 * \param[in] i Position index
+	 * \param[in] b Byte value to check for
+	 *
 	 * \return TRUE if byte on position \c i of the sequence has value \c b,
 	 * otherwise FALSE.
 	 */
@@ -312,6 +315,8 @@ public:
 
 	/**
 	 * \brief TRUE if byte on position \c i of the sequence is a wildcard.
+	 *
+	 * \param[in] i Position index
 	 *
 	 * \return TRUE if byte on position \c i of the sequence is a wildcard,
 	 * otherwise FALSE.
@@ -322,6 +327,8 @@ public:
 	 * \brief Swap this instance with another.
 	 *
 	 * \param[in] rhs The other instance to swap with
+	 *
+	 * \return Instance after swapping
 	 */
 	ByteSeq& swap(ByteSeq& rhs) ; //TODO noexcept possible when C++17
 
@@ -466,6 +473,8 @@ public:
 	/**
 	 * \brief Read access to a single byte.
 	 *
+	 * \param[in] i Index position
+	 *
 	 * \return Read a single byte.
 	 */
 	ByteSequence::const_reference operator[](ByteSequence::size_type i) const;
@@ -474,6 +483,8 @@ public:
 	 * \brief Swap this instance with another.
 	 *
 	 * \param[in] rhs The other instance to swap with
+	 *
+	 * \return Instance after swapping
 	 */
 	Bytes& swap(Bytes& rhs) ; //TODO noexcept possible when C++17
 
@@ -515,6 +526,9 @@ namespace details
  *
  * Returns TRUE if the suffix of the filename equals one of the internal
  * suffices. The check is done case-insensitive.
+ *
+ * \param[in] suffices Set of filename suffices
+ * \param[in] filename Input filename to check
  *
  * \return TRUE if the filename suffix matches one of the internal suffices
  */
