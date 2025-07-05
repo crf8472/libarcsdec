@@ -28,7 +28,7 @@ set_property (TARGET libarcsdec_parsertoc
 
 target_include_directories (libarcsdec_parsertoc
 	PRIVATE
-		$<BUILD_INTERFACE:${PROJECT_INCLUDE_BINARY_DIR}> ## public headers
+		$<BUILD_INTERFACE:${PROJECT_INCLUDE_SOURCE_DIR}> ## public headers
 		$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>         ## private headers
 		$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/cdrtoc> ## flex/bison code
 	)

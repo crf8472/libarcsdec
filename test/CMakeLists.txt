@@ -27,6 +27,8 @@ list (APPEND TEST_SETS descriptor            )
 list (APPEND TEST_SETS libinspect            )
 list (APPEND TEST_SETS parsercue             )
 list (APPEND TEST_SETS parsercue_details     )
+list (APPEND TEST_SETS parsertoc             )
+list (APPEND TEST_SETS parsertoc_details     )
 list (APPEND TEST_SETS readerwav             )
 list (APPEND TEST_SETS readerwav_details     )
 list (APPEND TEST_SETS selection             )
@@ -116,13 +118,36 @@ foreach (_testcase ${TEST_SETS} )
 
 	## Use src/ by default as include directory for the sources
 	set (COMPONENT_SOURCE_DIR "${PROJECT_SOURCE_DIR}")
+	set (COMPONENT_BINARY_DIR "${PROJECT_BINARY_DIR}")
 
-	## Check for subdirectory and use it, if it exists
+	## Check for subdirectory in src and use it, if it exists
+	## e.g. /src/parsercue/cuesheet
 	get_filename_component (_fullpath "${PROJECT_SOURCE_DIR}/${SOURCES_SUBDIR}"
 		REALPATH )
 	if (EXISTS "${_fullpath}" )
 		set (COMPONENT_SOURCE_DIR "${PROJECT_SOURCE_DIR}/${SOURCES_SUBDIR}")
 	endif ()
+
+	## Check for subdirectory in binary dir and use it, if it exists
+	## e.g. /build/src/parsercue
+	get_filename_component (_fullpath
+		"${PROJECT_BINARY_DIR}/src/${SOURCES_SUBDIR}"
+		REALPATH )
+	if (EXISTS "${_fullpath}" )
+		set (COMPONENT_BINARY_DIR "${PROJECT_BINARY_DIR}/src/${SOURCES_SUBDIR}")
+	endif ()
+
+	## Add subdirectories of component e.g. /build/src/parsercue/cuesheet
+	file (GLOB SUBDIRS RELATIVE ${COMPONENT_SOURCE_DIR}
+		"${COMPONENT_SOURCE_DIR}/*" )
+	set (COMPONENT_INCLUDES "" )
+	foreach (DIR ${SUBDIRS} )
+		if (IS_DIRECTORY ${COMPONENT_BINARY_DIR}/${DIR} )
+			list (APPEND COMPONENT_INCLUDES ${COMPONENT_BINARY_DIR}/${DIR} )
+		endif()
+	endforeach()
+	unset (DIR )
+	unset (SUBDIRS )
 
 
 	## Set compile flags for testing
@@ -139,14 +164,26 @@ foreach (_testcase ${TEST_SETS} )
 	set_property (TARGET ${_testcase}_test PROPERTY CXX_STANDARD 17 )
 
 	target_include_directories (${_testcase}_test
-		PRIVATE ${PROJECT_INCLUDE_BINARY_DIR}      ##  public libarcsdec headers
-		PRIVATE ${COMPONENT_SOURCE_DIR}            ## private libarcsdec headers
-		PRIVATE ${PROJECT_GEN_SOURCES_DIR}         ## generated sources
-		PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include" ## test headers
+		PRIVATE
+			## test headers
+			$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+			##  public libarcsdec headers
+			$<BUILD_INTERFACE:${PROJECT_INCLUDE_BINARY_DIR}>
+            ## private libarcsdec headers
+			$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
+			## generated sources
+			$<BUILD_INTERFACE:${PROJECT_GEN_SOURCES_DIR}>
+            ## private component headers
+			$<BUILD_INTERFACE:${COMPONENT_SOURCE_DIR}>
+            ## generated component headers
+			$<BUILD_INTERFACE:${COMPONENT_BINARY_DIR}>
+			## list of component includes
+			"$<BUILD_INTERFACE:${COMPONENT_INCLUDES}>"
 	)
 
 	unset (COMPONENT_TEST_SOURCE_DIR )
 	unset (COMPONENT_SOURCE_DIR )
+	unset (COMPONENT_INCLUDES )
 
 	target_link_libraries (${_testcase}_test
 		PRIVATE

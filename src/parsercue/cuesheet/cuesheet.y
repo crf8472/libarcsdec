@@ -52,12 +52,12 @@
 {
 	// Declaration of class 'Parser' refers to 'TokenLocation' in constructor
 	#ifndef __LIBARCSDEC_FLEXBISONDRIVER_HPP__
-	#include "../src/flexbisondriver.hpp"   // for TokenLocation
+	#include "flexbisondriver.hpp"   // for TokenLocation
 	#endif
 
 	// Declaration of class 'Parser' refers to 'ParserTocHandler' in constructor
 	#ifndef __LIBARCSDEC_TOCHANDLER_HPP__
-	#include "../src/tochandler.hpp"        // for ParserTocHandler
+	#include "tochandler.hpp"        // for ParserTocHandler
 	#endif
 
 	// Forward declare what we are about to use
@@ -84,7 +84,7 @@
 	// To use member functions of 'ParserTocHandler' in production rule actions
 	// (Include also required in cuesheet.tab.hpp)
 	#ifndef __LIBARCSDEC_TOCHANDLER_HPP__
-	#include "../src/tochandler.hpp"       // for ParserTocHandler, ...
+	#include "tochandler.hpp"       // for ParserTocHandler, ...
 	#endif
 
 	// Re-declaration of yylex() below requires declaration of class 'Lexer'
