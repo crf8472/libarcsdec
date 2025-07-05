@@ -18,8 +18,8 @@ TEST_CASE ( "constants", "[version]" )
 	CHECK ( arcsdec::v_1_0_0::LIBARCSDEC_VERSION_MAJOR  == 0 );
 	CHECK ( arcsdec::v_1_0_0::LIBARCSDEC_VERSION_MINOR  == 2 );
 	CHECK ( arcsdec::v_1_0_0::LIBARCSDEC_VERSION_PATCH  == 0 );
-	CHECK ( arcsdec::v_1_0_0::LIBARCSDEC_VERSION_SUFFIX == "alpha.1" );
-	CHECK ( arcsdec::v_1_0_0::LIBARCSDEC_VERSION        == "0.2.0-alpha.1" );
+	CHECK ( arcsdec::v_1_0_0::LIBARCSDEC_VERSION_SUFFIX == "alpha.2" );
+	CHECK ( arcsdec::v_1_0_0::LIBARCSDEC_VERSION        == "0.2.0-alpha.2" );
 }
 
 
