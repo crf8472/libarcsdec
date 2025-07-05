@@ -222,3 +222,5 @@ if (NOT TARGET doc)
 	add_custom_target (doc )
 endif()
 
+add_dependencies (doc libarcsdec_doc )
+
