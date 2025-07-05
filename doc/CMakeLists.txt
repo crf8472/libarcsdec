@@ -23,10 +23,6 @@ message (STATUS "Build documentation" )
 find_package (Doxygen ) ## must be >= 1.9.8
 
 
-## --- Provide target
-add_custom_target (doc )
-
-
 ## --- Some Variables {{{1
 
 ## Target directory for generated documentation
