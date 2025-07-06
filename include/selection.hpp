@@ -571,7 +571,7 @@ namespace details
  * element is a nullptr. The unaltered input pointer is returned as a second
  * element in any case.
  *
- * \tparam Concrete FileReader type to cast to
+ * \tparam ReaderType Concrete FileReader type to cast to
  *
  * \param[in] file_reader The pointer to cast
  *
