@@ -45,7 +45,7 @@ set (MCSS_SCRIPT_RELPATH "documentation/doxygen.py" )
 ## 1}}}
 
 
-add_custom_target (libarcsdec_mcss_create_html DEPENDS "${INDEX_HTML}" )
+add_custom_target (libarcsdec_mcss_generate_html DEPENDS "${INDEX_HTML}" )
 add_dependencies  (libarcsdec_doc_generate_html libarcsdec_mcss_generate_html )
 
 
@@ -138,7 +138,7 @@ add_requirements_target (libarcsdec_mcss_requirements
 	"${CMAKE_CURRENT_SOURCE_DIR}/requirements.txt"
 )
 
-add_dependencies (libarcsdec_mcss_create_html
+add_dependencies (libarcsdec_mcss_generate_html
 	libarcsdec_mcss_requirements
 	libarcsdec_doxygen_provide_xml
 )
@@ -154,7 +154,7 @@ if (DOXYGEN_XML_POSTPROCESSING_TASKS )
 	## Doxygen needs to run separately from m.css since we want to post-process
 	## its XML output.
 
-	add_doxygen_xml_target (libarcsdec_mcss_create_xml
+	add_doxygen_xml_target (libarcsdec_mcss_generate_xml
 		"${DOXYFILE}" "${INDEX_XML}" )
 
 	add_custom_command (
