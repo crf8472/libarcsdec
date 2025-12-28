@@ -1576,7 +1576,8 @@ void print_codec_info(std::ostream& out, const ::AVCodecContext* cctx)
 			<< (codec_cap_delay ? "yes" : "no ")
 			<< "  (may delay frames, decoder requires flushing)" << '\n';
 
-		// More than 1 frame per packet?
+#if AV_CODEC_CAP_SUBFRAMES
+		// More than 1 frame per packet? (Removed in ffmpeg 8.0 in 08/2025)
 
 		const bool codec_cap_subframes =
 			cctx->codec->capabilities & AV_CODEC_CAP_SUBFRAMES;
@@ -1584,6 +1585,7 @@ void print_codec_info(std::ostream& out, const ::AVCodecContext* cctx)
 		out << "  CAP_SUBFRAMES:           "
 			<< (codec_cap_subframes ? "yes" : "no ")
 			<< "  (allows more than 1 frame/packet)" << '\n';
+#endif
 
 		// May use mulithreading (frame order?)
 
