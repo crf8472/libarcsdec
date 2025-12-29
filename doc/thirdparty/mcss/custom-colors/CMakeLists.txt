@@ -51,7 +51,6 @@ foreach (FILE IN ITEMS "m-custom.css" "m-theme-custom.css" )
 	## For each file dependency: copy file to CSS_SOURCE_DIR
 	add_custom_command (
 		OUTPUT  "${CSS_SOURCE_DIR}/${FILE}"
-		#DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${FILE}"
 		COMMAND "${CMAKE_COMMAND}"
 		ARGS    -E copy
 				"${CMAKE_CURRENT_SOURCE_DIR}/${FILE}"
