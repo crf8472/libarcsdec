@@ -362,14 +362,14 @@ public:
 	 * Any audio file names in the ToC are ignored in favor of \c audiofilename.
 	 *
 	 * The result will contain ARCS v1 and v2 for all tracks specified in the
-	 * ToC.
+	 * ToC. A version of the ToC is returned that is ensured to be complete.
 	 *
 	 * \param[in] audiofilename Name of the audiofile
 	 * \param[in] toc           Offsets for the audiofile
 	 *
-	 * \return AccurateRip checksums of all tracks specified in the ToC
+	 * \return AccurateRip checksums of all tracks in the Toc and completed ToC
 	 */
-	std::pair<Checksums, ARId> calculate(const std::string& audiofilename,
+	std::pair<Checksums, ToC> calculate(const std::string& audiofilename,
 			const ToC& toc);
 
 	/**

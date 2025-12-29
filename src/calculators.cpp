@@ -491,7 +491,7 @@ ARCSCalculator::ARCSCalculator()
 }
 
 
-std::pair<Checksums, ARId> ARCSCalculator::calculate(
+std::pair<Checksums, ToC> ARCSCalculator::calculate(
 		const std::string& audiofilename,
 		const ToC& toc)
 {
@@ -499,8 +499,8 @@ std::pair<Checksums, ARId> ARCSCalculator::calculate(
 
 	using arcstk::make_arid;
 
-	auto size { std::make_unique<AudioSize>() };
-	*size = toc.leadout(); // maybe zero
+	auto leadout { std::make_unique<AudioSize>() };
+	*leadout = toc.leadout(); // maybe zero
 
 	// A Calculation requires two informations about the input audio data:
 	//
@@ -533,12 +533,20 @@ std::pair<Checksums, ARId> ARCSCalculator::calculate(
 
 	const auto track_checksums {
 		calculate(audiofilename, Context::ALBUM, types(),
-				size/*get leadout passed here*/, toc.offsets())
+				leadout/*get leadout passed here*/, toc.offsets())
 	};
 
-	const auto id = !toc.complete() ? make_arid(toc, *size) : make_arid(toc);
+	if (toc.leadout().zero() && !leadout->zero())
+	{
+		auto updated_toc { toc };
+		updated_toc.set_leadout(*leadout);
 
-	return std::make_pair(track_checksums, *id);
+		return std::make_pair(track_checksums, updated_toc);
+	}
+
+	//const auto id = !toc.complete() ? make_arid(toc, *leadout) : make_arid(toc);
+
+	return std::make_pair(track_checksums, toc);
 }
 
 
