@@ -120,6 +120,9 @@ private:
 
 	/**
 	 * \brief Implements \ref append_samples().
+	 *
+	 * \param[in] begin Start of the sample sequence
+	 * \param[in] end   End of the sample sequence
 	 */
 	virtual void do_append_samples(SampleInputIterator begin,
 			SampleInputIterator end)
@@ -127,6 +130,8 @@ private:
 
 	/**
 	 * \brief Implements \ref update_audiosize().
+	 *
+	 * \param[in] size New Audiosize
 	 */
 	virtual void do_update_audiosize(const AudioSize& size)
 	= 0;

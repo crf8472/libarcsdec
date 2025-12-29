@@ -903,6 +903,8 @@ private:
 
 	/**
 	 * \brief Implements FileReader::descriptor().
+	 *
+	 * \return Descriptor for this FileReader instance
 	 */
 	virtual std::unique_ptr<FileReaderDescriptor> do_descriptor() const
 	= 0;
