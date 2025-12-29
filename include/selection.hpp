@@ -687,7 +687,7 @@ struct CreateReader final
 	/**
 	 * \brief Default destructor.
 	 */
-	virtual ~CreateReader() noexcept = default;
+	~CreateReader() noexcept = default;
 
 	/**
 	 * \brief Return a unique_ptr to an instance of the specified \c ReaderType.

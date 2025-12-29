@@ -379,7 +379,7 @@ public:
 	/**
 	 * \brief Virtual default destructor.
 	 */
-	virtual ~WavChunkDescriptor() noexcept;
+	~WavChunkDescriptor() noexcept;
 
 	/**
 	 * \brief ChunkId, either RIFF or RIFX.
@@ -437,7 +437,7 @@ public:
 	/**
 	 * \brief Virtual default destructor.
 	 */
-	virtual ~WavSubchunkHeader() noexcept;
+	~WavSubchunkHeader() noexcept;
 
 	/**
 	 * \brief Id of the subchunk.
@@ -477,7 +477,7 @@ public:
 	/**
 	 * \brief Virtual default destructor.
 	 */
-	virtual ~WavFormatSubchunk() noexcept;
+	~WavFormatSubchunk() noexcept;
 
 	/**
 	 * \brief Parsed id of this format subchunk.
