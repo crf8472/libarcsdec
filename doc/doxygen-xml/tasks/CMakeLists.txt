@@ -2,6 +2,8 @@
 ##
 ## vim:fdm=marker
 
+cmake_minimum_required (VERSION 3.12 )
+
 message (STATUS "Doxygen XSLT postprocessing is required" )
 
 
@@ -38,25 +40,14 @@ else()
 
 endif()
 ## 1}}}
-## --- Load Postprocessing Tasks from Subdirectories {{{1
-foreach (_task IN LISTS XML_POSTPROC_TASKS )
-
-	add_subdirectory (${_task} )
-endforeach()
-unset (_task )
-
-
-
-## --- Functions to Add XML Postprocessing Tasks {{{1
-
-## -- Function: Add a XSLT post processing comand {{{2
-function (add_doxygen_xslt_task TASK DOXYFILE INDEX_XML )
+## --- Function: Add a XSLT post processing comand {{{1
+function (add_doxygen_xslt_task TASK XML_INPUT_FILES )
 
 	## "Chain" a target: task-target depends on doxygen_generate_xml and is
 	## itself a dependency of doxygen_provide_xml. The actual posprocessing
 	## will be a POST_BUILD command to this target.
 
-	set (TASK_TARGET libarcsdec_doxygen_task_${TASK} )
+	set (TASK_TARGET libarcsdec_doxygen_xsl_task_${TASK} )
 
 	add_custom_target (${TASK_TARGET} )
 
@@ -67,31 +58,50 @@ function (add_doxygen_xslt_task TASK DOXYFILE INDEX_XML )
 
 	add_dependencies (libarcsdec_doxygen_provide_xml ${TASK_TARGET} )
 
-	## When doxygen_generate_xml is completed, postprocess the file
+	## NOTE Get XML input filenames at build time
+	##
+	## It would be nice to use a task-specific call at build time to get the
+	## XML input filenames. We would use a build-time command like:
+	##
+	## add_custom_command (
+	##	TARGET  ${TASK_TARGET} PRE_BUILD
+	##	COMMENT "List input files of task ${TASK}"
+	##	COMMAND ${CMAKE_COMMAND} -P
+	##		"${PROJECT_ROOT_DIR}/doc/doxygen-xml/tasks/${TASK}/file_list.cmake"
+	##	VERBATIM
+	## )
+	##
+	## Also possible as POST_BUILD of libarcstk_doxygen_generate_xml.
+	##
+	## 2 impediments:
+	##
+	## - We would have to know and pass the XML input path at this site. This
+	##   would be redundant and overly complex since doxygen-xml/CMakeLists.txt
+	##   is the correct site to do that.
+	## - We would have to transport the file list back to this site. If we do
+	##   this by -P with a script, there is no PARENT_SCOPE. We would have to
+	##   capture the output (somehow).
 
 	add_custom_command (
 		TARGET  ${TASK_TARGET} POST_BUILD
 		COMMAND "${PYTHON_CMD}"
 		ARGS    "${PROJECT_ROOT_DIR}/doc/doxygen-xml/tasks/xsl_transform.py"
-				"${INDEX_XML}"
+				"${XML_INPUT_FILES}"
 				"${PROJECT_ROOT_DIR}/doc/doxygen-xml/tasks/${TASK}/${TASK}.xsl"
-				"${INDEX_XML}"
 		WORKING_DIRECTORY "${DOC_GEN_DIR}"
-		COMMENT "Remove duplicate compounds in ${INDEX_XML}"
+		COMMENT "Run transformations of task ${TASK}"
 		VERBATIM
 	)
 
-endfunction()
-
-
-## -- Function: Add all post processing comands in given list {{{2
-function (add_doxygen_xslt_tasks DOXY_TARGET DOXYFILE INDEX_XML TASK_LIST )
-
-	foreach (_task IN LISTS TASK_LIST )
-
-		add_doxygen_xslt_task (${_task} "${DOXYFILE}" "${INDEX_XML}" )
-	endforeach()
-	unset (_task )
+	unset (TASK_TARGET )
 
 endfunction()
+
+
+## --- Load Requested Postprocessing Tasks from Subdirectories {{{1
+foreach (_task IN LISTS XML_POSTPROC_TASKS )
+
+	add_subdirectory (${_task} )
+endforeach()
+unset (_task )
 
