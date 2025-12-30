@@ -71,22 +71,23 @@ Libarcsdec contains:
 - libwavpack >= 5.0.0
 - libsndfile >= 1.0.17
 
-If you do not need any of the default dependencies, you can switch them off
-independently from each other:
+If you do not need any of the optional default-on dependencies, you can switch
+them off independently from each other:
 
 - build without ffmpeg support by ``-DWITH_FFMPEG=OFF``
 - build without FLAC support by ``-DWITH_FLAC=OFF``
 - build without WavPack support by ``-DWITH_WVPK=OFF``
 
-If you need any of the optional dependencies, you can switch them on
+If you need any of the optional default-off dependencies, you can switch them on
 independently from each other:
 
-- build without libcue support by ``-DWITH_LIBCUE=ON``
-- build without libsndfile support by ``-DWITH_LIBSNDFILE=ON``
+- build with libcue support by ``-DWITH_LIBCUE=ON``
+- build with libsndfile support by ``-DWITH_LIBSNDFILE=ON``
 
-You can switch off each of these dependencies thereby leaving libarcstk as the
-only dependency. However, this entails that libarcsdec will only be able to read
-Cuesheets and WAVE-files with its respective builtin reading capabilities.
+You can switch off or on each of these dependencies thereby leaving libarcstk as
+the only mandatory dependency. However, this entails that libarcsdec will only
+be able to read Cuesheets and WAVE-files with its respective builtin reading
+capabilities.
 
 ### Configure and start build
 
