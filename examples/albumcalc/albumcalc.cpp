@@ -56,20 +56,25 @@ int main(int argc, char* argv[])
 	arcsdec::ToCParser parser;
 	auto tocptr { parser.parse(metafilename) };
 
-	// Read the audio file and calculate the result.
+	// Read the audio file and calculate the checksums.
 	// Note that technical details of the audio input are "abstracted away" by
 	// libarcsdec. ARCSCalculator takes some audio and gives you the ARCSs.
 	arcsdec::ARCSCalculator calculator;
-	const auto [ checksums, arid ] =
+	const auto [ checksums, toc ] =
 		calculator.calculate(audiofilename, *tocptr);
 
-	// The result is a tuple containing the checksums as well as the ARId.
+	// The result is a tuple containing the checksums as well as the completed
+	// ToC. While we had to test tocptr for completeness before using it, the
+	// ToC object returned by the calculator is guaranteed to be suitable to use
+	// it to get the AccurateRip id.
+	const auto arid { arcstk::make_arid(toc) };
+
 	// We print both to the command line. Of course you can use the URL to
 	// request the reference values and then verify them with one of
 	// libarcstk's Matchers or just parse them to plaintext.
 
 	// Print the ARId.
-	std::cout << "AccurateRip URL: " << arid.url() << '\n';
+	std::cout << "AccurateRip URL: " << arid->url() << '\n';
 
 	// Print the actual checksums.
 	std::cout << "Track  ARCSv1    ARCSv2" << '\n';
