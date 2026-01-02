@@ -130,6 +130,16 @@ void process_audio_file(const std::string& audiofilename,
 
 
 /**
+ * \brief Ensure a non-zero leadout.
+ *
+ * If it is non-zero, use the leadout passed, otherwise call acquire_size()
+ * on the \c reader for the \c audiofilename passed and return the result.
+ */
+AudioSize ensure_leadout(const AudioSize& leadout,
+		const AudioReader& reader, const std::string& audiofilename);
+
+
+/**
  * \brief SampleProcessor that updates a Calculation.
  */
 class CalculationProcessor final : public SampleProcessor

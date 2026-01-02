@@ -417,17 +417,21 @@ public:
 	/**
 	 * \brief Calculate Checksums of a single audiofile.
 	 *
+	 * If \c leadout is zero() the leadout will be updated from reading it from
+	 * the audiofile, otherwise the returned leadout will just be identical to
+	 * the leadout passed.
+	 *
 	 * \param[in] audiofilename Name of audio file to process
 	 * \param[in] settings      Settings for calculations
 	 * \param[in] types         Requested checksum types
-	 * \param[in,out] leadout   Leadout
+	 * \param[in] leadout       Leadout
 	 * \param[in] offsets       Offsets
 	 *
-	 * \return Calculated checksums
+	 * \return Calculated checksums and updated Leadout
 	 */
-	Checksums calculate(const std::string& audiofilename,
+	std::pair<Checksums, AudioSize> calculate(const std::string& audiofilename,
 			const Settings& settings, const ChecksumtypeSet& types,
-			std::unique_ptr<AudioSize>& leadout, const Points& offsets);
+			const AudioSize& leadout, const Points& offsets);
 
 	/**
 	 * \brief Return checksum::types calculated by this instance.

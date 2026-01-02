@@ -234,6 +234,24 @@ void process_audio_file(const std::string& audiofilename,
 }
 
 
+// update_leadout
+
+
+AudioSize ensure_leadout(const AudioSize& leadout,
+		const AudioReader& reader, const std::string& audiofilename)
+{
+	if (!leadout.zero())
+	{
+		return leadout;
+	}
+
+	ARCS_LOG_DEBUG <<
+		"Empty leadout passed, acquire size from audio file";
+
+	return *reader.acquire_size(audiofilename);
+}
+
+
 // CalculationProcessor
 
 
@@ -497,9 +515,6 @@ std::pair<Checksums, ToC> ARCSCalculator::calculate(
 {
 	ARCS_LOG_DEBUG << "Calculate by ToC and single audiofilename";
 
-	auto leadout { std::make_unique<AudioSize>() };
-	*leadout = toc.leadout(); // maybe zero
-
 	// A Calculation requires two informations about the input audio data:
 	//
 	// 1.) the LBA offset of each track
@@ -529,22 +544,20 @@ std::pair<Checksums, ToC> ARCSCalculator::calculate(
 	// AudioReader, open the file and get the information. Since this is an
 	// expensive operation, we want to keep the reader.
 
-	const auto track_checksums {
+	const auto [ track_checksums, leadout ] {
 		calculate(audiofilename, Context::ALBUM, types(),
-				leadout/*get leadout passed here*/, toc.offsets())
+				toc.leadout(), toc.offsets())
 	};
 
-	if (toc.leadout().zero() && !leadout->zero())
+	if (toc.leadout() == leadout)
 	{
-		auto updated_toc { toc };
-		updated_toc.set_leadout(*leadout);
-
-		return std::make_pair(track_checksums, updated_toc);
+		return std::make_pair(track_checksums, toc);
 	}
 
-	//const auto id = !toc.complete() ? make_arid(toc, *leadout) : make_arid(toc);
+	auto updated_toc { toc };
+	updated_toc.set_leadout(leadout);
 
-	return std::make_pair(track_checksums, toc);
+	return std::make_pair(track_checksums, updated_toc);
 }
 
 
@@ -610,13 +623,10 @@ ChecksumSet ARCSCalculator::calculate(
 	ARCS_LOG_DEBUG <<
 		"Calculate by single audiofilename and flags for 1st and last track";
 
-	const auto context { to_context(is_first_track, is_last_track) };
+	const auto ctx { to_context(is_first_track, is_last_track) };
 
-	auto ignore_size { std::make_unique<AudioSize>() };
-
-	const auto checksums {
-		calculate(audiofilename, context,
-				types(), ignore_size, {/*no offsets*/})
+	const auto [ checksums, leadout ] {
+		calculate(audiofilename, ctx, types(), {/*no size*/}, {/*no offsets*/})
 	};
 
 	if (checksums.empty())
@@ -628,9 +638,10 @@ ChecksumSet ARCSCalculator::calculate(
 }
 
 
-Checksums ARCSCalculator::calculate(const std::string& audiofilename,
+std::pair<Checksums, AudioSize> ARCSCalculator::calculate(
+		const std::string& audiofilename,
 		const Settings& settings, const ChecksumtypeSet& types,
-		std::unique_ptr<AudioSize>& leadout, const Points& offsets)
+		const AudioSize& leadout, const Points& offsets)
 {
 	using details::get_algorithms_or_throw;
 	using details::init_calculations;
@@ -647,13 +658,13 @@ Checksums ARCSCalculator::calculate(const std::string& audiofilename,
 
 	auto reader { create(audiofilename) };
 
-	if (leadout->zero())
-	{
-		leadout = reader->acquire_size(audiofilename); // output param
-	}
+	const auto updated_leadout {
+		details::ensure_leadout(leadout, *reader, audiofilename)
+		// TODO Wouldn't it be sufficient to do this exclusively for ALBUM?
+	};
 
 	auto calculations {
-		init_calculations(settings, algorithms, *leadout, offsets) };
+		init_calculations(settings, algorithms, updated_leadout, offsets) };
 
 	// Run
 
@@ -698,7 +709,7 @@ Checksums ARCSCalculator::calculate(const std::string& audiofilename,
 		ARCS_LOG_ERROR << "Calculations lead to no result, return empty set";
 	}
 
-	return checksums;
+	return { checksums, updated_leadout };
 }
 
 
