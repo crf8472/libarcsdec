@@ -497,8 +497,6 @@ std::pair<Checksums, ToC> ARCSCalculator::calculate(
 {
 	ARCS_LOG_DEBUG << "Calculate by ToC and single audiofilename";
 
-	using arcstk::make_arid;
-
 	auto leadout { std::make_unique<AudioSize>() };
 	*leadout = toc.leadout(); // maybe zero
 
