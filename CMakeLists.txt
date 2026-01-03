@@ -12,10 +12,13 @@ cmake_policy (SET CMP0048 NEW )
 ## 3.14: Make bison run in CMAKE_CURRENT_BINARY_DIR
 ## See: https://cmake.org/cmake/help/latest/policy/CMP0088.html
 cmake_policy (SET CMP0088 NEW )
+
 ## 1}}}
 
 
 project (libarcsdec VERSION 0.2.0 LANGUAGES CXX )
+
+set (PROJECT_VERSION_SUFFIX "alpha.3" )
 
 
 ## --- Setup Short Description, URL and Version Information {{{1
@@ -23,8 +26,6 @@ project (libarcsdec VERSION 0.2.0 LANGUAGES CXX )
 set (PROJECT_BRIEF_DESC "Audio decoder and TOC parser adapters for libarcstk" )
 
 set (PROJECT_URL "https://github.com/crf8472/${PROJECT_NAME}" )
-
-set (PROJECT_VERSION_SUFFIX "alpha.2" )
 
 set (PROJECT_DEFAULT_BUILD_TYPE "Release" )
 
