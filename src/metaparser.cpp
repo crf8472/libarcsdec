@@ -1,7 +1,9 @@
 /**
+ * \internal
+ *
  * \file
  *
- * \brief Implements API for implementing MetadataParsers.
+ * \brief Implements symbols from metaparser.hpp.
  */
 
 

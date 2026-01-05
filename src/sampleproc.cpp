@@ -1,7 +1,9 @@
 /**
+ * \internal
+ *
  * \file
  *
- * \brief Implements interface for processing samples
+ * \brief Implements symbols from sampleproc.hpp.
  */
 
 #ifndef __LIBARCSDEC_SAMPLEPROC_HPP__

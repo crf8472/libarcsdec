@@ -7,7 +7,7 @@
  */
 
 #ifndef __LIBARCSDEC_PARSERCUE_HPP__
-#define __LIBARCSDEC_PARSERCUE_HPP__ // allow parsercue_details.hpp
+#define __LIBARCSDEC_PARSERCUE_HPP__    // allow parsercue_details.hpp
 #endif
 #ifndef __LIBARCSDEC_PARSERCUE_DETAILS_HPP__
 #include "parsercue_details.hpp"        // TO BE TESTED
@@ -20,7 +20,7 @@
 #include "tochandler.hpp"               // for ParserToCHandler
 #endif
 
-#include <fstream> // for ifstream
+#include <fstream>                      // for ifstream
 
 
 TEST_CASE ("cuesheet", "[yycuesheet]" )

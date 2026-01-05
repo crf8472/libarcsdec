@@ -7,7 +7,7 @@
  */
 
 #ifndef __LIBARCSDEC_CALCULATORS_HPP__
-#define __LIBARCSDEC_CALCULATORS_HPP__
+#define __LIBARCSDEC_CALCULATORS_HPP__  // allow calculators_details.hpp
 #endif
 #ifndef __LIBARCSDEC_CALCULATORS_DETAILS_HPP__
 #include "calculators_details.hpp"      // TO BE TESTED

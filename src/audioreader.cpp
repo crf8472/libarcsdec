@@ -1,7 +1,9 @@
 /**
+ * \internal
+ *
  * \file
  *
- * \brief Implements API for implementing AudioReaders.
+ * \brief Implements symbols from audioreader.hpp.
  */
 
 #ifndef __LIBARCSDEC_AUDIOREADER_HPP__

@@ -7,8 +7,9 @@
  */
 
 #ifndef __LIBARCSDEC_READERSNDFILE_HPP__
-#include "readersndfile.hpp"
+#include "readersndfile.hpp"            // TO BE TESTED
 #endif
+
 #ifndef __LIBARCSDEC_SELECTION_HPP__
 #include "selection.hpp"                // for FileReaderSelection
 #endif

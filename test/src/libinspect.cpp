@@ -14,7 +14,7 @@
 #include "version.hpp"                  // for LIBARCSDEC_NAME
 #endif
 
-#include <regex> // for regex, regex_match
+#include <regex>                        // for regex, regex_match
 
 
 TEST_CASE ( "Names of libraries are matched correctly", "[libraries]" )

@@ -1,7 +1,9 @@
 /**
+ * \internal
+ *
  * \file
  *
- * \brief Implementation of a descriptor for FileReaders
+ * \brief Implements symbols from descriptor.hpp.
  */
 
 #ifndef __LIBARCSDEC_DESCRIPTOR_HPP__

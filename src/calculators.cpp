@@ -1,7 +1,9 @@
 /**
+ * \internal
+ *
  * \file
  *
- * \brief Implementing high-level API for calculating ARCSs of files.
+ * \brief Implements symbols from calculators.hpp.
  */
 
 #ifndef __LIBARCSDEC_CALCULATORS_HPP__

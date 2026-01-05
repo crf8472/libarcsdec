@@ -1,7 +1,9 @@
 /**
+ * \internal
+ *
  * \file
  *
- * \brief Implementation of a selection toolkit for FileReaderDescriptors
+ * \brief Implements symbols from selection.hpp.
  */
 
 #ifndef __LIBARCSDEC_SELECTION_HPP__

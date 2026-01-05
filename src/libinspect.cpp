@@ -1,7 +1,9 @@
 /**
+ * \internal
+ *
  * \file
  *
- * \brief Implementation of the toolkit for inspecting the libarcsdec library
+ * \brief Implements symbols from libinspect.hpp.
  */
 
 #ifndef __LIBARCSDEC_LIBINSPECT_HPP__

@@ -10,7 +10,7 @@
 #define __LIBARCSDEC_READERSNDFILE_HPP__ // allow readersndfile_details.hpp
 #endif
 #ifndef __LIBARCSDEC_READERSNDFILE_DETAILS_HPP__
-#include "readersndfile_details.hpp"    // TO BE TESTED
+#include "readersndfile_details.hpp"     // TO BE TESTED
 #endif
 
 

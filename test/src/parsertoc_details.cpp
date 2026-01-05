@@ -7,7 +7,7 @@
  */
 
 #ifndef __LIBARCSDEC_PARSERTOC_HPP__
-#define __LIBARCSDEC_PARSERTOC_HPP__ // allow parsertoc_details.hpp
+#define __LIBARCSDEC_PARSERTOC_HPP__    // allow parsertoc_details.hpp
 #endif
 #ifndef __LIBARCSDEC_PARSERTOC_DETAILS_HPP__
 #include "parsertoc_details.hpp"        // TO BE TESTED

@@ -1,6 +1,17 @@
+/* vim:ft=cpp */
+/**
+ * \internal
+ *
+ * \file
+ *
+ * \brief Implements symbols from version.hpp.
+ */
+
 #ifndef __LIBARCSDEC_VERSION_HPP__
 #include "version.hpp"
 #endif
+
+#include <string>   // for string
 
 namespace arcsdec
 {
@@ -50,8 +61,6 @@ bool api_version_is_at_least(const int major, const int minor, const int patch)
 
 	return true;
 }
-
-/** @} */
 
 } // namespace v_1_0_0
 } // namespace arcsdec

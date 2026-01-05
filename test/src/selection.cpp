@@ -10,7 +10,7 @@
 #include "selection.hpp"                // TO BE TESTED
 #endif
 
-#include <type_traits>    // for is_copy_constructible,...
+#include <type_traits>                  // for is_copy_constructible,...
 
 
 TEST_CASE ( "FileReaderSelector", "[filereaderselector]")

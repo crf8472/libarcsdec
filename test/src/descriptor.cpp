@@ -10,15 +10,14 @@
 #include "descriptor.hpp"               // TO BE TESTED
 #endif
 
-#include <climits>
-#include <type_traits>
+#include <climits>                      // for ? TODO
+#include <type_traits>                  // for ? TODO
 
 
 TEST_CASE ( "ci_string", "[ci_string]" )
 {
-  //using arcsdec::details::ci_string;
-
 // TODO
+  //using arcsdec::details::ci_string;
 }
 
 
