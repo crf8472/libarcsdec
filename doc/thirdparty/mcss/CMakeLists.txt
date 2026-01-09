@@ -9,7 +9,7 @@
 ## - Variables: DOC_COMMENT, DOC_DOXYFILE_BASE, DOC_GEN_DIR, DOC_SOURCES
 ##
 ## Provides:
-## - Targets: 'libarcsdec_mcss_doc'
+## - Targets: 'libarcsdec_mcss_generate_html'
 
 cmake_minimum_required (VERSION 3.10 )
 
@@ -172,7 +172,7 @@ else()
 
 	## Since we do not use add_doxygen_target, we have to take care for the
 	## dependencies manually
-	add_dependencies (libarcsdec_mcss_doc
+	add_dependencies (libarcsdec_mcss_generate_html
 		## add deps from PARENT
 		libarcsdec_create_output_dir
 		libarcsdec_create_log_dir
