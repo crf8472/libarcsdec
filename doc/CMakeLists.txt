@@ -20,7 +20,7 @@ cmake_policy (SET CMP0057 NEW )
 message (STATUS "Build documentation" )
 
 
-find_package (Doxygen ) ## must be >= 1.9.8
+find_package (Doxygen ) ## must be >= 1.9.8, also ok: 1.8.15...1.8.20
 
 
 ## --- Some Variables {{{1
@@ -217,7 +217,7 @@ else() # If no Generators are Specified, Just Use Doxygen's Stock HTML
 endif()
 ## 1}}}
 
-## Add doc if it was not already added by libarcstk-submodule
+## Add target 'doc' if it was not already added by submodules
 if (NOT TARGET doc)
 	add_custom_target (doc )
 endif()
