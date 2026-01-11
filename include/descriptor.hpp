@@ -28,12 +28,6 @@ namespace arcsdec
 {
 inline namespace v_1_0_0
 {
-
-/**
- * \internal
- *
- * \brief Implementation details of API 1.0.0.
- */
 namespace details
 {
 

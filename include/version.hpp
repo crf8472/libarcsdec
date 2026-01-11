@@ -71,6 +71,16 @@ bool api_version_is_at_least(const int major, const int minor, const int patch);
 
 /** @} */
 
+
+/**
+ * \internal
+ *
+ * \brief Namespace for implementation details.
+ */
+namespace details
+{ // empty
+} // namespace details
+
 } // namespace v_1_0_0
 } // namespace arcsdec
 
