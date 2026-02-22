@@ -18,7 +18,7 @@ LINKS_NAVBAR2    = [
 ]
 
 ## Expand version namespace and show class list
-CLASS_INDEX_EXPAND_LEVELS = 2
+CLASS_INDEX_EXPAND_LEVELS = 3
 
 ## custom, not m.css
 my_CUSTOM_STYLESHEET = '@MCSS_CUSTOM_STYLESHEET@'
