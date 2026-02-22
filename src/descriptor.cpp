@@ -9,28 +9,31 @@
 #ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
 #include "descriptor.hpp"
 #endif
+#ifndef __LIBARCSDEC_DESCRIPTOR_DETAILS_HPP__
+#include "descriptor_details.hpp"  // redundant, already in descriptor.hpp
+#endif
 
 #ifndef __LIBARCSDEC_LIBINSPECT_HPP__
-#include "libinspect.hpp"     // for libfile
+#include "libinspect.hpp"          // for libfile
 #endif
 
 #ifndef __LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp> // for ARCS_LOG, _WARNING, _DEBUG
+#include <arcstk/logging.hpp>      // for ARCS_LOG, _WARNING, _DEBUG
 #endif
 
-#include <algorithm>    // for find, find_if, mismatch
-#include <array>        // for array
-#include <cstdint>      // for uint32_t, uint64_t, int64_t
-#include <fstream>      // for ifstream
-#include <initializer_list>
-#include <ios>          // for ios, ios_base
-#include <iterator>     // for distance
-#include <memory>       // for unique_ptr
-#include <set>          // for set
-#include <stdexcept>    // for runtime_error
-#include <string>       // for string, to_string
-#include <type_traits>  // for underlying_type_t
-#include <vector>       // for vector
+#include <algorithm>        // for find, find_if, mismatch, transform
+#include <array>            // for array
+#include <cstdint>          // for uint32_t, uint64_t, int64_t
+#include <fstream>          // for ifstream
+#include <initializer_list> // for initializer_list
+#include <ios>              // for ios, ios_base
+#include <iterator>         // for distance
+#include <memory>           // for unique_ptr
+#include <set>              // for set
+#include <stdexcept>        // for runtime_error
+#include <string>           // for string, to_string
+#include <type_traits>      // for underlying_type_t
+#include <vector>           // for vector
 
 
 namespace arcsdec
@@ -402,21 +405,26 @@ namespace details
 {
 
 
-bool ci_match_suffix(const SuffixSet& suffices, const std::string& filename)
+bool ci_match_suffix(const std::set<details::ci_string>& suffices,
+		const std::string& filename)
 {
-	const auto fname_suffix = details::get_suffix(filename, ".");
+	const auto fname_suffix = get_suffix(filename, ".");
 
 	if (fname_suffix.empty()) { return false; }
 	if (fname_suffix.length() == filename.length()) { return true; }
 
-	const auto ref_suffix = details::ci_string { fname_suffix.c_str() };
-	auto result = std::find_if(suffices.begin(), suffices.end(),
+	const auto ref_suffix = ci_string { fname_suffix.c_str() };
+
+	using std::cbegin;
+	using std::cend;
+
+	auto result = std::find_if(cbegin(suffices), cend(suffices),
 			[ref_suffix](const SuffixSet::value_type& suffix)
 			{
 				return suffix == ref_suffix; // case insensitive comparison
 			});
 
-	return result != suffices.end();
+	return result != cend(suffices);
 }
 
 

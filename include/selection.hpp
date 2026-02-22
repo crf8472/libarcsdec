@@ -30,7 +30,7 @@ inline namespace v_1_0_0
 {
 
 /**
- * \brief FileReader selection.
+ * \brief Utilities for selection of FileReaders.
  */
 namespace select
 {
@@ -577,6 +577,91 @@ protected:
 };
 
 
+/**
+ * \brief Register a \ref Format.
+ *
+ * Register a set of supported filename suffices and a byte sequence for a
+ * Format \c F.
+ *
+ * \tparam F The Format to register
+ */
+template <enum Format F>
+struct RegisterFormat final : private FileReaderRegistry
+{
+	/**
+	 * \brief Constructor
+	 *
+	 * \param[in] suffices Set of supported filename suffices for \c F
+	 * \param[in] codecs   Set of codecs supported with \c F
+	 */
+	RegisterFormat(const SuffixSet& suffices, const std::set<Codec>& codecs)
+	{
+		add_format(std::make_unique<FormatMatcher<F>>(suffices, codecs));
+	}
+
+	/**
+	 * \brief Constructor
+	 *
+	 * \param[in] suffices Set of supported filename suffices for \c F
+	 * \param[in] bytes    Reference byte sequence to determine \c F
+	 * \param[in] codecs   Set of codecs supported with \c F
+	 */
+	RegisterFormat(const SuffixSet& suffices, const Bytes& bytes,
+			const std::set<Codec>& codecs)
+	{
+		add_format(std::make_unique<FormatMatcher<F>>(suffices, bytes, codecs));
+	}
+};
+
+
+/**
+ * \internal
+ *
+ * \brief Implementation details of namespace \c select.
+ */
+namespace details
+{
+
+/**
+ * \brief Instantiate FileReaderDescriptor.
+ *
+ * \param[in] args Input arguments
+ *
+ * \tparam T    The type to instantiate
+ * \tparam Args The constructor arguments
+ *
+ * \return FileReaderDescriptor
+ */
+template <class T, typename... Args>
+std::unique_ptr<FileReaderDescriptor> make_descriptor(Args&&... args)
+{
+	static_assert(std::is_convertible<T*, FileReaderDescriptor*>::value,
+			"Cannot convert type to FileReaderDescriptor");
+
+	return std::make_unique<T>(std::forward<Args>(args)...);
+}
+
+} // namespace details
+
+
+/**
+ * \brief Register a FileReaderDescriptor type.
+ *
+ * \tparam D The descriptor type to register
+ */
+template <class D>
+struct RegisterDescriptor final : private FileReaderRegistry
+{
+	/**
+	 * \brief Registers a descriptor of the template type \c D.
+	 */
+	RegisterDescriptor()
+	{
+		add_reader(call_maker(&details::make_descriptor<D>));
+	}
+};
+
+
 namespace details
 {
 
@@ -750,82 +835,7 @@ struct CreateReader final
 	}
 };
 
-
-/**
- * \brief Instantiate FileReaderDescriptor.
- *
- * \param[in] args Input arguments
- *
- * \tparam T    The type to instantiate
- * \tparam Args The constructor arguments
- *
- * \return FileReaderDescriptor
- */
-template <class T, typename... Args>
-std::unique_ptr<FileReaderDescriptor> make_descriptor(Args&&... args)
-{
-	static_assert(std::is_convertible<T*, FileReaderDescriptor*>::value,
-			"Cannot convert type to FileReaderDescriptor");
-
-	return std::make_unique<T>(std::forward<Args>(args)...);
-}
-
 } // namespace details
-
-
-/**
- * \brief Register a \ref Format.
- *
- * Register a set of supported filename suffices and a byte sequence for a
- * Format \c F.
- *
- * \tparam F The Format to register
- */
-template <enum Format F>
-struct RegisterFormat final : private FileReaderRegistry
-{
-	/**
-	 * \brief Constructor
-	 *
-	 * \param[in] suffices Set of supported filename suffices for \c F
-	 * \param[in] codecs   Set of codecs supported with \c F
-	 */
-	RegisterFormat(const SuffixSet& suffices, const std::set<Codec>& codecs)
-	{
-		add_format(std::make_unique<FormatMatcher<F>>(suffices, codecs));
-	}
-
-	/**
-	 * \brief Constructor
-	 *
-	 * \param[in] suffices Set of supported filename suffices for \c F
-	 * \param[in] bytes    Reference byte sequence to determine \c F
-	 * \param[in] codecs   Set of codecs supported with \c F
-	 */
-	RegisterFormat(const SuffixSet& suffices, const Bytes& bytes,
-			const std::set<Codec>& codecs)
-	{
-		add_format(std::make_unique<FormatMatcher<F>>(suffices, bytes, codecs));
-	}
-};
-
-
-/**
- * \brief Register a FileReaderDescriptor type.
- *
- * \tparam D The descriptor type to register
- */
-template <class D>
-struct RegisterDescriptor final : private FileReaderRegistry
-{
-	/**
-	 * \brief Registers a descriptor of the template type \c D.
-	 */
-	RegisterDescriptor()
-	{
-		add_reader(call_maker(&details::make_descriptor<D>));
-	}
-};
 
 /// @}
 

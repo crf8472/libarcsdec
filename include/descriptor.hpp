@@ -10,10 +10,10 @@
 #ifndef __LIBARCSTK_LOGGING_HPP__
 #include <arcstk/logging.hpp>   // for ARCS_LOG_WARNING, ARCS_LOG_DEBUG
 #endif
+#ifndef __LIBARCSDEC_DESCRIPTOR_DETAILS_HPP__
+#include "descriptor_details.hpp"  // for ci_match_suffix
+#endif
 
-#include <algorithm>   // for transform
-#include <cctype>      // for toupper
-#include <cstddef>     // for size_t
 #include <cstdint>     // for uint32_t, uint64_t, int64_t
 #include <list>        // for list
 #include <memory>      // for unique_ptr, make_unique
@@ -30,52 +30,6 @@ inline namespace v_1_0_0
 {
 namespace read
 {
-namespace details
-{
-
-/* -NO_DOXYGEN-
- * \brief Traits for case insensitive string comparison.
- *
- * Thanks to Herb Sutter: http://www.gotw.ca/gotw/029.htm
- */
-struct ci_char_traits final : public std::char_traits<char>
-{
-	static bool eq(char c1, char c2) { return toupper(c1) == toupper(c2); }
-
-	static bool ne(char c1, char c2) { return toupper(c1) != toupper(c2); }
-
-	static bool lt(char c1, char c2) { return toupper(c1)  < toupper(c2); }
-
-	static int compare(const char* s1, const char* s2, size_t n)
-	{
-        while(n-- != 0)
-		{
-			if( toupper(*s1) < toupper(*s2) ) { return -1; }
-			if( toupper(*s1) > toupper(*s2) ) { return  1; }
-
-			++s1;
-			++s2;
-		}
-
-		return 0;
-	}
-
-	static const char* find(const char* s, int n, char a)
-	{
-		while(n-- > 0 && toupper(*s) != toupper(a)) { ++s; }
-
-		return s;
-	}
-};
-
-
-/* -NO_DOXYGEN-
- * \brief Case insensitive comparable string.
- */
-using ci_string = std::basic_string<char, ci_char_traits>;
-
-} // namespace details
-
 
 /**
  * \defgroup descriptor Interfaces for abstract FileReaders
@@ -217,6 +171,7 @@ std::string name(Codec codec);
 
 /**
  * \internal
+ *
  * \brief Adds inequality operator to classes defining equality operator==.
  */
 template <typename T>
@@ -244,6 +199,7 @@ class ByteSeq;
 bool operator == (const ByteSeq& lhs, const ByteSeq& rhs);
 
 void swap(ByteSeq& lhs, ByteSeq& rhs);
+
 
 /**
  * \brief Byte sequence with or without wildcards.
@@ -352,7 +308,6 @@ public:
 
 	byte_type* data(); // forces contiguous memory layout
 };
-
 
 
 /**
@@ -506,70 +461,6 @@ private:
 
 
 /**
- * \brief A set of filename suffices.
- *
- * An ordered set of case-insensitive strings. Defines a \c value_type and
- * is iterable as required by \c std::find_if.
- */
-using SuffixSet = std::set<details::ci_string>;
-
-
-namespace details
-{
-
-/**
- * \brief Worker: default implementation for checking a filename.
- *
- * Returns TRUE if the suffix of the filename equals one of the internal
- * suffices. The check is done case-insensitive.
- *
- * \param[in] suffices Set of filename suffices
- * \param[in] filename Input filename to check
- *
- * \return TRUE if the filename suffix matches one of the internal suffices
- */
-bool ci_match_suffix(const SuffixSet& suffices,
-		const std::string& filename);
-
-
-/**
- * \brief Worker: Provides the suffix of a given filename.
- *
- * The suffix is the part of filename following the last occurrence of
- * \c delimiter. If filename does not contain the delimiter, the entire
- * filename is returned as suffix.
- *
- * \param[in] filename  The filename to check
- * \param[in] delimiter The delimiter to separate the suffix from the base
- *
- * \return The relevant suffix or the entire filename
- */
-std::string get_suffix(const std::string& filename,
-		const std::string& delimiter);
-
-
-/**
- * \brief Worker: Read \c length bytes from file \c filename starting at
- * position \c offset.
- *
- * \param[in] filename Name of the file to read from
- * \param[in] offset   0-based byte offset to start
- * \param[in] length   Number of bytes to read
- *
- * \return Byte sequence read from file
- *
- * \throw FileReadException If the specified number of bytes could not be
- * read from the specified file and position
- *
- * \throw InputFormatException On unspecified error
- */
-Bytes read_bytes(const std::string& filename,
-	const uint32_t& offset, const uint32_t& length);
-
-} // namespace details
-
-
-/**
  * \brief Interface for matchers.
  *
  * A Matcher is a check for a certain file format or audio codec.
@@ -664,6 +555,15 @@ private:
 
 
 /**
+ * \brief A set of filename suffices.
+ *
+ * An ordered set of case-insensitive strings. Defines a \c value_type and
+ * is iterable as required by \c std::find_if.
+ */
+using SuffixSet = std::set<details::ci_string>;
+
+
+/**
  * \brief Template: Matcher for file formats.
  *
  * Matches a specific Format. A FormatMatcher can be implemented by
@@ -698,7 +598,9 @@ public:
 		: suffices_ { suffices }
 		, bytes_    { bytes }
 		, codecs_   { codecs }
-	{ /* empty */ };
+	{
+		/* empty */
+	}
 
 
 	/**
@@ -709,14 +611,15 @@ public:
 	 */
 	FormatMatcher(const SuffixSet& suffices, const std::set<Codec>& codecs)
 		: FormatMatcher(suffices, { /* empty byte sequence */ }, codecs)
-	{ /* empty */ };
+	{
+		/* empty */
+	}
 
 
 	/**
 	 * \brief Virtual default destructor.
 	 */
 	inline virtual ~FormatMatcher() noexcept = default;
-
 
 private:
 
@@ -782,10 +685,12 @@ private:
  */
 using LibInfoEntry = std::pair<std::string, std::string>;
 
+
 /**
  * \brief Represents a list of pairs of a library name and an additional string.
  */
 using LibInfo = std::list<LibInfoEntry>;
+
 
 /**
  * \brief Create a LibInfoEntry for \c libname, lookup filepath of library.
@@ -798,7 +703,6 @@ using LibInfo = std::list<LibInfoEntry>;
  * \return A LibInfoEntry that contains the concrete filepath for the library.
  */
 LibInfoEntry libinfo_entry_filepath(const std::string& libname);
-
 
 
 /**
@@ -872,6 +776,7 @@ private:
 
 
 class FileReaderDescriptor;
+
 
 /**
  * \brief Abstract base class for \link FileReader FileReaders\endlink.
@@ -1059,7 +964,6 @@ private:
 	virtual std::string do_name() const
 	= 0;
 
-
 	virtual InputType do_input_type() const;
 
 	virtual bool do_accepts_format(const Format f) const;
@@ -1076,7 +980,6 @@ private:
 	virtual std::set<Format> define_formats() const;
 
 	virtual std::set<Codec> define_codecs() const;
-
 
 	virtual LibInfo do_libraries() const
 	= 0;

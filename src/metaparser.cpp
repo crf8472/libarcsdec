@@ -10,14 +10,17 @@
 #ifndef __LIBARCSDEC_METAPARSER_HPP__
 #include "metaparser.hpp"
 #endif
+#ifndef __LIBARCSDEC_METAPARSER_DETAILS_HPP__
+#include "metaparser_details.hpp"
+#endif
 
 #ifndef __LIBARCSTK_LOGGING_HPP__
 #include <arcstk/logging.hpp>  // for ARCS_LOG_DEBUG
 #endif
 
-#include <memory>   // for unique_ptr
-#include <string>   // for string
-#include <utility>  // for move
+#include <memory>       // for unique_ptr
+#include <string>       // for string
+#include <utility>      // for move
 
 
 namespace arcsdec

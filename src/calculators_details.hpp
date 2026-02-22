@@ -31,13 +31,21 @@ namespace arcsdec
 {
 inline namespace v_1_0_0
 {
+
 namespace read
 {
 // forward delcaration
 class AudioReader;
 } // namespace read
+
 namespace calc
 {
+
+/**
+ * \internal
+ *
+ * \brief Implementation details of namespace \c calc.
+ */
 namespace details
 {
 

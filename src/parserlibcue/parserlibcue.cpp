@@ -14,6 +14,9 @@
 #ifndef __LIBARCSDEC_METAPARSER_HPP__
 #include "metaparser.hpp"         // for MetadataParseException
 #endif
+#ifndef __LIBARCSDEC_METAPARSER_DETAILS_HPP__
+#include "metaparser_details.hpp" // for cast_or_throw
+#endif
 #ifndef __LIBARCSDEC_SELECTION_HPP__
 #include "selection.hpp"          // for RegisterDescriptor
 #endif

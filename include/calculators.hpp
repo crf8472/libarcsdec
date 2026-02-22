@@ -36,24 +36,6 @@ namespace arcsdec
 inline namespace v_1_0_0
 {
 
-namespace read // forward declarations
-{
-// required by interface
-class AudioReader;
-class MetadataParser;
-}
-
-using arcstk::ARId;
-using arcstk::Algorithm;
-using arcstk::AudioSize;
-using arcstk::ChecksumSet;
-using arcstk::Checksums;
-using arcstk::ChecksumtypeSet;
-using arcstk::Points;
-using arcstk::Settings;
-using arcstk::ToC;
-
-
 namespace select
 {
 
@@ -259,8 +241,15 @@ protected:
 } // namespace select
 
 
+namespace read // forward declarations
+{
+class AudioReader;
+class MetadataParser;
+} // namespace read
+
+
 /**
- * \brief Calculators.
+ * \brief Format-independent calculators for AccurateRip checksums and ids.
  */
 namespace calc
 {
@@ -302,9 +291,20 @@ namespace calc
  * @{
  */
 
+using arcstk::ARId;
+using arcstk::Algorithm;
+using arcstk::AudioSize;
+using arcstk::ChecksumSet;
+using arcstk::Checksums;
+using arcstk::ChecksumtypeSet;
+using arcstk::Points;
+using arcstk::Settings;
+using arcstk::ToC;
+
 using arcsdec::read::AudioReader;
 using arcsdec::read::MetadataParser;
 using arcsdec::select::FileReaderProvider;
+
 
 /**
  * \brief Format-independent parser for audio metadata.
