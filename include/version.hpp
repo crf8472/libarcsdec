@@ -4,14 +4,25 @@
 /**
  * \file
  *
- * \brief Provide version and name information for libarcsdec.
+ * \brief \link version Name, version and release information\endlink for
+ *        libarcsdec.
+ *
+ * \details
+ *
+ * Provide version and release info.
  */
 
 #include <string>
 
-
+/**
+ * \brief APIs of libarcsdec.
+ */
 namespace arcsdec
 {
+
+/**
+ * \brief libarcsdec API version 1.0.0.
+ */
 inline namespace v_1_0_0
 {
 

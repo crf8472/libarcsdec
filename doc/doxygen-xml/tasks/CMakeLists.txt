@@ -71,7 +71,7 @@ function (add_doxygen_xslt_task TASK XML_INPUT_FILES )
 	##	VERBATIM
 	## )
 	##
-	## Also possible as POST_BUILD of libarcstk_doxygen_generate_xml.
+	## Also possible as POST_BUILD of libarcsdec_doxygen_generate_xml.
 	##
 	## 2 impediments:
 	##

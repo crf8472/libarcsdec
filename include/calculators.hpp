@@ -27,9 +27,6 @@
 #include <vector>   // for vector
 
 
-/**
- * \brief APIs of libarcsdec.
- */
 namespace arcsdec
 {
 
