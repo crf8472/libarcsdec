@@ -23,7 +23,6 @@
 #include <memory>       // for unique_ptr, make_unique
 #include <set>          // for set
 #include <string>       // for string
-#include <type_traits>  // for remove_reference
 #include <utility>      // for pair, make_pair, move
 
 
@@ -207,9 +206,11 @@ Codec FileType::codec(const std::set<Codec>& codecs) const
 	// TODO Iterate over codecs and check each for a match with bytes
 	if (codecs.size() == 1) // Make Codec::NONE work
 	{
-		using arcsdec::read::name;
+		using std::cbegin;
 
-		const auto codec = *codecs.begin(); // FIXME cbegin
+		const auto codec = *cbegin(codecs);
+
+		using arcsdec::read::name;
 
 		ARCS_LOG(DEBUG1) << "Format supports only codec '" << name(codec)
 			<< "', so just assume this";
