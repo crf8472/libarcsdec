@@ -29,6 +29,11 @@ namespace arcsdec
 inline namespace v_1_0_0
 {
 
+/**
+ * \brief FileReader selection.
+ */
+namespace select
+{
 
 /**
  * \defgroup selection Select FileReaders
@@ -59,6 +64,17 @@ inline namespace v_1_0_0
  *
  * @{
  */
+
+
+using arcsdec::read::Bytes;
+using arcsdec::read::Codec;
+using arcsdec::read::FileReader;
+using arcsdec::read::FileReaderDescriptor;
+using arcsdec::read::Format;
+using arcsdec::read::FormatMatcher;
+using arcsdec::read::InputFormatException;
+using arcsdec::read::Matcher;
+using arcsdec::read::SuffixSet;
 
 
 /**
@@ -813,6 +829,7 @@ struct RegisterDescriptor final : private FileReaderRegistry
 
 /// @}
 
+} // namespace select
 } // namespace v_1_0_0
 } // namespace arcsdec
 

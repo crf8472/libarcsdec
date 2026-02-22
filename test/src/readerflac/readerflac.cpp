@@ -17,9 +17,9 @@
 
 TEST_CASE ("DescriptorFlac", "[readerflac]" )
 {
-	using arcsdec::DescriptorFlac;
-	using arcsdec::Format;
-	using arcsdec::Codec;
+	using arcsdec::read::DescriptorFlac;
+	using arcsdec::read::Format;
+	using arcsdec::read::Codec;
 
 	auto d = DescriptorFlac {};
 
@@ -102,11 +102,11 @@ TEST_CASE ("DescriptorFlac", "[readerflac]" )
 
 TEST_CASE ("FileReaderSelection", "[filereaderselection]")
 {
-	using arcsdec::FileReaderSelection;
-	using arcsdec::FileReaderRegistry;
-	using arcsdec::Format;
-	using arcsdec::Codec;
-	using arcsdec::DescriptorFlac;
+	using arcsdec::select::FileReaderSelection;
+	using arcsdec::select::FileReaderRegistry;
+	using arcsdec::read::Format;
+	using arcsdec::read::Codec;
+	using arcsdec::read::DescriptorFlac;
 
 	const auto default_selection {
 		FileReaderRegistry::default_audio_selection() };
@@ -120,7 +120,7 @@ TEST_CASE ("FileReaderSelection", "[filereaderselection]")
 
 	SECTION ( "Descriptor is registered" )
 	{
-		CHECK ( nullptr != arcsdec::FileReaderRegistry::reader("flac") );
+		CHECK ( nullptr != arcsdec::select::FileReaderRegistry::reader("flac") );
 	}
 
 	SECTION ( "Default settings select flac for FLAC/FLAC" )
@@ -143,7 +143,7 @@ TEST_CASE ("FileReaderSelection", "[filereaderselection]")
 
 //TEST_CASE ("FormatFlac", "[readerflac]" )
 //{
-//	auto f = arcsdec::FormatFlac{};
+//	auto f = arcsdec::read::FormatFlac{};
 //
 //	SECTION ("Matches accepted bytes correctly")
 //	{

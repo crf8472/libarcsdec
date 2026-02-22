@@ -27,6 +27,9 @@ namespace arcsdec
 inline namespace v_1_0_0
 {
 
+namespace read
+{
+
 using arcstk::ToC;
 
 /**
@@ -267,6 +270,7 @@ void frames_to_msf(long frames, int* m, int* s, int* f);
 
 /// @}
 
+} // namespace read
 } // namespace v_1_0_0
 } // namespace arcsdec
 

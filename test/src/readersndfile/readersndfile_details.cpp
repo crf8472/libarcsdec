@@ -16,7 +16,7 @@
 
 TEST_CASE ( "LibsndfileAudioReaderImpl", "[libsndfileaudioreaderimpl]" )
 {
-	auto i = arcsdec::details::sndfile::LibsndfileAudioReaderImpl{};
+	auto i = arcsdec::read::details::sndfile::LibsndfileAudioReaderImpl{};
 	// TODO
 
 	SECTION ("Descriptor is correct")

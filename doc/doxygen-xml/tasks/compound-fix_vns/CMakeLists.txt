@@ -13,52 +13,55 @@ function (register_compound-fix_vns XML_INPUT_PATH )
 	set (_arcsdec_ "arcsdec")
 	set (_v100_    "v__1__0__0" )
 	set (_arcsdec_v100_ "${_arcsdec_}${_sep_}${_v100_}${_sep_}" )
+	set (_read     "read${_sep_}" )
+	set (_select   "select${_sep_}" )
+	set (_calc     "calc${_sep_}" )
 
 	## refids of the compounds to be fixed.
 	## Only the compounds in the Classes/'annotated' tab are considered.
 	set (_XML_COMPOUNDS
-		"class${_arcsdec_v100_}ARCSCalculator" ;
-		"class${_arcsdec_v100_}ARIdCalculator" ;
-		"class${_arcsdec_v100_}AudioInfo" ;
-		"class${_arcsdec_v100_}AudioReader" ;
-		"class${_arcsdec_v100_}AudioReaderImpl" ;
-		"class${_arcsdec_v100_}AudioValidator" ;
-		"class${_arcsdec_v100_}Bytes" ;
-		"class${_arcsdec_v100_}ByteSeq" ;
-		"class${_arcsdec_v100_}DefaultPreference" ;
-		"class${_arcsdec_v100_}DefaultSelector" ;
-		"class${_arcsdec_v100_}DefaultValidator" ;
-		"class${_arcsdec_v100_}DescriptorPreference" ;
-		"class${_arcsdec_v100_}FileReader" ;
-		"class${_arcsdec_v100_}FileReaderDescriptor" ;
-		"class${_arcsdec_v100_}FileReaderPreferenceSelection" ;
-		"class${_arcsdec_v100_}FileReaderProvider" ;
-		"class${_arcsdec_v100_}FileReaderRegistry" ;
-		"class${_arcsdec_v100_}FileReaderSelection" ;
-		"class${_arcsdec_v100_}FileReaderSelector" ;
-		"class${_arcsdec_v100_}FileReadException" ;
-		"class${_arcsdec_v100_}FormatMatcher" ;
-		"class${_arcsdec_v100_}FormatPreference" ;
-		"class${_arcsdec_v100_}IdSelector" ;
-		"class${_arcsdec_v100_}InputFormatException" ;
-		"class${_arcsdec_v100_}InvalidAudioException" ;
-		"class${_arcsdec_v100_}Matcher" ;
-		"class${_arcsdec_v100_}MetadataParseException" ;
-		"class${_arcsdec_v100_}MetadataParser" ;
-		"class${_arcsdec_v100_}MetadataParserImpl" ;
-		"class${_arcsdec_v100_}MinPreference" ;
-		"class${_arcsdec_v100_}ReaderAndFormatHolder" ;
-		"class${_arcsdec_v100_}SampleProcessor" ;
-		"class${_arcsdec_v100_}SampleProvider" ;
-		"class${_arcsdec_v100_}SelectionPerformer" ;
-		"class${_arcsdec_v100_}ToCParser" ;
+		"class${_arcsdec_v100_}${_calc}ARCSCalculator" ;
+		"class${_arcsdec_v100_}${_calc}ARIdCalculator" ;
+		"class${_arcsdec_v100_}${_calc}AudioInfo" ;
+		"class${_arcsdec_v100_}${_read}AudioReader" ;
+		"class${_arcsdec_v100_}${_read}AudioReaderImpl" ;
+		"class${_arcsdec_v100_}${_read}AudioValidator" ;
+		"class${_arcsdec_v100_}${_read}Bytes" ;
+		"class${_arcsdec_v100_}${_read}ByteSeq" ;
+		"class${_arcsdec_v100_}${_select}DefaultPreference" ;
+		"class${_arcsdec_v100_}${_select}DefaultSelector" ;
+		"class${_arcsdec_v100_}${_read}DefaultValidator" ;
+		"class${_arcsdec_v100_}${_select}DescriptorPreference" ;
+		"class${_arcsdec_v100_}${_read}FileReader" ;
+		"class${_arcsdec_v100_}${_read}FileReaderDescriptor" ;
+		"class${_arcsdec_v100_}${_select}FileReaderPreferenceSelection" ;
+		"class${_arcsdec_v100_}${_select}FileReaderProvider" ;
+		"class${_arcsdec_v100_}${_select}FileReaderRegistry" ;
+		"class${_arcsdec_v100_}${_select}FileReaderSelection" ;
+		"class${_arcsdec_v100_}${_select}FileReaderSelector" ;
+		"class${_arcsdec_v100_}${_read}FileReadException" ;
+		"class${_arcsdec_v100_}${_read}FormatMatcher" ;
+		"class${_arcsdec_v100_}${_select}FormatPreference" ;
+		"class${_arcsdec_v100_}${_select}IdSelector" ;
+		"class${_arcsdec_v100_}${_read}InputFormatException" ;
+		"class${_arcsdec_v100_}${_read}InvalidAudioException" ;
+		"class${_arcsdec_v100_}${_read}Matcher" ;
+		"class${_arcsdec_v100_}${_read}MetadataParseException" ;
+		"class${_arcsdec_v100_}${_read}MetadataParser" ;
+		"class${_arcsdec_v100_}${_read}MetadataParserImpl" ;
+		"class${_arcsdec_v100_}${_select}MinPreference" ;
+		"class${_arcsdec_v100_}${_select}ReaderAndFormatHolder" ;
+		"class${_arcsdec_v100_}${_read}SampleProcessor" ;
+		"class${_arcsdec_v100_}${_read}SampleProvider" ;
+		"class${_arcsdec_v100_}${_select}SelectionPerformer" ;
+		"class${_arcsdec_v100_}${_calc}ToCParser" ;
 		#
-		"struct${_arcsdec_v100_}BigEndianBytes" ;
-		"struct${_arcsdec_v100_}BLOCKSIZE" ;
-		"struct${_arcsdec_v100_}CDDAValidator" ;
-		"struct${_arcsdec_v100_}LittleEndianBytes" ;
-		"struct${_arcsdec_v100_}RegisterDescriptor" ;
-		"struct${_arcsdec_v100_}RegisterFormat" ;
+		"struct${_arcsdec_v100_}${_read}BigEndianBytes" ;
+		"struct${_arcsdec_v100_}${_read}BLOCKSIZE" ;
+		"struct${_arcsdec_v100_}${_read}CDDAValidator" ;
+		"struct${_arcsdec_v100_}${_read}LittleEndianBytes" ;
+		"struct${_arcsdec_v100_}${_select}RegisterDescriptor" ;
+		"struct${_arcsdec_v100_}${_select}RegisterFormat" ;
 	)
 
 	## Expand the compounds' refids to XML filenames

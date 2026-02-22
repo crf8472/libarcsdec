@@ -36,9 +36,12 @@ namespace arcsdec
 inline namespace v_1_0_0
 {
 
+namespace read // forward declarations
+{
 // required by interface
 class AudioReader;
 class MetadataParser;
+}
 
 using arcstk::ARId;
 using arcstk::Algorithm;
@@ -51,42 +54,8 @@ using arcstk::Settings;
 using arcstk::ToC;
 
 
-/**
- * \defgroup calculators Calculators for AccurateRip Checksums and IDs
- *
- * \brief Calculate AccurateRip checksums and IDs.
- *
- * Calculators provide calculation results, thereby processing data provided by
- * FileReader instances. When passed filenames, calculators determine
- * autonomously the required FileReader types for reading those files, perform
- * the read process and their respective calculation task and provide the result
- * to the caller. The caller is not responsible for any format or codec related
- * task.
- *
- * This module defines four calculators providing different kinds of
- * information:
- *
- * <table>
- *		<tr>
- *			<td>ARCSCalculator is a calculator for the ARCSs for each audio
- *				track of a given audio-/metadata file pair.</td>
- *		</tr>
- *		<tr>
- *			<td>ARIdCalculator is a calculator for the AccurateRip id of a given
- *				audio-/metadata file pair.</td>
- *		</tr>
- *		<tr>
- *			<td>ToCParser is a format independent parser for metadata files.
- *			</td>
- *		</tr>
- *		<tr>
- *			<td>AudioInfo is a format independent reader for metadata of audio
- *			files that currently provides the amount of samples.</td>
- *		</tr>
- * </table>
- *
- * @{
- */
+namespace select
+{
 
 /**
  * \brief Provide the default FileReaderSelection for the specified ReaderType.
@@ -258,7 +227,6 @@ private:
 	details::CreateReader<ReaderType> create_;
 };
 
-
 // Re-activate -Weffc++ for all what follows
 #pragma GCC diagnostic pop
 
@@ -288,6 +256,55 @@ protected:
 	}
 };
 
+} // namespace select
+
+
+/**
+ * \brief Calculators.
+ */
+namespace calc
+{
+
+/**
+ * \defgroup calculators Calculators for AccurateRip Checksums and IDs
+ *
+ * \brief Calculate AccurateRip checksums and IDs.
+ *
+ * Calculators provide calculation results, thereby processing data provided by
+ * FileReader instances. When passed filenames, calculators determine
+ * autonomously the required FileReader types for reading those files, perform
+ * the read process and their respective calculation task and provide the result
+ * to the caller. The caller is not responsible for any format or codec related
+ * task.
+ *
+ * This module defines four calculators providing different kinds of
+ * information:
+ *
+ * <table>
+ *		<tr>
+ *			<td>ARCSCalculator is a calculator for the ARCSs for each audio
+ *				track of a given audio-/metadata file pair.</td>
+ *		</tr>
+ *		<tr>
+ *			<td>ARIdCalculator is a calculator for the AccurateRip id of a given
+ *				audio-/metadata file pair.</td>
+ *		</tr>
+ *		<tr>
+ *			<td>ToCParser is a format independent parser for metadata files.
+ *			</td>
+ *		</tr>
+ *		<tr>
+ *			<td>AudioInfo is a format independent reader for metadata of audio
+ *			files that currently provides the amount of samples.</td>
+ *		</tr>
+ * </table>
+ *
+ * @{
+ */
+
+using arcsdec::read::AudioReader;
+using arcsdec::read::MetadataParser;
+using arcsdec::select::FileReaderProvider;
 
 /**
  * \brief Format-independent parser for audio metadata.
@@ -551,6 +568,8 @@ private:
 };
 
 /// @}
+
+} // namespace calc
 
 } // namespace v_1_0_0
 } // namespace arcsdec

@@ -17,7 +17,7 @@
 
 TEST_CASE ( "RIFFWAV_PCM_CDDA_t constants", "[readerwav]" )
 {
-	using arcsdec::details::wave::RIFFWAV_PCM_CDDA_t;
+	using arcsdec::read::details::wave::RIFFWAV_PCM_CDDA_t;
 
 	RIFFWAV_PCM_CDDA_t w;
 

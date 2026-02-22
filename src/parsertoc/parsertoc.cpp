@@ -44,6 +44,8 @@ namespace arcsdec
 {
 inline namespace v_1_0_0
 {
+namespace read
+{
 namespace details
 {
 namespace cdrtoc
@@ -86,6 +88,7 @@ std::unique_ptr<ToC> TocParserImpl::do_parse(const std::string& filename)
 
 std::unique_ptr<FileReaderDescriptor> TocParserImpl::do_descriptor() const
 {
+	using arcsdec::read::DescriptorToc;
 	return std::make_unique<DescriptorToc>();
 }
 
@@ -133,8 +136,8 @@ std::set<Format> DescriptorToc::define_formats() const
 LibInfo DescriptorToc::do_libraries() const
 {
 	return { { "-genuine-",
-		details::first_libname_match(details::runtime_deps(""), LIBARCSDEC_NAME)
-	} };
+		details::first_libname_match(
+				details::runtime_deps(""), LIBARCSDEC_NAME) } };
 }
 
 
@@ -150,10 +153,15 @@ std::unique_ptr<FileReaderDescriptor> DescriptorToc::do_clone() const
 	return std::make_unique<DescriptorToc>();
 }
 
+} // namespace read
+
 
 // Add this descriptor to the metadata descriptor registry
 
 namespace {
+
+using arcsdec::select::RegisterDescriptor;
+using arcsdec::read::DescriptorToc;
 
 const auto d = RegisterDescriptor<DescriptorToc>{};
 

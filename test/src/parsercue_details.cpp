@@ -25,9 +25,9 @@
 
 TEST_CASE ("cuesheet", "[yycuesheet]" )
 {
-	using arcsdec::details::DefaultLexerHandler;
-	using arcsdec::details::ParserToCHandler;
-	using arcsdec::details::cuesheet::Driver;
+	using arcsdec::read::details::DefaultLexerHandler;
+	using arcsdec::read::details::ParserToCHandler;
+	using arcsdec::read::details::cuesheet::Driver;
 
 	auto l_hdler = DefaultLexerHandler { /* default */ } ;
 	auto handler = ParserToCHandler {};

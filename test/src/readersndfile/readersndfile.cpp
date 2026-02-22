@@ -17,9 +17,9 @@
 
 TEST_CASE ("DescriptorSndfile", "[readersndfile]" )
 {
-	using arcsdec::DescriptorSndfile;
-	using arcsdec::Format;
-	using arcsdec::Codec;
+	using arcsdec::read::DescriptorSndfile;
+	using arcsdec::read::Format;
+	using arcsdec::read::Codec;
 
 	auto d = DescriptorSndfile {};
 
@@ -117,10 +117,10 @@ TEST_CASE ("DescriptorSndfile", "[readersndfile]" )
 
 TEST_CASE ("FileReaderSelection", "[filereaderselection]")
 {
-	using arcsdec::FileReaderSelection;
-	using arcsdec::FileReaderRegistry;
-	using arcsdec::Format;
-	using arcsdec::Codec;
+	using arcsdec::select::FileReaderSelection;
+	using arcsdec::select::FileReaderRegistry;
+	using arcsdec::read::Format;
+	using arcsdec::read::Codec;
 
 	const auto default_selection {
 		FileReaderRegistry::default_audio_selection() };
@@ -134,7 +134,7 @@ TEST_CASE ("FileReaderSelection", "[filereaderselection]")
 
 	SECTION ( "Descriptor is registered" )
 	{
-		CHECK ( nullptr != arcsdec::FileReaderRegistry::reader("libsndfile") );
+		CHECK ( nullptr != arcsdec::select::FileReaderRegistry::reader("libsndfile") );
 	}
 
 	SECTION ( "Default settings select libsndfile for AIFF/PCM_S16LE" )

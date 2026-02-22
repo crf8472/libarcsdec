@@ -16,8 +16,8 @@
 
 TEST_CASE ("CueParserImpl", "[parserlibcue]" )
 {
-	using arcsdec::details::libcue::CueParserImpl;
-	//using arcsdec::DescriptorCue;
+	using arcsdec::read::details::libcue::CueParserImpl;
+	//using arcsdec::read::DescriptorCue;
 
 	auto d = CueParserImpl{}.descriptor();
 
@@ -26,7 +26,7 @@ TEST_CASE ("CueParserImpl", "[parserlibcue]" )
 		using arcstk::AudioSize;
 		using arcstk::UNIT;
 
-		using arcsdec::details::libcue::CueParserImpl;
+		using arcsdec::read::details::libcue::CueParserImpl;
 		auto parser = CueParserImpl{};
 		const auto cue = parser.parse("cuesheet/ok01.cue");
 		// This Cuesheet is complete and syntactically correct
@@ -50,7 +50,7 @@ TEST_CASE ("CueParserImpl", "[parserlibcue]" )
 		using arcstk::AudioSize;
 		using arcstk::UNIT;
 
-		using arcsdec::details::libcue::CueParserImpl;
+		using arcsdec::read::details::libcue::CueParserImpl;
 		auto parser = CueParserImpl{};
 		const auto cue = parser.parse("cuesheet/ok02.cue");
 		// This Cuesheet is complete and syntactically correct

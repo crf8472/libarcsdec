@@ -53,6 +53,8 @@ namespace arcsdec
 {
 inline namespace v_1_0_0
 {
+namespace read
+{
 namespace details
 {
 namespace wavpack
@@ -599,8 +601,6 @@ bool WavpackAudioReaderImpl::perform_validations(const WavpackOpenFile& file)
 } // namespace wavpack
 } // namespace details
 
-/// @}
-
 
 // DescriptorWavpack
 
@@ -659,10 +659,14 @@ std::unique_ptr<FileReaderDescriptor> DescriptorWavpack::do_clone() const
 	return std::make_unique<DescriptorWavpack>();
 }
 
+} // namespace read
 
 // Add this descriptor to the audio descriptor registry
 
 namespace {
+
+using select::RegisterDescriptor;
+using read::DescriptorWavpack;
 
 const auto d = RegisterDescriptor<DescriptorWavpack>{};
 

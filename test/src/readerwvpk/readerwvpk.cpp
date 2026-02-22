@@ -16,9 +16,9 @@
 
 TEST_CASE ("DescriptorWavpack", "[readerwvpk]" )
 {
-	using arcsdec::DescriptorWavpack;
-	using arcsdec::Format;
-	using arcsdec::Codec;
+	using arcsdec::read::DescriptorWavpack;
+	using arcsdec::read::Format;
+	using arcsdec::read::Codec;
 
 	auto d = DescriptorWavpack {};
 
@@ -94,10 +94,10 @@ TEST_CASE ("DescriptorWavpack", "[readerwvpk]" )
 
 TEST_CASE ("FileReaderSelection", "[filereaderselection]")
 {
-	using arcsdec::FileReaderSelection;
-	using arcsdec::FileReaderRegistry;
-	using arcsdec::Format;
-	using arcsdec::Codec;
+	using arcsdec::select::FileReaderSelection;
+	using arcsdec::select::FileReaderRegistry;
+	using arcsdec::read::Format;
+	using arcsdec::read::Codec;
 
 	const auto default_selection {
 		FileReaderRegistry::default_audio_selection() };
@@ -111,7 +111,7 @@ TEST_CASE ("FileReaderSelection", "[filereaderselection]")
 
 	SECTION ( "Descriptor is registered" )
 	{
-		CHECK ( nullptr != arcsdec::FileReaderRegistry::reader("wavpack") );
+		CHECK ( nullptr != arcsdec::select::FileReaderRegistry::reader("wavpack") );
 	}
 
 	SECTION ( "Default settings select wavpack for WV/Wavpack" )
@@ -134,7 +134,7 @@ TEST_CASE ("FileReaderSelection", "[filereaderselection]")
 
 //TEST_CASE ("FormatWavpack", "[readerwvpk]" )
 //{
-//	auto f = arcsdec::FormatWavpack {};
+//	auto f = arcsdec::read::FormatWavpack {};
 //
 //	SECTION ("Matches accepted bytes correctly")
 //	{

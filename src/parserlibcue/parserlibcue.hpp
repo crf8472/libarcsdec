@@ -20,6 +20,8 @@ namespace arcsdec
 {
 inline namespace v_1_0_0
 {
+namespace read
+{
 
 /**
  * \brief A MetadataParser for Cuesheet files, implemented with libcue 2.
@@ -58,6 +60,7 @@ private:
 	std::unique_ptr<FileReaderDescriptor> do_clone() const final;
 };
 
+} // namespace read
 } // namespace v_1_0_0
 } // namespace arcsdec
 

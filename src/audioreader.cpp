@@ -27,8 +27,9 @@
 
 namespace arcsdec
 {
-
 inline namespace v_1_0_0
+{
+namespace read
 {
 
 using arcstk::CDDA;
@@ -778,7 +779,7 @@ std::unique_ptr<FileReaderDescriptor> AudioReader::do_descriptor() const
 	return impl_->descriptor();
 }
 
+} // namespace read
 } // namespace v_1_0_0
-
 } // namespace arcsdec
 

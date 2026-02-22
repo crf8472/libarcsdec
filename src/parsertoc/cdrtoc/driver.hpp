@@ -17,12 +17,14 @@
 #include "flexbisondriver.hpp"  // for FlexBisonDriver
 #endif
 #ifndef __LIBARCSDEC_TOCHANDLER_HPP__
-#include "tochandler.hpp"         // for ParserToCHandler
+#include "tochandler.hpp"       // for ParserToCHandler
 #endif
 
 namespace arcsdec
 {
 inline namespace v_1_0_0
+{
+namespace read
 {
 namespace details
 {
@@ -39,6 +41,7 @@ using Driver = FlexBisonDriver<
 
 } // namespace cdrtoc
 } // namespace details
+} // namespace read
 } // namespace v_1_0_0
 } // namespace arcsdec
 

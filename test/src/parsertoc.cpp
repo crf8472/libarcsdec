@@ -17,9 +17,9 @@
 
 TEST_CASE ("DescriptorToc", "[parsertoc]" )
 {
-	using arcsdec::DescriptorToc;
-	using arcsdec::Format;
-	using arcsdec::Codec;
+	using arcsdec::read::DescriptorToc;
+	using arcsdec::read::Format;
+	using arcsdec::read::Codec;
 
 	auto d = DescriptorToc{};
 
@@ -92,10 +92,10 @@ TEST_CASE ("DescriptorToc", "[parsertoc]" )
 
 TEST_CASE ("FileReaderSelection", "[filereaderselection]")
 {
-	using arcsdec::FileReaderSelection;
-	using arcsdec::FileReaderRegistry;
-	using arcsdec::Format;
-	using arcsdec::Codec;
+	using arcsdec::select::FileReaderSelection;
+	using arcsdec::select::FileReaderRegistry;
+	using arcsdec::read::Format;
+	using arcsdec::read::Codec;
 
 	const auto default_selection {
 		FileReaderRegistry::default_audio_selection() };
@@ -109,7 +109,7 @@ TEST_CASE ("FileReaderSelection", "[filereaderselection]")
 
 	SECTION ( "Descriptor is registered" )
 	{
-		CHECK ( nullptr != arcsdec::FileReaderRegistry::reader("cdrtoc") );
+		CHECK ( nullptr != arcsdec::select::FileReaderRegistry::reader("cdrtoc") );
 	}
 }
 

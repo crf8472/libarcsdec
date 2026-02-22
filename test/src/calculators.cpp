@@ -21,7 +21,7 @@
 #endif
 
 
-using arcsdec::ReaderAndFormatHolder;
+using arcsdec::select::ReaderAndFormatHolder;
 
 /**
  * \brief Mock for ReaderAndFormatHolder.
@@ -38,7 +38,7 @@ class Mock_ReaderAndFormatHolder : public ReaderAndFormatHolder
 
 TEST_CASE ( "ReaderAndFormatHolder", "[readerandformatholder]")
 {
-	using arcsdec::FileReaderRegistry;
+	using arcsdec::select::FileReaderRegistry;
 
 	auto h = Mock_ReaderAndFormatHolder{};
 
@@ -70,9 +70,9 @@ TEST_CASE ( "ReaderAndFormatHolder", "[readerandformatholder]")
 
 TEST_CASE ( "SelectionPerformer", "[selectionperformer]")
 {
-	using arcsdec::AudioReader;
-	using arcsdec::MetadataParser;
-	using arcsdec::SelectionPerformer;
+	using arcsdec::read::AudioReader;
+	using arcsdec::read::MetadataParser;
+	using arcsdec::select::SelectionPerformer;
 
 	const auto h = Mock_ReaderAndFormatHolder{};
 	const auto p = SelectionPerformer<MetadataParser>{};
@@ -96,8 +96,8 @@ TEST_CASE ( "SelectionPerformer", "[selectionperformer]")
 
 TEST_CASE ( "AudioInfo", "[calculators]")
 {
-	using arcsdec::AudioInfo;
-	using arcsdec::FileReaderRegistry;
+	using arcsdec::calc::AudioInfo;
+	using arcsdec::select::FileReaderRegistry;
 
 	const auto i = AudioInfo{};
 
@@ -120,8 +120,8 @@ TEST_CASE ( "AudioInfo", "[calculators]")
 
 TEST_CASE ( "ToCParser", "[calculators]" )
 {
-	using arcsdec::FileReaderRegistry;
-	using arcsdec::ToCParser;
+	using arcsdec::select::FileReaderRegistry;
+	using arcsdec::calc::ToCParser;
 
 	const auto p = ToCParser{};
 
@@ -146,7 +146,7 @@ TEST_CASE ( "ToCParser", "[calculators]" )
 
 TEST_CASE ( "ARCSCalculator", "[calculators]" )
 {
-	using arcsdec::ARCSCalculator;
+	using arcsdec::calc::ARCSCalculator;
 
 	auto c = ARCSCalculator{};
 
@@ -176,8 +176,8 @@ TEST_CASE ( "ARCSCalculator", "[calculators]" )
 
 TEST_CASE ( "ARIdCalculator", "[calculators]" )
 {
-	using arcsdec::ARIdCalculator;
-	using arcsdec::FileReaderRegistry;
+	using arcsdec::calc::ARIdCalculator;
+	using arcsdec::select::FileReaderRegistry;
 
 	const auto c = ARIdCalculator{};
 

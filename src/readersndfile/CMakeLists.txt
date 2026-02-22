@@ -29,6 +29,5 @@ else()
 		PUBLIC ${libsndfile_LIBRARIES} )
 endif()
 
-target_sources (${PROJECT_NAME}
-	PRIVATE ${PROJECT_SOURCE_DIR}/readersndfile.cpp )
+target_sources (${PROJECT_NAME} PRIVATE readersndfile.cpp )
 

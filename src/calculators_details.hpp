@@ -31,9 +31,13 @@ namespace arcsdec
 {
 inline namespace v_1_0_0
 {
-
+namespace read
+{
+// forward delcaration
 class AudioReader;
-
+} // namespace read
+namespace calc
+{
 namespace details
 {
 
@@ -101,23 +105,20 @@ std::vector<Calculation> init_calculations(const arcstk::Settings& settings,
  */
 Checksums merge_results(const std::vector<Calculation>& calculations);
 
-/**
- * \brief Derive an audiofile from a ToC.
- *
- * Iff the ToC contains exactly one audiofilename, this name is the result. Iff
- * the ToC contains multiple filenames that are identical, this name is the
- * result. Iff the ToC contains either no filename or multiple different
- * filenames, the function throws.
- *
- * \param[in] toc The ToC to inspect for audiofile name
- */
-// std::string get_audiofilename(const ToC& toc);
+} // namespace details
+} // namespace calc
+
+
+namespace read
+{
+namespace details
+{
 
 /**
  * \brief Worker: process an audio file via specified SampleProcessor.
  *
  * The \c buffer_size is specified as number of 32 bit PCM samples. It is
- * applied to the created \link AudioReader AudioReaders.
+ * applied to the created \link AudioReader AudioReaders\endlink.
  *
  * \param[in] audiofilename  Name of the audiofile
  * \param[in] reader         Audio reader
@@ -138,6 +139,16 @@ void process_audio_file(const std::string& audiofilename,
 AudioSize ensure_leadout(const AudioSize& leadout,
 		const AudioReader& reader, const std::string& audiofilename);
 
+} // namespace details
+} // namespace read
+
+
+namespace calc
+{
+namespace details
+{
+
+using arcsdec::read::SampleProcessor;
 
 /**
  * \brief SampleProcessor that updates a Calculation.
@@ -240,6 +251,8 @@ private:
 };
 
 } // namespace details
+} // namespace calc
+
 } // namespace v_1_0_0
 } // namespace arcsdec
 

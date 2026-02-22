@@ -11,7 +11,7 @@
  *
  * All functions are implemented empty.
  */
-class Mock_SampleProcessor: public arcsdec::SampleProcessor
+class Mock_SampleProcessor: public arcsdec::read::SampleProcessor
 {
 	void do_start_input() final
 	{

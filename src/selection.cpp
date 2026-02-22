@@ -31,6 +31,8 @@ namespace arcsdec
 {
 inline namespace v_1_0_0
 {
+namespace select
+{
 
 /**
  * \brief Amount of bytes to read from the beginning of a file.
@@ -128,7 +130,7 @@ private:
 
 FileType::FileType(const std::string& filename)
 	: filename_ { filename }
-	, bytes_    { details::read_bytes(filename, offset(), total_bytes()) }
+	, bytes_    { read::details::read_bytes(filename, offset(), total_bytes()) }
 {
 	// empty
 }
@@ -205,10 +207,12 @@ Codec FileType::codec(const std::set<Codec>& codecs) const
 	// TODO Iterate over codecs and check each for a match with bytes
 	if (codecs.size() == 1) // Make Codec::NONE work
 	{
-		const auto codec = *codecs.begin();
+		using arcsdec::read::name;
 
-		ARCS_LOG(DEBUG1) << "Format supports only codec '" <<
-			arcsdec::name(codec) << "', so just assume this";
+		const auto codec = *codecs.begin(); // FIXME cbegin
+
+		ARCS_LOG(DEBUG1) << "Format supports only codec '" << name(codec)
+			<< "', so just assume this";
 
 		// TODO Activate/deactivate Validation?
 
@@ -530,6 +534,8 @@ std::unique_ptr<FileReaderDescriptor> select_descriptor(
 {
 	if (filename.empty())
 	{
+		using read::FileReadException;
+
 		throw FileReadException("Filename must not be empty");
 	}
 
@@ -632,6 +638,7 @@ const auto da8 = RegisterFormat<Format::AIFF>({ "aiff" },
 
 } // namespace
 
+} // namespace select
 } // namespace v_1_0_0
 } // namespace arcsdec
 

@@ -20,6 +20,8 @@ namespace arcsdec
 {
 inline namespace v_1_0_0
 {
+namespace read
+{
 
 /**
  * \brief AudioReader for RIFF/WAVE files with CDDA-compliant PCM data.
@@ -64,6 +66,7 @@ private:
 	std::unique_ptr<FileReaderDescriptor> do_clone() const final;
 };
 
+} // namespace read
 } // namespace v_1_0_0
 } // namespace arcsdec
 

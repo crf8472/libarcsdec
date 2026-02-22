@@ -16,7 +16,7 @@
  *
  * We also rename yylex() to Lexer::next_token().
 */
-#define YY_DECL arcsdec::details::cdrtoc::yycdrtoc::Parser::symbol_type arcsdec::details::cdrtoc::yycdrtoc::Lexer::next_token()
+#define YY_DECL arcsdec::read::details::cdrtoc::yycdrtoc::Parser::symbol_type arcsdec::read::details::cdrtoc::yycdrtoc::Lexer::next_token()
 
 
 #include <string>
@@ -40,7 +40,8 @@
 /* NOTE that Lexer is part of v_1_0_0! File cdrtoc.l does always refer to */
 /* the Lexer class without specifiying the inline namespace for version!    */
 
-namespace arcsdec { inline namespace v_1_0_0 { namespace details {
+namespace arcsdec { inline namespace v_1_0_0 {
+namespace read { namespace details {
 
 // forward declared from flexbisondriver.hpp
 
@@ -160,7 +161,7 @@ public:
 
 } // namespace yycdrtoc
 } // namespace cdrtoc
-} /*details*/ } /*v_1_0_0*/ } /*arcsdec*/
+} /*details*/ } /*read*/ } /*v_1_0_0*/ } /*arcsdec*/
 
 #endif // __LIBARCSDEC_CDRTOC_LEXER_DEFS_HPP__
 

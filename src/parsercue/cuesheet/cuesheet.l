@@ -20,7 +20,7 @@
 %option noyywrap
 
 /* Specify name of the generated lexer class */
-%option yyclass="arcsdec::details::cuesheet::yycuesheet::Lexer"
+%option yyclass="arcsdec::read::details::cuesheet::yycuesheet::Lexer"
 
 /* Maintain the lineno */
 %option yylineno
@@ -229,6 +229,8 @@ SIZE_INFO   { return Parser::make_SIZE_INFO(loc());           }
 
 namespace arcsdec
 {
+namespace read
+{
 namespace details
 {
 namespace cuesheet
@@ -268,5 +270,6 @@ Parser::location_type Lexer::loc() const
 } // namespace yycuesheet
 } // namespace cuesheet
 } // namespace details
+} // namespace read
 } // namespace arcsdec
 

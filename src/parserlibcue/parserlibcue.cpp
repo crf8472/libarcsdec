@@ -56,6 +56,8 @@ namespace arcsdec
 {
 inline namespace v_1_0_0
 {
+namespace read
+{
 namespace details
 {
 namespace libcue
@@ -342,10 +344,14 @@ std::unique_ptr<FileReaderDescriptor> DescriptorCue::do_clone() const
 	return std::make_unique<DescriptorCue>();
 }
 
+} // namespace read
 
 // Add this descriptor to the metadata descriptor registry
 
 namespace {
+
+using select::RegisterDescriptor;
+using read::DescriptorCue;
 
 const auto d = RegisterDescriptor<DescriptorCue>{};
 

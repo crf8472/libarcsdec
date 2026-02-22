@@ -28,6 +28,8 @@ namespace arcsdec
 {
 inline namespace v_1_0_0
 {
+namespace read
+{
 namespace details
 {
 
@@ -1007,6 +1009,7 @@ int64_t retrieve_file_size_bytes(const std::string& filename);
 
 } // namespace wave
 } // namespace details
+} // namespace read
 } // namespace v_1_0_0
 } // namespace arcsdec
 

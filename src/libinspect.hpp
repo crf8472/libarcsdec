@@ -15,7 +15,8 @@ namespace arcsdec
 {
 inline namespace v_1_0_0
 {
-
+namespace read
+{
 namespace details
 {
 
@@ -121,9 +122,8 @@ const std::string& libfile(const std::string& libname);
 
 /// @}
 
-} // details
-
-
+} // namespace details
+} // namespace read
 } // namespace v_1_0_0
 } // namespace arcsdec
 

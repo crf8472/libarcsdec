@@ -28,6 +28,8 @@ namespace arcsdec
 {
 inline namespace v_1_0_0
 {
+namespace read
+{
 namespace details
 {
 
@@ -662,7 +664,7 @@ private:
 
 
 /**
- * \brief Matcher for file formats.
+ * \brief Template: Matcher for file formats.
  *
  * Matches a specific Format. A FormatMatcher can be implemented by
  * constructing a FormatMatcher with the specified format as its template
@@ -720,7 +722,7 @@ private:
 
 	inline std::string do_name() const final
 	{
-		using arcsdec::name;
+		using arcsdec::read::name;
 		return name(F);
 	}
 
@@ -1088,6 +1090,7 @@ private:
 
 /// @}
 
+} // namespace read
 } // namespace v_1_0_0
 } // namespace arcsdec
 

@@ -16,7 +16,7 @@
  *
  * We also rename yylex() to Lexer::next_token().
 */
-#define YY_DECL arcsdec::details::cuesheet::yycuesheet::Parser::symbol_type arcsdec::details::cuesheet::yycuesheet::Lexer::next_token()
+#define YY_DECL arcsdec::read::details::cuesheet::yycuesheet::Parser::symbol_type arcsdec::read::details::cuesheet::yycuesheet::Lexer::next_token()
 
 
 #include <string>
@@ -40,7 +40,8 @@
 /* NOTE that Lexer is part of v_1_0_0! File cuesheet.l does always refer to */
 /* the Lexer class without specifiying the inline namespace for version!    */
 
-namespace arcsdec { inline namespace v_1_0_0 { namespace details {
+namespace arcsdec { inline namespace v_1_0_0 {
+namespace read { namespace details {
 
 // forward declared from flexbisondriver.hpp
 
@@ -158,7 +159,7 @@ public:
 
 } // namespace yycuesheet
 } // namespace cuesheet
-} /*details*/ } /*v_1_0_0*/ } /*arcsdec*/
+} /*details*/ } /*read*/ } /*v_1_0_0*/ } /*arcsdec*/
 
 #endif // __LIBARCSDEC_CUESHEET_LEXER_DEFS_HPP__
 

@@ -15,7 +15,7 @@
 
 TEST_CASE ( "FileReaderSelector", "[filereaderselector]")
 {
-	using arcsdec::FileReaderSelector;
+	using arcsdec::select::FileReaderSelector;
 
 
 	SECTION ( "Copy constructor and assignment operator are not declared" )
@@ -34,7 +34,7 @@ TEST_CASE ( "FileReaderSelector", "[filereaderselector]")
 
 TEST_CASE ( "FileReaderRegistry", "[filereaderregistry]")
 {
-	using arcsdec::FileReaderRegistry;
+	using arcsdec::select::FileReaderRegistry;
 	//using arcsdec::DescriptorWavPCM;
 	//using DescriptorTestType = arcsdec::RegisterDescriptor<DescriptorWavPCM>;
 
@@ -63,7 +63,7 @@ TEST_CASE ( "FileReaderRegistry", "[filereaderregistry]")
 
 	SECTION ( "Exactly the supported formats are present" )
 	{
-		using arcsdec::Format;
+		using arcsdec::read::Format;
 
 		CHECK ( FileReaderRegistry::has_format(Format::CUE) );
 		CHECK ( FileReaderRegistry::has_format(Format::CDRDAO) );
@@ -84,7 +84,7 @@ TEST_CASE ( "FileReaderRegistry", "[filereaderregistry]")
 		// At least the 2 non-optional descriptors:
 		// Maybe not each available reader was compiled, but we will always have
 		// the genuine wav reader + libcue-based cuesheet parser
-		CHECK ( 2 <= arcsdec::FileReaderRegistry::readers()->size() );
+		CHECK ( 2 <= arcsdec::select::FileReaderRegistry::readers()->size() );
 		// Specific tests are in parserlibcue.cpp and readerwav.cpp
 	}
 }

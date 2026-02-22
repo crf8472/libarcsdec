@@ -20,7 +20,7 @@
 
 TEST_CASE ( "WAVPACK_CDDA_t constants are correct", "[readerwvpk]" )
 {
-	arcsdec::details::wavpack::WAVPACK_CDDA_t w;
+	arcsdec::read::details::wavpack::WAVPACK_CDDA_t w;
 
 	CHECK(  w.lossless()              );
 	CHECK(  w.wav_format_only()       );
@@ -32,8 +32,8 @@ TEST_CASE ( "WAVPACK_CDDA_t constants are correct", "[readerwvpk]" )
 
 TEST_CASE ("WavpackAudioReaderImpl", "[readerwvpk]" )
 {
-	using arcsdec::details::wavpack::WavpackAudioReaderImpl;
-	//using arcsdec::DescriptorWavpack;
+	using arcsdec::read::details::wavpack::WavpackAudioReaderImpl;
+	//using arcsdec::read::DescriptorWavpack;
 
 	auto d = WavpackAudioReaderImpl{}.descriptor();
 
@@ -47,7 +47,7 @@ TEST_CASE ("WavpackAudioReaderImpl", "[readerwvpk]" )
 
 	SECTION ("Parses a syntactically intact input correctly")
 	{
-		using arcsdec::details::wavpack::WavpackAudioReaderImpl;
+		using arcsdec::read::details::wavpack::WavpackAudioReaderImpl;
 
 		auto r { WavpackAudioReaderImpl{} };
 		auto proc = Mock_SampleProcessor{};
@@ -61,7 +61,7 @@ TEST_CASE ("WavpackAudioReaderImpl", "[readerwvpk]" )
 
 TEST_CASE ("WavpackOpenFile", "[readerwvpk]" )
 {
-	using arcsdec::details::wavpack::WavpackOpenFile;
+	using arcsdec::read::details::wavpack::WavpackOpenFile;
 
 	WavpackOpenFile f {"test01.wv"};
 
@@ -105,9 +105,9 @@ TEST_CASE ("WavpackOpenFile", "[readerwvpk]" )
 
 TEST_CASE ("WavpackValidatingHandler", "[readerwvpk]" )
 {
-	using arcsdec::details::wavpack::WavpackValidatingHandler;
-	using arcsdec::details::wavpack::WavpackOpenFile;
-	using arcsdec::details::wavpack::WAVPACK_CDDA_t;
+	using arcsdec::read::details::wavpack::WavpackValidatingHandler;
+	using arcsdec::read::details::wavpack::WavpackOpenFile;
+	using arcsdec::read::details::wavpack::WAVPACK_CDDA_t;
 
 	auto valid = std::make_unique<WAVPACK_CDDA_t>();
 	auto h = std::make_unique<WavpackValidatingHandler>(std::move(valid));

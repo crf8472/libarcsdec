@@ -17,11 +17,11 @@
 
 TEST_CASE ("DescriptorCue", "[parserlibcue]" )
 {
-	using arcsdec::DescriptorCue;
-	using arcsdec::Format;
-	using arcsdec::Codec;
+	using arcsdec::read::DescriptorCue;
+	using arcsdec::read::Format;
+	using arcsdec::read::Codec;
 
-	auto d = arcsdec::DescriptorCue{};
+	auto d = DescriptorCue{};
 
 	SECTION ("Returns own name correctly")
 	{
@@ -97,10 +97,10 @@ TEST_CASE ("DescriptorCue", "[parserlibcue]" )
 
 TEST_CASE ("FileReaderSelection", "[filereaderselection]")
 {
-	using arcsdec::FileReaderSelection;
-	using arcsdec::FileReaderRegistry;
-	using arcsdec::Format;
-	using arcsdec::Codec;
+	using arcsdec::select::FileReaderSelection;
+	using arcsdec::select::FileReaderRegistry;
+	using arcsdec::read::Format;
+	using arcsdec::read::Codec;
 
 	const auto default_selection {
 		FileReaderRegistry::default_audio_selection() };
@@ -114,14 +114,14 @@ TEST_CASE ("FileReaderSelection", "[filereaderselection]")
 
 	SECTION ( "Descriptor is registered" )
 	{
-		CHECK ( nullptr != arcsdec::FileReaderRegistry::reader("libcue") );
+		CHECK ( nullptr != arcsdec::select::FileReaderRegistry::reader("libcue") );
 	}
 }
 
 
 //TEST_CASE ("FormatCue", "[parserlibcue]" )
 //{
-//	auto f = arcsdec::FormatCue{};
+//	auto f = arcsdec::read::FormatCue{};
 //
 //	SECTION ("Returns own name correctly")
 //	{

@@ -16,10 +16,10 @@
 
 TEST_CASE ( "FrameQueue", "[framequeue]" )
 {
-	using arcsdec::details::ffmpeg::AVFormatContextPtr;
-	using arcsdec::details::ffmpeg::AVCodecContextPtr;
-	using arcsdec::details::ffmpeg::FrameQueue;
-	using arcsdec::details::ffmpeg::av_err2str;
+	using arcsdec::read::details::ffmpeg::AVFormatContextPtr;
+	using arcsdec::read::details::ffmpeg::AVCodecContextPtr;
+	using arcsdec::read::details::ffmpeg::FrameQueue;
+	using arcsdec::read::details::ffmpeg::av_err2str;
 
 #if LIBAVFORMAT_VERSION_INT < AV_VERSION_INT(58, 9, 100) //  < ffmpeg 4.0
 	::av_register_all();
@@ -104,7 +104,7 @@ TEST_CASE ( "FrameQueue", "[framequeue]" )
 
 		// Further enqueueing yields only false but no exception
 
-		using arcsdec::details::ffmpeg::AVFramePtr;
+		using arcsdec::read::details::ffmpeg::AVFramePtr;
 		auto frame = AVFramePtr { nullptr };
 		auto total_samples = int32_t { 0 };
 
@@ -124,7 +124,7 @@ TEST_CASE ( "FrameQueue", "[framequeue]" )
 	{
 		// TODO This is basically the same test as in the SECTION above!
 
-		using arcsdec::details::ffmpeg::AVFramePtr;
+		using arcsdec::read::details::ffmpeg::AVFramePtr;
 		auto frame = AVFramePtr { nullptr };
 		auto total_samples = int32_t { 0 };
 

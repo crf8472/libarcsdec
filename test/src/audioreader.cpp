@@ -13,7 +13,7 @@
 
 TEST_CASE ( "LittleEndianBytes", "[littleendianbytes]" )
 {
-	using LE = arcsdec::LittleEndianBytes;
+	using LE = arcsdec::read::LittleEndianBytes;
 
 	SECTION ( "Convert 2 LE chars to int16_t", "[littleendianbytes]" )
 	{
@@ -43,7 +43,7 @@ TEST_CASE ( "LittleEndianBytes", "[littleendianbytes]" )
 
 TEST_CASE ( "BigEndianBytes", "[bigendianbytes]" )
 {
-	using BE = arcsdec::BigEndianBytes;
+	using BE = arcsdec::read::BigEndianBytes;
 
 	SECTION ( "Convert 4 BE chars to int32_t", "[bigendianbytes]" )
 	{

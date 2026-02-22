@@ -12,7 +12,7 @@
 %define api.location.file      "cuesheet_location.hpp"
 
 /* Namespace for generated parser class */
-%define api.namespace          {arcsdec::v_1_0_0::details::cuesheet::yycuesheet}
+%define api.namespace          {arcsdec::v_1_0_0::read::details::cuesheet::yycuesheet}
 
 /* Classname for generated parser class */
 %define api.parser.class       {Parser}
@@ -42,7 +42,7 @@
 %lex-param   { Lexer* lexer } /* to apply token rules */
 
 /* Define parameters to pass to Parser::Parser() */
-%parse-param { arcsdec::details::TokenLocation<position,location>* loc }
+%parse-param { arcsdec::read::details::TokenLocation<position,location>* loc }
 %parse-param { Lexer* lexer } /* to call parser */
 %parse-param { ParserToCHandler* handler } /* to implement parser rules */
 
@@ -55,9 +55,9 @@
 	#include "flexbisondriver.hpp"   // for TokenLocation
 	#endif
 
-	// Declaration of class 'Parser' refers to 'ParserTocHandler' in constructor
+	// Declaration of class 'Parser' refers to 'ParserToCHandler' in constructor
 	#ifndef __LIBARCSDEC_TOCHANDLER_HPP__
-	#include "tochandler.hpp"        // for ParserTocHandler
+	#include "tochandler.hpp"        // for ParserToCHandler
 	#endif
 
 	// Forward declare what we are about to use
@@ -69,7 +69,7 @@
 	{
 	inline namespace v_1_0_0
 	{
-	namespace details::cuesheet::yycuesheet
+	namespace read::details::cuesheet::yycuesheet
 	{
 		class Lexer;
 	}
@@ -81,10 +81,10 @@
 /* Goes to source file _before_ cuesheet.tab.hpp is included */
 %code top
 {
-	// To use member functions of 'ParserTocHandler' in production rule actions
+	// To use member functions of 'ParserToCHandler' in production rule actions
 	// (Include also required in cuesheet.tab.hpp)
 	#ifndef __LIBARCSDEC_TOCHANDLER_HPP__
-	#include "tochandler.hpp"       // for ParserTocHandler, ...
+	#include "tochandler.hpp"       // for ParserToCHandler, ...
 	#endif
 
 	// Re-declaration of yylex() below requires declaration of class 'Lexer'
@@ -103,8 +103,8 @@
 	// Override yylex() to be called in Parser::parse().
 	// Only called inside bison, so make it static to limit visibility to TU.
 	// Namespaces are required since yylex() is in global namespace.
-	static auto yylex(arcsdec::details::cuesheet::yycuesheet::Lexer* lexer)
-		-> arcsdec::details::cuesheet::yycuesheet::Parser::symbol_type
+	static auto yylex(arcsdec::read::details::cuesheet::yycuesheet::Lexer* lexer)
+		-> arcsdec::read::details::cuesheet::yycuesheet::Parser::symbol_type
 	{
 		return lexer->next_token(); // renamed yylex()
 	}
@@ -369,8 +369,8 @@ msf_time
 #endif
 
 /* Bison expects us to provide implementation, otherwise linker complains */
-namespace arcsdec { inline namespace v_1_0_0 { namespace details {
-namespace cuesheet {
+namespace arcsdec { inline namespace v_1_0_0 { namespace read {
+namespace details { namespace cuesheet {
 namespace yycuesheet {
 
 void Parser::error(const location& loc, const std::string& message)
@@ -380,5 +380,5 @@ void Parser::error(const location& loc, const std::string& message)
 
 } // namespace yycuesheet
 } // namespace cuesheet
-} /*details*/ } /*v_1_0_0*/ } /*arcsdec*/
+} /*details*/ } /*read*/ } /*v_1_0_0*/ } /*arcsdec*/
 

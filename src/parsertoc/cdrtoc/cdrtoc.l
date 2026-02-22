@@ -20,7 +20,7 @@
 %option noyywrap
 
 /* Specify name of the generated lexer class */
-%option yyclass="arcsdec::details::cdrtoc::yycdrtoc::Lexer"
+%option yyclass="arcsdec::read::details::cdrtoc::yycdrtoc::Lexer"
 
 /* Maintain the lineno */
 %option yylineno
@@ -216,6 +216,8 @@ ENCODING_MANDARIN   { return Parser::make_ENCODING_MANDARIN(loc());   }
 
 namespace arcsdec
 {
+namespace read
+{
 namespace details
 {
 namespace cdrtoc
@@ -261,5 +263,6 @@ Parser::location_type Lexer::loc() const
 } // namespace yycdrtoc
 } // namespace cdrtoc
 } // namespace details
+} // namespace read
 } // namespace arcsdec
 

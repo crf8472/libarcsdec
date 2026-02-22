@@ -75,6 +75,8 @@ using arcstk::make_arid;
 
 // calculate_details.hpp
 
+namespace calc
+{
 namespace details
 {
 
@@ -199,6 +201,14 @@ Checksums merge_results(const std::vector<Calculation>& calculations)
 	return result;
 }
 
+} // namespace details
+} // namespace calc
+
+
+namespace read
+{
+namespace details
+{
 
 // process_audio_file
 
@@ -253,6 +263,14 @@ AudioSize ensure_leadout(const AudioSize& leadout,
 	return *reader.acquire_size(audiofilename);
 }
 
+} // namespace details
+} // namespace read
+
+
+namespace calc
+{
+namespace details
+{
 
 // CalculationProcessor
 
@@ -405,9 +423,16 @@ void MultiCalculationProcessor::do_end_input()
 }
 
 } // namespace details
+} // namespace calc
 
 
 // calculate.hpp
+
+
+namespace select
+{
+using arcsdec::read::AudioReader;
+using arcsdec::read::MetadataParser;
 
 
 // default_selection()
@@ -464,6 +489,13 @@ const FileReaders* ReaderAndFormatHolder::readers() const
 	return descriptors_;
 }
 
+} // namespace select
+
+
+namespace calc
+{
+using arcsdec::read::BLOCKSIZE;
+
 
 // ToCParser
 
@@ -475,6 +507,7 @@ std::unique_ptr<ToC> ToCParser::parse(const std::string& metafilename) const
 		ARCS_LOG_ERROR <<
 			"ToC info was requested but metadata filename was empty";
 
+		using arcsdec::read::FileReadException;
 		throw FileReadException(
 				"Requested metadata file parser for empty filename.");
 	}
@@ -648,8 +681,9 @@ std::pair<Checksums, AudioSize> ARCSCalculator::calculate(
 	using details::get_algorithms_or_throw;
 	using details::init_calculations;
 	using details::merge_results;
-	using details::process_audio_file;
 	using details::MultiCalculationProcessor;
+	using read::details::ensure_leadout;
+	using read::details::process_audio_file;
 
 	ARCS_LOG_DEBUG <<
 		"Calculate by single audiofilename and complete input data";
@@ -661,7 +695,7 @@ std::pair<Checksums, AudioSize> ARCSCalculator::calculate(
 	auto reader { create(audiofilename) };
 
 	const auto updated_leadout {
-		details::ensure_leadout(leadout, *reader, audiofilename)
+		ensure_leadout(leadout, *reader, audiofilename)
 		// TODO Wouldn't it be sufficient to do this exclusively for ALBUM?
 	};
 
@@ -800,6 +834,8 @@ void ARIdCalculator::set_audio(const AudioInfo& audio)
 {
 	audio_ = audio;
 }
+
+} // namespace calc
 
 } // namespace v_1_0_0
 } // namespace arcsdec

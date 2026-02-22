@@ -4,6 +4,7 @@
  * \brief Implements Libsndfile-based generic audio reader.
  */
 
+#include "parsertoc/parsertoc.hpp"
 #ifndef __LIBARCSDEC_READERSNDFILE_HPP__
 #include "readersndfile.hpp"
 #endif
@@ -48,6 +49,8 @@ namespace arcsdec
 {
 
 inline namespace v_1_0_0
+{
+namespace read
 {
 
 using arcstk::AudioSize;
@@ -274,10 +277,15 @@ std::unique_ptr<FileReaderDescriptor> DescriptorSndfile::do_clone() const
 	return std::make_unique<DescriptorSndfile>();
 }
 
+} // namespace read
+
 
 // Add this descriptor to the audio descriptor registry
 
 namespace {
+
+using select::RegisterDescriptor;
+using read::DescriptorSndfile;
 
 const auto d = RegisterDescriptor<DescriptorSndfile>{};
 

@@ -25,6 +25,8 @@ namespace arcsdec
 {
 inline namespace v_1_0_0
 {
+namespace read
+{
 
 /**
  * \brief Wavpack-5-based reader for losslessly encoded wavpack files.
@@ -69,6 +71,7 @@ private:
 	std::unique_ptr<FileReaderDescriptor> do_clone() const final;
 };
 
+} // namespace read
 } // namespace v_1_0_0
 } // namespace arcsdec
 

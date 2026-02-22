@@ -35,6 +35,13 @@ namespace arcsdec
 inline namespace v_1_0_0
 {
 
+/**
+ * \brief Read audio data and meta information.
+ */
+namespace read
+{
+
+
 using arcstk::AudioSize;
 using arcstk::UNIT;
 
@@ -823,8 +830,8 @@ struct BigEndianBytes final
 
 /// @}
 
+} // namespace read
 } // namespace v_1_0_0
-
 } // namespace arcsdec
 
 #endif

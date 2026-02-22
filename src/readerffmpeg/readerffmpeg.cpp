@@ -66,6 +66,8 @@ namespace arcsdec
 {
 inline namespace v_1_0_0
 {
+namespace read
+{
 namespace details
 {
 namespace ffmpeg
@@ -1748,10 +1750,15 @@ std::unique_ptr<FileReaderDescriptor> DescriptorFFmpeg::do_clone() const
 	return std::make_unique<DescriptorFFmpeg>();
 }
 
+} // namespace read
+
 
 // Add this descriptor to the audio descriptor registry
 
 namespace {
+
+using select::RegisterDescriptor;
+using read::DescriptorFFmpeg;
 
 const auto d = RegisterDescriptor<DescriptorFFmpeg>{};
 

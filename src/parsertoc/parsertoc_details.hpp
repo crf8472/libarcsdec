@@ -27,6 +27,8 @@ namespace arcsdec
 {
 inline namespace v_1_0_0
 {
+namespace read
+{
 namespace details
 {
 
@@ -40,6 +42,8 @@ namespace cdrtoc
 
 using arcstk::ToC;
 
+using arcsdec::read::FileReaderDescriptor;
+using arcsdec::read::MetadataParserImpl;
 
 /**
  * \internal
@@ -66,6 +70,7 @@ class TocParserImpl final : public MetadataParserImpl
 
 } // namespace cdrtoc
 } // namespace details
+} // namespace read
 } // namespace v_1_0_0
 } // namespace arcsdec
 

@@ -24,6 +24,8 @@ namespace arcsdec
 {
 inline namespace v_1_0_0
 {
+namespace read
+{
 
 // MetadataParserImpl
 
@@ -114,6 +116,8 @@ void frames_to_msf(long frames, int* m, int* s, int* f)
 }
 
 } // namespace details
+
+} // namespace read
 } // namespace v_1_0_0
 } // namespace arcsdec
 

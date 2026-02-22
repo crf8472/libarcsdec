@@ -19,14 +19,14 @@
 
 TEST_CASE ( "Names of libraries are matched correctly", "[libraries]" )
 {
-	const auto pattern = arcsdec::details::to_libname_pattern(
+	const auto pattern = arcsdec::read::details::to_libname_pattern(
 			arcsdec::LIBARCSDEC_NAME);
 
 
 	SECTION ("libnames are correctly escaped")
 	{
 		auto libname = std::string { "libFLAC++" };
-		arcsdec::details::escape(libname, '+', "\\");
+		arcsdec::read::details::escape(libname, '+', "\\");
 
 		CHECK ( libname == "libFLAC\\+\\+" );
 
@@ -37,13 +37,13 @@ TEST_CASE ( "Names of libraries are matched correctly", "[libraries]" )
 
 	SECTION ("libnames match so names")
 	{
-		const auto patt1 = arcsdec::details::to_libname_pattern("libFLAC++");
+		const auto patt1 = arcsdec::read::details::to_libname_pattern("libFLAC++");
 
 		CHECK ( std::regex_match("/usr/lib/libFLAC++.so.6", patt1) );
 
 
 		auto libname = std::string { "libFLAC++" };
-		arcsdec::details::escape(libname, '+', "\\");
+		arcsdec::read::details::escape(libname, '+', "\\");
 		const auto patt2 = std::regex(".*\\b" + libname + "\\.so(\\.[0-9]+)*$",
 			std::regex::icase);
 
@@ -59,11 +59,11 @@ TEST_CASE ( "Names of libraries are matched correctly", "[libraries]" )
 
 	SECTION ("Escaped libname is found in libarcsdec list")
 	{
-		const auto& list = arcsdec::details::libarcsdec_deps();
+		const auto& list = arcsdec::read::details::libarcsdec_deps();
 
 		CHECK ( !list.empty() );
 
-		auto so_name = arcsdec::details::first_libname_match(list, "libFLAC++");
+		auto so_name = arcsdec::read::details::first_libname_match(list, "libFLAC++");
 
 		CHECK ( !so_name.empty() );
 	}

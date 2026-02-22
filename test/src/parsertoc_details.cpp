@@ -16,8 +16,8 @@
 
 TEST_CASE ("TocParserImpl", "[parsertoc]" )
 {
-	using arcsdec::details::cdrtoc::TocParserImpl;
-	//using arcsdec::DescriptorToc;
+	using arcsdec::read::details::cdrtoc::TocParserImpl;
+	//using arcsdec::read::DescriptorToc;
 
 	auto d = TocParserImpl{}.descriptor();
 

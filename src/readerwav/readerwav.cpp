@@ -61,6 +61,8 @@ namespace arcsdec
 {
 inline namespace v_1_0_0
 {
+namespace read
+{
 namespace details
 {
 
@@ -1223,10 +1225,15 @@ std::unique_ptr<FileReaderDescriptor> DescriptorWavPCM::do_clone() const
 	return std::make_unique<DescriptorWavPCM>();
 }
 
+} // namespace read
+
 
 // Add this descriptor to the audio descriptor registry
 
 namespace {
+
+using select::RegisterDescriptor;
+using read::DescriptorWavPCM;
 
 const auto d = RegisterDescriptor<DescriptorWavPCM>();
 

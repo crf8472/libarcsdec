@@ -22,8 +22,8 @@
 
 TEST_CASE ("FlacDefaultMetadataHandler", "[readerflac]" )
 {
-	using arcsdec::details::flac::FlacDefaultMetadataHandler;
-	using arcsdec::Codec;
+	using arcsdec::read::details::flac::FlacDefaultMetadataHandler;
+	using arcsdec::read::Codec;
 
 	FlacDefaultMetadataHandler h;
 
@@ -36,9 +36,9 @@ TEST_CASE ("FlacDefaultMetadataHandler", "[readerflac]" )
 
 TEST_CASE ("FlacAudioReaderImpl", "[readerflac]" )
 {
-	using arcsdec::details::flac::FlacAudioReaderImpl;
-	using arcsdec::details::flac::FlacDefaultMetadataHandler;
-	using arcsdec::details::flac::FlacDefaultErrorHandler;
+	using arcsdec::read::details::flac::FlacAudioReaderImpl;
+	using arcsdec::read::details::flac::FlacDefaultMetadataHandler;
+	using arcsdec::read::details::flac::FlacDefaultErrorHandler;
 
 	FlacAudioReaderImpl r;
 	r.register_metadata_handler(std::make_unique<FlacDefaultMetadataHandler>());

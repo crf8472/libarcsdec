@@ -17,14 +17,14 @@
 TEST_CASE ( "ci_string", "[ci_string]" )
 {
 // TODO
-  //using arcsdec::details::ci_string;
+  //using arcsdec::read::details::ci_string;
 }
 
 
 TEST_CASE ( "ByteSeq", "[byteseq]")
 {
-	using arcsdec::ByteSeq;
-	using arcsdec::Bytes;
+	using arcsdec::read::ByteSeq;
+	using arcsdec::read::Bytes;
 
 	SECTION ("Constants are correct")
 	{
@@ -57,8 +57,8 @@ TEST_CASE ( "ByteSeq", "[byteseq]")
 
 TEST_CASE ( "Bytes special members and operators", "[bytes]" )
 {
-	using arcsdec::Bytes;
-	using arcsdec::ByteSequence;
+	using arcsdec::read::Bytes;
+	using arcsdec::read::ByteSequence;
 
 	auto bytes  { Bytes(0, { 0x01, 0x02, 0x06, 0x07, 0x4C, 0xF0 }) };
 
@@ -131,8 +131,8 @@ TEST_CASE ( "Bytes special members and operators", "[bytes]" )
 
 TEST_CASE ( "Bytes::match()", "[bytes]" )
 {
-	using arcsdec::Bytes;
-	using arcsdec::ByteSequence;
+	using arcsdec::read::Bytes;
+	using arcsdec::read::ByteSequence;
 
 	auto bytes  { Bytes(0, { 0x01, 0x02, 0x06, 0x07, 0x4C, 0xF0 }) };
 
@@ -221,7 +221,7 @@ TEST_CASE ( "Bytes::match()", "[bytes]" )
 
 TEST_CASE ( "FileReader special members", "[filereader]")
 {
-	using arcsdec::FileReader;
+	using arcsdec::read::FileReader;
 
 	SECTION ( "FileReader is not copy-constructible" )
 	{
@@ -254,9 +254,9 @@ TEST_CASE ( "FileReaderDescriptor special members", "[filereaderdescriptor]")
 
 TEST_CASE ( "libinfo_entry", "[libinfo]" )
 {
-	using arcsdec::LibInfoEntry;
-	using arcsdec::LibInfo;
-	using arcsdec::libinfo_entry_filepath;
+	using arcsdec::read::LibInfoEntry;
+	using arcsdec::read::LibInfo;
+	using arcsdec::read::libinfo_entry_filepath;
 }
 
 
@@ -274,11 +274,11 @@ TEST_CASE ( "libinfo_entry", "[libinfo]" )
 
 TEST_CASE ( "read_bytes", "[read_bytes]" )
 {
-	using arcsdec::FileReadException;
+	using arcsdec::read::FileReadException;
 
 	SECTION ( "Reading existing bytes from valid file works" )
 	{
-		auto bytes = arcsdec::details::read_bytes("test01.wav", 0, 44);
+		auto bytes = arcsdec::read::details::read_bytes("test01.wav", 0, 44);
 		// ARCS1: E35EF68A, ARCS2: E3631C44
 
 		CHECK ( bytes.size() == 44 );
@@ -308,7 +308,7 @@ TEST_CASE ( "read_bytes", "[read_bytes]" )
 	{
 		try
 		{
-			arcsdec::details::read_bytes("does_not_exist.wav", 0, 12);
+			arcsdec::read::details::read_bytes("does_not_exist.wav", 0, 12);
 			FAIL ( "Expected FileReadException was not thrown" );
 		} catch (const FileReadException &e)
 		{
@@ -320,7 +320,7 @@ TEST_CASE ( "read_bytes", "[read_bytes]" )
 	{
 		try
 		{
-			arcsdec::details::read_bytes("test01.wav", 0, 4146);
+			arcsdec::read::details::read_bytes("test01.wav", 0, 4146);
 			FAIL ( "Expected FileReadException was not thrown" );
 		} catch (const FileReadException &e)
 		{

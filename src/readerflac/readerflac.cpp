@@ -50,6 +50,8 @@ namespace arcsdec
 {
 inline namespace v_1_0_0
 {
+namespace read
+{
 namespace details
 {
 namespace flac
@@ -439,10 +441,15 @@ std::unique_ptr<FileReaderDescriptor> DescriptorFlac::do_clone() const
 	return std::make_unique<DescriptorFlac>();
 }
 
+} // namespace read
+
 
 // Add this descriptor to the audio descriptor registry
 
 namespace {
+
+using select::RegisterDescriptor;
+using read::DescriptorFlac;
 
 const auto d = RegisterDescriptor<DescriptorFlac>{};
 

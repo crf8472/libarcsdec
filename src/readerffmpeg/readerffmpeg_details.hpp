@@ -49,6 +49,8 @@ namespace arcsdec
 {
 inline namespace v_1_0_0
 {
+namespace read
+{
 namespace details
 {
 
@@ -1275,6 +1277,7 @@ void print_stream_info(std::ostream& out, const ::AVStream* stream);
 
 } // namespace ffmpeg
 } // namespace details
+} // namespace read
 } // namespace v_1_0_0
 } // namespace arcsdec
 

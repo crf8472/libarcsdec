@@ -37,6 +37,8 @@ namespace arcsdec
 {
 inline namespace v_1_0_0
 {
+namespace read
+{
 
 std::string name(Format format)
 {
@@ -764,6 +766,7 @@ void swap(Bytes& lhs, Bytes& rhs)
 	lhs.swap(rhs);
 }
 
+} // namespace read
 } // namespace v_1_0_0
 } // namespace arcsdec
 
