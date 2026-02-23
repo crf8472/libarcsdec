@@ -28,16 +28,24 @@ namespace read
 {
 namespace details
 {
+
+/**
+ * \brief Implementation for parsing CDRTOC documents.
+ */
 namespace cdrtoc
 {
 
-using Driver = FlexBisonDriver<
-	yycdrtoc::Lexer,
-	yycdrtoc::Parser,
-	yycdrtoc::location,
-	yycdrtoc::position,
-	ParserToCHandler
->;
+/**
+ * \brief Driver for parsertoc.
+ */
+using Driver = FlexBisonDriver<yycdrtoc::Lexer, yycdrtoc::Parser,
+	yycdrtoc::location, yycdrtoc::position, ParserToCHandler>;
+
+/**
+ * \brief Flex/Bison implementation of parsertoc.
+ */
+namespace yycdrtoc
+{/*for doxygen*/}
 
 } // namespace cdrtoc
 } // namespace details

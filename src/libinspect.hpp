@@ -24,15 +24,13 @@ namespace details
 /**
  * \internal
  *
- * \defgroup libinfoImpl API for implementing info functions about descriptors
+ * \defgroup libinfoImpl Runtime dependency inspection
  *
- * \ingroup descriptors
- *
- * \brief API for implementing info functions about descriptors.
+ * \brief Inspect shared objects and manage runtime dependencies
  *
  * \warning
- * This API is currently *nix-only. It uses only dlopen and operates only on
- * sonames.
+ * This API is currently *nix-only. It uses only dlopen and operates exclusively
+ * on sonames.
  *
  * @{
  */
@@ -48,7 +46,6 @@ void escape(std::string& input, const char c, const std::string& seq);
 
 
 /**
- * \internal
  * \brief Service: construct soname search pattern from library name.
  *
  * The library name should be the first part of the soname without any
@@ -66,7 +63,6 @@ std::regex to_libname_pattern(const std::string& libname);
 
 
 /**
- * \internal
  * \brief Find shared object in the list of libarcsdec runtime dependencies.
  *
  * List \c list is a list of sonames, it can be created by using runtime_deps.
@@ -82,7 +78,6 @@ const std::string& first_libname_match(const std::vector<std::string>& list,
 
 
 /**
- * \internal
  * \brief Service: load runtime dependencies of an object.
  *
  * If \c object_name is empty, the runtime dependencies of the main executable
@@ -99,7 +94,6 @@ std::vector<std::string> runtime_deps(const std::string& object_name);
 
 
 /**
- * \internal
  * \brief Acquire list of runtime dependencies of libarcsdec.
  *
  * \return List of runtime dependencies of libarcsdec

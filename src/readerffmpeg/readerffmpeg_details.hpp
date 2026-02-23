@@ -108,9 +108,6 @@ extern "C"
  * has to be a static or global function with C linkage to provide a portable
  * way of setting a C++ function as a callback for a C function.
  *
- * \relatesalso FFmpegAudioStream
- * \relatesalso FFmpegAudioStreamLoader
- *
  * \param[in] lvl  The loglevel as defined by the ffmpeg API (e.g. AV_LOG_INFO)
  * \param[in] fmt  The message format to log
  * \param[in] args The arguments to be placed in \c fmt
@@ -128,6 +125,7 @@ void arcs_av_log(void* /*v*/, int lvl, const char* fmt, std::va_list args);
  * \return LOGLEVEL
  */
 arcstk::LOGLEVEL arcs_loglevel(const int lvl);
+
 
 /**
  * \brief Encapsulates error code from the ffmpeg API.
@@ -179,6 +177,9 @@ struct Free_AVFormatContext final
 void operator << (std::ostream& out, const ::AVFormatContext* fctx);
 
 
+/**
+ * \brief Smart pointer for AVFormatContext.
+ */
 using AVFormatContextPtr =
 		std::unique_ptr<::AVFormatContext, Free_AVFormatContext>;
 
@@ -196,6 +197,9 @@ struct Free_AVCodecContext final
 void operator << (std::ostream& out, const ::AVCodecContext* cctx);
 
 
+/**
+ * \brief Smart pointer for AVCodecContext.
+ */
 using AVCodecContextPtr =
 		std::unique_ptr<::AVCodecContext, Free_AVCodecContext>;
 
@@ -212,7 +216,7 @@ struct Free_AVPacket final
 
 
 /**
- * \brief A unique_ptr for AVPackets using Free_AVPacket as a custom deleter.
+ * \brief Smart pointer for AVPacket
  */
 using AVPacketPtr = std::unique_ptr<::AVPacket, Free_AVPacket>;
 
@@ -246,7 +250,7 @@ void operator << (std::ostream& out, const ::AVStream* stream);
 
 
 /**
- * \brief A unique_ptr for AVFrame using Free_AVFrame as a custom deleter.
+ * \brief Smart pointer for AVFrame
  */
 using AVFramePtr = std::unique_ptr<::AVFrame, Free_AVFrame>;
 

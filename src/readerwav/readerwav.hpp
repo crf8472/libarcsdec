@@ -4,7 +4,7 @@
 /**
  * \file
  *
- * \brief Audio reader for RIFF/WAVE audio files with PCM samples.
+ * \brief AudioReader for RIFF/WAVE audio files with PCM samples.
  */
 
 #ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
@@ -24,7 +24,19 @@ namespace read
 {
 
 /**
- * \brief AudioReader for RIFF/WAVE files with CDDA-compliant PCM data.
+ * \internal
+ *
+ * \defgroup readerwav libarcsdec's RIFF/WAV@PCM implementation
+ *
+ * \ingroup audioreader
+ *
+ * @{
+ */
+
+/**
+ * \internal
+ *
+ * \brief An AudioReader for RIFF/WAVE files with integral PCM data.
  *
  * Represents a RIFF WAVE container holding PCM samples conforming to CDDA. That
  * is 16 bit, 2 channels, 44100 samples/sec as integer representation
@@ -65,6 +77,8 @@ private:
 
 	std::unique_ptr<FileReaderDescriptor> do_clone() const final;
 };
+
+/// @}
 
 } // namespace read
 } // namespace v_1_0_0

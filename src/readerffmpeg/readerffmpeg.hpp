@@ -4,7 +4,7 @@
 /**
  * \file
  *
- * \brief Audio reader for multiple file formats, implemented with ffmpeg.
+ * \brief AudioReader for multiple lossless audio formats, based on ffmpeg.
  */
 
 #ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
@@ -24,7 +24,19 @@ namespace read
 {
 
 /**
- * \brief Reader for lossless audio formats, implemented with ffmpeg.
+ * \internal
+ *
+ * \defgroup readerffmpeg Features based on ffmpeg
+ *
+ * \ingroup audioreader
+ *
+ * @{
+ */
+
+/**
+ * \internal
+ *
+ * \brief Generic ffmpeg-based AudioReader for lossless formats.
  *
  * \details
  *
@@ -79,6 +91,8 @@ private:
 
 	std::unique_ptr<FileReaderDescriptor> do_clone() const final;
 };
+
+/// @}
 
 } // namespace read
 } // namespace v_1_0_0

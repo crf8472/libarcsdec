@@ -53,7 +53,7 @@ using arcstk::ToC;
 /**
  * \internal
  *
- * \defgroup parserLibcueImpl Implementation details of CueSheet parsing
+ * \defgroup parserlibcueImpl Implementation
  *
  * \ingroup parserlibcue
  *

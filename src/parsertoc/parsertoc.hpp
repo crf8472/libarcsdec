@@ -24,6 +24,18 @@ namespace read
 {
 
 /**
+ * \internal
+ *
+ * \defgroup parsertoc libarcsdec's CDRTOC implementation
+ *
+ * \ingroup metaparser
+ *
+ * @{
+ */
+
+/**
+ * \internal
+ *
  * \brief A MetadataParser for CDRDAO/TOC files.
  */
 class DescriptorToc final : public FileReaderDescriptor
@@ -64,6 +76,8 @@ private:
 
 	std::unique_ptr<FileReaderDescriptor> do_clone() const final;
 };
+
+/// @}
 
 } // namespace read
 } // namespace v_1_0_0

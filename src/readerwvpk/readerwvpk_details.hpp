@@ -39,7 +39,7 @@ namespace details
 /**
  * \internal
  *
- * \brief Implementation details of readerwav.
+ * \brief Implementation details of readerwvpk.
  */
 namespace wavpack
 {

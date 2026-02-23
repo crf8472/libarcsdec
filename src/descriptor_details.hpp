@@ -29,7 +29,7 @@ class Bytes;
 /**
  * \internal
  *
- * \brief Implementation details of namespace 'read'.
+ * \brief Implementation details of namespace \c read.
  */
 namespace details
 {

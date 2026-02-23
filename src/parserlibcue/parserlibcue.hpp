@@ -24,6 +24,18 @@ namespace read
 {
 
 /**
+ * \internal
+ *
+ * \defgroup parserlibcue Features based on libcue
+ *
+ * \ingroup metaparser
+ *
+ * @{
+ */
+
+/**
+ * \internal
+ *
  * \brief A MetadataParser for Cuesheet files, implemented with libcue 2.
  */
 class DescriptorCue final : public FileReaderDescriptor
@@ -59,6 +71,8 @@ private:
 
 	std::unique_ptr<FileReaderDescriptor> do_clone() const final;
 };
+
+/// @}
 
 } // namespace read
 } // namespace v_1_0_0

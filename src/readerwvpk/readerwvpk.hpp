@@ -29,7 +29,19 @@ namespace read
 {
 
 /**
- * \brief Wavpack-5-based reader for losslessly encoded wavpack files.
+ * \internal
+ *
+ * \defgroup readerwvpk Features based on Wavpack
+ *
+ * \ingroup audioreader
+ *
+ * @{
+ */
+
+/**
+ * \internal
+ *
+ * \brief An AudioReader for losslessly encoded wavpack files.
  *
  * Represents a Wavpack container holding losslessly encoded samples conforming
  * to CDDA. That is 16 bit, 2 channels, 44100 samples/sec as integer
@@ -70,6 +82,8 @@ private:
 
 	std::unique_ptr<FileReaderDescriptor> do_clone() const final;
 };
+
+/// @}
 
 } // namespace read
 } // namespace v_1_0_0

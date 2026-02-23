@@ -4,7 +4,7 @@
 /**
  * \file
  *
- * \brief Audio reader for multiple file formats, implemented with libsndfile.
+ * \brief AudioReader for multiple lossless audio formats, based on libsndfile.
  */
 
 #ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
@@ -24,7 +24,19 @@ namespace read
 {
 
 /**
- * \brief A generic AudioReader for losslessly encoded audio files.
+ * \internal
+ *
+ * \defgroup readersndfile Features based on libsndfile
+ *
+ * \ingroup audioreader
+ *
+ * @{
+ */
+
+/**
+ * \internal
+ *
+ * \brief Generic libsndfile-based AudioReader for lossless formats.
  *
  * The LibsndfileAudioReaderImpl can also read FLAC encoded data in either
  * container format (since 1.0.18). As by configuration, the native FLAC reader
@@ -69,6 +81,8 @@ private:
 
 	std::unique_ptr<FileReaderDescriptor> do_clone() const final;
 };
+
+/// @}
 
 } // namespace read
 } // namespace v_1_0_0

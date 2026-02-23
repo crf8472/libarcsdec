@@ -24,14 +24,26 @@ namespace read
 {
 
 /**
- * \brief An AudioReader for fLaC/fLaC files.
+ * \internal
  *
- * Represents a Flac container holding samples conforming to CDDA. That
+ * \defgroup readerflac Features based on fLaC
+ *
+ * \ingroup audioreader
+ *
+ * @{
+ */
+
+/**
+ * \internal
+ *
+ * \brief An AudioReader for fLaC-encoded files in fLaC containers.
+ *
+ * Represents a fLaC container holding samples conforming to CDDA. That
  * is 16 bit, 2 channels, 44100 samples/sec as integer representation.
  *
- * The Flac AudioReader will only read files in fLaC file format. fLaC/Ogg is
- * currently not supported. Validation requires CDDA conform samples. Embedded
- * Cuesheets are ignored.
+ * The fLaC AudioReader will only read files in fLaC file format. fLaC/Ogg is
+ * currently not supported. Validation requires samples conforming to CDDA.
+ * Embedded Cuesheets are ignored.
  */
 class DescriptorFlac final : public FileReaderDescriptor
 {
@@ -63,6 +75,8 @@ private:
 
 	std::unique_ptr<FileReaderDescriptor> do_clone() const final;
 };
+
+/// @}
 
 } // namespace read
 } // namespace v_1_0_0

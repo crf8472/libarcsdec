@@ -106,7 +106,7 @@ std::vector<Calculation> init_calculations(const arcstk::Settings& settings,
 /**
  * \brief Combine all results of the specified Calculation instances in a
  * single, duplicate-free object.
- * .
+ *
  * \param[in] calculations Calculations to aggregate the results from
  *
  * \return Aggregated results from all input Calculation instances

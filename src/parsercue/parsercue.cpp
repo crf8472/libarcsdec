@@ -12,7 +12,7 @@
 #endif
 
 #ifndef __LIBARCSDEC_CUESHEET_DRIVER_HPP__
-#include "cuesheet/driver.hpp"
+#include "cuesheet/driver.hpp" // for Driver
 #endif
 #ifndef __LIBARCSDEC_LIBINSPECT_HPP__
 #include "libinspect.hpp"      // for first_libname_match
@@ -59,7 +59,7 @@ std::unique_ptr<ToC> CuesheetParserImpl::do_parse(const std::string& filename)
 	auto p_handler = ParserToCHandler{};
 
 	{
-		auto l_handler = DefaultLexerHandler { /* default */ } ;
+		auto l_handler = DefaultLexerHandler{} ;
 		auto driver    = Driver { &l_handler, &p_handler };
 
 #ifdef YYDEBUG

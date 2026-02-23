@@ -580,12 +580,12 @@ endif (WITH_DOCS )
 
 ## -- Require WITH_DOCS to use WITH_INTERNAL_DOCS
 if (WITH_INTERNAL_DOCS )
-#
+
 # 	set (WITH_DOCS ON CACHE BOOL "Build documentation for public API" FORCE )
- 	if (NOT WITH_DOCS )
+	if (NOT WITH_DOCS )
 		message (WARNING
 			"-DWITH_DOCS=ON is OFF but -DWITH_INTERNAL_DOCS=ON will only "
 			"have any effects as soon as -DWITH_DOCS is set ON." )
- 	endif()
+	endif()
 endif()
 

@@ -44,7 +44,7 @@ namespace wave
 /**
  * \internal
  *
- * \defgroup readerwavInternal Implementation of the WAV reader
+ * \defgroup readerwavImpl Implementation details of RIFF/WAV@PCM reading
  *
  * \ingroup readerwav
  *

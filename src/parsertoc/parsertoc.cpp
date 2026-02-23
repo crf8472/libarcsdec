@@ -59,7 +59,7 @@ std::unique_ptr<ToC> TocParserImpl::do_parse(const std::string& filename)
 	auto p_handler = ParserToCHandler{};
 
 	{
-		auto l_handler = DefaultLexerHandler { /* default */ } ;
+		auto l_handler = DefaultLexerHandler{} ;
 		auto driver    = Driver { &l_handler, &p_handler };
 
 #ifdef YYDEBUG

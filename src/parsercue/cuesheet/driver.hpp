@@ -14,10 +14,10 @@
 #endif
 
 #ifndef __LIBARCSDEC_FLEXBISONDRIVER_HPP__
-#include "flexbisondriver.hpp"    // for FlexBisonDriver
+#include "flexbisondriver.hpp"  // for FlexBisonDriver
 #endif
 #ifndef __LIBARCSDEC_TOCHANDLER_HPP__
-#include "tochandler.hpp"         // for ParserToCHandler
+#include "tochandler.hpp"       // for ParserToCHandler
 #endif
 
 namespace arcsdec
@@ -28,16 +28,24 @@ namespace read
 {
 namespace details
 {
+
+/**
+ * \brief Implementation for parsing Cuesheets.
+ */
 namespace cuesheet
 {
 
-using Driver = FlexBisonDriver<
-	yycuesheet::Lexer,
-	yycuesheet::Parser,
-	yycuesheet::location,
-	yycuesheet::position,
-	ParserToCHandler
->;
+/**
+ * \brief Driver for parsercue.
+ */
+using Driver = FlexBisonDriver<yycuesheet::Lexer, yycuesheet::Parser,
+	yycuesheet::location, yycuesheet::position, ParserToCHandler>;
+
+/**
+ * \brief Flex/Bison implementation of parsercue.
+ */
+namespace yycuesheet
+{/*for doxygen*/}
 
 } // namespace cuesheet
 } // namespace details

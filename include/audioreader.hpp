@@ -4,7 +4,7 @@
 /**
  * \file
  *
- * \brief Implement AudioReaders.
+ * \brief Implement \ref AudioReader "AudioReaders".
  */
 
 #ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
