@@ -38,8 +38,7 @@ namespace select
 /**
  * \defgroup selection Select FileReaders
  *
- * \brief API for selecting \link FileReader FileReaders\endlink for given
- * input files.
+ * \brief API for selecting a suitable FileReader for an input file.
  *
  * A concrete DescriptorPreference assigns a preference value to each descriptor
  * based on the specified Format and Codec. It represents a preference to use
@@ -59,8 +58,8 @@ namespace select
  * select_descriptor() and select_reader().
  *
  * Class FileReaderRegistry holds the set of available FileReaderDescriptors as
- * well as the set of supported \link Format Formats\endlink. It also defines
- * default selections for Metadata/ToC formats as well as audio formats.
+ * well as the set of supported Formats. It also defines default selections for
+ * Metadata/ToC formats as well as for audio formats.
  *
  * @{
  */
@@ -429,7 +428,7 @@ private:
 
 
 /**
- * \brief An unordered list of \link Matcher Matchers\endlink for Formats.
+ * \brief An unordered list of Matcher instances for Formats.
  */
 using FormatList = std::vector<std::unique_ptr<Matcher>>;
 
@@ -505,21 +504,21 @@ public:
 	static std::unique_ptr<FileReaderDescriptor> reader(const std::string& id);
 
 	/**
-	 * \brief List of supported \link Format Formats\endlink.
+	 * \brief List of supported Formats.
 	 *
 	 * \return List of supported formats
 	 */
 	static const FormatList* formats();
 
 	/**
-	 * \brief Set of available \link FileReader FileReaderDescriptors\endlink.
+	 * \brief Set of available FileReaders.
 	 *
 	 * \return Set of available descriptors for FileReaders
 	 */
 	static const FileReaders* readers();
 
 	/**
-	 * \brief Default selection for \link AudioReader AudioReaders\endlink.
+	 * \brief Default selection for AudioReaders.
 	 *
 	 * This is used to initialize ToCParser and the Calculators with the same
 	 * default selection setup for audio readers.
@@ -529,8 +528,7 @@ public:
 	static const FileReaderSelection* default_audio_selection();
 
 	/**
-	 * \brief Default selection for
-	 * \link MetadataParser MetatdataParsers\endlink.
+	 * \brief Default selection for MetatdataParsers.
 	 *
 	 * This is used to initialize ToCParser and the Calculators with the same
 	 * default selection setup for ToCs.
@@ -578,7 +576,7 @@ protected:
 
 
 /**
- * \brief Register a \ref Format.
+ * \brief Register a Format.
  *
  * Register a set of supported filename suffices and a byte sequence for a
  * Format \c F.
