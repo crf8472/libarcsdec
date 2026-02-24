@@ -110,15 +110,14 @@ public:
 private:
 
 	/**
-	 * \brief Internal list of supported formats
+	 * \brief Internal list of supported Formats.
 	 */
 	const FormatList* formats_;
 
 	/**
-	 * \brief Internal list of available
-	 * \link FileReaderDescriptor FileReaderDescriptors\endlink
+	 * \brief Internal list of available FileReaders.
 	 */
-	const FileReaders* descriptors_;
+	const FileReaders* readers_;
 };
 
 
@@ -345,9 +344,6 @@ public:
 
 /**
  * \brief Calculate ARCSs for input audio files.
- *
- * Note that ARCSCalculator does not perform any lookups in the filesystem. This
- * part is completely delegated to the \link FileReader FileReaders\endlink.
  */
 class ARCSCalculator final : public FileReaderProvider<AudioReader>
 {
@@ -431,7 +427,7 @@ public:
 	/**
 	 * \brief Calculate Checksums of a single audiofile.
 	 *
-	 * If \c leadout is zero() the leadout will be updated from reading it from
+	 * If \c leadout is zero() the leadout will be updated by reading it from
 	 * the audiofile, otherwise the returned leadout will just be identical to
 	 * the leadout passed.
 	 *

@@ -456,8 +456,8 @@ const FileReaderSelection* default_selection<MetadataParser>()
 
 
 ReaderAndFormatHolder::ReaderAndFormatHolder()
-	: formats_      { FileReaderRegistry::formats() }
-	, descriptors_  { FileReaderRegistry::readers() }
+	: formats_  { FileReaderRegistry::formats() }
+	, readers_  { FileReaderRegistry::readers() }
 {
 	/* empty */
 }
@@ -478,15 +478,15 @@ const FormatList* ReaderAndFormatHolder::formats() const
 }
 
 
-void ReaderAndFormatHolder::set_readers(const FileReaders* descriptors)
+void ReaderAndFormatHolder::set_readers(const FileReaders* readers)
 {
-	descriptors_ = descriptors;
+	readers_ = readers;
 }
 
 
 const FileReaders* ReaderAndFormatHolder::readers() const
 {
-	return descriptors_;
+	return readers_;
 }
 
 } // namespace select
