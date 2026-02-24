@@ -34,7 +34,7 @@ TEST_CASE ("FileReaderSelection", "[filereaderselection]")
 
 	SECTION ( "Descriptor is registered" )
 	{
-		CHECK ( nullptr != arcsdec::select::FileReaderRegistry::reader("ffmpeg") );
+		CHECK ( nullptr != FileReaderRegistry::reader("ffmpeg") );
 	}
 
 
