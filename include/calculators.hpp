@@ -433,14 +433,14 @@ public:
 	 *
 	 * \param[in] audiofilename Name of audio file to process
 	 * \param[in] settings      Settings for calculations
-	 * \param[in] types         Requested checksum types
+	 * \param[in] req_types     Requested checksum types
 	 * \param[in] leadout       Leadout
 	 * \param[in] offsets       Offsets
 	 *
 	 * \return Calculated checksums and updated Leadout
 	 */
 	std::pair<Checksums, AudioSize> calculate(const std::string& audiofilename,
-			const Settings& settings, const ChecksumtypeSet& types,
+			const Settings& settings, const ChecksumtypeSet& req_types,
 			const AudioSize& leadout, const Points& offsets);
 
 	/**
@@ -551,9 +551,9 @@ public:
 	/**
 	 * \brief Set the AudioInfo used by this instance.
 	 *
-	 * \param[in] audio AudioInfo to be used by this instance
+	 * \param[in] audio_info AudioInfo to be used by this instance
 	 */
-	void set_audio(const AudioInfo& audio);
+	void set_audio(const AudioInfo& audio_info);
 
 private:
 

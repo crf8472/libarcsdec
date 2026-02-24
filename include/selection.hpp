@@ -221,15 +221,15 @@ public:
 	 * this ordering the implementation of select() is free to decide which
 	 * position of the ordering is the one to pick.
 	 *
-	 * \param[in] format   File format
-	 * \param[in] codec    Audio codec
-	 * \param[in] descs    Set of descriptors to select from
-	 * \param[in] pref_model Preference model for selecting descriptors
+	 * \param[in] format      Actual file format
+	 * \param[in] codec       Actual audio codec
+	 * \param[in] descriptors Set of descriptors to select from
+	 * \param[in] pref_model  Preference model for selecting descriptors
 	 *
 	 * \return A FileReaderDescriptor that accepts \c format and \c codec
 	 */
 	std::unique_ptr<FileReaderDescriptor> select(const Format format,
-			const Codec codec, const FileReaders& descs,
+			const Codec codec, const FileReaders& descriptors,
 			const DescriptorPreference& pref_model) const;
 
 private:
@@ -310,14 +310,14 @@ public:
 	/**
 	 * \brief Selects a descriptor for the specified Format and Codec.
 	 *
-	 * \param[in] format   File format
-	 * \param[in] codec    Audio codec
-	 * \param[in] descs    Set of descriptors to select from
+	 * \param[in] format      Actual file format
+	 * \param[in] codec       Actual audio codec
+	 * \param[in] descriptors Set of descriptors to select from
 	 *
 	 * \return A FileReaderDescriptor that accepts \c format and \c codec
 	 */
 	std::unique_ptr<FileReaderDescriptor> get(const Format format,
-			const Codec codec, const FileReaders& descs) const;
+			const Codec codec, const FileReaders& descriptors) const;
 
 private:
 

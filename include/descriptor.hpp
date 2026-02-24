@@ -351,10 +351,10 @@ public:
 	/**
 	 * \brief Constructor.
 	 *
-	 * \param[in] offset  0-based offset where \c bytes occured in the file
-	 * \param[in] bytes   Sequence of bytes
+	 * \param[in] byte_offset 0-based start position
+	 * \param[in] byte_seq    Sequence of bytes
 	 */
-	Bytes(const uint32_t offset, const ByteSequence& bytes);
+	Bytes(const uint32_t byte_offset, const ByteSequence& byte_seq);
 
 	/**
 	 * \brief Match a byte sequence with this instance.
@@ -370,24 +370,24 @@ public:
 	bool match(const Bytes& bytes) const;
 
 	/**
-	 * \brief Match a byte sequence starting with \c offset with this instance.
+	 * \brief Match a byte sequence and its starting offset with this instance.
 	 *
-	 * The match is tried starting on positin \c offset on this instance and
-	 * ends on the end of the shorter sequence, either \c bytes or this
+	 * The match is tried starting on position \c byte_offset on this instance
+	 * and ends on the end of the shorter sequence, either \c byte_seq or this
 	 * instance.
 	 *
-	 * \note Parameter \c offset does not refer to the original file position
-	 * but to the start of the reference ByteSequence. It does therfore not
-	 * indicate where in the file the sequence \c bytes is located but whether
-	 * \c bytes is the very start of the reference ByteSequence or only a
-	 * shifted part of it.
+	 * \note Parameter \c byte_offset does not refer to the original file
+	 * position but to the start of the reference ByteSequence. It does therfore
+	 * not indicate where in the file the sequence \c byte_seq is located but
+	 * whether \c byte_seq is the very start of the reference ByteSequence or
+	 * only a shifted part of it.
 	 *
-	 * \param[in] bytes  ByteSequence from a file to be matched
-	 * \param[in] offset Offset to start of ByteSequence of this instance
+	 * \param[in] byte_seq    ByteSequence from a file to be matched
+	 * \param[in] byte_offset Offset to start of ByteSequence of this instance
 	 *
-	 * \return TRUE iff this instance matches \c bytes, otherwise FALSE
+	 * \return TRUE iff this instance matches \c byte_seq, otherwise FALSE
 	 */
-	bool match(const ByteSequence& bytes, const uint32_t& offset) const;
+	bool match(const ByteSequence& byte_seq, const uint32_t& byte_offset) const;
 
 	/**
 	 * \brief Match a byte sequence with offset 0 with this instance.
