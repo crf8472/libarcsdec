@@ -36,20 +36,12 @@ extern "C"
 #include <libavutil/avutil.h>
 }
 
-// required for using <string.h>
-#ifdef __STDC_ALLOC_LIB__
-	#define __STDC_WANT_LIB_EXT2__ 1
-#else
-	#define _POSIX_C_SOURCE 200809L
-#endif
-#include <string.h>   // for strdup (C)
-
 #include <algorithm>  // for remove
 #include <cerrno>     // for EAGAIN
 #include <climits>    // for CHAR_BIT
 #include <cstdarg>    // for va_list
 #include <cstdlib>    // for size_t, abs
-#include <cstring>    // for strlen
+#include <cstdio>     // for vsnprintf
 #include <functional> // for function, bind, placeholders
 #include <memory>     // for unique_ptr, make_unique
 #include <new>        // for bad_alloc
@@ -75,6 +67,57 @@ namespace ffmpeg
 
 using arcstk::AudioSize;
 
+std::string v_format_string(const char* fmt, std::va_list args_list)
+{
+	auto buf         = /* target buffer */ std::vector<char>(256, '\0');
+	using buf_size_t = decltype( buf )::size_type;
+	auto buf_size    = /* target buffer size */ buf_size_t { buf.size() };
+	auto total_chars = /* total chars to write */ int { -1 };
+	auto text        = /* output text */ std::string {};
+	auto error_count = int {};
+
+	while (error_count < 3)/*TODO kind of random magic number*/
+	{
+		std::va_list args; /* use a copy(!) of the va_list for each loop run */
+		va_copy(args, args_list);
+		total_chars = std::vsnprintf(buf.data(), buf_size, fmt, args);
+		va_end(args);
+
+		if (total_chars > -1) // no error
+		{
+			if (total_chars < buf_size) // success
+			{
+				text = std::string { buf.data() };
+				break;
+			}
+
+			// else: Message was truncated, total_chars tells us correct size.
+			// Increase buf_size by precisely the amount required.
+			buf_size = total_chars + 1u;
+			buf.resize(buf_size, '\0');
+		} else
+		{
+			++error_count;
+		}
+	}
+
+	if (text.empty())
+	{
+		// TODO check error_count and do what?
+		return text;
+	}
+
+	using std::begin;
+	using std::end;
+	using std::cend;
+
+	// Remove newline(s) from message text
+	text.erase(std::remove(begin(text), end(text), '\n'), cend(text));
+
+	return text;
+}
+
+
 extern "C"
 {
 
@@ -92,61 +135,15 @@ void arcs_av_log(void* /*v*/, int level, const char* fmt, std::va_list args)
 		return;
 	}
 
-	// Format message as passed by ffmpeg
+	// Format message input as passed by ffmpeg
 
-	std::string text { "[FFMPEG] " };
+	//std::va_list args_list;
+	//va_copy(args_list, args); /* TODO copy of va_list required? */
+	const auto text = v_format_string(fmt, args/*_list*/);
+	//va_end(args_list);
 
-	{
-		char buf[384];
-
-		// print to local buffer
-		auto length { std::vsnprintf(buf, sizeof buf, fmt, args) };
-
-		if (length < 0) {
-			// formatting error, abort logging
-			ARCS_LOG_ERROR << "Failed to format message from FFMPEG";
-			return;
-		} else
-		{
-			char* msg;
-
-			if (static_cast<unsigned>(length) < sizeof buf)
-			{
-				// message was successfully formatted, allocate a copy
-				msg = ::strdup(buf);
-			} else
-			{
-				// message was truncated, allocate a buffer that is large enough
-				msg = static_cast<char*>(::malloc(length + 1U));
-			}
-
-			if (!msg)
-			{
-				// allocation error, abort logging
-				ARCS_LOG_ERROR << "Failed to log message from FFMPEG";
-				return;
-			}
-
-			// format the message again if buffer is large enought this time
-			if (static_cast<unsigned>(length) >= sizeof buf)
-			{
-				length = std::vsnprintf(msg, length + 1U, fmt, args);
-			}
-
-			text += msg;
-
-			::free(msg);
-		}
-	}
-
-	// Remove newline(s) from message text
-
-	using std::begin;
-	using std::end;
-
-	text.erase(std::remove(begin(text), end(text), '\n'), end(text));
-
-	arcstk::Log(arcstk::Logging::instance().logger(), LEVEL).get() << text;
+	arcstk::Log(arcstk::Logging::instance().logger(), LEVEL).get()
+		<< "[FFMPEG] " << text;
 }
 
 } // extern C

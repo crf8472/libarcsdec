@@ -93,6 +93,17 @@ av_always_inline char* av_err2str(int errnum)
 }
 #endif
 
+/**
+ * \internal
+ * \brief Format a C-printf-styled input as a std::string.
+ *
+ * \param[in] fmt  Format string
+ * \param[in] args Argument list
+ *
+ * \return Formatted std::string
+ */
+std::string v_format_string(const char* fmt, std::va_list args);
+
 extern "C"
 {
 

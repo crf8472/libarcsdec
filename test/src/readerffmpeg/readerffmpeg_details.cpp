@@ -13,6 +13,65 @@
 #include "readerffmpeg_details.hpp"     // TO BE TESTED
 #endif
 
+#include <cstdarg>
+#include <string>
+
+
+namespace test
+{
+std::string format_string_wrapper(const char* fmt,...);
+
+std::string format_string_wrapper(const char* fmt,...)
+{
+	auto s = std::string {};
+	std::va_list args;
+
+	va_start(args, fmt);
+	s = arcsdec::read::details::ffmpeg::v_format_string(fmt, args);
+    va_end(args);
+
+	return s;
+}
+} // namespace test
+
+
+TEST_CASE ( "format_string", "[format_string]" )
+{
+	using test::format_string_wrapper;
+
+	const auto too_long_string = std::string(259, 'x');
+
+
+	SECTION ("Works for input less long than default buffer size")
+	{
+		CHECK ( "TEST123 |= 86" ==
+				format_string_wrapper("%s |= %d", "TEST123", 86) );
+
+		CHECK ( "2xfoobar171717687;" ==
+				format_string_wrapper("%dx%s%d;", 2, "foobar", 171717687) );
+
+		const auto text = std::string { "foobarquux" };
+		const auto ref = format_string_wrapper("%s", text.c_str());
+
+		CHECK ( "foobarquux" == ref );
+	}
+
+	SECTION ("Works for input longer than default buffer size")
+	{
+		// format a string with more than 256 chars
+
+		const auto ref = std::string { "!-" + too_long_string + "-?" };
+
+		/* longer than 256 chars, the default char buffer size of function */
+		REQUIRE ( ref.size() > 256 );
+
+		const auto text = format_string_wrapper("!-%s-?",
+				too_long_string.c_str());
+
+		CHECK ( text == ref );
+	}
+}
+
 
 TEST_CASE ( "FrameQueue", "[framequeue]" )
 {
