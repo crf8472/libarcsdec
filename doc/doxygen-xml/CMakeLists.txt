@@ -19,9 +19,11 @@ add_dependencies (libarcsdec_doxygen_provide_xml libarcsdec_doxygen_generate_xml
 
 if (DOXYGEN_VERSION VERSION_GREATER_EQUAL 1.8.16 )
 
-	## Order is not guaranteed, tasks must be orthogonal
+	## Postprocess if version namespace v_1_0_0 is to be shown
+	if (DOXYGEN_ENABLED_SECTIONS STREQUAL "NAMESPACE_v_1_0_0" )
 
-	list (APPEND XML_POSTPROC_TASKS "index-dedup" )
+		list (APPEND XML_POSTPROC_TASKS "index-dedup" )
+	endif()
 endif()
 ## 1}}}
 ## --- List of Postprocessing Tasks To Be Visible to Generators {{{1

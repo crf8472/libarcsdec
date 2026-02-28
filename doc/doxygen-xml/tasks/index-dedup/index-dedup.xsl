@@ -32,7 +32,7 @@
 </xsl:template>
 
 
-<!-- Add version namespace just everywhere. -->
+<!-- Remove version namespace just everywhere. -->
 <!-- Thus we will not have to care about accessing a preceding sibling. -->
 
 <xsl:template match="compound/name[not(contains(text(), '::v_1_0_0'))
