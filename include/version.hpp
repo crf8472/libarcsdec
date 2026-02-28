@@ -19,7 +19,6 @@
  */
 namespace arcsdec
 {
-
                                                   /** \cond NAMESPACE_v_1_0_0 */
 /**
  * \brief libarcsdec API version 1.0.0.
