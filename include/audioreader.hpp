@@ -21,7 +21,6 @@
 #include <arcstk/calculate.hpp>  // for SampleInputIterator
 #endif
 
-#include <cstddef>    // for size_t
 #include <cstdint>    // for uint16_t, uint32_t, int16_t, int32_t
 #include <memory>     // for unique_ptr
 #include <set>        // for set
@@ -55,13 +54,13 @@ using arcstk::UNIT;
  *
  * The AudioReader provides two actual operations on the input file: it can
  * either analyze the file via \c acquire_size() or actually process the file
- * via \c process_file(), which yields the actual calculation results. An
- * AudioReader is a SampleProvider and hence a SampleProcessor can be
- * attached to it.
+ * via \c process_file() which let the AudioReader act as a SampleProvider. It
+ * can be attached a SampleProcessor to that receives the samples and may yield
+ * the calculation results.
  *
- * An AudioReader internally holds a concrete instance of AudioReaderImpl.
- * AudioReaderImpl can be subclassed to implement the capabilities of an
- * AudioReader.
+ * An AudioReader internally holds a concrete instance of AudioReaderImpl which
+ * may be suitable for one or more different Formats. AudioReaderImpl can be
+ * subclassed to implement the capabilities of an AudioReader.
  *
  * The concrete reading of a given audio file is implemented by the subclasses
  * of AudioReaderImpl. An AudioReaderImpl can be set to a block size, that may
@@ -73,8 +72,8 @@ using arcstk::UNIT;
  *
  * AudioValidator wraps a CDDAValidator with error tracking for easy
  * registering validation functionality to an AudioReaderImpl. It provides
- * default implementations for CDDA testing. Subclasses are supposed to add
- * validation for the concrete format and codec.
+ * default implementations for CDDA testing. Subclasses of AudioValidator are
+ * supposed to add validation for the concrete format and codec.
  *
  * Validation failures are reported as InvalidAudioException.
  *
@@ -382,22 +381,23 @@ constexpr inline static int32_t cast_to_int32(const INT value)
 				+ " cannot be represented with only 32 bit");
 	}
 
+	// TODO What about value < 0?
+
 	return static_cast<int32_t>(value);
 }
 
 
 /**
  * \brief Abstract base class for validation handlers for
- * \link AudioReaderImpl AudioReaderImpls\endlink.
+ *        \link AudioReaderImpl AudioReaderImpls\endlink.
  *
- * Implements a class that just provides some assert methods that get a label, a
- * current value, a proper value and an error message. The validating handler
- * keeps an error list and can also return the latest error or the complete
- * list of errors. Subclasses may decide to throw exceptions by implementing
- * \c on_failure().
+ * Provides some assert methods that get a label, a current value, a proper
+ * value and an error message. The validating handler keeps an error list and
+ * can also return the latest error or the complete list of errors. Subclasses
+ * may decide to throw exceptions by implementing \c on_failure().
  *
- * It also provides default assertions for validating against CDDA,
- * thereby delegating to CDDAValidator.
+ * Also provides default assertions for validating against CDDA, thereby
+ * delegating to CDDAValidator.
  *
  * Subclasses must implement \c do_codecs() to provide the list of supported
  * audio codecs, i.e. codecs that are actively validated. If the subclass does
@@ -513,7 +513,9 @@ public:
 
 protected:
 
-	AudioValidator(AudioValidator&&) noexcept = default;
+	AudioValidator(AudioValidator&&) noexcept
+		= default;
+
 	AudioValidator& operator = (AudioValidator&&) noexcept
 		= default;
 
@@ -525,18 +527,18 @@ protected:
 	void fail_if(const bool condition);
 
 	/**
-	 * \brief Returns TRUE iff value == proper_value.
+	 * \brief Returns TRUE iff \c value == \c proper_value.
 	 *
-	 * Always prints the label. Iff the comparison is not TRUE, error_msg is
+	 * Always prints the label. Iff the comparison is not TRUE, \c error_msg is
 	 * printed and a new error is added to the error list.
 	 *
-	 * \param[in] label Label to log for this test
-	 * \param[in] value Value to be checked
+	 * \param[in] label        Label to log for this test
+	 * \param[in] value        Value to be checked
 	 * \param[in] proper_value Value to check against
-	 * \param[in] error_msg Message to log in case value is not equal to
-	 * proper_value
+	 * \param[in] error_msg    Message to log in case \c value is not equal to
+	 *                         \c proper_value
 	 *
-	 * \return TRUE if value is equal to proper_value, otherwise FALSE
+	 * \return TRUE if \c value is equal to \c proper_value, otherwise FALSE
 	 */
 	bool assert_equals(
 		const std::string& label,
@@ -545,18 +547,18 @@ protected:
 		const std::string& error_msg);
 
 	/**
-	 * \brief Returns TRUE iff value == proper_value.
+	 * \brief Returns TRUE iff \c value == \c proper_value.
 	 *
-	 * Always prints the label. Iff the comparison is not TRUE, error_msg is
+	 * Always prints the label. Iff the comparison is not TRUE, \c error_msg is
 	 * printed and a new error is added to the error list.
 	 *
-	 * \param[in] label Label to log for this test
-	 * \param[in] value Value to be checked
+	 * \param[in] label        Label to log for this test
+	 * \param[in] value        Value to be checked
 	 * \param[in] proper_value Value to check against
-	 * \param[in] error_msg Message to log in case value is not equal to
-	 * proper_value
+	 * \param[in] error_msg    Message to log in case \c value is not equal to
+	 *                         \c proper_value
 	 *
-	 * \return TRUE if value is equal to proper_value, otherwise FALSE
+	 * \return TRUE if \c value is equal to \c proper_value, otherwise FALSE
 	 */
 	bool assert_equals_u(
 		const std::string& label,
@@ -565,18 +567,19 @@ protected:
 		const std::string& error_msg);
 
 	/**
-	 * \brief Returns TRUE iff value >= proper_value.
+	 * \brief Returns TRUE iff \c value >= \c proper_value.
 	 *
-	 * Always prints the label. Iff the comparison is not TRUE, error_msg is
+	 * Always prints the label. Iff the comparison is not TRUE, \c error_msg is
 	 * printed and a new error is added to the error list.
 	 *
-	 * \param[in] label Label to log for this test
-	 * \param[in] value Value to be checked
+	 * \param[in] label        Label to log for this test
+	 * \param[in] value        Value to be checked
 	 * \param[in] proper_value Value to check against
-	 * \param[in] error_msg Message to log in case value is smaller than
-	 * proper_value
+	 * \param[in] error_msg    Message to log in case \c value is smaller than
+	 *                         \c proper_value
 	 *
-	 * \return TRUE if value is not smaller than proper_value, otherwise FALSE
+	 * \return TRUE if \c value is not smaller than \c proper_value, otherwise
+	 *         FALSE
 	 */
 	bool assert_at_least(
 		const std::string& label,
@@ -585,18 +588,19 @@ protected:
 		const std::string& error_msg);
 
 	/**
-	 * \brief Returns TRUE iff value <= proper_value.
+	 * \brief Returns TRUE iff \c value <= \c proper_value.
 	 *
-	 * Always prints the label. Iff the comparison is not TRUE, error_msg is
+	 * Always prints the label. Iff the comparison is not TRUE, \c error_msg is
 	 * printed and a new error is added to the error list.
 	 *
-	 * \param[in] label Label to log for this test
-	 * \param[in] value Value to be checked
+	 * \param[in] label        Label to log for this test
+	 * \param[in] value        Value to be checked
 	 * \param[in] proper_value Value to check against
-	 * \param[in] error_msg Message to log in case value is bigger than
-	 * proper_value
+	 * \param[in] error_msg    Message to log in case \c value is bigger than
+	 *                         \c proper_value
 	 *
-	 * \return TRUE if value is not bigger than proper_value, otherwise FALSE
+	 * \return TRUE if \c value is not bigger than \c proper_value, otherwise
+	 *         FALSE
 	 */
 	bool assert_at_most(
 		const std::string& label,
@@ -605,16 +609,16 @@ protected:
 		const std::string& error_msg);
 
 	/**
-	 * \brief Returns TRUE iff value is true.
+	 * \brief Returns TRUE iff \c value is true.
 	 *
-	 * Always prints the label. Iff the comparison is not TRUE, error_msg is
+	 * Always prints the label. Iff the comparison is not TRUE, \c error_msg is
 	 * printed and a new error is added to the error list.
 	 *
-	 * \param[in] label Label to log for this test
-	 * \param[in] value Value to be checked for being TRUE
-	 * \param[in] error_msg Message to log in case value is not TRUE
+	 * \param[in] label     Label to log for this test
+	 * \param[in] value     Value to be checked for being TRUE
+	 * \param[in] error_msg Message to log in case \c value is not TRUE
 	 *
-	 * \return TRUE if value is TRUE, otherwise FALSE
+	 * \return TRUE if \c value is TRUE, otherwise FALSE
 	 */
 	bool assert_true(
 		const std::string& label,
