@@ -26,8 +26,10 @@
 
 namespace arcsdec
 {
+                                                  /** \cond NAMESPACE_v_1_0_0 */
 inline namespace v_1_0_0
 {
+                                                                 /** \endcond */
 
 /**
  * \brief Utilities for selection of FileReaders.
@@ -838,7 +840,9 @@ struct CreateReader final
 /// @}
 
 } // namespace select
+                                                  /** \cond NAMESPACE_v_1_0_0 */
 } // namespace v_1_0_0
+                                                                 /** \endcond */
 } // namespace arcsdec
 
 #endif

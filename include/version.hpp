@@ -20,11 +20,13 @@
 namespace arcsdec
 {
 
+                                                  /** \cond NAMESPACE_v_1_0_0 */
 /**
  * \brief libarcsdec API version 1.0.0.
  */
 inline namespace v_1_0_0
 {
+                                                                 /** \endcond */
 
 /**
  * \defgroup version Version information
@@ -82,7 +84,9 @@ bool api_version_is_at_least(const int major, const int minor, const int patch);
 
 /** @} */
 
+                                                  /** \cond NAMESPACE_v_1_0_0 */
 } // namespace v_1_0_0
+                                                                 /** \endcond */
 } // namespace arcsdec
 
 #endif

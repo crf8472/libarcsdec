@@ -32,8 +32,10 @@ extern "C" {
 
 namespace arcsdec
 {
+                                                  /** \cond NAMESPACE_v_1_0_0 */
 inline namespace v_1_0_0
 {
+                                                                 /** \endcond */
 namespace read
 {
 namespace details
@@ -168,7 +170,9 @@ private:
 } // namespace libcue
 } // namespace details
 } // namespace read
+                                                  /** \cond NAMESPACE_v_1_0_0 */
 } // namespace v_1_0_0
+                                                                 /** \endcond */
 } // namespace arcsdec
 
 #endif

@@ -33,9 +33,10 @@ namespace arcsdec
 /**
  * \brief libarcsdec API version 1.0.0.
  */
+                                                  /** \cond NAMESPACE_v_1_0_0 */
 inline namespace v_1_0_0
 {
-
+                                                                 /** \endcond */
 namespace select
 {
 
@@ -567,7 +568,9 @@ private:
 
 } // namespace calc
 
+                                                  /** \cond NAMESPACE_v_1_0_0 */
 } // namespace v_1_0_0
+                                                                 /** \endcond */
 } // namespace arcsdec
 
 #endif

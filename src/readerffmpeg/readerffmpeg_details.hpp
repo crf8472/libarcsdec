@@ -47,8 +47,10 @@ extern "C"
 
 namespace arcsdec
 {
+                                                  /** \cond NAMESPACE_v_1_0_0 */
 inline namespace v_1_0_0
 {
+                                                                 /** \endcond */
 namespace read
 {
 namespace details
@@ -1293,7 +1295,9 @@ void print_stream_info(std::ostream& out, const ::AVStream* stream);
 } // namespace ffmpeg
 } // namespace details
 } // namespace read
+                                                  /** \cond NAMESPACE_v_1_0_0 */
 } // namespace v_1_0_0
+                                                                 /** \endcond */
 } // namespace arcsdec
 
 #endif
