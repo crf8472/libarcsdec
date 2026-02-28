@@ -202,7 +202,6 @@ bool operator == (const ByteSeq& lhs, const ByteSeq& rhs);
 
 void swap(ByteSeq& lhs, ByteSeq& rhs);
 
-
 /**
  * \brief Byte sequence with or without wildcards.
  */
@@ -325,7 +324,6 @@ class Bytes;
 bool operator == (const Bytes& lhs, const Bytes& rhs);
 
 void swap(Bytes& lhs, Bytes& rhs);
-
 
 /**
  * \brief A sequence of bytes read from a specific offset in a file.
