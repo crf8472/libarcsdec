@@ -30,8 +30,18 @@ namespace arcsdec
 {
 inline namespace v_1_0_0
 {
+
+namespace read // forward declarations
+{
+class AudioReader;
+class MetadataParser;
+} // namespace read
+
 namespace select
 {
+
+using arcsdec::read::AudioReader;
+using arcsdec::read::MetadataParser;
 
 /**
  * \brief Amount of bytes to read from the beginning of a file.
@@ -419,6 +429,23 @@ std::unique_ptr<FileReaderDescriptor> FileReaderSelection::get(
 }
 
 
+// default_selection()
+
+
+template <>
+const FileReaderSelection* default_selection<AudioReader>()
+{
+	return FileReaderRegistry::default_audio_selection();
+}
+
+
+template <>
+const FileReaderSelection* default_selection<MetadataParser>()
+{
+	return FileReaderRegistry::default_toc_selection();
+}
+
+
 // FileReaderRegistry
 
 
@@ -565,6 +592,44 @@ std::unique_ptr<FileReader> select_reader(
 }
 
 } // namespace details
+
+
+// ReaderAndFormatHolder
+
+
+ReaderAndFormatHolder::ReaderAndFormatHolder()
+	: formats_  { FileReaderRegistry::formats() }
+	, readers_  { FileReaderRegistry::readers() }
+{
+	/* empty */
+}
+
+
+ReaderAndFormatHolder::~ReaderAndFormatHolder() noexcept = default;
+
+
+void ReaderAndFormatHolder::set_formats(const FormatList* formats)
+{
+	formats_ = formats;
+}
+
+
+const FormatList* ReaderAndFormatHolder::formats() const
+{
+	return formats_;
+}
+
+
+void ReaderAndFormatHolder::set_readers(const FileReaders* readers)
+{
+	readers_ = readers;
+}
+
+
+const FileReaders* ReaderAndFormatHolder::readers() const
+{
+	return readers_;
+}
 
 
 namespace {
