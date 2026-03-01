@@ -4,8 +4,7 @@
 /**
  * \file
  *
- * \brief Implement \link arcsdec::v_1_0_0::read::MetadataParser
- *        MetadataParsers\endlink.
+ * \brief Implement \link arcsdec::read::MetadataParser MetadataParsers\endlink.
  */
 
 #ifndef __LIBARCSDEC_DESCRIPTOR_HPP__

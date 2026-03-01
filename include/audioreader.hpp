@@ -4,7 +4,7 @@
 /**
  * \file
  *
- * \brief Implement AudioReaders.
+ * \brief Implement \link arcsdec::read::AudioReader AudioReaders\endlink.
  */
 
 #ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
