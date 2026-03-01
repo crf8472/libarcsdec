@@ -9,7 +9,7 @@
 
 #ifndef __LIBARCSDEC_SELECTION_HPP__
 #include "selection.hpp"           // for CreateReader, FileReaders, FormatList,
-#endif                             // FileReaderSelector
+#endif                             // FileReaderProvider, FileReaderSelector
 
 #ifndef __LIBARCSTK_CALCULATE_HPP__
 #include <arcstk/calculate.hpp>    // for Checksums, ChecksumSet,...
@@ -45,6 +45,20 @@ class MetadataParser;
  */
 namespace calc
 {
+
+using arcstk::ARId;
+using arcstk::Algorithm;
+using arcstk::AudioSize;
+using arcstk::ChecksumSet;
+using arcstk::Checksums;
+using arcstk::ChecksumtypeSet;
+using arcstk::Points;
+using arcstk::Settings;
+using arcstk::ToC;
+
+using arcsdec::read::AudioReader;
+using arcsdec::read::MetadataParser;
+using arcsdec::select::FileReaderProvider;
 
 /**
  * \defgroup calculators Calculators for AccurateRip Checksums and IDs
@@ -82,20 +96,6 @@ namespace calc
  *
  * @{
  */
-
-using arcstk::ARId;
-using arcstk::Algorithm;
-using arcstk::AudioSize;
-using arcstk::ChecksumSet;
-using arcstk::Checksums;
-using arcstk::ChecksumtypeSet;
-using arcstk::Points;
-using arcstk::Settings;
-using arcstk::ToC;
-
-using arcsdec::read::AudioReader;
-using arcsdec::read::MetadataParser;
-using arcsdec::select::FileReaderProvider;
 
 
 /**
