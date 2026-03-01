@@ -53,13 +53,13 @@ int main(int argc, char* argv[])
 	// Actually, this step is completely format independent and not restricted
 	// to Cuesheets. We require a Cuesheet for this example since at the time of
 	// writing, Cuesheet is the only actual input format implemented. :-)
-	arcsdec::ToCParser parser;
+	arcsdec::calc::ToCParser parser {};
 	auto tocptr { parser.parse(metafilename) };
 
 	// Read the audio file and calculate the checksums.
 	// Note that technical details of the audio input are "abstracted away" by
 	// libarcsdec. ARCSCalculator takes some audio and gives you the ARCSs.
-	arcsdec::ARCSCalculator calculator;
+	arcsdec::calc::ARCSCalculator calculator {};
 	const auto [ checksums, toc ] =
 		calculator.calculate(audiofilename, *tocptr);
 

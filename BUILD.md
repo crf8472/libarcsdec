@@ -211,6 +211,7 @@ used.
 |                    |CMAKE_BUILD_TYPE=Debug                                                                             |OFF    |
 |                    |CMAKE_BUILD_TYPE=Release                                                                           |ON     |
 |WITH_TESTS          |Compile [tests](#run-unit-tests) (but don't run them)                                              |OFF    |
+|WITH_EXAMPLES       |Compile [examples](#examples)                                                                      |OFF    |
 |WITH_LIBCUE         |Build with libcue support                                                                          |OFF    |
 |WITH_FFMPEG         |Build with ffmpeg support                                                                          |ON     |
 |WITH_FLAC           |Build with FLAC support by libflac                                                                 |ON     |
@@ -283,6 +284,47 @@ Note that ctest will write report files in the ``build`` folder, their name
 pattern is ``report.<testcase>.xml`` where ``<testcase>`` corresponds to a
 ``.cpp``-file in ``test/src``.
 
+
+### Examples
+
+For two of the basic tasks of calculating ARCSs and calculating ARIds there are
+code examples within the directory ``examples``.
+
+**Important:** the examples are *always* linked against the libarcsdec binary in
+directory ``build``. It is therefore NOT supported to just use them independent
+from the libarcsdec build process.
+
+#### Building during build phase
+
+You may build those examples by configuring ``-DWITH_EXAMPLES=ON`` before
+building. After building, you will find the binaries in
+``build/examples/<NAME>``.
+
+#### Building manually
+
+Alternatively each example can be built separately by cd'ing into its directory
+and just issuing ``make``. Note that the libarcsdec binary has to be available
+in the build directory, so build libarcsdec before building the examples
+manually.
+
+For example, to build the albumcalc example:
+
+	$ cd examples/albumcalc
+	$ make clean && make
+	$ ./albumcalc
+
+#### Cleaning the examples
+
+If the examples were built by the regular build phase, it is sufficient to just
+remove the corresponding subdirectory:
+
+	$ cd build
+	$ rm -r examples/
+
+If the examples were built manually, the current example folder can be cleaned
+by:
+
+	$ make clean
 
 ### Build with libarcstk as a submodule
 

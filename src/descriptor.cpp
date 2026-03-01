@@ -9,9 +9,6 @@
 #ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
 #include "descriptor.hpp"
 #endif
-#ifndef __LIBARCSDEC_DESCRIPTOR_DETAILS_HPP__
-#include "descriptor_details.hpp"  // redundant, already in descriptor.hpp
-#endif
 
 #ifndef __LIBARCSDEC_LIBINSPECT_HPP__
 #include "libinspect.hpp"          // for libfile

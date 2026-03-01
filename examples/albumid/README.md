@@ -16,8 +16,8 @@ get an illustration what libarcsdec adds to libarcstk.
 
 Dependencies for building and running:
 
-- libarcsdec.so in the ``build`` directory
-- libarcstk.so in the ``build/libs/libarcstk`` directory or installed in system
+- libarcsdec.so in the ``build/`` directory
+- libarcstk.so in the ``build/libs/libarcstk/`` directory or installed in system
 
 
 ## Build
@@ -47,7 +47,7 @@ albumid expects two filenames as parameters, the first being a Cuesheet and
 the second an audio file in a lossless audio format. (Due to a current
 limitation of libarcsdec, WMA lossless can actually not be decoded.)
 
-	$ ./albumid <name_of_chuesheet.cue> <name_of_audio_file>
+	$ ./albumid <name_of_cuesheet.cue> <name_of_audio_file>
 
 For more information, read the comments in [albumid.cpp](./albumid.cpp).
 

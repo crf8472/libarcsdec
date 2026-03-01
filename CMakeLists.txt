@@ -208,7 +208,7 @@ list (APPEND INTERFACE_HEADERS
 ## -- Specify Sources {{{2
 
 add_library (${PROJECT_NAME} SHARED
-	# api
+	# public
 	"${PROJECT_SOURCE_DIR}/audioreader.cpp"
 	"${PROJECT_SOURCE_DIR}/calculators.cpp"
 	"${PROJECT_SOURCE_DIR}/descriptor.cpp"
@@ -564,6 +564,7 @@ option (WITH_INTERNAL_DOCS "Build documentation also for internal APIs"   OFF )
 option (USE_DOC_TOOL       "Build documentation using specified tool"     OFF )
 ## TODO Remove the following line
 option (USE_MCSS           "Build documentation using m.css"              OFF )
+option (WITH_EXAMPLES      "Build examples"                               OFF )
 
 
 ## -- Process configuration for building the documentation
@@ -587,5 +588,12 @@ if (WITH_INTERNAL_DOCS )
 			"-DWITH_DOCS=ON is OFF but -DWITH_INTERNAL_DOCS=ON will only "
 			"have any effects as soon as -DWITH_DOCS is set ON." )
 	endif()
+endif()
+
+
+## -- Process configuration for building the examples
+if (WITH_EXAMPLES )
+
+	add_subdirectory ("${CMAKE_CURRENT_SOURCE_DIR}/examples" )
 endif()
 
