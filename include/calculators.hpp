@@ -317,7 +317,7 @@ public:
 	 *
 	 * \return The AccurateRip id for this medium
 	 */
-	std::unique_ptr<ARId> calculate(const std::string& metafilename,
+	ARId calculate(const std::string& metafilename,
 			const std::string& audiofilename) const;
 
 	/**
@@ -331,7 +331,7 @@ public:
 	 *
 	 * \return The AccurateRip id for this medium
 	 */
-	std::unique_ptr<ARId> calculate(const ToC& toc,
+	ARId calculate(const ToC& toc,
 			const std::string& audiofilename) const;
 
 	/**

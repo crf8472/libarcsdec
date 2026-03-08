@@ -739,7 +739,7 @@ ARIdCalculator::ARIdCalculator()
 }
 
 
-std::unique_ptr<ARId> ARIdCalculator::calculate(const std::string& metafilename,
+ARId ARIdCalculator::calculate(const std::string& metafilename,
 		const std::string& audiofilename) const
 {
 	const auto toc { create(metafilename)->parse(metafilename) };
@@ -748,7 +748,7 @@ std::unique_ptr<ARId> ARIdCalculator::calculate(const std::string& metafilename,
 }
 
 
-std::unique_ptr<ARId> ARIdCalculator::calculate(const ToC& toc,
+ARId ARIdCalculator::calculate(const ToC& toc,
 		const std::string& audiofilename) const
 {
 	if (toc.complete())
