@@ -7,13 +7,13 @@
  * \brief Audio reader for FLAC audio files, implemented with libflac.
  */
 
-#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
-#include "descriptor.hpp"  // for FileReaderDescriptor
-#endif
-
 #include <memory>   // for unique_ptr
 #include <set>      // for set
 #include <string>   // for string
+
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
+#include "descriptor.hpp"  // for FileReaderDescriptor
+#endif
 
 
 namespace arcsdec

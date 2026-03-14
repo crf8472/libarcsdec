@@ -7,9 +7,10 @@
  * \brief Calculate AccurateRip Checksums and IDs.
  */
 
-#ifndef LIBARCSDEC_SELECTION_HPP__
-#include "selection.hpp"           // for CreateReader, FileReaders, FormatList,
-#endif                             // FileReaderProvider, FileReaderSelector
+#include <memory>   // for unique_ptr
+#include <string>   // for string
+#include <utility>  // for pair
+#include <vector>   // for vector
 
 #ifndef LIBARCSTK_CALCULATE_HPP__
 #include <arcstk/calculate.hpp>    // for Checksums, ChecksumSet,...
@@ -21,10 +22,9 @@
 #include <arcstk/metadata.hpp>     // for ToC
 #endif
 
-#include <memory>   // for unique_ptr
-#include <string>   // for string
-#include <utility>  // for pair
-#include <vector>   // for vector
+#ifndef LIBARCSDEC_SELECTION_HPP__
+#include "selection.hpp"           // for CreateReader, FileReaders, FormatList,
+#endif                             // FileReaderProvider, FileReaderSelector
 
 
 namespace arcsdec

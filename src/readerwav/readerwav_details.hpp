@@ -12,16 +12,16 @@
  * \brief Implementation details of readerwav.hpp.
  */
 
-#ifndef LIBARCSDEC_AUDIOREADER_HPP__
-#include "audioreader.hpp"  // for AudioReaderImpl
-#endif
-
 #include <array>      // for array
 #include <cstdint>    // for uint8_t, uint32_t, int64_t
 #include <fstream>    // for ifstream
 #include <memory>     // for unique_ptr
 #include <string>     // for string
 #include <vector>     // for vector
+
+#ifndef LIBARCSDEC_AUDIOREADER_HPP__
+#include "audioreader.hpp"  // for AudioReaderImpl
+#endif
 
 
 namespace arcsdec

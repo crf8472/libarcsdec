@@ -13,38 +13,6 @@
 #include "calculators_details.hpp"
 #endif
 
-#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
-#include "descriptor.hpp"
-#endif
-#ifndef LIBARCSDEC_SELECTION_HPP__
-#include "selection.hpp"        // for FormatList,FileReaders,FileReaderSelector
-#endif
-#ifndef LIBARCSDEC_AUDIOREADER_HPP__
-#include "audioreader.hpp"      // for AudioReader
-#endif
-#ifndef LIBARCSDEC_METAPARSER_HPP__
-#include "metaparser.hpp"       // for MetadataParser
-#endif
-#ifndef LIBARCSDEC_SAMPLEPROC_HPP__
-#include "sampleproc.hpp"       // for SampleProcessor, BLOCKSIZE
-#endif
-
-#ifndef LIBARCSTK_ALGORITHMS_HPP__
-#include <arcstk/algorithms.hpp>// for AccurateRip::V1andV2...
-#endif
-#ifndef LIBARCSTK_IDENTIFIER_HPP__
-#include <arcstk/identifier.hpp>// for ARId, make_arid
-#endif
-#ifndef LIBARCSTK_METADATA_HPP__
-#include <arcstk/metadata.hpp>  // for ToC
-#endif
-#ifndef LIBARCSTK_CALCULATE_HPP__
-#include <arcstk/calculate.hpp> // for Checksums, SampleInputIterator, Points...
-#endif
-#ifndef LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp>   // for ARCS_LOG, _ERROR, _WARNING, _INFO, _DEBUG
-#endif
-
 #include <cstdint>       // for uint16_t, int64_t
 #include <iterator>      // for distance
 #include <memory>        // for unique_ptr, make_unique
@@ -53,6 +21,38 @@
 #include <unordered_set> // for unordered_set
 #include <utility>       // for pair, move, make_pair
 #include <vector>        // for vector
+
+#ifndef LIBARCSTK_ALGORITHMS_HPP__
+#include <arcstk/algorithms.hpp>// for AccurateRip::V1andV2...
+#endif
+#ifndef LIBARCSTK_CALCULATE_HPP__
+#include <arcstk/calculate.hpp> // for Checksums, SampleInputIterator, Points...
+#endif
+#ifndef LIBARCSTK_IDENTIFIER_HPP__
+#include <arcstk/identifier.hpp>// for ARId, make_arid
+#endif
+#ifndef LIBARCSTK_LOGGING_HPP__
+#include <arcstk/logging.hpp>   // for ARCS_LOG, _ERROR, _WARNING, _INFO, _DEBUG
+#endif
+#ifndef LIBARCSTK_METADATA_HPP__
+#include <arcstk/metadata.hpp>  // for ToC
+#endif
+
+#ifndef LIBARCSDEC_AUDIOREADER_HPP__
+#include "audioreader.hpp"      // for AudioReader
+#endif
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
+#include "descriptor.hpp"
+#endif
+#ifndef LIBARCSDEC_SELECTION_HPP__
+#include "selection.hpp"        // for FormatList,FileReaders,FileReaderSelector
+#endif
+#ifndef LIBARCSDEC_METAPARSER_HPP__
+#include "metaparser.hpp"       // for MetadataParser
+#endif
+#ifndef LIBARCSDEC_SAMPLEPROC_HPP__
+#include "sampleproc.hpp"       // for SampleProcessor, BLOCKSIZE
+#endif
 
 
 namespace arcsdec

@@ -11,6 +11,7 @@
 #include <arcstk/calculate.hpp>
 #endif
 
+
 namespace arcsdec
 {
                                                   /** \cond NAMESPACE_v_1_0_0 */

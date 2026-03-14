@@ -7,13 +7,13 @@
  * \brief Parser for Cuesheets.
  */
 
-#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
-#include "descriptor.hpp"// for Codec, Format, FileReaderDescriptor, FileReader
-#endif
-
 #include <memory>   // for unique_ptr
 #include <set>      // for set
 #include <string>   // for string
+
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
+#include "descriptor.hpp"// for Codec, Format, FileReaderDescriptor, FileReader
+#endif
 
 
 namespace arcsdec

@@ -7,10 +7,6 @@
  * \brief Recognize file formats and select compatible file readers.
  */
 
-#ifndef LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp>   // for ARCS_LOG_WARNING, ARCS_LOG_DEBUG
-#endif
-
 #include <cstdint>     // for uint32_t, uint64_t, int64_t
 #include <list>        // for list
 #include <memory>      // for unique_ptr, make_unique
@@ -19,6 +15,10 @@
 #include <string>      // for basic_string, string, char_traits
 #include <utility>     // for pair
 #include <vector>      // for vector
+
+#ifndef LIBARCSTK_LOGGING_HPP__
+#include <arcstk/logging.hpp>   // for ARCS_LOG_WARNING, ARCS_LOG_DEBUG
+#endif
 
 
 namespace arcsdec

@@ -9,6 +9,7 @@
 #ifndef LIBARCSDEC_READERWAV_HPP__
 #include "readerwav.hpp"                // TO BE TESTED
 #endif
+
 #ifndef LIBARCSDEC_SELECTION_HPP__
 #include "selection.hpp"                // for FileReaderSelection
 #endif

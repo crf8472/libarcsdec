@@ -12,14 +12,16 @@
 #include "readersndfile_details.hpp" // for LibsndfileAudioReaderImpl
 #endif
 
-#ifndef LIBARCSDEC_AUDIOREADER_HPP__
-#include "audioreader.hpp"  // for AudioReaderImpl, InvalidAudioException
-#endif
-#ifndef LIBARCSDEC_LIBINSPECT_HPP__
-#include "libinspect.hpp"   // for first_libname_match
-#endif
-#ifndef LIBARCSDEC_SELECTION_HPP__
-#include "selection.hpp"    // for RegisterDescriptor
+#include <cstdint>  // for int16_t, unit32_t, uint64_t
+#include <memory>   // for unique_ptr
+#include <set>      // for set
+#include <sstream>  // for ostringstream
+#include <string>   // for string, to_string
+#include <utility>  // for make_unique, move
+#include <vector>   // for vector
+
+#ifndef SNDFILE_HH
+#include <sndfile.hh>  // for SndfileHandle, SFM_READ, SF_FORMAT_PCM_16
 #endif
 
 #ifndef LIBARCSTK_METADATA_HPP__
@@ -32,17 +34,15 @@
 #include <arcstk/logging.hpp>    // for ARCS_LOG, _ERROR, _INFO, _DEBUG
 #endif
 
-#ifndef SNDFILE_HH
-#include <sndfile.hh>  // for SndfileHandle, SFM_READ, SF_FORMAT_PCM_16
+#ifndef LIBARCSDEC_AUDIOREADER_HPP__
+#include "audioreader.hpp"  // for AudioReaderImpl, InvalidAudioException
 #endif
-
-#include <cstdint>  // for int16_t, unit32_t, uint64_t
-#include <memory>   // for unique_ptr
-#include <set>      // for set
-#include <sstream>  // for ostringstream
-#include <string>   // for string, to_string
-#include <utility>  // for make_unique, move
-#include <vector>   // for vector
+#ifndef LIBARCSDEC_LIBINSPECT_HPP__
+#include "libinspect.hpp"   // for first_libname_match
+#endif
+#ifndef LIBARCSDEC_SELECTION_HPP__
+#include "selection.hpp"    // for RegisterDescriptor
+#endif
 
 
 namespace arcsdec

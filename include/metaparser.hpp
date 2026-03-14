@@ -7,16 +7,17 @@
  * \brief Implement \link arcsdec::read::MetadataParser MetadataParsers\endlink.
  */
 
-#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
-#include "descriptor.hpp"  // for FileReader, FileReaderDescriptor
-#endif
+#include <memory>       // for unique_ptr
+#include <string>       // for string
 
 #ifndef LIBARCSTK_METADATA_HPP__
 #include <arcstk/metadata.hpp>    // for ToC
 #endif
 
-#include <memory>       // for unique_ptr
-#include <string>       // for string
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
+#include "descriptor.hpp"  // for FileReader, FileReaderDescriptor
+#endif
+
 
 namespace arcsdec
 {

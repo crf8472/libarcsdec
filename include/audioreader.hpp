@@ -7,12 +7,12 @@
  * \brief Implement \link arcsdec::read::AudioReader AudioReaders\endlink.
  */
 
-#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
-#include "descriptor.hpp"  // for Codec, FileReaderDescriptor, ...
-#endif
-#ifndef LIBARCSDEC_SAMPLEPROC_HPP__
-#include "sampleproc.hpp"  // for SampleProcessor, SampleProvider
-#endif
+#include <cstdint>    // for uint16_t, uint32_t, int16_t, int32_t
+#include <memory>     // for unique_ptr
+#include <set>        // for set
+#include <stdexcept>  // for logic_error
+#include <string>     // for string
+#include <vector>     // for vector
 
 #ifndef LIBARCSTK_METADATA_HPP__
 #include <arcstk/metadata.hpp>   // for AudioSize, UNIT
@@ -21,12 +21,12 @@
 #include <arcstk/calculate.hpp>  // for SampleInputIterator
 #endif
 
-#include <cstdint>    // for uint16_t, uint32_t, int16_t, int32_t
-#include <memory>     // for unique_ptr
-#include <set>        // for set
-#include <stdexcept>  // for logic_error
-#include <string>     // for string
-#include <vector>     // for vector
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
+#include "descriptor.hpp"        // for Codec, FileReaderDescriptor, ...
+#endif
+#ifndef LIBARCSDEC_SAMPLEPROC_HPP__
+#include "sampleproc.hpp"        // for SampleProcessor, SampleProvider
+#endif
 
 
 namespace arcsdec

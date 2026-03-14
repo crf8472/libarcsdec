@@ -12,9 +12,8 @@
  * \brief Implementation details of calculators.hpp.
  */
 
-#ifndef LIBARCSDEC_SAMPLEPROC_HPP__
-#include "sampleproc.hpp"       // for SampleProcessor
-#endif
+#include <cstdint>  // for uint32_t, int32_t
+#include <memory>   // for unique_ptr
 
 #ifndef LIBARCSTK_CALCULATE_HPP__
 #include <arcstk/calculate.hpp> // for Checksums, ChecksumtypeSet, Points
@@ -23,8 +22,9 @@
 #include <arcstk/metadata.hpp>  // for ToC
 #endif
 
-#include <cstdint>  // for uint32_t, int32_t
-#include <memory>   // for unique_ptr
+#ifndef LIBARCSDEC_SAMPLEPROC_HPP__
+#include "sampleproc.hpp"       // for SampleProcessor
+#endif
 
 
 namespace arcsdec

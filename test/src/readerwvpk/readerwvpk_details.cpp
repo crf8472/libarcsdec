@@ -7,7 +7,7 @@
  */
 
 #ifndef LIBARCSDEC_READERWVPK_HPP__
-#define LIBARCSDEC_READERWVPK_HPP__   // allow readerwvpk_details.hpp
+#define LIBARCSDEC_READERWVPK_HPP__     // allow readerwvpk_details.hpp
 #endif
 #ifndef LIBARCSDEC_READERWVPK_DETAILS_HPP__
 #include "readerwvpk_details.hpp"       // TO BE TESTED

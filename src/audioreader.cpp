@@ -10,19 +10,19 @@
 #include "audioreader.hpp"
 #endif
 
-#ifndef LIBARCSTK_METADATA_HPP__
-#include <arcstk/metadata.hpp> // for CDDA
-#endif
-#ifndef LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp>  // for ARCS_LOG, _ERROR, _WARNING, _DEBUG
-#endif
-
 #include <cstdint>       // for uint16_t, uint32_t, int16_t, int32_t
 #include <memory>        // for unique_ptr, make_unique
 #include <sstream>       // for ostringstream
 #include <stdexcept>     // for logic_error
 #include <string>        // for string, to_string
 #include <utility>       // for move
+
+#ifndef LIBARCSTK_LOGGING_HPP__
+#include <arcstk/logging.hpp>  // for ARCS_LOG, _ERROR, _WARNING, _DEBUG
+#endif
+#ifndef LIBARCSTK_METADATA_HPP__
+#include <arcstk/metadata.hpp> // for CDDA
+#endif
 
 
 namespace arcsdec

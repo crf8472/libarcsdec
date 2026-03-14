@@ -11,6 +11,17 @@
 #include "parsercue_details.hpp"  // for CuesheetParserImpl
 #endif
 
+#include <memory>    // for unique_ptr
+#include <set>       // for set
+#include <string>    // for string
+
+#ifndef LIBARCSTK_METADATA_HPP__
+#include <arcstk/metadata.hpp> // for ToC, make_toc
+#endif
+#ifndef LIBARCSTK_LOGGING_HPP__
+#include <arcstk/logging.hpp>
+#endif
+
 #ifndef LIBARCSDEC_CUESHEET_DRIVER_HPP__
 #include "cuesheet/driver.hpp" // for Driver
 #endif
@@ -23,20 +34,9 @@
 #ifndef LIBARCSDEC_SELECTION_HPP__
 #include "selection.hpp"       // for RegisterDescriptor
 #endif
-
-#ifndef LIBARCSTK_METADATA_HPP__
-#include <arcstk/metadata.hpp> // for ToC, make_toc
-#endif
-#ifndef LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp>
-#endif
 #ifndef LIBARCSDEC_VERSION_HPP__
 #include "version.hpp"         // for LIBARCSDEC_NAME
 #endif
-
-#include <memory>    // for unique_ptr
-#include <set>       // for set
-#include <string>    // for string
 
 
 namespace arcsdec

@@ -7,7 +7,6 @@
  */
 
 #ifndef LIBARCSDEC_READERWAV_HPP__
-//#include "readerwav.hpp"    // TODO remove if not required
 #define LIBARCSDEC_READERWAV_HPP__
 #endif
 #ifndef LIBARCSDEC_READERWAV_DETAILS_HPP__

@@ -10,11 +10,11 @@
 #include "libinspect.hpp"               // TO BE TESTED
 #endif
 
+#include <regex>                        // for regex, regex_match
+
 #ifndef LIBARCSDEC_VERSION_HPP__
 #include "version.hpp"                  // for LIBARCSDEC_NAME
 #endif
-
-#include <regex>                        // for regex, regex_match
 
 
 TEST_CASE ( "Names of libraries are matched correctly", "[libraries]" )

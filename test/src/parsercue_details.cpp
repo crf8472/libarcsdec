@@ -7,11 +7,13 @@
  */
 
 #ifndef LIBARCSDEC_PARSERCUE_HPP__
-#define LIBARCSDEC_PARSERCUE_HPP__    // allow parsercue_details.hpp
+#define LIBARCSDEC_PARSERCUE_HPP__      // allow parsercue_details.hpp
 #endif
 #ifndef LIBARCSDEC_PARSERCUE_DETAILS_HPP__
 #include "parsercue_details.hpp"        // TO BE TESTED
 #endif
+
+#include <fstream>                      // for ifstream
 
 #ifndef LIBARCSDEC_CUESHEET_DRIVER_HPP__
 #include "cuesheet/driver.hpp"          // for Driver
@@ -19,8 +21,6 @@
 #ifndef LIBARCSDEC_TOCHANDLER_HPP__
 #include "tochandler.hpp"               // for ParserToCHandler
 #endif
-
-#include <fstream>                      // for ifstream
 
 
 TEST_CASE ("cuesheet", "[yycuesheet]" )

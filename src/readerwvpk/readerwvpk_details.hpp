@@ -12,10 +12,6 @@
  * \brief Implementation details of readerwvpk.hpp.
  */
 
-#ifndef LIBARCSDEC_AUDIOREADER_HPP__
-#include "audioreader.hpp"  // for AudioReaderImpl
-#endif
-
 extern "C" {
 #include <wavpack/wavpack.h>  // for WavpackContext
 }
@@ -25,6 +21,10 @@ extern "C" {
 #include <memory>    // for unique_ptr
 #include <string>    // for string
 #include <vector>    // for vector
+
+#ifndef LIBARCSDEC_AUDIOREADER_HPP__
+#include "audioreader.hpp"  // for AudioReaderImpl
+#endif
 
 
 namespace arcsdec

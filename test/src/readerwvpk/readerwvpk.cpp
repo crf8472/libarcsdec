@@ -9,6 +9,7 @@
 #ifndef LIBARCSDEC_READERWVPK_HPP__
 #include "readerwvpk.hpp"               // TO BE TESTED
 #endif
+
 #ifndef LIBARCSDEC_SELECTION_HPP__
 #include "selection.hpp"                // for FileReaderSelection
 #endif

@@ -6,6 +6,10 @@
  * \brief Tools for parsers for compact disc toc files.
  */
 
+#include <cstdint>  // for uint64_t, int32_t
+#include <string>   // for string
+#include <vector>   // for vector
+
 #ifndef LIBARCSTK_METADATA_HPP__
 #include <arcstk/metadata.hpp>    // for AudioSize, ToCData, ToC
 #endif
@@ -14,9 +18,6 @@
 #include "flexbisondriver.hpp"    // for ParserHandler
 #endif
 
-#include <cstdint>  // for uint64_t, int32_t
-#include <string>   // for string
-#include <vector>   // for vector
 
 namespace arcsdec
 {

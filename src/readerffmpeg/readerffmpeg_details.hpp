@@ -12,17 +12,6 @@
  * \brief Implementation details of readerffmpeg.hpp.
  */
 
-#ifndef LIBARCSDEC_AUDIOREADER_HPP__
-#include "audioreader.hpp"      // for AudioReaderImpl
-#endif
-
-#ifndef LIBARCSTK_SAMPLES_HPP__
-#include <arcstk/samples.hpp>   // for SampleInputIterator
-#endif
-#ifndef LIBARCSTK_CALCULATE_HPP__
-#include <arcstk/calculate.hpp> // for AudioSize
-#endif
-
 // ffmpeg
 extern "C"
 {
@@ -43,6 +32,17 @@ extern "C"
 #include <type_traits> // for true_type, false_type
 #include <utility>     // for pair
 #include <fstream>
+
+#ifndef LIBARCSTK_SAMPLES_HPP__
+#include <arcstk/samples.hpp>   // for SampleInputIterator
+#endif
+#ifndef LIBARCSTK_CALCULATE_HPP__
+#include <arcstk/calculate.hpp> // for AudioSize
+#endif
+
+#ifndef LIBARCSDEC_AUDIOREADER_HPP__
+#include "audioreader.hpp"      // for AudioReaderImpl
+#endif
 
 
 namespace arcsdec

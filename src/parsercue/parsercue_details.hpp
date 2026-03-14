@@ -12,16 +12,16 @@
  * \brief Implementation details of parsercue.hpp.
  */
 
+#include <cstdint>  // for int32_t
+#include <memory>   // for unique_ptr
+#include <string>   // for string
+
 #ifndef LIBARCSDEC_DESCRIPTOR_HPP__
 #include "descriptor.hpp"       // for FileReaderDescriptor
 #endif
 #ifndef LIBARCSDEC_METAPARSER_HPP__
 #include "metaparser.hpp"       // for MetaparserImpl
 #endif
-
-#include <cstdint>  // for int32_t
-#include <memory>   // for unique_ptr
-#include <string>   // for string
 
 
 namespace arcsdec

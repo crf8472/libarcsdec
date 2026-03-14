@@ -12,12 +12,12 @@
  * \brief Implementation details of readersndfile.hpp.
  */
 
+#include <memory>   // for unique_ptr
+#include <string>   // for string
+
 #ifndef LIBARCSDEC_AUDIOREADER_HPP__
 #include "audioreader.hpp"  // for AudioReaderImpl
 #endif
-
-#include <memory>   // for unique_ptr
-#include <string>   // for string
 
 
 namespace arcsdec

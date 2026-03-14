@@ -7,13 +7,13 @@
  * \brief AudioReader for RIFF/WAVE audio files with PCM samples.
  */
 
-#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
-#include "descriptor.hpp"  // for FileReaderDescriptor
-#endif
-
 #include <memory>   // for unique_ptr
 #include <set>      // for set
 #include <string>   // for string
+
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
+#include "descriptor.hpp"  // for FileReaderDescriptor
+#endif
 
 
 namespace arcsdec

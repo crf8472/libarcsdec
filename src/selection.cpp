@@ -10,20 +10,20 @@
 #include "selection.hpp"
 #endif
 
-#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
-#include "descriptor.hpp"     // for FileReaderDescriptor
-#endif
-
-#ifndef LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp> // for ARCS_LOG, _WARNING, _DEBUG
-#endif
-
 #include <algorithm>    // for find_if
 #include <iterator>     // for begin, end
 #include <memory>       // for unique_ptr, make_unique
 #include <set>          // for set
 #include <string>       // for string
 #include <utility>      // for pair, make_pair, move
+
+#ifndef LIBARCSTK_LOGGING_HPP__
+#include <arcstk/logging.hpp> // for ARCS_LOG, _WARNING, _DEBUG
+#endif
+
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
+#include "descriptor.hpp"     // for FileReaderDescriptor
+#endif
 
 
 namespace arcsdec

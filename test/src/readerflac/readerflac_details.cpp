@@ -7,17 +7,17 @@
  */
 
 #ifndef LIBARCSDEC_READERFLAC_HPP__
-#define LIBARCSDEC_READERFLAC_HPP__   // allow readerflac_details.hpp
+#define LIBARCSDEC_READERFLAC_HPP__     // allow readerflac_details.hpp
 #endif
 #ifndef LIBARCSDEC_READERFLAC_DETAILS_HPP__
 #include "readerflac_details.hpp"       // TO BE TESTED
 #endif
 
+#include <set>                          // for set
+
 #ifndef LIBARCSDEC_READERMOCKS_HPP__
 #include "readermocks.hpp"              // for Mock_SampleProcessor
 #endif
-
-#include <set>                          // for set
 
 
 TEST_CASE ("FlacDefaultMetadataHandler", "[readerflac]" )

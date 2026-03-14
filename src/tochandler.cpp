@@ -10,17 +10,17 @@
 #include "tochandler.hpp"
 #endif
 
+#include <cctype>      // for isalnum, isdigit
+#include <iomanip>     // for setw
+#include <string>      // for vector
+#include <vector>      // for string
+
 #ifndef LIBARCSTK_METADATA_HPP__
 #include <arcstk/metadata.hpp>    // for ToC, AudioSize, UNIT
 #endif
 #ifndef LIBARCSTK_LOGGING_HPP__
 #include <arcstk/logging.hpp>
 #endif
-
-#include <cctype>      // for isalnum, isdigit
-#include <iomanip>     // for setw
-#include <string>      // for vector
-#include <vector>      // for string
 
 namespace arcsdec
 {

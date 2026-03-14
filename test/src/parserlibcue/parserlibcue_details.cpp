@@ -7,7 +7,7 @@
  */
 
 #ifndef LIBARCSDEC_PARSERLIBCUE_HPP__
-#define LIBARCSDEC_PARSERLIBCUE_HPP__ // allow parserlibcue_details.hpp
+#define LIBARCSDEC_PARSERLIBCUE_HPP__   // allow parserlibcue_details.hpp
 #endif
 #ifndef LIBARCSDEC_PARSERLIBCUE_DETAILS_HPP__
 #include "parserlibcue_details.hpp"     // TO BE TESTED

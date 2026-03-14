@@ -12,22 +12,12 @@
 #include "readerflac_details.hpp"
 #endif
 
-#ifndef LIBARCSDEC_AUDIOREADER_HPP__
-#include "audioreader.hpp"      // for AudioReaderImpl, InvalidAudioException
-#endif
-#ifndef LIBARCSDEC_LIBINSPECT_HPP__
-#include "libinspect.hpp"       // for libinfo_entry_filepath
-#endif
-#ifndef LIBARCSDEC_SELECTION_HPP__
-#include "selection.hpp"        // for RegisterDescriptor
-#endif
-
-#ifndef LIBARCSTK_METADATA_HPP__
-#include <arcstk/metadata.hpp>  // for AudioSize
-#endif
-#ifndef LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp>   // for ARCS_LOG_ERROR, _WARNING, _INFO, _DEBUG
-#endif
+#include <limits>      // for numeric_limits
+#include <memory>      // for unique_ptr
+#include <set>         // for set
+#include <sstream>     // for ostringstream
+#include <string>      // for string
+#include <utility>     // for make_unique, move
 
 //#include <FLAC/ordinals.h>     // for FLAC__int64_t, FLAC__int32_t
 
@@ -38,12 +28,22 @@
 								// FLAC__StreamMetadata
 								// for FLAC__Frame
 
-#include <limits>      // for numeric_limits
-#include <memory>      // for unique_ptr
-#include <set>         // for set
-#include <sstream>     // for ostringstream
-#include <string>      // for string
-#include <utility>     // for make_unique, move
+#ifndef LIBARCSTK_METADATA_HPP__
+#include <arcstk/metadata.hpp>  // for AudioSize
+#endif
+#ifndef LIBARCSTK_LOGGING_HPP__
+#include <arcstk/logging.hpp>   // for ARCS_LOG_ERROR, _WARNING, _INFO, _DEBUG
+#endif
+
+#ifndef LIBARCSDEC_AUDIOREADER_HPP__
+#include "audioreader.hpp"      // for AudioReaderImpl, InvalidAudioException
+#endif
+#ifndef LIBARCSDEC_LIBINSPECT_HPP__
+#include "libinspect.hpp"       // for libinfo_entry_filepath
+#endif
+#ifndef LIBARCSDEC_SELECTION_HPP__
+#include "selection.hpp"        // for RegisterDescriptor
+#endif
 
 
 namespace arcsdec

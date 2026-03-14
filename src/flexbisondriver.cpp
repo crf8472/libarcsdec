@@ -10,14 +10,15 @@
 #include "flexbisondriver.hpp"
 #endif
 
-#ifndef LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp>
-#endif
-
 #include <fstream>     // for ifstream
 #include <stdexcept>   // for invalid_argument
 #include <string>      // for vector
 #include <vector>      // for string
+
+#ifndef LIBARCSTK_LOGGING_HPP__
+#include <arcstk/logging.hpp>
+#endif
+
 
 namespace arcsdec
 {

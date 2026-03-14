@@ -10,14 +10,6 @@
 #include "descriptor.hpp"
 #endif
 
-#ifndef LIBARCSDEC_LIBINSPECT_HPP__
-#include "libinspect.hpp"          // for libfile
-#endif
-
-#ifndef LIBARCSTK_LOGGING_HPP__
-#include <arcstk/logging.hpp>      // for ARCS_LOG, _WARNING, _DEBUG
-#endif
-
 #include <algorithm>        // for find, find_if, mismatch, transform
 #include <array>            // for array
 #include <cstdint>          // for uint32_t, uint64_t, int64_t
@@ -31,6 +23,14 @@
 #include <string>           // for string, to_string
 #include <type_traits>      // for underlying_type_t
 #include <vector>           // for vector
+
+#ifndef LIBARCSTK_LOGGING_HPP__
+#include <arcstk/logging.hpp>      // for ARCS_LOG, _WARNING, _DEBUG
+#endif
+
+#ifndef LIBARCSDEC_LIBINSPECT_HPP__
+#include "libinspect.hpp"          // for libfile
+#endif
 
 
 namespace arcsdec

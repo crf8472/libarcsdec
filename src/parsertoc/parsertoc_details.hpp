@@ -12,15 +12,15 @@
  * \brief Implementation details of parsertoc.hpp.
  */
 
+#include <memory>   // for unique_ptr
+#include <string>   // for string
+
 #ifndef LIBARCSDEC_DESCRIPTOR_HPP__
 #include "descriptor.hpp"        // for FileReaderDescriptor
 #endif
 #ifndef LIBARCSDEC_METAPARSER_HPP__
 #include "metaparser.hpp"        // for MetaparserImpl
 #endif
-
-#include <memory>   // for unique_ptr
-#include <string>   // for string
 
 
 namespace arcsdec

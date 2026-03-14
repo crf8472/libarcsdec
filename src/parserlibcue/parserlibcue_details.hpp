@@ -12,13 +12,6 @@
  * \brief Implementation details of parserlibcue.hpp.
  */
 
-#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
-#include "descriptor.hpp"       // for FileReaderDescriptor
-#endif
-#ifndef LIBARCSDEC_METAPARSER_HPP__
-#include "metaparser.hpp"        // for MetaparserImpl
-#endif
-
 extern "C" {
 #include <libcue/libcue.h>  // for Cd
 }
@@ -28,6 +21,13 @@ extern "C" {
 #include <string>   // for string
 #include <tuple>    // for tuple
 #include <vector>   // for vector
+
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
+#include "descriptor.hpp"       // for FileReaderDescriptor
+#endif
+#ifndef LIBARCSDEC_METAPARSER_HPP__
+#include "metaparser.hpp"        // for MetaparserImpl
+#endif
 
 
 namespace arcsdec

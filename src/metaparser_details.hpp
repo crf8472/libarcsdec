@@ -17,6 +17,7 @@
 #include <stdexcept>    // for out_of_range, runtime_error
 #include <type_traits>  // for is_signed, is_unsigned
 
+
 namespace arcsdec
 {
                                                   /** \cond NAMESPACE_v_1_0_0 */

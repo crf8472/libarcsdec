@@ -12,14 +12,9 @@
  * \brief Implementation details of readerflac.hpp.
  */
 
-#ifndef LIBARCSDEC_AUDIOREADER_HPP__
-#include "audioreader.hpp"    // for AudioReaderImpl, DefaultValidator
-#endif
-
-#ifndef LIBARCSTK_SAMPLES_HPP__
-#include <arcstk/samples.hpp> // for SampleSequence
-#endif
-
+#include <memory>   // for unique_ptr
+#include <string>   // for string
+					//
 #include <FLAC++/decoder.h>		// for FLAC::Decoder::File,
 								// FLAC__StreamDecoderWriteStatus,
 								// FLAC__StreamDecoderErrorStatus
@@ -28,8 +23,13 @@
 								// for FLAC__int32
 								// for FLAC__Frame
 
-#include <memory>   // for unique_ptr
-#include <string>   // for string
+#ifndef LIBARCSTK_SAMPLES_HPP__
+#include <arcstk/samples.hpp> // for SampleSequence
+#endif
+
+#ifndef LIBARCSDEC_AUDIOREADER_HPP__
+#include "audioreader.hpp"    // for AudioReaderImpl, DefaultValidator
+#endif
 
 
 namespace arcsdec

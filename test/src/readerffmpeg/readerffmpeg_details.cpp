@@ -6,15 +6,15 @@
  * \brief Fixtures for readerffmpeg_details.hpp.
  */
 
+#include <cstdarg>
+#include <string>
+
 #ifndef LIBARCSDEC_READERFFMPEG_HPP__
-#define LIBARCSDEC_READERFFMPEG_HPP__ // allow readerffmpeg_details.hpp
+#define LIBARCSDEC_READERFFMPEG_HPP__   // allow readerffmpeg_details.hpp
 #endif
 #ifndef LIBARCSDEC_READERFFMPEG_DETAILS_HPP__
 #include "readerffmpeg_details.hpp"     // TO BE TESTED
 #endif
-
-#include <cstdarg>
-#include <string>
 
 
 namespace test
