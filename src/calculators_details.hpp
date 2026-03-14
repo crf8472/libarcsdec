@@ -16,10 +16,10 @@
 #include "sampleproc.hpp"       // for SampleProcessor
 #endif
 
-#ifndef __LIBARCSTK_CALCULATE_HPP__
+#ifndef LIBARCSTK_CALCULATE_HPP__
 #include <arcstk/calculate.hpp> // for Checksums, ChecksumtypeSet, Points
 #endif
-#ifndef __LIBARCSTK_METADATA_HPP__
+#ifndef LIBARCSTK_METADATA_HPP__
 #include <arcstk/metadata.hpp>  // for ToC
 #endif
 

@@ -16,10 +16,10 @@
 #include "audioreader.hpp"      // for AudioReaderImpl
 #endif
 
-#ifndef __LIBARCSTK_SAMPLES_HPP__
+#ifndef LIBARCSTK_SAMPLES_HPP__
 #include <arcstk/samples.hpp>   // for SampleInputIterator
 #endif
-#ifndef __LIBARCSTK_CALCULATE_HPP__
+#ifndef LIBARCSTK_CALCULATE_HPP__
 #include <arcstk/calculate.hpp> // for AudioSize
 #endif
 

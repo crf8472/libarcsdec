@@ -11,13 +11,13 @@
 #include "selection.hpp"           // for CreateReader, FileReaders, FormatList,
 #endif                             // FileReaderProvider, FileReaderSelector
 
-#ifndef __LIBARCSTK_CALCULATE_HPP__
+#ifndef LIBARCSTK_CALCULATE_HPP__
 #include <arcstk/calculate.hpp>    // for Checksums, ChecksumSet,...
 #endif
-#ifndef __LIBARCSTK_IDENTIFIER_HPP__
+#ifndef LIBARCSTK_IDENTIFIER_HPP__
 #include <arcstk/identifier.hpp>   // for ARId
 #endif
-#ifndef __LIBARCSTK_METADATA_HPP__
+#ifndef LIBARCSTK_METADATA_HPP__
 #include <arcstk/metadata.hpp>     // for ToC
 #endif
 

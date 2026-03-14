@@ -29,19 +29,19 @@
 #include "sampleproc.hpp"       // for SampleProcessor, BLOCKSIZE
 #endif
 
-#ifndef __LIBARCSTK_ALGORITHMS_HPP__
+#ifndef LIBARCSTK_ALGORITHMS_HPP__
 #include <arcstk/algorithms.hpp>// for AccurateRip::V1andV2...
 #endif
-#ifndef __LIBARCSTK_IDENTIFIER_HPP__
+#ifndef LIBARCSTK_IDENTIFIER_HPP__
 #include <arcstk/identifier.hpp>// for ARId, make_arid
 #endif
-#ifndef __LIBARCSTK_METADATA_HPP__
+#ifndef LIBARCSTK_METADATA_HPP__
 #include <arcstk/metadata.hpp>  // for ToC
 #endif
-#ifndef __LIBARCSTK_CALCULATE_HPP__
+#ifndef LIBARCSTK_CALCULATE_HPP__
 #include <arcstk/calculate.hpp> // for Checksums, SampleInputIterator, Points...
 #endif
-#ifndef __LIBARCSTK_LOGGING_HPP__
+#ifndef LIBARCSTK_LOGGING_HPP__
 #include <arcstk/logging.hpp>   // for ARCS_LOG, _ERROR, _WARNING, _INFO, _DEBUG
 #endif
 

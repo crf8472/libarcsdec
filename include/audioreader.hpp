@@ -14,10 +14,10 @@
 #include "sampleproc.hpp"  // for SampleProcessor, SampleProvider
 #endif
 
-#ifndef __LIBARCSTK_METADATA_HPP__
+#ifndef LIBARCSTK_METADATA_HPP__
 #include <arcstk/metadata.hpp>   // for AudioSize, UNIT
 #endif
-#ifndef __LIBARCSTK_CALCULATE_HPP__
+#ifndef LIBARCSTK_CALCULATE_HPP__
 #include <arcstk/calculate.hpp>  // for SampleInputIterator
 #endif
 

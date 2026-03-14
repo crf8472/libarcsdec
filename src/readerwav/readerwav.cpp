@@ -27,10 +27,10 @@
 #include "version.hpp"      // for LIBARCSDEC_NAME
 #endif
 
-#ifndef __LIBARCSTK_METADATA_HPP__
+#ifndef LIBARCSTK_METADATA_HPP__
 #include <arcstk/metadata.hpp>  // for AudioSize, UNIT, CDDA
 #endif
-#ifndef __LIBARCSTK_LOGGING_HPP__
+#ifndef LIBARCSTK_LOGGING_HPP__
 #include <arcstk/logging.hpp>   // for ARCS_LOG, _ERROR, _WARNING, _INFO, _DEBUG
 #endif
 

@@ -7,7 +7,7 @@
  * \brief Interface for processing samples
  */
 
-#ifndef __LIBARCSTK_CALCULATE_HPP__
+#ifndef LIBARCSTK_CALCULATE_HPP__
 #include <arcstk/calculate.hpp>
 #endif
 

@@ -24,10 +24,10 @@
 #include "selection.hpp"       // for RegisterDescriptor
 #endif
 
-#ifndef __LIBARCSTK_METADATA_HPP__
+#ifndef LIBARCSTK_METADATA_HPP__
 #include <arcstk/metadata.hpp> // for ToC, make_toc
 #endif
-#ifndef __LIBARCSTK_LOGGING_HPP__
+#ifndef LIBARCSTK_LOGGING_HPP__
 #include <arcstk/logging.hpp>
 #endif
 #ifndef __LIBARCSDEC_VERSION_HPP__

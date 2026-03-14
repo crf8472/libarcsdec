@@ -21,10 +21,10 @@
 #include "selection.hpp"    // for RegisterDescriptor
 #endif
 
-#ifndef __LIBARCSTK_METADATA_HPP__
+#ifndef LIBARCSTK_METADATA_HPP__
 #include <arcstk/metadata.hpp>  // for AudioSize
 #endif
-#ifndef __LIBARCSTK_LOGGING_HPP__
+#ifndef LIBARCSTK_LOGGING_HPP__
 #include <arcstk/logging.hpp>   // for ARCS_LOG, _ERROR, _WARNING, _INFO, _DEBUG
 #endif
 

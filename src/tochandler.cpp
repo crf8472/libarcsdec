@@ -10,10 +10,10 @@
 #include "tochandler.hpp"
 #endif
 
-#ifndef __LIBARCSTK_METADATA_HPP__
+#ifndef LIBARCSTK_METADATA_HPP__
 #include <arcstk/metadata.hpp>    // for ToC, AudioSize, UNIT
 #endif
-#ifndef __LIBARCSTK_LOGGING_HPP__
+#ifndef LIBARCSTK_LOGGING_HPP__
 #include <arcstk/logging.hpp>
 #endif
 

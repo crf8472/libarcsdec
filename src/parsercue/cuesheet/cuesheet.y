@@ -92,7 +92,7 @@
 	#include "cuesheet_lexer.hpp"            // for Lexer
 	#endif
 
-	#ifndef __LIBARCSTK_LOGGING_HPP__
+	#ifndef LIBARCSTK_LOGGING_HPP__
 	#include <arcstk/logging.hpp>
 	#endif
 

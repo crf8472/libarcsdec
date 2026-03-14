@@ -7,7 +7,7 @@
 #include <arcsdec/calculators.hpp>
 #endif
 
-#ifndef __LIBARCSTK_LOGGING_HPP__      // libarcstk: log what you do
+#ifndef LIBARCSTK_LOGGING_HPP__      // libarcstk: log what you do
 #include <arcstk/logging.hpp>
 #endif
 

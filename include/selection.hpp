@@ -11,7 +11,7 @@
 #include "descriptor.hpp"       // for FileReaderDescriptor
 #endif
 
-#ifndef __LIBARCSTK_LOGGING_HPP__
+#ifndef LIBARCSTK_LOGGING_HPP__
 #include <arcstk/logging.hpp>   // for ARCS_LOG_WARNING, ARCS_LOG_DEBUG
 #endif
 

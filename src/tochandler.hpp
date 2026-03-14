@@ -6,7 +6,7 @@
  * \brief Tools for parsers for compact disc toc files.
  */
 
-#ifndef __LIBARCSTK_METADATA_HPP__
+#ifndef LIBARCSTK_METADATA_HPP__
 #include <arcstk/metadata.hpp>    // for AudioSize, ToCData, ToC
 #endif
 

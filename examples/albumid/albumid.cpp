@@ -7,10 +7,10 @@
 #include <arcsdec/calculators.hpp>
 #endif
 
-#ifndef __LIBARCSTK_IDENTIFIER_HPP__   // for ARId
+#ifndef LIBARCSTK_IDENTIFIER_HPP__   // for ARId
 #include <arcstk/identifier.hpp>
 #endif
-#ifndef __LIBARCSTK_LOGGING_HPP__      // libarcstk: log what you do
+#ifndef LIBARCSTK_LOGGING_HPP__      // libarcstk: log what you do
 #include <arcstk/logging.hpp>
 #endif
 

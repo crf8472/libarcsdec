@@ -22,13 +22,13 @@
 #include "selection.hpp"    // for RegisterDescriptor
 #endif
 
-#ifndef __LIBARCSTK_METADATA_HPP__
+#ifndef LIBARCSTK_METADATA_HPP__
 #include <arcstk/metadata.hpp>   // for AudioSize, CDDA
 #endif
-#ifndef __LIBARCSTK_SAMPLES_HPP__
+#ifndef LIBARCSTK_SAMPLES_HPP__
 #include <arcstk/samples.hpp>    // for SampleSequence
 #endif
-#ifndef __LIBARCSTK_LOGGING_HPP__
+#ifndef LIBARCSTK_LOGGING_HPP__
 #include <arcstk/logging.hpp>    // for ARCS_LOG, _ERROR, _INFO, _DEBUG
 #endif
 

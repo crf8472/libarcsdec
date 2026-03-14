@@ -16,7 +16,7 @@
 #include "audioreader.hpp"    // for AudioReaderImpl, DefaultValidator
 #endif
 
-#ifndef __LIBARCSTK_SAMPLES_HPP__
+#ifndef LIBARCSTK_SAMPLES_HPP__
 #include <arcstk/samples.hpp> // for SampleSequence
 #endif
 

@@ -11,7 +11,7 @@
 #include "descriptor.hpp"  // for FileReader, FileReaderDescriptor
 #endif
 
-#ifndef __LIBARCSTK_METADATA_HPP__
+#ifndef LIBARCSTK_METADATA_HPP__
 #include <arcstk/metadata.hpp>    // for ToC
 #endif
 
