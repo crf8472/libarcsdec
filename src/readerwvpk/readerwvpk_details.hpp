@@ -1,8 +1,8 @@
-#ifndef __LIBARCSDEC_READERWVPK_HPP__
+#ifndef LIBARCSDEC_READERWVPK_HPP__
 #error "Do not include readerwvpk_details.hpp, include readerwvpk.hpp instead"
 #endif
-#ifndef __LIBARCSDEC_READERWVPK_DETAILS_HPP__
-#define __LIBARCSDEC_READERWVPK_DETAILS_HPP__
+#ifndef LIBARCSDEC_READERWVPK_DETAILS_HPP__
+#define LIBARCSDEC_READERWVPK_DETAILS_HPP__
 
 /**
  * \internal
@@ -12,7 +12,7 @@
  * \brief Implementation details of readerwvpk.hpp.
  */
 
-#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
+#ifndef LIBARCSDEC_AUDIOREADER_HPP__
 #include "audioreader.hpp"  // for AudioReaderImpl
 #endif
 

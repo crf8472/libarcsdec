@@ -4,20 +4,20 @@
  * \brief Implements libcue-based parser for CueSheets.
  */
 
-#ifndef __LIBARCSDEC_PARSERLIBCUE_HPP__
+#ifndef LIBARCSDEC_PARSERLIBCUE_HPP__
 #include "parserlibcue.hpp"
 #endif
-#ifndef __LIBARCSDEC_PARSERLIBCUE_DETAILS_HPP__
+#ifndef LIBARCSDEC_PARSERLIBCUE_DETAILS_HPP__
 #include "parserlibcue_details.hpp"  // for CueParserImpl, CueOpenFile
 #endif
 
-#ifndef __LIBARCSDEC_METAPARSER_HPP__
+#ifndef LIBARCSDEC_METAPARSER_HPP__
 #include "metaparser.hpp"         // for MetadataParseException
 #endif
-#ifndef __LIBARCSDEC_METAPARSER_DETAILS_HPP__
+#ifndef LIBARCSDEC_METAPARSER_DETAILS_HPP__
 #include "metaparser_details.hpp" // for cast_or_throw
 #endif
-#ifndef __LIBARCSDEC_SELECTION_HPP__
+#ifndef LIBARCSDEC_SELECTION_HPP__
 #include "selection.hpp"          // for RegisterDescriptor
 #endif
 

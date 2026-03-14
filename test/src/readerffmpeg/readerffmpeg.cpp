@@ -6,11 +6,11 @@
  * \brief Fixtures for readerffmpeg.hpp.
  */
 
-#ifndef __LIBARCSDEC_READERFFMPEG_HPP__
+#ifndef LIBARCSDEC_READERFFMPEG_HPP__
 #include "readerffmpeg.hpp"             // TO BE TESTED
 #endif
 
-#ifndef __LIBARCSDEC_SELECTION_HPP__
+#ifndef LIBARCSDEC_SELECTION_HPP__
 #include "selection.hpp"                // for FileReaderSelection
 #endif
 

@@ -1,8 +1,8 @@
-#ifndef __LIBARCSDEC_PARSERLIBCUE_HPP__
+#ifndef LIBARCSDEC_PARSERLIBCUE_HPP__
 #error "Do not include parserlibcue_details.hpp, include parserlibcue.hpp instead"
 #endif
-#ifndef __LIBARCSDEC_PARSERLIBCUE_DETAILS_HPP__
-#define __LIBARCSDEC_PARSERLIBCUE_DETAILS_HPP__
+#ifndef LIBARCSDEC_PARSERLIBCUE_DETAILS_HPP__
+#define LIBARCSDEC_PARSERLIBCUE_DETAILS_HPP__
 
 /**
  * \internal
@@ -12,10 +12,10 @@
  * \brief Implementation details of parserlibcue.hpp.
  */
 
-#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
 #include "descriptor.hpp"       // for FileReaderDescriptor
 #endif
-#ifndef __LIBARCSDEC_METAPARSER_HPP__
+#ifndef LIBARCSDEC_METAPARSER_HPP__
 #include "metaparser.hpp"        // for MetaparserImpl
 #endif
 

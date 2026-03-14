@@ -1,5 +1,5 @@
-#ifndef __LIBARCSDEC_PARSERTOC_HPP__
-#define __LIBARCSDEC_PARSERTOC_HPP__
+#ifndef LIBARCSDEC_PARSERTOC_HPP__
+#define LIBARCSDEC_PARSERTOC_HPP__
 
 /**
  * \file
@@ -7,7 +7,7 @@
  * \brief Parser for cdrdao's toc files.
  */
 
-#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
 #include "descriptor.hpp"// for Codec, Format, FileReaderDescriptor, FileReader
 #endif
 

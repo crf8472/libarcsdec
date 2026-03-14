@@ -1,5 +1,5 @@
-#ifndef __LIBARCSDEC_METAPARSER_HPP__
-#define __LIBARCSDEC_METAPARSER_HPP__
+#ifndef LIBARCSDEC_METAPARSER_HPP__
+#define LIBARCSDEC_METAPARSER_HPP__
 
 /**
  * \file
@@ -7,7 +7,7 @@
  * \brief Implement \link arcsdec::read::MetadataParser MetadataParsers\endlink.
  */
 
-#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
 #include "descriptor.hpp"  // for FileReader, FileReaderDescriptor
 #endif
 

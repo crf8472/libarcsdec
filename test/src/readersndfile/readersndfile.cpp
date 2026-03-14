@@ -6,11 +6,11 @@
  * \brief Fixtures for readersndfile.hpp.
  */
 
-#ifndef __LIBARCSDEC_READERSNDFILE_HPP__
+#ifndef LIBARCSDEC_READERSNDFILE_HPP__
 #include "readersndfile.hpp"            // TO BE TESTED
 #endif
 
-#ifndef __LIBARCSDEC_SELECTION_HPP__
+#ifndef LIBARCSDEC_SELECTION_HPP__
 #include "selection.hpp"                // for FileReaderSelection
 #endif
 

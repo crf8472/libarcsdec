@@ -1,5 +1,5 @@
-#ifndef __LIBARCSDEC_SELECTION_HPP__
-#define __LIBARCSDEC_SELECTION_HPP__
+#ifndef LIBARCSDEC_SELECTION_HPP__
+#define LIBARCSDEC_SELECTION_HPP__
 
 /**
  * \file
@@ -7,7 +7,7 @@
  * \brief Select file readers by format and codec.
  */
 
-#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
 #include "descriptor.hpp"       // for FileReaderDescriptor
 #endif
 

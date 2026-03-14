@@ -1,5 +1,5 @@
-#ifndef __LIBARCSDEC_READERWVPK_HPP__
-#define __LIBARCSDEC_READERWVPK_HPP__
+#ifndef LIBARCSDEC_READERWVPK_HPP__
+#define LIBARCSDEC_READERWVPK_HPP__
 
 /**
  * \file
@@ -12,7 +12,7 @@
  * WAV are not supported.
  */
 
-#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
 #include "descriptor.hpp"  // for FileReaderDescriptor
 #endif
 

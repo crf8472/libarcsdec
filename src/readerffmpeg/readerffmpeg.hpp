@@ -1,5 +1,5 @@
-#ifndef __LIBARCSDEC_READERFFMPEG_HPP__
-#define __LIBARCSDEC_READERFFMPEG_HPP__
+#ifndef LIBARCSDEC_READERFFMPEG_HPP__
+#define LIBARCSDEC_READERFFMPEG_HPP__
 
 /**
  * \file
@@ -7,7 +7,7 @@
  * \brief AudioReader for multiple lossless audio formats, based on ffmpeg.
  */
 
-#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
 #include "descriptor.hpp"  // for FileReaderDescriptor
 #endif
 

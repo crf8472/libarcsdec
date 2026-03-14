@@ -1,22 +1,22 @@
-#ifndef __LIBARCSDEC_CUESHEET_DRIVER_HPP__
-#define __LIBARCSDEC_CUESHEET_DRIVER_HPP__
+#ifndef LIBARCSDEC_CUESHEET_DRIVER_HPP__
+#define LIBARCSDEC_CUESHEET_DRIVER_HPP__
 /**
  * \file
  *
  * \brief Driver for cuesheet format.
  */
 
-#ifndef __LIBARCSDEC_CUESHEET_LEXER_HPP__
+#ifndef LIBARCSDEC_CUESHEET_LEXER_HPP__
 #include "cuesheet_lexer.hpp"     // for Lexer declaration
 #endif
-#ifndef __LIBARCSDEC_CUESHEET_TAB_HPP__
+#ifndef LIBARCSDEC_CUESHEET_TAB_HPP__
 #include "cuesheet_tab.hpp"       // auto-generated
 #endif
 
-#ifndef __LIBARCSDEC_FLEXBISONDRIVER_HPP__
+#ifndef LIBARCSDEC_FLEXBISONDRIVER_HPP__
 #include "flexbisondriver.hpp"  // for FlexBisonDriver
 #endif
-#ifndef __LIBARCSDEC_TOCHANDLER_HPP__
+#ifndef LIBARCSDEC_TOCHANDLER_HPP__
 #include "tochandler.hpp"       // for ParserToCHandler
 #endif
 

@@ -1,8 +1,8 @@
-#ifndef __LIBARCSDEC_PARSERTOC_HPP__
+#ifndef LIBARCSDEC_PARSERTOC_HPP__
 #error "Do not include parsertoc_details.hpp, include parsertoc.hpp instead"
 #endif
-#ifndef __LIBARCSDEC_PARSERTOC_DETAILS_HPP__
-#define __LIBARCSDEC_PARSERTOC_DETAILS_HPP__
+#ifndef LIBARCSDEC_PARSERTOC_DETAILS_HPP__
+#define LIBARCSDEC_PARSERTOC_DETAILS_HPP__
 
 /**
  * \internal
@@ -12,10 +12,10 @@
  * \brief Implementation details of parsertoc.hpp.
  */
 
-#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
 #include "descriptor.hpp"        // for FileReaderDescriptor
 #endif
-#ifndef __LIBARCSDEC_METAPARSER_HPP__
+#ifndef LIBARCSDEC_METAPARSER_HPP__
 #include "metaparser.hpp"        // for MetaparserImpl
 #endif
 

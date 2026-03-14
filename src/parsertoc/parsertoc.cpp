@@ -4,23 +4,23 @@
  * \brief Implements a parser for CDRDAO/TOC files.
  */
 
-#ifndef __LIBARCSDEC_PARSERTOC_HPP__
+#ifndef LIBARCSDEC_PARSERTOC_HPP__
 #include "parsertoc.hpp"
 #endif
-#ifndef __LIBARCSDEC_PARSERTOC_DETAILS_HPP__
+#ifndef LIBARCSDEC_PARSERTOC_DETAILS_HPP__
 #include "parsertoc_details.hpp"  // for TocParserImpl
 #endif
 
-#ifndef __LIBARCSDEC_CDRTOC_DRIVER_HPP__
+#ifndef LIBARCSDEC_CDRTOC_DRIVER_HPP__
 #include "cdrtoc/driver.hpp"
 #endif
-#ifndef __LIBARCSDEC_LIBINSPECT_HPP__
+#ifndef LIBARCSDEC_LIBINSPECT_HPP__
 #include "libinspect.hpp"      // for first_libname_match
 #endif
-#ifndef __LIBARCSDEC_METAPARSER_HPP__
+#ifndef LIBARCSDEC_METAPARSER_HPP__
 #include "metaparser.hpp"      // for MetadataParseException
 #endif
-#ifndef __LIBARCSDEC_SELECTION_HPP__
+#ifndef LIBARCSDEC_SELECTION_HPP__
 #include "selection.hpp"       // for RegisterDescriptor
 #endif
 
@@ -30,7 +30,7 @@
 #ifndef LIBARCSTK_LOGGING_HPP__
 #include <arcstk/logging.hpp>
 #endif
-#ifndef __LIBARCSDEC_VERSION_HPP__
+#ifndef LIBARCSDEC_VERSION_HPP__
 #include "version.hpp"         // for LIBARCSDEC_NAME
 #endif
 

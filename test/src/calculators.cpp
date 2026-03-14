@@ -6,17 +6,17 @@
  * \brief Fixtures for calculators.hpp.
  */
 
-#ifndef __LIBARCSDEC_CALCULATORS_HPP__
+#ifndef LIBARCSDEC_CALCULATORS_HPP__
 #include "calculators.hpp"              // TO BE TESTED
 #endif
 
-#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
+#ifndef LIBARCSDEC_AUDIOREADER_HPP__
 #include "audioreader.hpp"              // for AudioReader
 #endif
-#ifndef __LIBARCSDEC_METAPARSER_HPP__
+#ifndef LIBARCSDEC_METAPARSER_HPP__
 #include "metaparser.hpp"               // for MetadataParser
 #endif
-#ifndef __LIBARCSDEC_SELECTION_HPP__
+#ifndef LIBARCSDEC_SELECTION_HPP__
 #include "selection.hpp"                // for FileReaderRegistry
 #endif
 

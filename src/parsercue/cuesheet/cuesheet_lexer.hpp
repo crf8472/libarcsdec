@@ -1,5 +1,5 @@
-#ifndef __LIBARCSDEC_CUESHEET_LEXER_HPP__
-#define __LIBARCSDEC_CUESHEET_LEXER_HPP__
+#ifndef LIBARCSDEC_CUESHEET_LEXER_HPP__
+#define LIBARCSDEC_CUESHEET_LEXER_HPP__
 
 /**
  * Generated Flex class name is yyFlexLexer by default.
@@ -26,7 +26,7 @@
 #include <FlexLexer.h>
 #undef yyFlexLexer
 
-#ifndef __LIBARCSDEC_CUESHEET_LEXER_DEFS_HPP__
+#ifndef LIBARCSDEC_CUESHEET_LEXER_DEFS_HPP__
 #include "cuesheet_lexer_defs.hpp"
 #endif
 
@@ -35,5 +35,5 @@
 #pragma GCC diagnostic pop
 #endif
 
-#endif // __LIBARCSDEC_CUESHEET_LEXER_HPP__
+#endif // LIBARCSDEC_CUESHEET_LEXER_HPP__
 

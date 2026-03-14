@@ -6,11 +6,11 @@
  * \brief Fixtures for parsertoc.hpp.
  */
 
-#ifndef __LIBARCSDEC_PARSERTOC_HPP__
+#ifndef LIBARCSDEC_PARSERTOC_HPP__
 #include "parsertoc.hpp"                // TO BE TESTED
 #endif
 
-#ifndef __LIBARCSDEC_SELECTION_HPP__
+#ifndef LIBARCSDEC_SELECTION_HPP__
 #include "selection.hpp"                // for FileReaderSelection
 #endif
 

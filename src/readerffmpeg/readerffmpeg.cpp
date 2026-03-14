@@ -4,20 +4,20 @@
  * \brief Implements FFmpeg-based generic audio reader.
  */
 
-#ifndef __LIBARCSDEC_READERFFMPEG_HPP__
+#ifndef LIBARCSDEC_READERFFMPEG_HPP__
 #include "readerffmpeg.hpp"
 #endif
-#ifndef __LIBARCSDEC_READERFFMPEG_DETAILS_HPP__
+#ifndef LIBARCSDEC_READERFFMPEG_DETAILS_HPP__
 #include "readerffmpeg_details.hpp"
 #endif
 
-#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
+#ifndef LIBARCSDEC_AUDIOREADER_HPP__
 #include "audioreader.hpp"  // for AudioReaderImpl, InvalidAudioException
 #endif
-#ifndef __LIBARCSDEC_LIBINSPECT_HPP__
+#ifndef LIBARCSDEC_LIBINSPECT_HPP__
 #include "libinspect.hpp"   // for first_libname_match
 #endif
-#ifndef __LIBARCSDEC_SELECTION_HPP__
+#ifndef LIBARCSDEC_SELECTION_HPP__
 #include "selection.hpp"    // for RegisterDescriptor
 #endif
 

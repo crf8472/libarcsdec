@@ -6,14 +6,14 @@
  * \brief Fixtures for readerwvpk_details.hpp.
  */
 
-#ifndef __LIBARCSDEC_READERWVPK_HPP__
-#define __LIBARCSDEC_READERWVPK_HPP__   // allow readerwvpk_details.hpp
+#ifndef LIBARCSDEC_READERWVPK_HPP__
+#define LIBARCSDEC_READERWVPK_HPP__   // allow readerwvpk_details.hpp
 #endif
-#ifndef __LIBARCSDEC_READERWVPK_DETAILS_HPP__
+#ifndef LIBARCSDEC_READERWVPK_DETAILS_HPP__
 #include "readerwvpk_details.hpp"       // TO BE TESTED
 #endif
 
-#ifndef __LIBARCSDEC_READERMOCKS_HPP__
+#ifndef LIBARCSDEC_READERMOCKS_HPP__
 #include "readermocks.hpp"              // for Mock_SampleProcessor
 #endif
 

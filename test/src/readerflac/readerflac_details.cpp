@@ -6,14 +6,14 @@
  * \brief Fixtures for readerflac_details.hpp.
  */
 
-#ifndef __LIBARCSDEC_READERFLAC_HPP__
-#define __LIBARCSDEC_READERFLAC_HPP__   // allow readerflac_details.hpp
+#ifndef LIBARCSDEC_READERFLAC_HPP__
+#define LIBARCSDEC_READERFLAC_HPP__   // allow readerflac_details.hpp
 #endif
-#ifndef __LIBARCSDEC_READERFLAC_DETAILS_HPP__
+#ifndef LIBARCSDEC_READERFLAC_DETAILS_HPP__
 #include "readerflac_details.hpp"       // TO BE TESTED
 #endif
 
-#ifndef __LIBARCSDEC_READERMOCKS_HPP__
+#ifndef LIBARCSDEC_READERMOCKS_HPP__
 #include "readermocks.hpp"              // for Mock_SampleProcessor
 #endif
 

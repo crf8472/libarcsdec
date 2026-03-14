@@ -6,11 +6,11 @@
  * \brief Implements symbols from selection.hpp.
  */
 
-#ifndef __LIBARCSDEC_SELECTION_HPP__
+#ifndef LIBARCSDEC_SELECTION_HPP__
 #include "selection.hpp"
 #endif
 
-#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
 #include "descriptor.hpp"     // for FileReaderDescriptor
 #endif
 

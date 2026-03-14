@@ -54,12 +54,12 @@
 %code requires
 {
 	// Declaration of class 'Parser' refers to 'TokenLocation' in constructor
-	#ifndef __LIBARCSDEC_FLEXBISONDRIVER_HPP__
+	#ifndef LIBARCSDEC_FLEXBISONDRIVER_HPP__
 	#include "flexbisondriver.hpp"   // for TokenLocation
 	#endif
 
 	// Declaration of class 'Parser' refers to 'ParserToCHandler' in constructor
-	#ifndef __LIBARCSDEC_TOCHANDLER_HPP__
+	#ifndef LIBARCSDEC_TOCHANDLER_HPP__
 	#include "tochandler.hpp"        // for ParserToCHandler
 	#endif
 
@@ -89,12 +89,12 @@
 {
 	// To use member functions of 'ParserToCHandler' in production rule actions
 	// (Include also required in cdrtoc.tab.hpp)
-	#ifndef __LIBARCSDEC_TOCHANDLER_HPP__
+	#ifndef LIBARCSDEC_TOCHANDLER_HPP__
 	#include "tochandler.hpp"       // for ParserToCHandler, ...
 	#endif
 
 	// Re-declaration of yylex() below requires declaration of class 'Lexer'
-	#ifndef __LIBARCSDEC_CDRTOC_LEXER_HPP__
+	#ifndef LIBARCSDEC_CDRTOC_LEXER_HPP__
 	#include "cdrtoc_lexer.hpp"            // for Lexer
 	#endif
 

@@ -6,10 +6,10 @@
  * \brief Fixtures for readersndfile_details.hpp.
  */
 
-#ifndef __LIBARCSDEC_READERSNDFILE_HPP__
-#define __LIBARCSDEC_READERSNDFILE_HPP__ // allow readersndfile_details.hpp
+#ifndef LIBARCSDEC_READERSNDFILE_HPP__
+#define LIBARCSDEC_READERSNDFILE_HPP__ // allow readersndfile_details.hpp
 #endif
-#ifndef __LIBARCSDEC_READERSNDFILE_DETAILS_HPP__
+#ifndef LIBARCSDEC_READERSNDFILE_DETAILS_HPP__
 #include "readersndfile_details.hpp"     // TO BE TESTED
 #endif
 

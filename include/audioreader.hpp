@@ -1,5 +1,5 @@
-#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
-#define __LIBARCSDEC_AUDIOREADER_HPP__
+#ifndef LIBARCSDEC_AUDIOREADER_HPP__
+#define LIBARCSDEC_AUDIOREADER_HPP__
 
 /**
  * \file
@@ -7,10 +7,10 @@
  * \brief Implement \link arcsdec::read::AudioReader AudioReaders\endlink.
  */
 
-#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
 #include "descriptor.hpp"  // for Codec, FileReaderDescriptor, ...
 #endif
-#ifndef __LIBARCSDEC_SAMPLEPROC_HPP__
+#ifndef LIBARCSDEC_SAMPLEPROC_HPP__
 #include "sampleproc.hpp"  // for SampleProcessor, SampleProvider
 #endif
 

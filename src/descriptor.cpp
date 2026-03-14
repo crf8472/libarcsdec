@@ -6,11 +6,11 @@
  * \brief Implements symbols from descriptor.hpp.
  */
 
-#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
 #include "descriptor.hpp"
 #endif
 
-#ifndef __LIBARCSDEC_LIBINSPECT_HPP__
+#ifndef LIBARCSDEC_LIBINSPECT_HPP__
 #include "libinspect.hpp"          // for libfile
 #endif
 

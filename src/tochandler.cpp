@@ -6,7 +6,7 @@
  * \brief Implementations to tochandler.hpp.
  */
 
-#ifndef __LIBARCSDEC_TOCHANDLER_HPP__
+#ifndef LIBARCSDEC_TOCHANDLER_HPP__
 #include "tochandler.hpp"
 #endif
 

@@ -1,5 +1,5 @@
-#ifndef __LIBARCSDEC_CALCULATORS_HPP__
-#define __LIBARCSDEC_CALCULATORS_HPP__
+#ifndef LIBARCSDEC_CALCULATORS_HPP__
+#define LIBARCSDEC_CALCULATORS_HPP__
 
 /**
  * \file
@@ -7,7 +7,7 @@
  * \brief Calculate AccurateRip Checksums and IDs.
  */
 
-#ifndef __LIBARCSDEC_SELECTION_HPP__
+#ifndef LIBARCSDEC_SELECTION_HPP__
 #include "selection.hpp"           // for CreateReader, FileReaders, FormatList,
 #endif                             // FileReaderProvider, FileReaderSelector
 

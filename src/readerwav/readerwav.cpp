@@ -4,26 +4,26 @@
  * \brief Implements audio reader for RIFF/WAV audio files with PCM.
  */
 
-#ifndef __LIBARCSDEC_READERWAV_HPP__
+#ifndef LIBARCSDEC_READERWAV_HPP__
 #include "readerwav.hpp"
 #endif
-#ifndef __LIBARCSDEC_READERWAV_DETAILS_HPP__
+#ifndef LIBARCSDEC_READERWAV_DETAILS_HPP__
 #include "readerwav_details.hpp" // for WavAudioHandler, RIFFWAV_PCM_CDDA_t
 #endif
 
-#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
+#ifndef LIBARCSDEC_AUDIOREADER_HPP__
 #include "audioreader.hpp"  // for AudioReaderImpl, *EndianBytes,
 #endif
-#ifndef __LIBARCSDEC_LIBINSPECT_HPP__
+#ifndef LIBARCSDEC_LIBINSPECT_HPP__
 #include "libinspect.hpp"   // for first_libname_match
 #endif
-#ifndef __LIBARCSDEC_SAMPLEPROC_HPP__
+#ifndef LIBARCSDEC_SAMPLEPROC_HPP__
 #include "sampleproc.hpp"   // for BLOCKSIZE
 #endif
-#ifndef __LIBARCSDEC_SELECTION_HPP__
+#ifndef LIBARCSDEC_SELECTION_HPP__
 #include "selection.hpp"    // for RegisterDescriptor
 #endif
-#ifndef __LIBARCSDEC_VERSION_HPP__
+#ifndef LIBARCSDEC_VERSION_HPP__
 #include "version.hpp"      // for LIBARCSDEC_NAME
 #endif
 

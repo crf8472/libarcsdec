@@ -6,10 +6,10 @@
  * \brief Fixtures for parsertoc_details.hpp.
  */
 
-#ifndef __LIBARCSDEC_PARSERTOC_HPP__
-#define __LIBARCSDEC_PARSERTOC_HPP__    // allow parsertoc_details.hpp
+#ifndef LIBARCSDEC_PARSERTOC_HPP__
+#define LIBARCSDEC_PARSERTOC_HPP__    // allow parsertoc_details.hpp
 #endif
-#ifndef __LIBARCSDEC_PARSERTOC_DETAILS_HPP__
+#ifndef LIBARCSDEC_PARSERTOC_DETAILS_HPP__
 #include "parsertoc_details.hpp"        // TO BE TESTED
 #endif
 

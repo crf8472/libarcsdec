@@ -6,11 +6,11 @@
  * \brief Fixtures for libinspect.hpp.
  */
 
-#ifndef __LIBARCSDEC_LIBINSPECT_HPP__
+#ifndef LIBARCSDEC_LIBINSPECT_HPP__
 #include "libinspect.hpp"               // TO BE TESTED
 #endif
 
-#ifndef __LIBARCSDEC_VERSION_HPP__
+#ifndef LIBARCSDEC_VERSION_HPP__
 #include "version.hpp"                  // for LIBARCSDEC_NAME
 #endif
 

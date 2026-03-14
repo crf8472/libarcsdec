@@ -1,8 +1,8 @@
-#ifndef __LIBARCSDEC_READERFLAC_HPP__
+#ifndef LIBARCSDEC_READERFLAC_HPP__
 #error "Do not include readerflac_details.hpp, include readerflac.hpp instead"
 #endif
-#ifndef __LIBARCSDEC_READERFLAC_DETAILS_HPP__
-#define __LIBARCSDEC_READERFLAC_DETAILS_HPP__
+#ifndef LIBARCSDEC_READERFLAC_DETAILS_HPP__
+#define LIBARCSDEC_READERFLAC_DETAILS_HPP__
 
 /**
  * \internal
@@ -12,7 +12,7 @@
  * \brief Implementation details of readerflac.hpp.
  */
 
-#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
+#ifndef LIBARCSDEC_AUDIOREADER_HPP__
 #include "audioreader.hpp"    // for AudioReaderImpl, DefaultValidator
 #endif
 

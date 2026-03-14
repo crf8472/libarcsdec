@@ -5,20 +5,20 @@
  */
 
 #include <stdexcept>
-#ifndef __LIBARCSDEC_READERFLAC_HPP__
+#ifndef LIBARCSDEC_READERFLAC_HPP__
 #include "readerflac.hpp"
 #endif
-#ifndef __LIBARCSDEC_READERFLAC_DETAILS_HPP__
+#ifndef LIBARCSDEC_READERFLAC_DETAILS_HPP__
 #include "readerflac_details.hpp"
 #endif
 
-#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
+#ifndef LIBARCSDEC_AUDIOREADER_HPP__
 #include "audioreader.hpp"      // for AudioReaderImpl, InvalidAudioException
 #endif
-#ifndef __LIBARCSDEC_LIBINSPECT_HPP__
+#ifndef LIBARCSDEC_LIBINSPECT_HPP__
 #include "libinspect.hpp"       // for libinfo_entry_filepath
 #endif
-#ifndef __LIBARCSDEC_SELECTION_HPP__
+#ifndef LIBARCSDEC_SELECTION_HPP__
 #include "selection.hpp"        // for RegisterDescriptor
 #endif
 

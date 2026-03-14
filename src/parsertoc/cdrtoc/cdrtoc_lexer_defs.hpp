@@ -1,5 +1,5 @@
-#ifndef __LIBARCSDEC_CDRTOC_LEXER_DEFS_HPP__
-#define __LIBARCSDEC_CDRTOC_LEXER_DEFS_HPP__
+#ifndef LIBARCSDEC_CDRTOC_LEXER_DEFS_HPP__
+#define LIBARCSDEC_CDRTOC_LEXER_DEFS_HPP__
 
 /**
  * \file
@@ -29,7 +29,7 @@
 // From cdrtoc.y:
 // Include the Token definitions as well as the redefined yylex()
 // in section "code top" (that calls get_next_token())
-#ifndef __LIBARCSDEC_CDRTOC_TAB_HPP__
+#ifndef LIBARCSDEC_CDRTOC_TAB_HPP__
 #include "cdrtoc_tab.hpp"
 #endif
 
@@ -163,5 +163,5 @@ public:
 } // namespace cdrtoc
 } /*details*/ } /*read*/ } /*v_1_0_0*/ } /*arcsdec*/
 
-#endif // __LIBARCSDEC_CDRTOC_LEXER_DEFS_HPP__
+#endif // LIBARCSDEC_CDRTOC_LEXER_DEFS_HPP__
 

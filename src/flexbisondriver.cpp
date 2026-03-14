@@ -6,7 +6,7 @@
  * \brief Implementations for flexbisondriver.hpp.
  */
 
-#ifndef __LIBARCSDEC_FLEXBISONDRIVER_HPP__
+#ifndef LIBARCSDEC_FLEXBISONDRIVER_HPP__
 #include "flexbisondriver.hpp"
 #endif
 

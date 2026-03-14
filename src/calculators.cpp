@@ -6,26 +6,26 @@
  * \brief Implements symbols from calculators.hpp.
  */
 
-#ifndef __LIBARCSDEC_CALCULATORS_HPP__
+#ifndef LIBARCSDEC_CALCULATORS_HPP__
 #include "calculators.hpp"
 #endif
-#ifndef __LIBARCSDEC_CALCULATORS_DETAILS_HPP__
+#ifndef LIBARCSDEC_CALCULATORS_DETAILS_HPP__
 #include "calculators_details.hpp"
 #endif
 
-#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
 #include "descriptor.hpp"
 #endif
-#ifndef __LIBARCSDEC_SELECTION_HPP__
+#ifndef LIBARCSDEC_SELECTION_HPP__
 #include "selection.hpp"        // for FormatList,FileReaders,FileReaderSelector
 #endif
-#ifndef __LIBARCSDEC_AUDIOREADER_HPP__
+#ifndef LIBARCSDEC_AUDIOREADER_HPP__
 #include "audioreader.hpp"      // for AudioReader
 #endif
-#ifndef __LIBARCSDEC_METAPARSER_HPP__
+#ifndef LIBARCSDEC_METAPARSER_HPP__
 #include "metaparser.hpp"       // for MetadataParser
 #endif
-#ifndef __LIBARCSDEC_SAMPLEPROC_HPP__
+#ifndef LIBARCSDEC_SAMPLEPROC_HPP__
 #include "sampleproc.hpp"       // for SampleProcessor, BLOCKSIZE
 #endif
 

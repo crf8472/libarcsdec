@@ -1,5 +1,5 @@
-#ifndef __LIBARCSDEC_PARSERLIBCUE_HPP__
-#define __LIBARCSDEC_PARSERLIBCUE_HPP__
+#ifndef LIBARCSDEC_PARSERLIBCUE_HPP__
+#define LIBARCSDEC_PARSERLIBCUE_HPP__
 
 /**
  * \file
@@ -7,7 +7,7 @@
  * \brief Parser for Cuesheets, implemented with libcue.
  */
 
-#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
 #include "descriptor.hpp"// for Codec, Format, FileReaderDescriptor, FileReader
 #endif
 

@@ -1,8 +1,8 @@
-#ifndef __LIBARCSDEC_CALCULATORS_HPP__
+#ifndef LIBARCSDEC_CALCULATORS_HPP__
 #error "Do not include calculators_details.hpp, include calculators.hpp instead"
 #endif
-#ifndef __LIBARCSDEC_CALCULATORS_DETAILS_HPP__
-#define __LIBARCSDEC_CALCULATORS_DETAILS_HPP__
+#ifndef LIBARCSDEC_CALCULATORS_DETAILS_HPP__
+#define LIBARCSDEC_CALCULATORS_DETAILS_HPP__
 
 /**
  * \internal
@@ -12,7 +12,7 @@
  * \brief Implementation details of calculators.hpp.
  */
 
-#ifndef __LIBARCSDEC_SAMPLEPROC_HPP__
+#ifndef LIBARCSDEC_SAMPLEPROC_HPP__
 #include "sampleproc.hpp"       // for SampleProcessor
 #endif
 

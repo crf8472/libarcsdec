@@ -1,5 +1,5 @@
-#ifndef __LIBARCSDEC_READERFLAC_HPP__
-#define __LIBARCSDEC_READERFLAC_HPP__
+#ifndef LIBARCSDEC_READERFLAC_HPP__
+#define LIBARCSDEC_READERFLAC_HPP__
 
 /**
  * \file
@@ -7,7 +7,7 @@
  * \brief Audio reader for FLAC audio files, implemented with libflac.
  */
 
-#ifndef __LIBARCSDEC_DESCRIPTOR_HPP__
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
 #include "descriptor.hpp"  // for FileReaderDescriptor
 #endif
 

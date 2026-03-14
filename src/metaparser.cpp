@@ -7,10 +7,10 @@
  */
 
 
-#ifndef __LIBARCSDEC_METAPARSER_HPP__
+#ifndef LIBARCSDEC_METAPARSER_HPP__
 #include "metaparser.hpp"
 #endif
-#ifndef __LIBARCSDEC_METAPARSER_DETAILS_HPP__
+#ifndef LIBARCSDEC_METAPARSER_DETAILS_HPP__
 #include "metaparser_details.hpp"
 #endif
 

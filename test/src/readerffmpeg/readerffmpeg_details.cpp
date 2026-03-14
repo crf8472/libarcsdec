@@ -6,10 +6,10 @@
  * \brief Fixtures for readerffmpeg_details.hpp.
  */
 
-#ifndef __LIBARCSDEC_READERFFMPEG_HPP__
-#define __LIBARCSDEC_READERFFMPEG_HPP__ // allow readerffmpeg_details.hpp
+#ifndef LIBARCSDEC_READERFFMPEG_HPP__
+#define LIBARCSDEC_READERFFMPEG_HPP__ // allow readerffmpeg_details.hpp
 #endif
-#ifndef __LIBARCSDEC_READERFFMPEG_DETAILS_HPP__
+#ifndef LIBARCSDEC_READERFFMPEG_DETAILS_HPP__
 #include "readerffmpeg_details.hpp"     // TO BE TESTED
 #endif
 

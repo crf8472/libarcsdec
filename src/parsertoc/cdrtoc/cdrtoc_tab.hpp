@@ -1,5 +1,5 @@
-#ifndef __LIBARCSDEC_CDRTOC_TAB_HPP__
-#define __LIBARCSDEC_CDRTOC_TAB_HPP__
+#ifndef LIBARCSDEC_CDRTOC_TAB_HPP__
+#define LIBARCSDEC_CDRTOC_TAB_HPP__
 /**
  * \file
  *
