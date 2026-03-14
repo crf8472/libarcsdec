@@ -6,11 +6,11 @@
  * \brief Fixtures for readerwvpk.hpp.
  */
 
-#ifndef LIBARCSDEC_READERWVPK_HPP__
+#ifndef LIBARCSDEC_READERWVPK_HPP_
 #include "readerwvpk.hpp"               // TO BE TESTED
 #endif
 
-#ifndef LIBARCSDEC_SELECTION_HPP__
+#ifndef LIBARCSDEC_SELECTION_HPP_
 #include "selection.hpp"                // for FileReaderSelection
 #endif
 

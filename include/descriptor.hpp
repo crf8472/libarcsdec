@@ -1,5 +1,5 @@
-#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
-#define LIBARCSDEC_DESCRIPTOR_HPP__
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP_
+#define LIBARCSDEC_DESCRIPTOR_HPP_
 
 /**
  * \file
@@ -16,7 +16,7 @@
 #include <utility>     // for pair
 #include <vector>      // for vector
 
-#ifndef LIBARCSTK_LOGGING_HPP__
+#ifndef LIBARCSTK_LOGGING_HPP_
 #include <arcstk/logging.hpp>   // for ARCS_LOG_WARNING, ARCS_LOG_DEBUG
 #endif
 

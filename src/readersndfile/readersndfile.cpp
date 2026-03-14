@@ -5,10 +5,10 @@
  */
 
 #include "parsertoc/parsertoc.hpp"
-#ifndef LIBARCSDEC_READERSNDFILE_HPP__
+#ifndef LIBARCSDEC_READERSNDFILE_HPP_
 #include "readersndfile.hpp"
 #endif
-#ifndef LIBARCSDEC_READERSNDFILE_DETAILS_HPP__
+#ifndef LIBARCSDEC_READERSNDFILE_DETAILS_HPP_
 #include "readersndfile_details.hpp" // for LibsndfileAudioReaderImpl
 #endif
 
@@ -24,23 +24,23 @@
 #include <sndfile.hh>  // for SndfileHandle, SFM_READ, SF_FORMAT_PCM_16
 #endif
 
-#ifndef LIBARCSTK_METADATA_HPP__
+#ifndef LIBARCSTK_METADATA_HPP_
 #include <arcstk/metadata.hpp>   // for AudioSize, CDDA
 #endif
-#ifndef LIBARCSTK_SAMPLES_HPP__
+#ifndef LIBARCSTK_SAMPLES_HPP_
 #include <arcstk/samples.hpp>    // for SampleSequence
 #endif
-#ifndef LIBARCSTK_LOGGING_HPP__
+#ifndef LIBARCSTK_LOGGING_HPP_
 #include <arcstk/logging.hpp>    // for ARCS_LOG, _ERROR, _INFO, _DEBUG
 #endif
 
-#ifndef LIBARCSDEC_AUDIOREADER_HPP__
+#ifndef LIBARCSDEC_AUDIOREADER_HPP_
 #include "audioreader.hpp"  // for AudioReaderImpl, InvalidAudioException
 #endif
-#ifndef LIBARCSDEC_LIBINSPECT_HPP__
+#ifndef LIBARCSDEC_LIBINSPECT_HPP_
 #include "libinspect.hpp"   // for first_libname_match
 #endif
-#ifndef LIBARCSDEC_SELECTION_HPP__
+#ifndef LIBARCSDEC_SELECTION_HPP_
 #include "selection.hpp"    // for RegisterDescriptor
 #endif
 

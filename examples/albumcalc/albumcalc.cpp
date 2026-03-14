@@ -3,11 +3,11 @@
 // represented by a Cuesheet and a single losslessly encoded audio file.
 //
 
-#ifndef LIBARCSDEC_CALCULATORS_HPP__ // libarcsdec: ToCParser, ARCSCalculator
+#ifndef LIBARCSDEC_CALCULATORS_HPP_ // libarcsdec: ToCParser, ARCSCalculator
 #include <arcsdec/calculators.hpp>
 #endif
 
-#ifndef LIBARCSTK_LOGGING_HPP__      // libarcstk: log what you do
+#ifndef LIBARCSTK_LOGGING_HPP_      // libarcstk: log what you do
 #include <arcstk/logging.hpp>
 #endif
 

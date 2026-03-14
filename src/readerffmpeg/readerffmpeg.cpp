@@ -4,10 +4,10 @@
  * \brief Implements FFmpeg-based generic audio reader.
  */
 
-#ifndef LIBARCSDEC_READERFFMPEG_HPP__
+#ifndef LIBARCSDEC_READERFFMPEG_HPP_
 #include "readerffmpeg.hpp"
 #endif
-#ifndef LIBARCSDEC_READERFFMPEG_DETAILS_HPP__
+#ifndef LIBARCSDEC_READERFFMPEG_DETAILS_HPP_
 #include "readerffmpeg_details.hpp"
 #endif
 
@@ -36,20 +36,20 @@ extern "C"
 #include <utility>    // for make_pair, move
 #include <vector>     // for vector
 
-#ifndef LIBARCSTK_METADATA_HPP__
+#ifndef LIBARCSTK_METADATA_HPP_
 #include <arcstk/metadata.hpp>  // for AudioSize
 #endif
-#ifndef LIBARCSTK_LOGGING_HPP__
+#ifndef LIBARCSTK_LOGGING_HPP_
 #include <arcstk/logging.hpp>   // for ARCS_LOG, _ERROR, _WARNING, _INFO, _DEBUG
 #endif
 
-#ifndef LIBARCSDEC_AUDIOREADER_HPP__
+#ifndef LIBARCSDEC_AUDIOREADER_HPP_
 #include "audioreader.hpp"  // for AudioReaderImpl, InvalidAudioException
 #endif
-#ifndef LIBARCSDEC_LIBINSPECT_HPP__
+#ifndef LIBARCSDEC_LIBINSPECT_HPP_
 #include "libinspect.hpp"   // for first_libname_match
 #endif
-#ifndef LIBARCSDEC_SELECTION_HPP__
+#ifndef LIBARCSDEC_SELECTION_HPP_
 #include "selection.hpp"    // for RegisterDescriptor
 #endif
 

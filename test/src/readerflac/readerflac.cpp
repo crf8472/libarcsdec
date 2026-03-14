@@ -6,11 +6,11 @@
  * \brief Fixtures for readerflac.hpp.
  */
 
-#ifndef LIBARCSDEC_READERFLAC_HPP__
+#ifndef LIBARCSDEC_READERFLAC_HPP_
 #include "readerflac.hpp"               // TO BE TESTED
 #endif
 
-#ifndef LIBARCSDEC_SELECTION_HPP__
+#ifndef LIBARCSDEC_SELECTION_HPP_
 #include "selection.hpp"                // for FileReaderSelection
 #endif
 

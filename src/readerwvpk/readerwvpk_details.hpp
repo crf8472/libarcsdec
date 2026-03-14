@@ -1,8 +1,8 @@
-#ifndef LIBARCSDEC_READERWVPK_HPP__
+#ifndef LIBARCSDEC_READERWVPK_HPP_
 #error "Do not include readerwvpk_details.hpp, include readerwvpk.hpp instead"
 #endif
-#ifndef LIBARCSDEC_READERWVPK_DETAILS_HPP__
-#define LIBARCSDEC_READERWVPK_DETAILS_HPP__
+#ifndef LIBARCSDEC_READERWVPK_DETAILS_HPP_
+#define LIBARCSDEC_READERWVPK_DETAILS_HPP_
 
 /**
  * \internal
@@ -22,7 +22,7 @@ extern "C" {
 #include <string>    // for string
 #include <vector>    // for vector
 
-#ifndef LIBARCSDEC_AUDIOREADER_HPP__
+#ifndef LIBARCSDEC_AUDIOREADER_HPP_
 #include "audioreader.hpp"  // for AudioReaderImpl
 #endif
 

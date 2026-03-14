@@ -6,10 +6,10 @@
  * \brief Fixtures for readerwav_details.hpp.
  */
 
-#ifndef LIBARCSDEC_READERWAV_HPP__
-#define LIBARCSDEC_READERWAV_HPP__
+#ifndef LIBARCSDEC_READERWAV_HPP_
+#define LIBARCSDEC_READERWAV_HPP_
 #endif
-#ifndef LIBARCSDEC_READERWAV_DETAILS_HPP__
+#ifndef LIBARCSDEC_READERWAV_DETAILS_HPP_
 #include "readerwav_details.hpp"        // TO BE TESTED
 #endif
 

@@ -1,8 +1,8 @@
-#ifndef LIBARCSDEC_READERSNDFILE_HPP__
+#ifndef LIBARCSDEC_READERSNDFILE_HPP_
 #error "Do not include readersndfile_details.hpp, include readersndfile.hpp instead"
 #endif
-#ifndef LIBARCSDEC_READERSNDFILE_DETAILS_HPP__
-#define LIBARCSDEC_READERSNDFILE_DETAILS_HPP__
+#ifndef LIBARCSDEC_READERSNDFILE_DETAILS_HPP_
+#define LIBARCSDEC_READERSNDFILE_DETAILS_HPP_
 
 /**
  * \internal
@@ -15,7 +15,7 @@
 #include <memory>   // for unique_ptr
 #include <string>   // for string
 
-#ifndef LIBARCSDEC_AUDIOREADER_HPP__
+#ifndef LIBARCSDEC_AUDIOREADER_HPP_
 #include "audioreader.hpp"  // for AudioReaderImpl
 #endif
 

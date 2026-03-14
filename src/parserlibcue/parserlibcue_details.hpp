@@ -1,8 +1,8 @@
-#ifndef LIBARCSDEC_PARSERLIBCUE_HPP__
+#ifndef LIBARCSDEC_PARSERLIBCUE_HPP_
 #error "Do not include parserlibcue_details.hpp, include parserlibcue.hpp instead"
 #endif
-#ifndef LIBARCSDEC_PARSERLIBCUE_DETAILS_HPP__
-#define LIBARCSDEC_PARSERLIBCUE_DETAILS_HPP__
+#ifndef LIBARCSDEC_PARSERLIBCUE_DETAILS_HPP_
+#define LIBARCSDEC_PARSERLIBCUE_DETAILS_HPP_
 
 /**
  * \internal
@@ -22,10 +22,10 @@ extern "C" {
 #include <tuple>    // for tuple
 #include <vector>   // for vector
 
-#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP_
 #include "descriptor.hpp"       // for FileReaderDescriptor
 #endif
-#ifndef LIBARCSDEC_METAPARSER_HPP__
+#ifndef LIBARCSDEC_METAPARSER_HPP_
 #include "metaparser.hpp"        // for MetaparserImpl
 #endif
 

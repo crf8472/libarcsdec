@@ -6,7 +6,7 @@
  * \brief Fixtures for selection.hpp.
  */
 
-#ifndef LIBARCSDEC_SELECTION_HPP__
+#ifndef LIBARCSDEC_SELECTION_HPP_
 #include "selection.hpp"                // TO BE TESTED
 #endif
 

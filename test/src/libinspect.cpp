@@ -6,13 +6,13 @@
  * \brief Fixtures for libinspect.hpp.
  */
 
-#ifndef LIBARCSDEC_LIBINSPECT_HPP__
+#ifndef LIBARCSDEC_LIBINSPECT_HPP_
 #include "libinspect.hpp"               // TO BE TESTED
 #endif
 
 #include <regex>                        // for regex, regex_match
 
-#ifndef LIBARCSDEC_VERSION_HPP__
+#ifndef LIBARCSDEC_VERSION_HPP_
 #include "version.hpp"                  // for LIBARCSDEC_NAME
 #endif
 

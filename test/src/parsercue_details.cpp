@@ -6,19 +6,19 @@
  * \brief Fixtures for parsercue_details.hpp.
  */
 
-#ifndef LIBARCSDEC_PARSERCUE_HPP__
-#define LIBARCSDEC_PARSERCUE_HPP__      // allow parsercue_details.hpp
+#ifndef LIBARCSDEC_PARSERCUE_HPP_
+#define LIBARCSDEC_PARSERCUE_HPP_      // allow parsercue_details.hpp
 #endif
-#ifndef LIBARCSDEC_PARSERCUE_DETAILS_HPP__
+#ifndef LIBARCSDEC_PARSERCUE_DETAILS_HPP_
 #include "parsercue_details.hpp"        // TO BE TESTED
 #endif
 
 #include <fstream>                      // for ifstream
 
-#ifndef LIBARCSDEC_CUESHEET_DRIVER_HPP__
+#ifndef LIBARCSDEC_CUESHEET_DRIVER_HPP_
 #include "cuesheet/driver.hpp"          // for Driver
 #endif
-#ifndef LIBARCSDEC_TOCHANDLER_HPP__
+#ifndef LIBARCSDEC_TOCHANDLER_HPP_
 #include "tochandler.hpp"               // for ParserToCHandler
 #endif
 

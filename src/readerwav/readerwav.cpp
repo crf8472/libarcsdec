@@ -4,10 +4,10 @@
  * \brief Implements audio reader for RIFF/WAV audio files with PCM.
  */
 
-#ifndef LIBARCSDEC_READERWAV_HPP__
+#ifndef LIBARCSDEC_READERWAV_HPP_
 #include "readerwav.hpp"
 #endif
-#ifndef LIBARCSDEC_READERWAV_DETAILS_HPP__
+#ifndef LIBARCSDEC_READERWAV_DETAILS_HPP_
 #include "readerwav_details.hpp" // for WavAudioHandler, RIFFWAV_PCM_CDDA_t
 #endif
 
@@ -33,26 +33,26 @@ extern "C" {
 #include <filesystem>
 #endif
 
-#ifndef LIBARCSTK_METADATA_HPP__
+#ifndef LIBARCSTK_METADATA_HPP_
 #include <arcstk/metadata.hpp>  // for AudioSize, UNIT, CDDA
 #endif
-#ifndef LIBARCSTK_LOGGING_HPP__
+#ifndef LIBARCSTK_LOGGING_HPP_
 #include <arcstk/logging.hpp>   // for ARCS_LOG, _ERROR, _WARNING, _INFO, _DEBUG
 #endif
 
-#ifndef LIBARCSDEC_AUDIOREADER_HPP__
+#ifndef LIBARCSDEC_AUDIOREADER_HPP_
 #include "audioreader.hpp"  // for AudioReaderImpl, *EndianBytes,
 #endif
-#ifndef LIBARCSDEC_LIBINSPECT_HPP__
+#ifndef LIBARCSDEC_LIBINSPECT_HPP_
 #include "libinspect.hpp"   // for first_libname_match
 #endif
-#ifndef LIBARCSDEC_SAMPLEPROC_HPP__
+#ifndef LIBARCSDEC_SAMPLEPROC_HPP_
 #include "sampleproc.hpp"   // for BLOCKSIZE
 #endif
-#ifndef LIBARCSDEC_SELECTION_HPP__
+#ifndef LIBARCSDEC_SELECTION_HPP_
 #include "selection.hpp"    // for RegisterDescriptor
 #endif
-#ifndef LIBARCSDEC_VERSION_HPP__
+#ifndef LIBARCSDEC_VERSION_HPP_
 #include "version.hpp"      // for LIBARCSDEC_NAME
 #endif
 

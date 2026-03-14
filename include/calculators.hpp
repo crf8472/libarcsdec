@@ -1,5 +1,5 @@
-#ifndef LIBARCSDEC_CALCULATORS_HPP__
-#define LIBARCSDEC_CALCULATORS_HPP__
+#ifndef LIBARCSDEC_CALCULATORS_HPP_
+#define LIBARCSDEC_CALCULATORS_HPP_
 
 /**
  * \file
@@ -12,17 +12,17 @@
 #include <utility>  // for pair
 #include <vector>   // for vector
 
-#ifndef LIBARCSTK_CALCULATE_HPP__
+#ifndef LIBARCSTK_CALCULATE_HPP_
 #include <arcstk/calculate.hpp>    // for Checksums, ChecksumSet,...
 #endif
-#ifndef LIBARCSTK_IDENTIFIER_HPP__
+#ifndef LIBARCSTK_IDENTIFIER_HPP_
 #include <arcstk/identifier.hpp>   // for ARId
 #endif
-#ifndef LIBARCSTK_METADATA_HPP__
+#ifndef LIBARCSTK_METADATA_HPP_
 #include <arcstk/metadata.hpp>     // for ToC
 #endif
 
-#ifndef LIBARCSDEC_SELECTION_HPP__
+#ifndef LIBARCSDEC_SELECTION_HPP_
 #include "selection.hpp"           // for CreateReader, FileReaders, FormatList,
 #endif                             // FileReaderProvider, FileReaderSelector
 

@@ -5,10 +5,10 @@
  */
 
 #include <stdexcept>
-#ifndef LIBARCSDEC_READERFLAC_HPP__
+#ifndef LIBARCSDEC_READERFLAC_HPP_
 #include "readerflac.hpp"
 #endif
-#ifndef LIBARCSDEC_READERFLAC_DETAILS_HPP__
+#ifndef LIBARCSDEC_READERFLAC_DETAILS_HPP_
 #include "readerflac_details.hpp"
 #endif
 
@@ -28,20 +28,20 @@
 								// FLAC__StreamMetadata
 								// for FLAC__Frame
 
-#ifndef LIBARCSTK_METADATA_HPP__
+#ifndef LIBARCSTK_METADATA_HPP_
 #include <arcstk/metadata.hpp>  // for AudioSize
 #endif
-#ifndef LIBARCSTK_LOGGING_HPP__
+#ifndef LIBARCSTK_LOGGING_HPP_
 #include <arcstk/logging.hpp>   // for ARCS_LOG_ERROR, _WARNING, _INFO, _DEBUG
 #endif
 
-#ifndef LIBARCSDEC_AUDIOREADER_HPP__
+#ifndef LIBARCSDEC_AUDIOREADER_HPP_
 #include "audioreader.hpp"      // for AudioReaderImpl, InvalidAudioException
 #endif
-#ifndef LIBARCSDEC_LIBINSPECT_HPP__
+#ifndef LIBARCSDEC_LIBINSPECT_HPP_
 #include "libinspect.hpp"       // for libinfo_entry_filepath
 #endif
-#ifndef LIBARCSDEC_SELECTION_HPP__
+#ifndef LIBARCSDEC_SELECTION_HPP_
 #include "selection.hpp"        // for RegisterDescriptor
 #endif
 

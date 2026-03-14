@@ -6,10 +6,10 @@
  * \brief Fixtures for parserlibcue_details.hpp.
  */
 
-#ifndef LIBARCSDEC_PARSERLIBCUE_HPP__
-#define LIBARCSDEC_PARSERLIBCUE_HPP__   // allow parserlibcue_details.hpp
+#ifndef LIBARCSDEC_PARSERLIBCUE_HPP_
+#define LIBARCSDEC_PARSERLIBCUE_HPP_   // allow parserlibcue_details.hpp
 #endif
-#ifndef LIBARCSDEC_PARSERLIBCUE_DETAILS_HPP__
+#ifndef LIBARCSDEC_PARSERLIBCUE_DETAILS_HPP_
 #include "parserlibcue_details.hpp"     // TO BE TESTED
 #endif
 

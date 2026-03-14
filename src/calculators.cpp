@@ -6,10 +6,10 @@
  * \brief Implements symbols from calculators.hpp.
  */
 
-#ifndef LIBARCSDEC_CALCULATORS_HPP__
+#ifndef LIBARCSDEC_CALCULATORS_HPP_
 #include "calculators.hpp"
 #endif
-#ifndef LIBARCSDEC_CALCULATORS_DETAILS_HPP__
+#ifndef LIBARCSDEC_CALCULATORS_DETAILS_HPP_
 #include "calculators_details.hpp"
 #endif
 
@@ -22,35 +22,35 @@
 #include <utility>       // for pair, move, make_pair
 #include <vector>        // for vector
 
-#ifndef LIBARCSTK_ALGORITHMS_HPP__
+#ifndef LIBARCSTK_ALGORITHMS_HPP_
 #include <arcstk/algorithms.hpp>// for AccurateRip::V1andV2...
 #endif
-#ifndef LIBARCSTK_CALCULATE_HPP__
+#ifndef LIBARCSTK_CALCULATE_HPP_
 #include <arcstk/calculate.hpp> // for Checksums, SampleInputIterator, Points...
 #endif
-#ifndef LIBARCSTK_IDENTIFIER_HPP__
+#ifndef LIBARCSTK_IDENTIFIER_HPP_
 #include <arcstk/identifier.hpp>// for ARId, make_arid
 #endif
-#ifndef LIBARCSTK_LOGGING_HPP__
+#ifndef LIBARCSTK_LOGGING_HPP_
 #include <arcstk/logging.hpp>   // for ARCS_LOG, _ERROR, _WARNING, _INFO, _DEBUG
 #endif
-#ifndef LIBARCSTK_METADATA_HPP__
+#ifndef LIBARCSTK_METADATA_HPP_
 #include <arcstk/metadata.hpp>  // for ToC
 #endif
 
-#ifndef LIBARCSDEC_AUDIOREADER_HPP__
+#ifndef LIBARCSDEC_AUDIOREADER_HPP_
 #include "audioreader.hpp"      // for AudioReader
 #endif
-#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP_
 #include "descriptor.hpp"
 #endif
-#ifndef LIBARCSDEC_SELECTION_HPP__
+#ifndef LIBARCSDEC_SELECTION_HPP_
 #include "selection.hpp"        // for FormatList,FileReaders,FileReaderSelector
 #endif
-#ifndef LIBARCSDEC_METAPARSER_HPP__
+#ifndef LIBARCSDEC_METAPARSER_HPP_
 #include "metaparser.hpp"       // for MetadataParser
 #endif
-#ifndef LIBARCSDEC_SAMPLEPROC_HPP__
+#ifndef LIBARCSDEC_SAMPLEPROC_HPP_
 #include "sampleproc.hpp"       // for SampleProcessor, BLOCKSIZE
 #endif
 

@@ -66,17 +66,17 @@
 #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
 #endif
 
-#ifndef LIBARCSDEC_CDRTOC_LEXER_DEFS_HPP__
+#ifndef LIBARCSDEC_CDRTOC_LEXER_DEFS_HPP_
 #include "cdrtoc_lexer_defs.hpp"   /* for Lexer (user-defined) */
 #endif
 
-#ifndef LIBARCSDEC_CDRTOC_TAB_HPP__
+#ifndef LIBARCSDEC_CDRTOC_TAB_HPP_
 #include "cdrtoc_tab.hpp"       /* auto-generated: bison token definitions */
 #endif
 
 #include "cdrtoc_location.hpp"  /* auto-generated: position + location */
 
-#ifndef LIBARCSDEC_FLEXBISONDRIVER_HPP__
+#ifndef LIBARCSDEC_FLEXBISONDRIVER_HPP_
 #include "flexbisondriver.hpp"  /* for LexerHandler,... */
 #endif
 

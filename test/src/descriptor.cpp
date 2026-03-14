@@ -6,7 +6,7 @@
  * \brief Fixtures for descriptor.hpp.
  */
 
-#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP_
 #include "descriptor.hpp"               // TO BE TESTED
 #endif
 

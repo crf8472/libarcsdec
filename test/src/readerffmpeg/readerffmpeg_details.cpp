@@ -9,10 +9,10 @@
 #include <cstdarg>
 #include <string>
 
-#ifndef LIBARCSDEC_READERFFMPEG_HPP__
-#define LIBARCSDEC_READERFFMPEG_HPP__   // allow readerffmpeg_details.hpp
+#ifndef LIBARCSDEC_READERFFMPEG_HPP_
+#define LIBARCSDEC_READERFFMPEG_HPP_   // allow readerffmpeg_details.hpp
 #endif
-#ifndef LIBARCSDEC_READERFFMPEG_DETAILS_HPP__
+#ifndef LIBARCSDEC_READERFFMPEG_DETAILS_HPP_
 #include "readerffmpeg_details.hpp"     // TO BE TESTED
 #endif
 

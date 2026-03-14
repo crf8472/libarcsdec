@@ -1,5 +1,5 @@
-#ifndef LIBARCSDEC_READERFLAC_HPP__
-#define LIBARCSDEC_READERFLAC_HPP__
+#ifndef LIBARCSDEC_READERFLAC_HPP_
+#define LIBARCSDEC_READERFLAC_HPP_
 
 /**
  * \file
@@ -11,7 +11,7 @@
 #include <set>      // for set
 #include <string>   // for string
 
-#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP_
 #include "descriptor.hpp"  // for FileReaderDescriptor
 #endif
 

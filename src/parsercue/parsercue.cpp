@@ -4,10 +4,10 @@
  * \brief Implements a parser for CueSheets.
  */
 
-#ifndef LIBARCSDEC_PARSERCUE_HPP__
+#ifndef LIBARCSDEC_PARSERCUE_HPP_
 #include "parsercue.hpp"
 #endif
-#ifndef LIBARCSDEC_PARSERCUE_DETAILS_HPP__
+#ifndef LIBARCSDEC_PARSERCUE_DETAILS_HPP_
 #include "parsercue_details.hpp"  // for CuesheetParserImpl
 #endif
 
@@ -15,26 +15,26 @@
 #include <set>       // for set
 #include <string>    // for string
 
-#ifndef LIBARCSTK_METADATA_HPP__
+#ifndef LIBARCSTK_METADATA_HPP_
 #include <arcstk/metadata.hpp> // for ToC, make_toc
 #endif
-#ifndef LIBARCSTK_LOGGING_HPP__
+#ifndef LIBARCSTK_LOGGING_HPP_
 #include <arcstk/logging.hpp>
 #endif
 
-#ifndef LIBARCSDEC_CUESHEET_DRIVER_HPP__
+#ifndef LIBARCSDEC_CUESHEET_DRIVER_HPP_
 #include "cuesheet/driver.hpp" // for Driver
 #endif
-#ifndef LIBARCSDEC_LIBINSPECT_HPP__
+#ifndef LIBARCSDEC_LIBINSPECT_HPP_
 #include "libinspect.hpp"      // for first_libname_match
 #endif
-#ifndef LIBARCSDEC_METAPARSER_HPP__
+#ifndef LIBARCSDEC_METAPARSER_HPP_
 #include "metaparser.hpp"      // for MetadataParseException
 #endif
-#ifndef LIBARCSDEC_SELECTION_HPP__
+#ifndef LIBARCSDEC_SELECTION_HPP_
 #include "selection.hpp"       // for RegisterDescriptor
 #endif
-#ifndef LIBARCSDEC_VERSION_HPP__
+#ifndef LIBARCSDEC_VERSION_HPP_
 #include "version.hpp"         // for LIBARCSDEC_NAME
 #endif
 

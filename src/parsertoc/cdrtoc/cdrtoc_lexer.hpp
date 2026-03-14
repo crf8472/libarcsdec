@@ -1,5 +1,5 @@
-#ifndef LIBARCSDEC_CDRTOC_LEXER_HPP__
-#define LIBARCSDEC_CDRTOC_LEXER_HPP__
+#ifndef LIBARCSDEC_CDRTOC_LEXER_HPP_
+#define LIBARCSDEC_CDRTOC_LEXER_HPP_
 
 /**
  * Generated Flex class name is yyFlexLexer by default.
@@ -26,7 +26,7 @@
 #include <FlexLexer.h>
 #undef yyFlexLexer
 
-#ifndef LIBARCSDEC_CDRTOC_LEXER_DEFS_HPP__
+#ifndef LIBARCSDEC_CDRTOC_LEXER_DEFS_HPP_
 #include "cdrtoc_lexer_defs.hpp"
 #endif
 
@@ -35,5 +35,5 @@
 #pragma GCC diagnostic pop
 #endif
 
-#endif // LIBARCSDEC_CDRTOC_LEXER_HPP__
+#endif // LIBARCSDEC_CDRTOC_LEXER_HPP_
 

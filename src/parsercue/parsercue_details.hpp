@@ -1,8 +1,8 @@
-#ifndef LIBARCSDEC_PARSERCUE_HPP__
+#ifndef LIBARCSDEC_PARSERCUE_HPP_
 #error "Do not include parsercue_details.hpp, include parsercue.hpp instead"
 #endif
-#ifndef LIBARCSDEC_PARSERCUE_DETAILS_HPP__
-#define LIBARCSDEC_PARSERCUE_DETAILS_HPP__
+#ifndef LIBARCSDEC_PARSERCUE_DETAILS_HPP_
+#define LIBARCSDEC_PARSERCUE_DETAILS_HPP_
 
 /**
  * \internal
@@ -16,10 +16,10 @@
 #include <memory>   // for unique_ptr
 #include <string>   // for string
 
-#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP_
 #include "descriptor.hpp"       // for FileReaderDescriptor
 #endif
-#ifndef LIBARCSDEC_METAPARSER_HPP__
+#ifndef LIBARCSDEC_METAPARSER_HPP_
 #include "metaparser.hpp"       // for MetaparserImpl
 #endif
 

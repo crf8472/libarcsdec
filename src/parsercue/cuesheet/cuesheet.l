@@ -71,17 +71,17 @@
 #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
 #endif
 
-#ifndef LIBARCSDEC_CUESHEET_LEXER_DEFS_HPP__
+#ifndef LIBARCSDEC_CUESHEET_LEXER_DEFS_HPP_
 #include "cuesheet_lexer_defs.hpp" /* for Lexer (user-defined) */
 #endif
 
-#ifndef LIBARCSDEC_CUESHEET_TAB_HPP__
+#ifndef LIBARCSDEC_CUESHEET_TAB_HPP_
 #include "cuesheet.tab.hpp"       /* auto-generated: bison token definitions */
 #endif
 
 #include "cuesheet_location.hpp"  /* auto-generated: position + location */
 
-#ifndef LIBARCSDEC_FLEXBISONDRIVER_HPP__
+#ifndef LIBARCSDEC_FLEXBISONDRIVER_HPP_
 #include "flexbisondriver.hpp"  /* for LexerHandler,... */
 #endif
 

@@ -1,8 +1,8 @@
-#ifndef LIBARCSDEC_CALCULATORS_HPP__
+#ifndef LIBARCSDEC_CALCULATORS_HPP_
 #error "Do not include calculators_details.hpp, include calculators.hpp instead"
 #endif
-#ifndef LIBARCSDEC_CALCULATORS_DETAILS_HPP__
-#define LIBARCSDEC_CALCULATORS_DETAILS_HPP__
+#ifndef LIBARCSDEC_CALCULATORS_DETAILS_HPP_
+#define LIBARCSDEC_CALCULATORS_DETAILS_HPP_
 
 /**
  * \internal
@@ -15,14 +15,14 @@
 #include <cstdint>  // for uint32_t, int32_t
 #include <memory>   // for unique_ptr
 
-#ifndef LIBARCSTK_CALCULATE_HPP__
+#ifndef LIBARCSTK_CALCULATE_HPP_
 #include <arcstk/calculate.hpp> // for Checksums, ChecksumtypeSet, Points
 #endif
-#ifndef LIBARCSTK_METADATA_HPP__
+#ifndef LIBARCSTK_METADATA_HPP_
 #include <arcstk/metadata.hpp>  // for ToC
 #endif
 
-#ifndef LIBARCSDEC_SAMPLEPROC_HPP__
+#ifndef LIBARCSDEC_SAMPLEPROC_HPP_
 #include "sampleproc.hpp"       // for SampleProcessor
 #endif
 

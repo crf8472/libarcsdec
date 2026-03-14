@@ -1,8 +1,8 @@
-#ifndef LIBARCSDEC_READERWAV_HPP__
+#ifndef LIBARCSDEC_READERWAV_HPP_
 #error "Do not include readerwav_details.hpp, include readerwav.hpp instead"
 #endif
-#ifndef LIBARCSDEC_READERWAV_DETAILS_HPP__
-#define LIBARCSDEC_READERWAV_DETAILS_HPP__
+#ifndef LIBARCSDEC_READERWAV_DETAILS_HPP_
+#define LIBARCSDEC_READERWAV_DETAILS_HPP_
 
 /**
  * \internal
@@ -19,7 +19,7 @@
 #include <string>     // for string
 #include <vector>     // for vector
 
-#ifndef LIBARCSDEC_AUDIOREADER_HPP__
+#ifndef LIBARCSDEC_AUDIOREADER_HPP_
 #include "audioreader.hpp"  // for AudioReaderImpl
 #endif
 

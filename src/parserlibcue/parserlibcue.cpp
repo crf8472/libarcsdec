@@ -4,10 +4,10 @@
  * \brief Implements libcue-based parser for CueSheets.
  */
 
-#ifndef LIBARCSDEC_PARSERLIBCUE_HPP__
+#ifndef LIBARCSDEC_PARSERLIBCUE_HPP_
 #include "parserlibcue.hpp"
 #endif
-#ifndef LIBARCSDEC_PARSERLIBCUE_DETAILS_HPP__
+#ifndef LIBARCSDEC_PARSERLIBCUE_DETAILS_HPP_
 #include "parserlibcue_details.hpp"  // for CueParserImpl, CueOpenFile
 #endif
 
@@ -24,20 +24,20 @@ extern "C" {
 #include <string>    // for string
 #include <vector>    // for vector
 
-#ifndef LIBARCSTK_METADATA_HPP__
+#ifndef LIBARCSTK_METADATA_HPP_
 #include <arcstk/metadata.hpp>    // for ToC, make_toc
 #endif
-#ifndef LIBARCSTK_LOGGING_HPP__
+#ifndef LIBARCSTK_LOGGING_HPP_
 #include <arcstk/logging.hpp>
 #endif
 
-#ifndef LIBARCSDEC_METAPARSER_HPP__
+#ifndef LIBARCSDEC_METAPARSER_HPP_
 #include "metaparser.hpp"         // for MetadataParseException
 #endif
-#ifndef LIBARCSDEC_METAPARSER_DETAILS_HPP__
+#ifndef LIBARCSDEC_METAPARSER_DETAILS_HPP_
 #include "metaparser_details.hpp" // for cast_or_throw
 #endif
-#ifndef LIBARCSDEC_SELECTION_HPP__
+#ifndef LIBARCSDEC_SELECTION_HPP_
 #include "selection.hpp"          // for RegisterDescriptor
 #endif
 

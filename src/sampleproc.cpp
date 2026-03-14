@@ -6,7 +6,7 @@
  * \brief Implements symbols from sampleproc.hpp.
  */
 
-#ifndef LIBARCSDEC_SAMPLEPROC_HPP__
+#ifndef LIBARCSDEC_SAMPLEPROC_HPP_
 #include "sampleproc.hpp"
 #endif
 

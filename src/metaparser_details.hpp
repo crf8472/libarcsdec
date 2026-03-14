@@ -1,8 +1,8 @@
-#ifndef LIBARCSDEC_METAPARSER_HPP__
+#ifndef LIBARCSDEC_METAPARSER_HPP_
 #error "Do not include metaparser_details.hpp, include metaparser.hpp instead"
 #endif
-#ifndef LIBARCSDEC_METAPARSER_DETAILS_HPP__
-#define LIBARCSDEC_METAPARSER_DETAILS_HPP__
+#ifndef LIBARCSDEC_METAPARSER_DETAILS_HPP_
+#define LIBARCSDEC_METAPARSER_DETAILS_HPP_
 
 /**
  * \internal

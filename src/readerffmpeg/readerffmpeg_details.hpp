@@ -1,8 +1,8 @@
-#ifndef LIBARCSDEC_READERFFMPEG_HPP__
+#ifndef LIBARCSDEC_READERFFMPEG_HPP_
 #error "Do not include readerffmpeg_details.hpp, include readerffmpeg.hpp instead"
 #endif
-#ifndef LIBARCSDEC_READERFFMPEG_DETAILS_HPP__
-#define LIBARCSDEC_READERFFMPEG_DETAILS_HPP__
+#ifndef LIBARCSDEC_READERFFMPEG_DETAILS_HPP_
+#define LIBARCSDEC_READERFFMPEG_DETAILS_HPP_
 
 /**
  * \internal
@@ -33,14 +33,14 @@ extern "C"
 #include <utility>     // for pair
 #include <fstream>
 
-#ifndef LIBARCSTK_SAMPLES_HPP__
+#ifndef LIBARCSTK_SAMPLES_HPP_
 #include <arcstk/samples.hpp>   // for SampleInputIterator
 #endif
-#ifndef LIBARCSTK_CALCULATE_HPP__
+#ifndef LIBARCSTK_CALCULATE_HPP_
 #include <arcstk/calculate.hpp> // for AudioSize
 #endif
 
-#ifndef LIBARCSDEC_AUDIOREADER_HPP__
+#ifndef LIBARCSDEC_AUDIOREADER_HPP_
 #include "audioreader.hpp"      // for AudioReaderImpl
 #endif
 

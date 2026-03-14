@@ -1,5 +1,5 @@
-#ifndef LIBARCSDEC_SAMPLEPROC_HPP__
-#define LIBARCSDEC_SAMPLEPROC_HPP__
+#ifndef LIBARCSDEC_SAMPLEPROC_HPP_
+#define LIBARCSDEC_SAMPLEPROC_HPP_
 
 /**
  * \file
@@ -7,7 +7,7 @@
  * \brief Interface for processing samples
  */
 
-#ifndef LIBARCSTK_CALCULATE_HPP__
+#ifndef LIBARCSTK_CALCULATE_HPP_
 #include <arcstk/calculate.hpp>
 #endif
 

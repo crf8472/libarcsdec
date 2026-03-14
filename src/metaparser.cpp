@@ -7,10 +7,10 @@
  */
 
 
-#ifndef LIBARCSDEC_METAPARSER_HPP__
+#ifndef LIBARCSDEC_METAPARSER_HPP_
 #include "metaparser.hpp"
 #endif
-#ifndef LIBARCSDEC_METAPARSER_DETAILS_HPP__
+#ifndef LIBARCSDEC_METAPARSER_DETAILS_HPP_
 #include "metaparser_details.hpp"
 #endif
 
@@ -18,7 +18,7 @@
 #include <string>       // for string
 #include <utility>      // for move
 
-#ifndef LIBARCSTK_LOGGING_HPP__
+#ifndef LIBARCSTK_LOGGING_HPP_
 #include <arcstk/logging.hpp>  // for ARCS_LOG_DEBUG
 #endif
 

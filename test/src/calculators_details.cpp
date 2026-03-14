@@ -6,10 +6,10 @@
  * \brief Fixtures for calculators_details.hpp.
  */
 
-#ifndef LIBARCSDEC_CALCULATORS_HPP__
-#define LIBARCSDEC_CALCULATORS_HPP__  // allow calculators_details.hpp
+#ifndef LIBARCSDEC_CALCULATORS_HPP_
+#define LIBARCSDEC_CALCULATORS_HPP_  // allow calculators_details.hpp
 #endif
-#ifndef LIBARCSDEC_CALCULATORS_DETAILS_HPP__
+#ifndef LIBARCSDEC_CALCULATORS_DETAILS_HPP_
 #include "calculators_details.hpp"      // TO BE TESTED
 #endif
 

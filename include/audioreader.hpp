@@ -1,5 +1,5 @@
-#ifndef LIBARCSDEC_AUDIOREADER_HPP__
-#define LIBARCSDEC_AUDIOREADER_HPP__
+#ifndef LIBARCSDEC_AUDIOREADER_HPP_
+#define LIBARCSDEC_AUDIOREADER_HPP_
 
 /**
  * \file
@@ -14,17 +14,17 @@
 #include <string>     // for string
 #include <vector>     // for vector
 
-#ifndef LIBARCSTK_METADATA_HPP__
+#ifndef LIBARCSTK_METADATA_HPP_
 #include <arcstk/metadata.hpp>   // for AudioSize, UNIT
 #endif
-#ifndef LIBARCSTK_CALCULATE_HPP__
+#ifndef LIBARCSTK_CALCULATE_HPP_
 #include <arcstk/calculate.hpp>  // for SampleInputIterator
 #endif
 
-#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP_
 #include "descriptor.hpp"        // for Codec, FileReaderDescriptor, ...
 #endif
-#ifndef LIBARCSDEC_SAMPLEPROC_HPP__
+#ifndef LIBARCSDEC_SAMPLEPROC_HPP_
 #include "sampleproc.hpp"        // for SampleProcessor, SampleProvider
 #endif
 

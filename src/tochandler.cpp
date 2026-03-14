@@ -6,7 +6,7 @@
  * \brief Implementations to tochandler.hpp.
  */
 
-#ifndef LIBARCSDEC_TOCHANDLER_HPP__
+#ifndef LIBARCSDEC_TOCHANDLER_HPP_
 #include "tochandler.hpp"
 #endif
 
@@ -15,10 +15,10 @@
 #include <string>      // for vector
 #include <vector>      // for string
 
-#ifndef LIBARCSTK_METADATA_HPP__
+#ifndef LIBARCSTK_METADATA_HPP_
 #include <arcstk/metadata.hpp>    // for ToC, AudioSize, UNIT
 #endif
-#ifndef LIBARCSTK_LOGGING_HPP__
+#ifndef LIBARCSTK_LOGGING_HPP_
 #include <arcstk/logging.hpp>
 #endif
 

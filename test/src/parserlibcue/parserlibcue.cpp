@@ -6,11 +6,11 @@
  * \brief Fixtures for parserlibcue.hpp.
  */
 
-#ifndef LIBARCSDEC_PARSERLIBCUE_HPP__
+#ifndef LIBARCSDEC_PARSERLIBCUE_HPP_
 #include "parserlibcue.hpp"             // TO BE TESTED
 #endif
 
-#ifndef LIBARCSDEC_SELECTION_HPP__
+#ifndef LIBARCSDEC_SELECTION_HPP_
 #include "selection.hpp"                // for FileReaderSelection
 #endif
 

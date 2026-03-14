@@ -6,7 +6,7 @@
  * \brief Implements symbols from libinspect.hpp.
  */
 
-#ifndef LIBARCSDEC_LIBINSPECT_HPP__
+#ifndef LIBARCSDEC_LIBINSPECT_HPP_
 #include "libinspect.hpp"
 #endif
 
@@ -20,11 +20,11 @@ extern "C"
 #include <regex>       // for regex, regex_match
 #include <string>      // for string
 
-#ifndef LIBARCSTK_LOGGING_HPP__
+#ifndef LIBARCSTK_LOGGING_HPP_
 #include <arcstk/logging.hpp> // for ARCS_LOG_WARNING, ARCS_LOG_DEBUG
 #endif
 
-#ifndef LIBARCSDEC_VERSION_HPP__
+#ifndef LIBARCSDEC_VERSION_HPP_
 #include "version.hpp"        // for LIBARCSDEC_NAME
 #endif
 

@@ -6,7 +6,7 @@
  * \brief Implements symbols from selection.hpp.
  */
 
-#ifndef LIBARCSDEC_SELECTION_HPP__
+#ifndef LIBARCSDEC_SELECTION_HPP_
 #include "selection.hpp"
 #endif
 
@@ -17,11 +17,11 @@
 #include <string>       // for string
 #include <utility>      // for pair, make_pair, move
 
-#ifndef LIBARCSTK_LOGGING_HPP__
+#ifndef LIBARCSTK_LOGGING_HPP_
 #include <arcstk/logging.hpp> // for ARCS_LOG, _WARNING, _DEBUG
 #endif
 
-#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP_
 #include "descriptor.hpp"     // for FileReaderDescriptor
 #endif
 

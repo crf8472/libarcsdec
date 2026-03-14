@@ -1,5 +1,5 @@
-#ifndef LIBARCSDEC_CUESHEET_LEXER_DEFS_HPP__
-#define LIBARCSDEC_CUESHEET_LEXER_DEFS_HPP__
+#ifndef LIBARCSDEC_CUESHEET_LEXER_DEFS_HPP_
+#define LIBARCSDEC_CUESHEET_LEXER_DEFS_HPP_
 
 /**
  * \file
@@ -29,7 +29,7 @@
 // From cuesheet.y:
 // Include the Token definitions as well as the redefined yylex()
 // in section "code top" (that calls get_next_token())
-#ifndef LIBARCSDEC_CUESHEET_TAB_HPP__
+#ifndef LIBARCSDEC_CUESHEET_TAB_HPP_
 #include "cuesheet.tab.hpp"
 #endif
 
@@ -161,5 +161,5 @@ public:
 } // namespace cuesheet
 } /*details*/ } /*read*/ } /*v_1_0_0*/ } /*arcsdec*/
 
-#endif // LIBARCSDEC_CUESHEET_LEXER_DEFS_HPP__
+#endif // LIBARCSDEC_CUESHEET_LEXER_DEFS_HPP_
 

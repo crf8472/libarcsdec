@@ -1,8 +1,8 @@
-#ifndef LIBARCSDEC_READERFLAC_HPP__
+#ifndef LIBARCSDEC_READERFLAC_HPP_
 #error "Do not include readerflac_details.hpp, include readerflac.hpp instead"
 #endif
-#ifndef LIBARCSDEC_READERFLAC_DETAILS_HPP__
-#define LIBARCSDEC_READERFLAC_DETAILS_HPP__
+#ifndef LIBARCSDEC_READERFLAC_DETAILS_HPP_
+#define LIBARCSDEC_READERFLAC_DETAILS_HPP_
 
 /**
  * \internal
@@ -23,11 +23,11 @@
 								// for FLAC__int32
 								// for FLAC__Frame
 
-#ifndef LIBARCSTK_SAMPLES_HPP__
+#ifndef LIBARCSTK_SAMPLES_HPP_
 #include <arcstk/samples.hpp> // for SampleSequence
 #endif
 
-#ifndef LIBARCSDEC_AUDIOREADER_HPP__
+#ifndef LIBARCSDEC_AUDIOREADER_HPP_
 #include "audioreader.hpp"    // for AudioReaderImpl, DefaultValidator
 #endif
 

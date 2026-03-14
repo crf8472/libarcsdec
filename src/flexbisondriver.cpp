@@ -6,7 +6,7 @@
  * \brief Implementations for flexbisondriver.hpp.
  */
 
-#ifndef LIBARCSDEC_FLEXBISONDRIVER_HPP__
+#ifndef LIBARCSDEC_FLEXBISONDRIVER_HPP_
 #include "flexbisondriver.hpp"
 #endif
 
@@ -15,7 +15,7 @@
 #include <string>      // for vector
 #include <vector>      // for string
 
-#ifndef LIBARCSTK_LOGGING_HPP__
+#ifndef LIBARCSTK_LOGGING_HPP_
 #include <arcstk/logging.hpp>
 #endif
 

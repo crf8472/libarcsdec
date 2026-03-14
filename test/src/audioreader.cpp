@@ -6,7 +6,7 @@
  * \brief Fixtures for audioreader.hpp.
  */
 
-#ifndef LIBARCSDEC_AUDIOREADER_HPP__
+#ifndef LIBARCSDEC_AUDIOREADER_HPP_
 #include "audioreader.hpp"              // TO BE TESTED
 #endif
 

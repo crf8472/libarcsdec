@@ -1,5 +1,5 @@
-#ifndef LIBARCSDEC_TOCHANDLER_HPP__
-#define LIBARCSDEC_TOCHANDLER_HPP__
+#ifndef LIBARCSDEC_TOCHANDLER_HPP_
+#define LIBARCSDEC_TOCHANDLER_HPP_
 /**
  * \file
  *
@@ -10,11 +10,11 @@
 #include <string>   // for string
 #include <vector>   // for vector
 
-#ifndef LIBARCSTK_METADATA_HPP__
+#ifndef LIBARCSTK_METADATA_HPP_
 #include <arcstk/metadata.hpp>    // for AudioSize, ToCData, ToC
 #endif
 
-#ifndef LIBARCSDEC_FLEXBISONDRIVER_HPP__
+#ifndef LIBARCSDEC_FLEXBISONDRIVER_HPP_
 #include "flexbisondriver.hpp"    // for ParserHandler
 #endif
 

@@ -6,7 +6,7 @@
  * \brief Implements symbols from audioreader.hpp.
  */
 
-#ifndef LIBARCSDEC_AUDIOREADER_HPP__
+#ifndef LIBARCSDEC_AUDIOREADER_HPP_
 #include "audioreader.hpp"
 #endif
 
@@ -17,10 +17,10 @@
 #include <string>        // for string, to_string
 #include <utility>       // for move
 
-#ifndef LIBARCSTK_LOGGING_HPP__
+#ifndef LIBARCSTK_LOGGING_HPP_
 #include <arcstk/logging.hpp>  // for ARCS_LOG, _ERROR, _WARNING, _DEBUG
 #endif
-#ifndef LIBARCSTK_METADATA_HPP__
+#ifndef LIBARCSTK_METADATA_HPP_
 #include <arcstk/metadata.hpp> // for CDDA
 #endif
 

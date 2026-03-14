@@ -6,7 +6,7 @@
  * \brief Implements symbols from descriptor.hpp.
  */
 
-#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP_
 #include "descriptor.hpp"
 #endif
 
@@ -24,11 +24,11 @@
 #include <type_traits>      // for underlying_type_t
 #include <vector>           // for vector
 
-#ifndef LIBARCSTK_LOGGING_HPP__
+#ifndef LIBARCSTK_LOGGING_HPP_
 #include <arcstk/logging.hpp>      // for ARCS_LOG, _WARNING, _DEBUG
 #endif
 
-#ifndef LIBARCSDEC_LIBINSPECT_HPP__
+#ifndef LIBARCSDEC_LIBINSPECT_HPP_
 #include "libinspect.hpp"          // for libfile
 #endif
 

@@ -1,5 +1,5 @@
-#ifndef LIBARCSDEC_METAPARSER_HPP__
-#define LIBARCSDEC_METAPARSER_HPP__
+#ifndef LIBARCSDEC_METAPARSER_HPP_
+#define LIBARCSDEC_METAPARSER_HPP_
 
 /**
  * \file
@@ -10,11 +10,11 @@
 #include <memory>       // for unique_ptr
 #include <string>       // for string
 
-#ifndef LIBARCSTK_METADATA_HPP__
+#ifndef LIBARCSTK_METADATA_HPP_
 #include <arcstk/metadata.hpp>    // for ToC
 #endif
 
-#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP_
 #include "descriptor.hpp"  // for FileReader, FileReaderDescriptor
 #endif
 

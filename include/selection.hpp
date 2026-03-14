@@ -1,5 +1,5 @@
-#ifndef LIBARCSDEC_SELECTION_HPP__
-#define LIBARCSDEC_SELECTION_HPP__
+#ifndef LIBARCSDEC_SELECTION_HPP_
+#define LIBARCSDEC_SELECTION_HPP_
 
 /**
  * \file
@@ -15,11 +15,11 @@
 #include <utility>       // for pair, move, make_pair, forward
 #include <vector>        // for vector
 
-#ifndef LIBARCSTK_LOGGING_HPP__
+#ifndef LIBARCSTK_LOGGING_HPP_
 #include <arcstk/logging.hpp>   // for ARCS_LOG_WARNING, ARCS_LOG_DEBUG
 #endif
 
-#ifndef LIBARCSDEC_DESCRIPTOR_HPP__
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP_
 #include "descriptor.hpp"       // for FileReaderDescriptor
 #endif
 
