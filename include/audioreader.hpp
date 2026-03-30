@@ -126,7 +126,7 @@ public:
 	 *
 	 * \throw FileReadException If the file could not be read
 	 */
-	std::unique_ptr<AudioSize> acquire_size(const std::string& filename);
+	AudioSize acquire_size(const std::string& filename);
 
 	/**
 	 * \brief Provides implementation for process_file() of some AudioReader.
@@ -221,8 +221,7 @@ private:
 	 *
 	 * \throw FileReadException If the file could not be read
 	 */
-	virtual std::unique_ptr<AudioSize> do_acquire_size(
-		const std::string& filename)
+	virtual AudioSize do_acquire_size(const std::string& filename)
 	= 0;
 
 	/**
@@ -319,7 +318,7 @@ public:
 	 *
 	 * \throw FileReadException If the file could not be read
 	 */
-	std::unique_ptr<AudioSize> acquire_size(const std::string& filename) const;
+	AudioSize acquire_size(const std::string& filename) const;
 
 	/**
 	 * \brief Process the file and return ARCSs v1 and v2 for all tracks.

@@ -299,7 +299,7 @@ std::size_t ParserToCHandler::current_track() const
 }
 
 
-std::unique_ptr<ToC> ParserToCHandler::get_toc() const
+ToC ParserToCHandler::get_toc() const
 {
 	return arcstk::make_toc(offsets_, filenames_);
 }

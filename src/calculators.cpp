@@ -260,7 +260,7 @@ AudioSize ensure_leadout(const AudioSize& leadout,
 	ARCS_LOG_DEBUG <<
 		"Empty leadout passed, acquire size from audio file";
 
-	return *reader.acquire_size(audiofilename);
+	return reader.acquire_size(audiofilename);
 }
 
 } // namespace details
@@ -436,7 +436,7 @@ using arcsdec::read::BLOCKSIZE;
 // ToCParser
 
 
-std::unique_ptr<ToC> ToCParser::parse(const std::string& metafilename) const
+ToC ToCParser::parse(const std::string& metafilename) const
 {
 	if (metafilename.empty())
 	{
@@ -455,7 +455,7 @@ std::unique_ptr<ToC> ToCParser::parse(const std::string& metafilename) const
 // AudioInfo
 
 
-std::unique_ptr<AudioSize> AudioInfo::size(const std::string& filename) const
+AudioSize AudioInfo::size(const std::string& filename) const
 {
 	return create(filename)->acquire_size(filename);
 }
@@ -744,7 +744,7 @@ ARId ARIdCalculator::calculate(const std::string& metafilename,
 {
 	const auto toc { create(metafilename)->parse(metafilename) };
 
-	return calculate(*toc, audiofilename);
+	return calculate(toc, audiofilename);
 }
 
 
@@ -756,7 +756,7 @@ ARId ARIdCalculator::calculate(const ToC& toc,
 		return make_arid(toc);
 	}
 
-	return make_arid(toc, *audio()->size(audiofilename));
+	return make_arid(toc, audio()->size(audiofilename));
 }
 
 

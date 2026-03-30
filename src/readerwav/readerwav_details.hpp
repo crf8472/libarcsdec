@@ -865,8 +865,7 @@ public:
 
 private:
 
-	std::unique_ptr<AudioSize> do_acquire_size(const std::string& filename)
-		final;
+	AudioSize do_acquire_size(const std::string& filename) final;
 
 	void do_process_file(const std::string& filename) final;
 

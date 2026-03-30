@@ -565,8 +565,7 @@ WavAudioReaderImpl::WavAudioReaderImpl(std::unique_ptr<WavAudioHandler> hndlr)
 WavAudioReaderImpl::~WavAudioReaderImpl() noexcept = default;
 
 
-std::unique_ptr<AudioSize> WavAudioReaderImpl::do_acquire_size(
-	const std::string& audiofilename)
+AudioSize WavAudioReaderImpl::do_acquire_size(const std::string& audiofilename)
 {
 	auto total_pcm_bytes = int64_t { 0 };
 
@@ -592,9 +591,7 @@ std::unique_ptr<AudioSize> WavAudioReaderImpl::do_acquire_size(
 		}
 	}
 
-	const auto audiosize = to_audiosize(total_pcm_bytes, UNIT::BYTES);
-
-	return std::make_unique<AudioSize>(audiosize);
+	return to_audiosize(total_pcm_bytes, UNIT::BYTES);
 }
 
 

@@ -273,7 +273,7 @@ CueInfo CueParserImpl::parse_worker(const std::string& filename) const
 }
 
 
-std::unique_ptr<ToC> CueParserImpl::do_parse(const std::string& filename)
+ToC CueParserImpl::do_parse(const std::string& filename)
 {
 	const auto cue_info = this->parse_worker(filename);
 

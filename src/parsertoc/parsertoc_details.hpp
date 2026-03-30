@@ -62,7 +62,7 @@ using arcsdec::read::MetadataParserImpl;
  */
 class TocParserImpl final : public MetadataParserImpl
 {
-	std::unique_ptr<ToC> do_parse(const std::string& filename) final;
+	ToC do_parse(const std::string& filename) final;
 
 	std::unique_ptr<FileReaderDescriptor> do_descriptor() const final;
 };

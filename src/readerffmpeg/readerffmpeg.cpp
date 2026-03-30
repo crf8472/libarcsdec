@@ -1027,7 +1027,7 @@ FFmpegAudioStream::FFmpegAudioStream()
 	, stream_index_     { 0 }
 	, num_planes_       { 0 }
 	, channels_swapped_ { false }
-	, size_             { arcstk::EmptyAudioSize }
+	, size_             { arcstk::AudioSize{} /* zero */ }
 	, start_input_      { /* empty */ }
 	, push_frame_       { /* empty */ }
 	, update_audiosize_ { /* empty */ }
@@ -1221,8 +1221,7 @@ FFmpegAudioReaderImpl::FFmpegAudioReaderImpl()
 FFmpegAudioReaderImpl::~FFmpegAudioReaderImpl() noexcept = default;
 
 
-std::unique_ptr<AudioSize> FFmpegAudioReaderImpl::do_acquire_size(
-	const std::string& filename)
+AudioSize FFmpegAudioReaderImpl::do_acquire_size(const std::string& filename)
 {
 	using arcstk::AudioSize;
 	using arcstk::UNIT;
@@ -1240,13 +1239,13 @@ std::unique_ptr<AudioSize> FFmpegAudioReaderImpl::do_acquire_size(
 	{
 		ARCS_LOG_ERROR << "Could not load audiostream, give up, size is zero";
 
-		return std::make_unique<AudioSize>(/* empty */);
+		return { /* zero */ };
 	}
 
 	ARCS_LOG(DEBUG1) << "Declared size (samples) is: "
 		<< audiostream->declared_size().samples();
 
-	return std::make_unique<AudioSize>(audiostream->declared_size());
+	return audiostream->declared_size();
 }
 
 

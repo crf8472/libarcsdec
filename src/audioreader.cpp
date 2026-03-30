@@ -436,8 +436,7 @@ AudioReaderImpl& AudioReaderImpl::operator = (AudioReaderImpl&&) noexcept
 = default;
 
 
-std::unique_ptr<AudioSize> AudioReaderImpl::acquire_size(
-		const std::string& filename)
+AudioSize AudioReaderImpl::acquire_size(const std::string& filename)
 {
 	return this->do_acquire_size(filename);
 }
@@ -591,7 +590,7 @@ public:
 	 *
 	 * \param[in] filename Audiofile to get size from
 	 */
-	std::unique_ptr<AudioSize> acquire_size(const std::string& filename) const;
+	AudioSize acquire_size(const std::string& filename) const;
 
 	/**
 	 *
@@ -654,8 +653,7 @@ int64_t AudioReader::Impl::samples_per_read() const
 }
 
 
-std::unique_ptr<AudioSize> AudioReader::Impl::acquire_size(
-		const std::string& filename) const
+AudioSize AudioReader::Impl::acquire_size(const std::string& filename) const
 {
 	ARCS_LOG_DEBUG << "Acquire total number of samples in file '"
 		<< filename << "'";
@@ -667,9 +665,9 @@ std::unique_ptr<AudioSize> AudioReader::Impl::acquire_size(
 		using std::to_string;
 		ARCS_LOG_DEBUG << "Audio file size of '" << filename
 			<< "' successfully acquired: "
-			<< to_string(audiosize->frames())
+			<< to_string(audiosize.frames())
 			<< " LBA frames == "
-			<< to_string(audiosize->samples())
+			<< to_string(audiosize.samples())
 			<< " PCM stereo samples";
 	}
 
@@ -744,15 +742,14 @@ int64_t AudioReader::samples_per_read() const
 }
 
 
-std::unique_ptr<AudioSize> AudioReader::acquire_size(
-	const std::string& filename) const
+AudioSize AudioReader::acquire_size(const std::string& filename) const
 {
 	auto size = impl_->acquire_size(filename);
 
-	if (size->samples() > MAX_SAMPLES_TO_READ)
+	if (size.samples() > MAX_SAMPLES_TO_READ)
 	{
 		ARCS_LOG_WARNING << "File seems to contain "
-			<< size->samples()
+			<< size.samples()
 			<< " but redbook defines a maximum of "
 			<< MAX_SAMPLES_TO_READ
 			<< ". File does not seem to be a compact disc image";

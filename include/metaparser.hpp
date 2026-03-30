@@ -87,7 +87,7 @@ public:
 	 * \throw FileReadException      If the file could not be read
 	 * \throw MetadataParseException If the metadata could not be parsed
 	 */
-	std::unique_ptr<ToC> parse(const std::string& filename);
+	ToC parse(const std::string& filename);
 
 	/**
 	 * \brief Create a descriptor for this MetadataParser implementation.
@@ -113,7 +113,7 @@ private:
 	 * \throw FileReadException      If the file could not be read
 	 * \throw MetadataParseException If the metadata could not be parsed
 	 */
-	virtual std::unique_ptr<ToC> do_parse(const std::string& filename)
+	virtual ToC do_parse(const std::string& filename)
 	= 0;
 
 	/**
@@ -156,7 +156,7 @@ public:
 	 * \throw FileReadException      If the file could not be read
 	 * \throw MetadataParseException If the metadata could not be parsed
 	 */
-	std::unique_ptr<ToC> parse(const std::string& filename);
+	ToC parse(const std::string& filename);
 
 private:
 

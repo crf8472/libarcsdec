@@ -222,7 +222,7 @@ public:
 	 *
 	 * \return ToC instance representing the input file
 	 */
-	std::unique_ptr<ToC> get_toc() const;
+	ToC get_toc() const;
 
 	/**
 	 * \brief Append a track's ISRC.

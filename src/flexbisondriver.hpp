@@ -14,6 +14,7 @@
 #include <ostream>     // for ostream
 #include <stdexcept>   // for runtime_error
 #include <string>      // for string
+#include <sstream>     // for ostringstream
 #include <type_traits> // for void_t
 
 
@@ -142,6 +143,59 @@ public:
 };
 
 /**
+ * \brief Compose an error message from a LOCATION.
+ *
+ * \param[in] loc Error location
+ *
+ * \return Error message referring to \c loc
+ */
+template<class LOCATION>
+std::string positional_error_message(const LOCATION& loc)
+{
+	// last char that is part of the error
+	const auto loc_end_col { loc.end.column - 1 };
+
+	auto msg = std::ostringstream { "Parser error " };
+
+	if (loc.begin.line == loc.end.line)
+	{
+		msg << "at line ";
+		msg << loc.begin.line;
+
+		if (loc_end_col == loc.begin.column)
+		{
+			msg << ", char ";
+			msg << loc.begin.column;
+
+			// err << "Parser error at line " << loc.begin.line
+			// 	<< ", char " << loc.begin.column
+			// 	<< ": " << message << '\n';
+		} else
+		{
+			msg	<< ", chars ";
+			msg << loc.begin.column << "-" << loc_end_col;
+
+			// err << "Parser error at line " << loc.begin.line
+			// 	<< " chars " << loc.begin.column
+			// 	<< "-" << loc.end.column - 1
+			// 	<< ": " << message << '\n';
+		}
+	} else
+	{
+		msg << "from line "  << loc.begin.line << ", char " << loc.begin.column;
+		msg << " till line " << loc.end.line   << ", char " << loc_end_col;
+
+		// err << "Parser error from line " << loc.begin.line
+		// 	<< ", char " << loc.begin.column
+		// 	<< " till line " << loc.end.line
+		// 	<< ", char " << loc.end.column - 1
+		// 	<< ": " << message << '\n';
+	}
+
+	return msg.str();
+}
+
+/**
  * \brief Report a parser error to a specified output stream.
  *
  * \param[in] loc     Error location
@@ -152,28 +206,9 @@ template<class LOCATION>
 void parser_error(const LOCATION& loc, const std::string& message,
 		std::ostream& err)
 {
-	if (loc.begin.line == loc.end.line)
-	{
-		if (loc.end.column - 1 == loc.begin.column)
-		{
-			err << "Parser error at line " << loc.begin.line
-				<< ", char " << loc.begin.column
-				<< ": " << message << '\n';
-		} else
-		{
-			err << "Parser error at line " << loc.begin.line
-				<< " chars " << loc.begin.column
-				<< "-" << loc.end.column - 1
-				<< ": " << message << '\n';
-		}
-	} else
-	{
-		err << "Parser error from line " << loc.begin.line
-			<< ", char " << loc.begin.column
-			<< " till line " << loc.end.line
-			<< ", char " << loc.end.column - 1
-			<< ": " << message << '\n';
-	}
+	auto pos_info = positional_error_message(loc);
+
+	err << pos_info << ": " << message << '\n';
 }
 
 /**

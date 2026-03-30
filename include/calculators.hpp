@@ -112,8 +112,7 @@ public:
 	 *
 	 * \return The size of the audio data
 	 */
-	std::unique_ptr<arcstk::AudioSize> size(const std::string& audiofilename)
-		const;
+	arcstk::AudioSize size(const std::string& audiofilename) const;
 };
 
 
@@ -131,7 +130,7 @@ public:
 	 *
 	 * \return The parsed ToC
 	 */
-	std::unique_ptr<ToC> parse(const std::string& metafilename) const;
+	ToC parse(const std::string& metafilename) const;
 };
 
 

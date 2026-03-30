@@ -455,20 +455,17 @@ AudioValidator::codec_set_type WavpackValidatingHandler::do_codecs() const
 // WavpackAudioReaderImpl
 
 
-std::unique_ptr<AudioSize> WavpackAudioReaderImpl::do_acquire_size(
-	const std::string& filename)
+AudioSize WavpackAudioReaderImpl::do_acquire_size(const std::string& filename)
 {
 	const auto file = WavpackOpenFile { filename };
 
 	if (!file.success())
 	{
 		ARCS_LOG_ERROR << "File could not be opened, bail out";
-		return nullptr;
+		return {/*zero*/};
 	}
 
-	const auto size = to_audiosize(file.total_pcm_samples(), UNIT::SAMPLES);
-
-	return std::make_unique<AudioSize>(size);
+	return to_audiosize(file.total_pcm_samples(), UNIT::SAMPLES);
 }
 
 

@@ -159,7 +159,7 @@ private:
 	 */
 	CueInfo parse_worker(const std::string& filename) const;
 
-	std::unique_ptr<ToC> do_parse(const std::string& filename) final;
+	ToC do_parse(const std::string& filename) final;
 
 	std::unique_ptr<FileReaderDescriptor> do_descriptor() const final;
 };

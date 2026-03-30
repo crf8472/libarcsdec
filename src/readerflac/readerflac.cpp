@@ -290,8 +290,7 @@ void FlacAudioReaderImpl::register_error_handler(
 }
 
 
-std::unique_ptr<AudioSize> FlacAudioReaderImpl::do_acquire_size(
-	const std::string& filename)
+AudioSize FlacAudioReaderImpl::do_acquire_size(const std::string& filename)
 {
 	auto streaminfo = ::FLAC::Metadata::StreamInfo{};
 
@@ -300,8 +299,7 @@ std::unique_ptr<AudioSize> FlacAudioReaderImpl::do_acquire_size(
 	// Commented out, acquire_size() does not perform validation
 	//metadata_handler_->validate(streaminfo);
 
-	return std::make_unique<AudioSize>(to_audiosize(
-				streaminfo.get_total_samples(), UNIT::SAMPLES));
+	return to_audiosize(streaminfo.get_total_samples(), UNIT::SAMPLES);
 }
 
 

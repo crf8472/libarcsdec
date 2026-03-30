@@ -111,7 +111,7 @@ TEST_CASE ( "AudioInfo", "[calculators]")
 
 	SECTION( "Get size of wav file correctly" )
 	{
-		const auto leadout { i.size("test01.wav")->samples() };
+		const auto leadout { i.size("test01.wav").samples() };
 
 		CHECK ( leadout == 1025 );
 	}
@@ -137,9 +137,9 @@ TEST_CASE ( "ToCParser", "[calculators]" )
 	{
 		const auto toc { p.parse("cuesheet/ok01.cue") };
 
-		CHECK ( toc->total_tracks() == 2 );
-		CHECK ( toc->offsets().at(0).frames() ==   150 );
-		CHECK ( toc->offsets().at(1).frames() == 25072 );
+		CHECK ( toc.total_tracks() == 2 );
+		CHECK ( toc.offsets().at(0).frames() ==   150 );
+		CHECK ( toc.offsets().at(1).frames() == 25072 );
 	}
 }
 

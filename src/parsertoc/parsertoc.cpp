@@ -16,7 +16,7 @@
 #include <string>    // for string
 
 #ifndef LIBARCSTK_METADATA_HPP_
-#include <arcstk/metadata.hpp> // for ToC, make_toc
+#include <arcstk/metadata.hpp> // for ToC
 #endif
 #ifndef LIBARCSTK_LOGGING_HPP_
 #include <arcstk/logging.hpp>
@@ -53,7 +53,7 @@ namespace cdrtoc
 using arcstk::ToC;
 
 
-std::unique_ptr<ToC> TocParserImpl::do_parse(const std::string& filename)
+ToC TocParserImpl::do_parse(const std::string& filename)
 {
 	auto p_handler = ParserToCHandler{};
 

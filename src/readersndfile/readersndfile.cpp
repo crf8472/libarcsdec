@@ -70,8 +70,8 @@ namespace sndfile
 LibsndfileAudioReaderImpl::~LibsndfileAudioReaderImpl() noexcept = default;
 
 
-std::unique_ptr<AudioSize> LibsndfileAudioReaderImpl::do_acquire_size(
-	const std::string& filename)
+AudioSize LibsndfileAudioReaderImpl::do_acquire_size(
+		const std::string& filename)
 {
 	using arcstk::AudioSize;
 	using arcstk::UNIT;
@@ -80,7 +80,7 @@ std::unique_ptr<AudioSize> LibsndfileAudioReaderImpl::do_acquire_size(
 
 	// FIXME works only for WAV??
 	/* libsndfile's frames == libarcstk's samples */
-	return std::make_unique<AudioSize>(audiofile.frames(), UNIT::SAMPLES );
+	return { audiofile.frames(), UNIT::SAMPLES };
 }
 
 
