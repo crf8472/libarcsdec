@@ -166,7 +166,7 @@ std::vector<Calculation> init_calculations(const arcstk::Settings& settings,
 Checksums merge_results(const std::vector<Calculation>& calculations)
 {
 	const auto size { calculations[0].result().size() };
-	auto tracks { std::vector<ChecksumSet>(size, ChecksumSet{0}) };
+	auto tracks { std::vector<ChecksumSet>(size, ChecksumSet { {/*0*/} }) };
 
 	using std::begin;
 	using std::cbegin;
@@ -602,7 +602,7 @@ ChecksumSet ARCSCalculator::calculate(
 
 	if (checksums.empty())
 	{
-		return ChecksumSet { 0 };
+		return ChecksumSet { {/*0*/} };
 	}
 
 	return checksums[0];
