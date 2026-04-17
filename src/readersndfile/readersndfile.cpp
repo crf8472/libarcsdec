@@ -4,7 +4,6 @@
  * \brief Implements Libsndfile-based generic audio reader.
  */
 
-#include "parsertoc/parsertoc.hpp"
 #ifndef LIBARCSDEC_READERSNDFILE_HPP_
 #include "readersndfile.hpp"
 #endif
@@ -13,6 +12,7 @@
 #endif
 
 #include <cstdint>  // for int16_t, unit32_t, uint64_t
+#include <limits>   // for numeric_limits
 #include <memory>   // for unique_ptr
 #include <set>      // for set
 #include <sstream>  // for ostringstream
@@ -55,7 +55,7 @@ namespace read
 
 using arcstk::AudioSize;
 using arcstk::CDDA;
-using arcstk::SampleSequence;
+using arcstk::InterleavedSamples;
 
 
 namespace details
@@ -80,7 +80,17 @@ AudioSize LibsndfileAudioReaderImpl::do_acquire_size(
 
 	// FIXME works only for WAV??
 	/* libsndfile's frames == libarcstk's samples */
-	return { audiofile.frames(), UNIT::SAMPLES };
+	if (const auto total_values = audiofile.frames();
+			total_values <= std::numeric_limits<int32_t>::max())
+	{
+		return { static_cast<int32_t>(total_values), UNIT::SAMPLES };
+	} else
+	{
+		// FIXME total_values is too big for AudioSize
+		throw std::runtime_error("Could not acquire size, too many samples");
+	}
+
+	return AudioSize{}; // unreachable
 }
 
 
@@ -88,6 +98,9 @@ void LibsndfileAudioReaderImpl::do_process_file(const std::string& filename)
 {
 	using arcstk::AudioSize;
 	using arcstk::UNIT;
+
+	using std::cbegin;
+	using std::cend;
 
 	auto audiofile = SndfileHandle { filename, SFM_READ };
 
@@ -131,7 +144,8 @@ void LibsndfileAudioReaderImpl::do_process_file(const std::string& filename)
 		this->samples_per_read() * CDDA::NUMBER_OF_CHANNELS;
 
 	auto buffer   = std::vector<int16_t>(buffer_len);
-	auto sequence = SampleSequence<int16_t, false>{};
+	using sequence_type = arcstk::InterleavedSamples<int16_t>;
+	// SampleSequence<int16_t, false>{};
 
 	// Checking
 
@@ -183,7 +197,8 @@ void LibsndfileAudioReaderImpl::do_process_file(const std::string& filename)
 			buffer.resize(ints_in_block);
 		}
 
-		sequence.wrap_int_buffer(&buffer[0], buffer.size());
+		// FIXME respect channel ordering
+		auto sequence = sequence_type { &buffer[0], buffer.size(), false };
 
 		ARCS_LOG(DEBUG1) << "  Size: "
 				<< (buffer.size() * sizeof(buffer[0])) << " bytes";
@@ -191,7 +206,7 @@ void LibsndfileAudioReaderImpl::do_process_file(const std::string& filename)
 				<< (buffer.size() / CDDA::NUMBER_OF_CHANNELS)
 				<< " Stereo PCM samples (32 bit)";
 
-		this->signal_appendsamples(sequence.begin(), sequence.end());
+		this->signal_appendsamples(cbegin(sequence), cend(sequence));
 
 		sample_count += sequence.size();
 	}
