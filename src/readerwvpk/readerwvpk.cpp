@@ -32,7 +32,7 @@ extern "C" {
 #include <arcstk/metadata.hpp>       // for AudioSize
 #endif
 #ifndef LIBARCSTK_SAMPLES_HPP_
-#include <arcstk/samples.hpp>        // for InterleavedSamples
+#include <arcstk/samples_deprecated.hpp>        // for InterleavedSamples
 #endif
 #ifndef LIBARCSTK_LOGGING_HPP_
 #include <arcstk/logging.hpp> // for ARCS_LOG_ERROR, _WARNING, _INFO, _DEBUG

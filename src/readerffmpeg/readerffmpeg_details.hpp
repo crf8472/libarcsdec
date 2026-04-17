@@ -34,7 +34,7 @@ extern "C"
 #include <fstream>
 
 #ifndef LIBARCSTK_SAMPLES_HPP_
-#include <arcstk/samples.hpp>   // for SampleInputIterator
+#include <arcstk/samples_deprecated.hpp>   // for SampleInputIterator
 #endif
 #ifndef LIBARCSTK_CALCULATE_HPP_
 #include <arcstk/calculate.hpp> // for AudioSize

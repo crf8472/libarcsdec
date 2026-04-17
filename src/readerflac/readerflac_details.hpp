@@ -24,7 +24,7 @@
 								// for FLAC__Frame
 
 #ifndef LIBARCSTK_SAMPLES_HPP_
-#include <arcstk/samples.hpp> // for SampleSequence
+#include <arcstk/samples_deprecated.hpp> // for SampleSequence
 #endif
 
 #ifndef LIBARCSDEC_AUDIOREADER_HPP_
