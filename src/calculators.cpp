@@ -516,7 +516,7 @@ std::pair<Checksums, ToC> ARCSCalculator::calculate(
 	// expensive operation, we want to keep the reader.
 
 	const auto [ track_checksums, leadout ] {
-		calculate(audiofilename, Context::ALBUM, types(),
+		calculate(audiofilename, Settings { Context::ALBUM }, types(),
 				toc.leadout(), toc.offsets())
 	};
 
@@ -597,7 +597,8 @@ ChecksumSet ARCSCalculator::calculate(
 	const auto ctx { to_context(is_first_track, is_last_track) };
 
 	const auto [ checksums, leadout ] {
-		calculate(audiofilename, ctx, types(), {/*no size*/}, {/*no offsets*/})
+		calculate(audiofilename, Settings { ctx }, types(), {/*no size*/},
+				{/*no offsets*/})
 	};
 
 	if (checksums.empty())
