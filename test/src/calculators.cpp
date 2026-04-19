@@ -111,9 +111,11 @@ TEST_CASE ( "AudioInfo", "[calculators]")
 
 	SECTION( "Get size of wav file correctly" )
 	{
-		const auto leadout { i.size("test01.wav").samples() };
+		const auto size { i.size("test01.wav") };
 
-		CHECK ( leadout == 1025 );
+		CHECK ( size.bytes()   == 4100 );
+		CHECK ( size.samples() == 1025 ); // == 4100 bytes / 4 bytes/sample
+		CHECK ( size.frames()  == 1 );    // == 1025 samples / 588 samples/frame
 	}
 }
 
