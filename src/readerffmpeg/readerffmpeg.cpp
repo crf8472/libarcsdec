@@ -128,7 +128,11 @@ void arcs_av_log(void* /*v*/, int level, const char* fmt, std::va_list args)
 
 	// Decide whether to print anything at the first place
 
+#ifdef CLIP_LOGGING_LEVEL
 	if (LEVEL > CLIP_LOGGING_LEVEL
+#else
+	if (LEVEL > arcstk::CLIP_LOGGING_LEVEL
+#endif
 			|| LEVEL > arcstk::Logging::instance().level()
 			|| LEVEL == LOGLEVEL::NONE)
 	{
