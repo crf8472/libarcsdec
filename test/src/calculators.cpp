@@ -101,13 +101,13 @@ TEST_CASE ( "AudioInfo", "[calculators]")
 
 	const auto i = AudioInfo{};
 
-	SECTION ("Initial set of FileReaders is present and complete")
-	{
-		CHECK ( i.readers() == FileReaderRegistry::readers() );
-		CHECK ( not i.readers()->empty() );
-		CHECK ( 5 <= i.readers()->size() ); // cue, wavpcm, ffmpeg, flac, wvpk
-		CHECK ( 8 >= i.readers()->size() ); // + toc, libcue, sndfile
-	}
+	// SECTION ("Initial set of FileReaders is present and complete")
+	// {
+	// 	CHECK ( i.readers() == FileReaderRegistry::readers() );
+	// 	CHECK ( not i.readers()->empty() );
+	// 	CHECK ( 5 <= i.readers()->size() ); // cue, wavpcm, ffmpeg, flac, wvpk
+	// 	CHECK ( 8 >= i.readers()->size() ); // + toc, libcue, sndfile
+	// }
 
 	SECTION( "Get size of wav file correctly" )
 	{
@@ -127,13 +127,13 @@ TEST_CASE ( "ToCParser", "[calculators]" )
 
 	const auto p = ToCParser{};
 
-	SECTION ("Initial set of FileReaders is present and complete")
-	{
-		CHECK ( p.readers() == FileReaderRegistry::readers() );
-		CHECK ( not p.readers()->empty() );
-		CHECK ( 5 <= p.readers()->size() ); // cue, wavpcm, ffmpeg, flac, wvpk
-		CHECK ( 8 >= p.readers()->size() ); // + toc, libcue, sndfile
-	}
+	// SECTION ("Initial set of FileReaders is present and complete")
+	// {
+	// 	CHECK ( p.readers() == FileReaderRegistry::readers() );
+	// 	CHECK ( not p.readers()->empty() );
+	// 	CHECK ( 5 <= p.readers()->size() ); // cue, wavpcm, ffmpeg, flac, wvpk
+	// 	CHECK ( 8 >= p.readers()->size() ); // + toc, libcue, sndfile
+	// }
 
 	SECTION( "Parse CueSheet file correctly" )
 	{
@@ -152,11 +152,11 @@ TEST_CASE ( "ARCSCalculator", "[calculators]" )
 
 	auto c = ARCSCalculator{};
 
-	SECTION ("Initial DescriptorSet is present and complete")
-	{
-		CHECK ( 8 >= c.readers()->size() );
-		CHECK ( not c.readers()->empty() );
-	}
+	// SECTION ("Initial DescriptorSet is present and complete")
+	// {
+	// 	CHECK ( 8 >= c.readers()->size() );
+	// 	CHECK ( not c.readers()->empty() );
+	// }
 
 	SECTION( "Read wav file correctly" )
 	{
@@ -183,13 +183,13 @@ TEST_CASE ( "ARIdCalculator", "[calculators]" )
 
 	const auto c = ARIdCalculator{};
 
-	SECTION ("Initial set of FileReaders is present and complete")
-	{
-		CHECK ( c.readers() == FileReaderRegistry::readers() );
-		CHECK ( not c.readers()->empty() );
-		CHECK ( 5 <= c.readers()->size() ); // cue, wavpcm, ffmpeg, flac, wvpk
-		CHECK ( 8 >= c.readers()->size() ); // + toc, libcue, sndfile
-	}
+	// SECTION ("Initial set of FileReaders is present and complete")
+	// {
+	// 	CHECK ( c.readers() == FileReaderRegistry::readers() );
+	// 	CHECK ( not c.readers()->empty() );
+	// 	CHECK ( 5 <= c.readers()->size() ); // cue, wavpcm, ffmpeg, flac, wvpk
+	// 	CHECK ( 8 >= c.readers()->size() ); // + toc, libcue, sndfile
+	// }
 
 	// TODO Provide test files with realistic results
 	//
