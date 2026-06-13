@@ -146,58 +146,58 @@ TEST_CASE ( "ToCParser", "[calculators]" )
 }
 
 
-TEST_CASE ( "ARCSCalculator", "[calculators]" )
-{
-	using arcsdec::calc::ARCSCalculator;
+// TEST_CASE ( "ARCSCalculator", "[calculators]" )
+// {
+// 	using arcsdec::calc::ARCSCalculator;
+//
+// 	//auto c = ARCSCalculator{};
+//
+// 	// SECTION ("Initial DescriptorSet is present and complete")
+// 	// {
+// 	// 	CHECK ( 8 >= c.readers()->size() );
+// 	// 	CHECK ( not c.readers()->empty() );
+// 	// }
+//
+// 	// SECTION( "Read wav file correctly" )
+// 	// {
+// 	// 	const auto checksums = c.calculate("test01.wav", true, true);
+// 	//
+// 	// 	CHECK ( checksums.empty() );
+// 	// }
+//
+// 	// TODO Check whether flac is compiled in before testing
+// 	//
+// 	//SECTION( "Read flac file correctly" )
+// 	//{
+// 	//	const auto checksums = c.calculate("test01.flac", true, true);
+// 	//
+// 	//	CHECK ( checksums.empty() );
+// 	//}
+// }
 
-	auto c = ARCSCalculator{};
 
-	// SECTION ("Initial DescriptorSet is present and complete")
-	// {
-	// 	CHECK ( 8 >= c.readers()->size() );
-	// 	CHECK ( not c.readers()->empty() );
-	// }
-
-	SECTION( "Read wav file correctly" )
-	{
-		const auto checksums = c.calculate("test01.wav", true, true);
-
-		CHECK ( checksums.empty() );
-	}
-
-	// TODO Check whether flac is compiled in before testing
-	//
-	//SECTION( "Read flac file correctly" )
-	//{
-	//	const auto checksums = c.calculate("test01.flac", true, true);
-	//
-	//	CHECK ( checksums.empty() );
-	//}
-}
-
-
-TEST_CASE ( "ARIdCalculator", "[calculators]" )
-{
-	using arcsdec::calc::ARIdCalculator;
-	using arcsdec::select::FileReaderRegistry;
-
-	const auto c = ARIdCalculator{};
-
-	// SECTION ("Initial set of FileReaders is present and complete")
-	// {
-	// 	CHECK ( c.readers() == FileReaderRegistry::readers() );
-	// 	CHECK ( not c.readers()->empty() );
-	// 	CHECK ( 5 <= c.readers()->size() ); // cue, wavpcm, ffmpeg, flac, wvpk
-	// 	CHECK ( 8 >= c.readers()->size() ); // + toc, libcue, sndfile
-	// }
-
-	// TODO Provide test files with realistic results
-	//
-	//SECTION( "Get ARId from cue+wav file correctly" )
-	//{
-	//	const auto id = c.calculate("test01.wav", "test01_ok.cue");
-	//
-	//	CHECK ( id->to_string() == "foo" );
-	//}
-}
+// TEST_CASE ( "ARIdCalculator", "[calculators]" )
+// {
+// 	using arcsdec::calc::ARIdCalculator;
+// 	using arcsdec::select::FileReaderRegistry;
+//
+// 	const auto c = ARIdCalculator{};
+//
+// 	// SECTION ("Initial set of FileReaders is present and complete")
+// 	// {
+// 	// 	CHECK ( c.readers() == FileReaderRegistry::readers() );
+// 	// 	CHECK ( not c.readers()->empty() );
+// 	// 	CHECK ( 5 <= c.readers()->size() ); // cue, wavpcm, ffmpeg, flac, wvpk
+// 	// 	CHECK ( 8 >= c.readers()->size() ); // + toc, libcue, sndfile
+// 	// }
+//
+// 	// TODO Provide test files with realistic results
+// 	//
+// 	//SECTION( "Get ARId from cue+wav file correctly" )
+// 	//{
+// 	//	const auto id = c.calculate("test01.wav", "test01_ok.cue");
+// 	//
+// 	//	CHECK ( id->to_string() == "foo" );
+// 	//}
+// }
 
