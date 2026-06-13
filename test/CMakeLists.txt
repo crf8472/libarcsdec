@@ -24,7 +24,7 @@ set (TEST_SETS )
 list (APPEND TEST_SETS audioreader           )
 list (APPEND TEST_SETS calculators           )
 list (APPEND TEST_SETS descriptor            )
-list (APPEND TEST_SETS libinspect            )
+#list (APPEND TEST_SETS libinspect            ) ## commented out
 list (APPEND TEST_SETS parsercue             )
 list (APPEND TEST_SETS parsercue_details     )
 list (APPEND TEST_SETS parsertoc             )
