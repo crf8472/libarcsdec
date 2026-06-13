@@ -17,15 +17,12 @@
 #ifndef LIBARCSTK_METADATA_HPP_
 #include <arcstk/metadata.hpp>   // for AudioSize, UNIT
 #endif
-#ifndef LIBARCSTK_CALCULATE_HPP_
-#include <arcstk/calculate.hpp>  // for SampleInputIterator
-#endif
 
 #ifndef LIBARCSDEC_DESCRIPTOR_HPP_
 #include "descriptor.hpp"        // for Codec, FileReaderDescriptor, ...
 #endif
 #ifndef LIBARCSDEC_SAMPLEPROC_HPP_
-#include "sampleproc.hpp"        // for SampleProcessor, SampleProvider
+#include "sampleproc.hpp"        // for SampleProcessor, AudioEventHandler
 #endif
 
 
@@ -42,10 +39,10 @@ inline namespace v_1_0_0
 namespace read
 {
 
-
 using arcstk::AudioSize;
 using arcstk::UNIT;
 
+using calc::SampleProcessor;
 
 /**
  * \defgroup audioreader Implement AudioReaders
@@ -85,7 +82,6 @@ using arcstk::UNIT;
  * @{
  */
 
-
 /**
  * \brief Maximum number of PCM 32 bit samples to read from a file.
  *
@@ -100,6 +96,38 @@ extern const int32_t MAX_SAMPLES_TO_READ;
 
 
 /**
+ * \brief Symbolic constants for certain block sizes (in PCM 32 bit samples).
+ */
+struct BLOCKSIZE final
+{
+	/**
+	 * \brief Maximum buffer size in number of PCM 32 bit samples.
+	 *
+	 * Currently, this is 256 MiB.
+	 */
+	constexpr static unsigned MAX     = 67108864; // == 256 * 1024^2 / 4
+
+	/**
+	 * \brief Default buffer size in number of PCM 32 bit samples.
+	 *
+	 * Currently, this is 64 MiB.
+	 */
+	constexpr static unsigned DEFAULT = 16777216; // == 64 * 1024^2 / 4
+
+	/**
+	 * \brief Minimum buffer size in number of PCM 32 bit samples.
+	 *
+	 * Currently, this is 256 KiB.
+	 *
+	 * This is the maximal size of a fLaC frame. This setting entails that at
+	 * least one fLaC frame of maximal size is guaranteed to fit in a block of
+	 * minimal size.
+	 */
+	constexpr static unsigned MIN     = 65536; // == 256 * 1024 / 4
+};
+
+
+/**
  * \brief Abstract base class for AudioReader implementations.
  *
  * Concrete subclasses of AudioReaderImpl implement AudioReaders for a concrete
@@ -108,7 +136,7 @@ extern const int32_t MAX_SAMPLES_TO_READ;
  * \note
  * Instances of subclasses are non-copyable but movable.
  */
-class AudioReaderImpl : public SampleProvider
+class AudioReaderImpl
 {
 public:
 
@@ -116,6 +144,11 @@ public:
 	 * \brief Default constructor.
 	 */
 	AudioReaderImpl();
+
+	/**
+	 * \brief Default destructor.
+	 */
+	virtual ~AudioReaderImpl() noexcept = default;
 
 	/**
 	 * \brief Provides implementation for acquire_size() of a AudioReader.
@@ -138,6 +171,13 @@ public:
 	void process_file(const std::string& filename);
 
 	/**
+	 * \brief Create a descriptor for this AudioReader implementation.
+	 *
+	 * \return Descriptor for this implementation.
+	 */
+	std::unique_ptr<FileReaderDescriptor> descriptor() const;
+
+	/**
 	 * \brief Set the number of samples to read in one read operation.
 	 *
 	 * The default is BLOCKSIZE::DEFAULT.
@@ -154,34 +194,40 @@ public:
 	int64_t samples_per_read() const;
 
 	/**
-	 * \brief Create a descriptor for this AudioReader implementation.
+	 * \brief AudioEventHandler used by this instance.
 	 *
-	 * \return Descriptor for this implementation.
+	 * \return AudioEventHandler used by this instance
 	 */
-	std::unique_ptr<FileReaderDescriptor> descriptor() const;
+	AudioEventHandler* handler() const;
+
+	/**
+	 * \brief Set AudioEventHandler for this instance.
+	 *
+	 * \param[in] handler AudioEventHandler for this instance
+	 */
+	void set_handler(AudioEventHandler* handler);
+
+	/**
+	 * \brief SampleProcessor used by this instance.
+	 *
+	 * \return SampleProcessor used by this instance
+	 */
+	SampleProcessor* sample_processor() const;
+
+	/**
+	 * \brief Set SampleProcessor for this instance.
+	 *
+	 * \param[in] handler SampleProcessor for this instance
+	 */
+	void set_sample_processor(SampleProcessor* processor);
 
 protected:
 
-	// Avoid -Weffc++ firing
-	AudioReaderImpl(const AudioReaderImpl&) = delete;
-	AudioReaderImpl& operator = (const AudioReaderImpl&) = delete;
+	AudioReaderImpl(const AudioReaderImpl&)            = delete;
+	AudioReaderImpl& operator=(const AudioReaderImpl&) = delete;
 
-	AudioReaderImpl(AudioReaderImpl&&) noexcept;
-	AudioReaderImpl& operator = (AudioReaderImpl&&) noexcept;
-
-	/**
-	 * \brief Default implementation of attach_processor().
-	 *
-	 * \param[in] processor The processor to attach
-	 */
-	void attach_processor_impl(SampleProcessor& processor);
-
-	/**
-	 * \brief Use the internal SampleProcessor.
-	 *
-	 * \return Use the internal SampleProcessor
-	 */
-	SampleProcessor* use_processor();
+	AudioReaderImpl(AudioReaderImpl&&) noexcept            = default;
+	AudioReaderImpl& operator=(AudioReaderImpl&&) noexcept = default;
 
 	/**
 	 * \brief Service: convert 64 bit wide number of total samples to AudioSize.
@@ -194,43 +240,13 @@ protected:
 	 * \throw std::invalid_argument If total_samples is bigger than 32 bit
 	 */
 	AudioSize to_audiosize(const int64_t total_samples, const UNIT& u) const;
+	// TODO Implement is non-member non-friend function
 
 private:
 
-	// SampleProvider
-
-	void do_signal_startinput() override;
-
-	void do_signal_appendsamples(SampleInputIterator begin,
-			SampleInputIterator end) override;
-
-	void do_signal_updateaudiosize(const AudioSize& size) override;
-
-	void do_signal_endinput() override;
-
-	void do_attach_processor(SampleProcessor& processor) override;
-
-	const SampleProcessor* do_processor() const override;
-
-	/**
-	 * \brief Provides implementation for \c acquire_size() of an AudioReader.
-	 *
-	 * \param[in] filename The filename of the file to process
-	 *
-	 * \return A CalcContext for the specified file
-	 *
-	 * \throw FileReadException If the file could not be read
-	 */
 	virtual AudioSize do_acquire_size(const std::string& filename)
 	= 0;
 
-	/**
-	 * \brief Provides implementation for process_file() of some AudioReader.
-	 *
-	 * \param[in] filename The filename of the file to process
-	 *
-	 * \throw FileReadException If the file could not be read
-	 */
 	virtual void do_process_file(const std::string& filename)
 	= 0;
 
@@ -238,14 +254,19 @@ private:
 	= 0;
 
 	/**
-	 * \brief Internal pointer to the SampleProcessor.
-	 */
-	SampleProcessor* processor_;
-
-	/**
 	 * \brief Buffer size as total number of PCM 32 bit samples.
 	 */
-	int64_t samples_per_read_;
+	int64_t samples_per_read_ {};
+
+	/**
+	 * \brief AudioEventHandler of this instance.
+	 */
+	AudioEventHandler* handler_ {};
+
+	/**
+	 * \brief SampleProcessor of this instance.
+	 */
+	SampleProcessor* processor_ {};
 };
 
 
@@ -262,22 +283,17 @@ class AudioReader final : public FileReader
 public:
 
 	/**
-	 * \brief Constructor with a concrete implementation and a SampleProcessor.
-	 *
-	 * \param[in] impl AudioReader implementation to use
-	 * \param[in] proc SampleProcessor to use
-	 */
-	AudioReader(std::unique_ptr<AudioReaderImpl> impl, SampleProcessor& proc);
-
-	/**
 	 * \brief Constructor with a concrete implementation
 	 *
 	 * \param[in] impl The implementation of this instance
 	 */
 	explicit AudioReader(std::unique_ptr<AudioReaderImpl> impl);
 
-	AudioReader(AudioReader&&) noexcept;
-	AudioReader& operator = (AudioReader&&) noexcept;
+	AudioReader(const AudioReader&) = delete;
+	AudioReader& operator = (const AudioReader&) = delete;
+
+	AudioReader(AudioReader&&) noexcept = default;
+	AudioReader& operator = (AudioReader&&) noexcept = default;
 
 	/**
 	 * \brief Default destructor.
@@ -301,11 +317,32 @@ public:
 	int64_t samples_per_read() const;
 
 	/**
+	 * \brief AudioEventHandler used by this instance.
+	 *
+	 * \return AudioEventHandler used by this instance
+	 */
+	AudioEventHandler* handler() const;
+
+	/**
+	 * \brief Set AudioEventHandler for this instance.
+	 *
+	 * \param[in] handler AudioEventHandler for this instance
+	 */
+	void set_handler(AudioEventHandler* handler);
+
+	/**
+	 * \brief Registered SampleProcessor of this instance.
+	 *
+	 * \return Registered SampleProcessor of this instance
+	 */
+	SampleProcessor* processor() const;
+
+	/**
 	 * \brief Register a SampleProcessor instance to pass the read samples to.
 	 *
 	 * \param[in] processor SampleProcessor to use
 	 */
-	void set_processor(SampleProcessor& processor);
+	void set_processor(const SampleProcessor& processor);
 
 	/**
 	 * \brief Acquire the AudioSize of a file.
@@ -321,7 +358,7 @@ public:
 	AudioSize acquire_size(const std::string& filename) const;
 
 	/**
-	 * \brief Process the file and return ARCSs v1 and v2 for all tracks.
+	 * \brief Process the file and return Checksums for all tracks.
 	 *
 	 * \param[in] filename The filename of the file to process
 	 *
@@ -379,10 +416,15 @@ constexpr inline static int32_t cast_to_int32(const INT value)
 	{
 		using std::to_string;
 		throw std::invalid_argument(std::string { "Value " } + to_string(value)
-				+ " cannot be represented with only 32 bit");
+				+ " too big to be represented with only 32 bit");
 	}
 
-	// TODO What about value < 0?
+	if (value < std::numeric_limits<int32_t>::min())
+	{
+		using std::to_string;
+		throw std::invalid_argument(std::string { "Value " } + to_string(value)
+				+ " too small to be represented with only 32 bit");
+	}
 
 	return static_cast<int32_t>(value);
 }

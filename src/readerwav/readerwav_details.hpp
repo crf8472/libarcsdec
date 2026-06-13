@@ -828,7 +828,7 @@ private:
  * the 4 bytes following byte 0x2C. The format subchunk is validated to conform
  * to CDDA.
  */
-class WavAudioReaderImpl final : public AudioReaderImpl
+class WavAudioReaderImpl : public AudioReaderImpl
 {
 
 public:
@@ -841,29 +841,85 @@ public:
 	/**
 	 * \brief Constructor.
 	 *
-	 * \param[in] hndlr WavAudioHandler to set
+	 * \param[in] handler The WavAudioHandler to set
 	 */
-	explicit WavAudioReaderImpl(std::unique_ptr<WavAudioHandler> hndlr);
+	explicit WavAudioReaderImpl(std::unique_ptr<WavAudioHandler> handler);
 
 	/**
 	 * \brief Virtual destructor.
 	 */
-	virtual ~WavAudioReaderImpl() noexcept final;
+	~WavAudioReaderImpl() noexcept;
 
 	/**
 	 * \brief Get the current WavAudioHandler.
 	 */
-	const WavAudioHandler* audio_handler() const;
+	const WavAudioHandler* wav_audio_handler() const;
 
 	/**
 	 * \brief Set a WavAudioHandler.
 	 *
-	 * \param[in] hndlr The WavAudioHandler to set
+	 * \param[in] handler The WavAudioHandler to set
 	 */
-	void set_audio_handler(std::unique_ptr<WavAudioHandler> hndlr);
-
+	void set_wav_audio_handler(std::unique_ptr<WavAudioHandler> handler);
 
 private:
+
+	/**
+	 * \brief Read the WAV file and optionally use a handler on it. This
+	 * function provides the implementation of WavAudioReader::process_file().
+	 *
+	 * \param[in]  filename         The file to read from
+	 * \param[in]  samples_per_read Block size in samples
+	 * \param[in]  audio_handler    Optional audio handler
+	 * \param[out] total_pcm_bytes  Number of total bytes representing PCM samples
+	 *
+	 * \throw FileReadException If any problem occurred during reading from in
+	 * \throw InvalidAudioException In case of unexpected data
+	 */
+	void wav_process_file(const std::string& filename,
+			const int64_t    samples_per_read,
+			int64_t&         total_pcm_bytes,
+			WavAudioHandler* audio_handler);
+
+	/**
+	 * \brief Worker method for wav_process_file(): Read WAV file and optionally
+	 * use a handler on it.
+	 *
+	 * \param[in]  in               The ifstream to read from
+	 * \param[in]  samples_per_read Block size in samples
+	 * \param[in]  audio_handler    Optional audio handler
+	 * \param[out] total_pcm_bytes  Number of total bytes representing PCM samples
+	 *
+	 * \return Number of actually read bytes
+	 *
+	 * \throw FileReadException If any problem occurred during reading from in
+	 * \throw InvalidAudioException In case of unexpected data
+	 */
+	int64_t wav_process_file_worker(std::ifstream& in,
+			const int64_t    samples_per_read,
+			int64_t&         total_pcm_bytes,
+			WavAudioHandler* audio_handler);
+
+	/**
+	 * \brief Read blocks from the stream until the end of the stream.
+	 *
+	 * The number of actual bytes read is returned and will be equal to
+	 * total_pcm_bytes on success.
+	 *
+	 * \param[in]  in               The ifstream to read from
+	 * \param[in]  samples_per_read Block size in samples
+	 * \param[in]  audio_reader     Optional audio reader
+	 * \param[out] total_pcm_bytes  Number of total bytes representing PCM samples
+	 *
+	 * \throw FileReadException On any read error
+	 *
+	 * \return The actual number of bytes read
+	 */
+	int64_t wav_read_pcm_data(std::ifstream& in,
+			const int64_t    samples_per_read,
+			const int64_t&   total_pcm_bytes);
+
+	// AudioReaderImpl
 
 	AudioSize do_acquire_size(const std::string& filename) final;
 
@@ -874,7 +930,7 @@ private:
 	/**
 	 * \brief Validator handler instance.
 	 */
-	std::unique_ptr<WavAudioHandler> audio_handler_;
+	std::unique_ptr<WavAudioHandler> wav_audio_handler_;
 };
 
 
@@ -922,26 +978,6 @@ WavFormatSubchunk wav_format_subchunk(
 	const WavSubchunkHeader& header, const std::vector<char>& bytes);
 
 /**
- * \brief Read blocks from the stream until the end of the stream.
- *
- * The number of actual bytes read is returned and will be equal to
- * total_pcm_bytes on success.
- *
- * \param[in]  in               The ifstream to read from
- * \param[in]  samples_per_read Block size in samples
- * \param[in]  audio_reader     Optional audio reader
- * \param[out] total_pcm_bytes  Number of total bytes representing PCM samples
- *
- * \throw FileReadException On any read error
- *
- * \return The actual number of bytes read
- */
-int64_t wav_read_pcm_data(std::ifstream& in,
-		const int64_t    samples_per_read,
-		AudioReaderImpl& audio_reader,
-		const int64_t&   total_pcm_bytes);
-
-/**
  * Read specified amount of bytes from specified stream in specified vector
  * and do an exception safe increment of the byte counter.
  *
@@ -956,46 +992,6 @@ int64_t wav_read_pcm_data(std::ifstream& in,
  */
 int64_t wav_read_bytes(std::ifstream& in, const int32_t amount,
 		std::vector<char>& bytes, int64_t& byte_count);
-
-/**
- * \brief Worker method for wav_process_file(): Read WAV file and optionally
- * use a handler on it.
- *
- * \param[in]  in               The ifstream to read from
- * \param[in]  samples_per_read Block size in samples
- * \param[in]  audio_handler    Optional audio handler
- * \param[in]  audio_reader     Optional audio reader
- * \param[out] total_pcm_bytes  Number of total bytes representing PCM samples
- *
- * \return Number of actually read bytes
- *
- * \throw FileReadException If any problem occurred during reading from in
- * \throw InvalidAudioException In case of unexpected data
- */
-int64_t wav_process_file_worker(std::ifstream& in,
-		const int64_t    samples_per_read,
-		WavAudioHandler* audio_handler,
-		AudioReaderImpl* audio_reader,
-		int64_t&         total_pcm_bytes);
-
-/**
- * \brief Read the WAV file and optionally use a handler on it. This function
- * provides the implementation of WavAudioReader::process_file().
- *
- * \param[in]  filename         The file to read from
- * \param[in]  samples_per_read Block size in samples
- * \param[in]  audio_handler    Optional audio handler
- * \param[in]  audio_reader     Optional audio reader
- * \param[out] total_pcm_bytes  Number of total bytes representing PCM samples
- *
- * \throw FileReadException If any problem occurred during reading from in
- * \throw InvalidAudioException In case of unexpected data
- */
-void wav_process_file(const std::string& filename,
-		const int64_t    samples_per_read,
-		WavAudioHandler* audio_handler,
-		AudioReaderImpl* audio_reader,
-		int64_t&         total_pcm_bytes);
 
 /**
  * \brief Acquire the physical file size in bytes.

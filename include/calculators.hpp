@@ -7,7 +7,6 @@
  * \brief Calculate AccurateRip Checksums and IDs.
  */
 
-#include <memory>   // for unique_ptr
 #include <string>   // for string
 #include <utility>  // for pair
 #include <vector>   // for vector
@@ -22,10 +21,12 @@
 #include <arcstk/metadata.hpp>     // for ToC
 #endif
 
+#ifndef LIBARCSDEC_SAMPLEPROC_HPP_
+#include "sampleproc.hpp"          // for SampleProcessor
+#endif
 #ifndef LIBARCSDEC_SELECTION_HPP_
 #include "selection.hpp"           // for CreateReader, FileReaders, FormatList,
 #endif                             // FileReaderProvider, FileReaderSelector
-
 
 namespace arcsdec
 {
@@ -56,6 +57,8 @@ using arcstk::Points;
 using arcstk::Settings;
 using arcstk::ToC;
 
+using arcsdec::calc::SampleProcessor;
+using arcsdec::read::AudioEventHandler;
 using arcsdec::read::AudioReader;
 using arcsdec::read::MetadataParser;
 using arcsdec::select::FileReaderProvider;
@@ -280,6 +283,21 @@ private:
 	arcstk::Context to_context(
 		const bool first_file_is_first_track,
 		const bool last_file_is_last_track) const;
+
+	/**
+	 * \brief Worker: process an audio file via specified SampleProcessor.
+	 *
+	 * The \c buffer_size is specified as number of 32 bit PCM samples. It is
+	 * applied to the created \link AudioReader AudioReaders\endlink.
+	 *
+	 * \param[in] audiofilename  Name of the audiofile
+	 * \param[in] reader         Audio reader
+	 * \param[in] buffer_size    Read buffer size in number of samples
+	 * \param[in] processor      The SampleProcessor to use
+	 */
+	void process_audio_file(const std::string& audiofilename,
+			AudioReader* reader, const int64_t buffer_size,
+			AudioEventHandler* handler, SampleProcessor& processor);
 
 	/**
 	 * \brief Internal checksum type.

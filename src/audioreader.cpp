@@ -422,18 +422,10 @@ void DefaultValidator::on_failure()
 
 
 AudioReaderImpl::AudioReaderImpl()
-	: processor_        { /* empty */ }
-	, samples_per_read_ { BLOCKSIZE::DEFAULT }
+	: samples_per_read_ { BLOCKSIZE::DEFAULT }
 {
 	// empty
 }
-
-
-AudioReaderImpl::AudioReaderImpl(AudioReaderImpl&&) noexcept = default;
-
-
-AudioReaderImpl& AudioReaderImpl::operator = (AudioReaderImpl&&) noexcept
-= default;
 
 
 AudioSize AudioReaderImpl::acquire_size(const std::string& filename)
@@ -461,85 +453,77 @@ int64_t AudioReaderImpl::samples_per_read() const
 }
 
 
-AudioSize AudioReaderImpl::to_audiosize(const int64_t val, const UNIT& u) const
+AudioEventHandler* AudioReaderImpl::handler() const
 {
-	using arcstk::AudioSize;
-	using arcstk::UNIT;
+	return handler_;
+}
 
-	auto s = AudioSize{};
+
+void AudioReaderImpl::set_handler(AudioEventHandler* handler)
+{
+	handler_ = handler;
+}
+
+
+SampleProcessor* AudioReaderImpl::sample_processor() const
+{
+	return processor_;
+}
+
+
+void AudioReaderImpl::set_sample_processor(SampleProcessor* processor)
+{
+	processor_ = processor;
+}
+
+
+AudioSize AudioReaderImpl::to_audiosize(const int64_t v, const UNIT& u) const
+{
+	//using arcstk::AudioSize;
+	//using arcstk::UNIT;
+
+	auto value = int32_t { 0 };
 
 	try
 	{
-		s = { cast_to_int32(val), u };
+		value = cast_to_int32(v);
+
 	} catch (const std::invalid_argument& e)
 	{
+		// TODO use ostringstream
 		using std::to_string;
 
 		ARCS_LOG_ERROR << "Total number of samples in audio stream "
-			<< to_string(val)
+			<< to_string(v)
 			<< " exceeds the maximum possible value";
 
 		throw InvalidAudioException(std::string { "Too much input: " }
-				+ to_string(val)
+				+ to_string(v)
 				+ " samples exceed the maximal CDDA-conforming value");
 	}
 
-	return s;
+	if (value < 0)
+	{
+		// TODO use ostringstream
+		using std::to_string;
+
+		ARCS_LOG_ERROR << "Illegal value for total number of samples "
+			"in audio stream "
+			<< to_string(v)
+			<< " is negative";
+
+		throw InvalidAudioException(std::string { "Illegal negative value: " }
+				+ to_string(v)
+				+ " for size auf audio stream");
+	}
+
+	return { value, u };
 }
 
 
 std::unique_ptr<FileReaderDescriptor> AudioReaderImpl::descriptor() const
 {
 	return this->do_descriptor();
-}
-
-
-void AudioReaderImpl::attach_processor_impl(SampleProcessor& processor)
-{
-	processor_ = &processor;
-}
-
-
-SampleProcessor* AudioReaderImpl::use_processor()
-{
-	return this->processor_;
-}
-
-
-void AudioReaderImpl::do_signal_startinput()
-{
-	use_processor()->start_input();
-}
-
-
-void AudioReaderImpl::do_signal_appendsamples(
-		SampleInputIterator begin, SampleInputIterator end)
-{
-	use_processor()->append_samples(begin, end);
-}
-
-
-void AudioReaderImpl::do_signal_updateaudiosize(const AudioSize& size)
-{
-	use_processor()->update_audiosize(size);
-}
-
-
-void AudioReaderImpl::do_signal_endinput()
-{
-	use_processor()->end_input();
-}
-
-
-void AudioReaderImpl::do_attach_processor(SampleProcessor& processor)
-{
-	this->attach_processor_impl(processor);
-}
-
-
-const SampleProcessor* AudioReaderImpl::do_processor() const
-{
-	return this->processor_;
 }
 
 
@@ -557,9 +541,11 @@ public:
 	 * Construct an AudioReader::Impl
 	 *
 	 * \param[in] readerimpl The AudioReaderImpl to use
+	 * \param[in] handler    The AudioEventHandler to use
 	 * \param[in] processor  The SampleProcessor to use
 	 */
 	Impl(std::unique_ptr<AudioReaderImpl> readerimpl,
+			AudioEventHandler* handler,
 			SampleProcessor& processor);
 
 	/**
@@ -569,8 +555,13 @@ public:
 	 */
 	explicit Impl(std::unique_ptr<AudioReaderImpl> readerimpl);
 
+	~Impl() noexcept = default;
+
 	Impl(const Impl& rhs) = delete;
-	Impl& operator = (const Impl& rhs) = delete;
+	Impl& operator=(const Impl& rhs) = delete;
+
+	Impl(Impl&& rhs) noexcept = delete;
+	Impl& operator=(Impl&& rhs) noexcept = delete;
 
 	/**
 	 * Set the number of samples to read in one read operation.
@@ -587,12 +578,42 @@ public:
 	int64_t samples_per_read() const;
 
 	/**
+	 * \brief AudioEventHandler used by this instance.
+	 *
+	 * \return AudioEventHandler used by this instance
+	 */
+	AudioEventHandler* handler() const;
+
+	/**
+	 * \brief Set AudioEventHandler for this instance.
+	 *
+	 * \param[in] handler AudioEventHandler for this instance
+	 */
+	void set_handler(AudioEventHandler* handler);
+
+	/**
+	 * \brief SampleProcessor used by this instance.
+	 *
+	 * \return SampleProcessor used by this instance
+	 */
+	SampleProcessor* processor();
+
+	/**
+	 * \brief Set SampleProcessor for this instance.
+	 *
+	 * \param[in] handler SampleProcessor for this instance
+	 */
+	void set_processor(const SampleProcessor& processor);
+
+	/**
+	 * \brief Acquire the AudioSize of a file.
 	 *
 	 * \param[in] filename Audiofile to get size from
 	 */
 	AudioSize acquire_size(const std::string& filename) const;
 
 	/**
+	 * \brief Process the file and return Checksums for all tracks.
 	 *
 	 * \param[in] filename Audiofile to process
 	 */
@@ -605,32 +626,44 @@ public:
 	 */
 	std::unique_ptr<FileReaderDescriptor> descriptor() const;
 
-	/**
-	 *
-	 * \param[in] processor The SampleProcessor to use
-	 */
-	void set_processor(SampleProcessor& processor);
-
-	/**
-	 *
-	 * \return The SampleProcessor the reader uses
-	 */
-	const SampleProcessor* sampleprocessor();
-
 private:
+
+	void register_handler(AudioEventHandler* handler);
+
+	void register_processor(SampleProcessor* processor);
 
 	/**
 	 * \brief Internal AudioReaderImpl instance.
 	 */
 	std::unique_ptr<AudioReaderImpl> readerimpl_;
+
+	/**
+	 * \brief AudioEventHandler of this instance.
+	 */
+	AudioEventHandler* handler_ {};
+
+	/**
+	 * \brief SampleProcessor of this instance.
+	 */
+	SampleProcessor processor_ {};
 };
 
 
 AudioReader::Impl::Impl(std::unique_ptr<AudioReaderImpl> readerimpl,
-			SampleProcessor& processor)
+		AudioEventHandler* handler,
+		SampleProcessor& processor)
 	: readerimpl_ { std::move(readerimpl) }
+	, handler_    { handler }
+	, processor_  { processor }
 {
-	readerimpl_->attach_processor(processor);
+	if (readerimpl_)
+	{
+		if (handler_)
+		{
+			register_handler(handler);
+		}
+		register_processor(&processor_);
+	}
 }
 
 
@@ -650,6 +683,40 @@ void AudioReader::Impl::set_samples_per_read(const int64_t samples_per_read)
 int64_t AudioReader::Impl::samples_per_read() const
 {
 	return readerimpl_->samples_per_read();
+}
+
+
+AudioEventHandler* AudioReader::Impl::handler() const
+{
+	return handler_;
+}
+
+
+void AudioReader::Impl::set_handler(AudioEventHandler* handler)
+{
+	handler_ = handler;
+
+	if (readerimpl_ && handler_)
+	{
+		register_handler(handler_);
+	}
+}
+
+
+SampleProcessor* AudioReader::Impl::processor()
+{
+	return &processor_;
+}
+
+
+void AudioReader::Impl::set_processor(const SampleProcessor& processor)
+{
+	processor_ = processor;
+
+	if (readerimpl_)
+	{
+		register_processor(&processor_);
+	}
 }
 
 
@@ -691,27 +758,19 @@ std::unique_ptr<FileReaderDescriptor> AudioReader::Impl::descriptor() const
 }
 
 
-void AudioReader::Impl::set_processor(SampleProcessor& processor)
+void AudioReader::Impl::register_handler(AudioEventHandler* handler)
 {
-	readerimpl_->attach_processor(processor);
+	readerimpl_->set_handler(handler);
 }
 
 
-const SampleProcessor* AudioReader::Impl::sampleprocessor()
+void AudioReader::Impl::register_processor(SampleProcessor* processor)
 {
-	return readerimpl_->processor();
+	readerimpl_->set_sample_processor(processor);
 }
 
 
 // AudioReader
-
-
-AudioReader::AudioReader(std::unique_ptr<AudioReaderImpl> impl,
-			SampleProcessor& proc)
-	: impl_ { std::make_unique<AudioReader::Impl>(std::move(impl), proc) }
-{
-	// empty
-}
 
 
 AudioReader::AudioReader(std::unique_ptr<AudioReaderImpl> impl)
@@ -719,12 +778,6 @@ AudioReader::AudioReader(std::unique_ptr<AudioReaderImpl> impl)
 {
 	// empty
 }
-
-
-AudioReader::AudioReader(AudioReader&&) noexcept = default;
-
-
-AudioReader& AudioReader::operator = (AudioReader&&) noexcept = default;
 
 
 AudioReader::~AudioReader() noexcept = default;
@@ -739,6 +792,30 @@ void AudioReader::set_samples_per_read(const int64_t samples_per_read)
 int64_t AudioReader::samples_per_read() const
 {
 	return impl_->samples_per_read();
+}
+
+
+AudioEventHandler* AudioReader::handler() const
+{
+	return impl_->handler();
+}
+
+
+void AudioReader::set_handler(AudioEventHandler* handler)
+{
+	impl_->set_handler(handler);
+}
+
+
+SampleProcessor* AudioReader::processor() const
+{
+	return impl_->processor();
+}
+
+
+void AudioReader::set_processor(const SampleProcessor& processor)
+{
+	impl_->set_processor(processor);
 }
 
 
@@ -762,12 +839,6 @@ AudioSize AudioReader::acquire_size(const std::string& filename) const
 void AudioReader::process_file(const std::string& filename)
 {
 	impl_->process_file(filename);
-}
-
-
-void AudioReader::set_processor(SampleProcessor& processor)
-{
-	impl_->set_processor(processor);
 }
 
 
