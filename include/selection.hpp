@@ -832,10 +832,10 @@ struct CreateReader final
 
 		auto file_reader { std::move(p.first) };
 
-		// XXX Return std::move(p.first) is quirky since it prevents RVO.
+		// XXX return std::move(p.first) is quirky since it prevents RVO.
 		// Omitting the move and return p.first directly causes compile error
 		// since we try in fact to copy-construct a MetadataParser or
-		// AudioReader. Both classes are abstract.
+		// AudioReader. Both classes are abstract. We trust in NRVO.
 
 		return file_reader;
 	}
