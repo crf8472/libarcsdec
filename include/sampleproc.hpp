@@ -158,7 +158,7 @@ public:
 
 		using std::cbegin;
 		using std::cend;
-		do_receive_samples(cbegin(samples), cend(samples));
+		receive_samples(cbegin(samples), cend(samples));
 	}
 
 	/**
@@ -173,7 +173,7 @@ public:
 
 		using std::cbegin;
 		using std::cend;
-		do_receive_samples(cbegin(samples), cend(samples));
+		receive_samples(cbegin(samples), cend(samples));
 	}
 
 	/**
