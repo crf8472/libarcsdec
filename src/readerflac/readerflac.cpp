@@ -29,10 +29,10 @@
 								// for FLAC__Frame
 
 #ifndef LIBARCSTK_METADATA_HPP_
-#include <arcstk/metadata.hpp>  // for AudioSize
+#include <arcstk/metadata.hpp>  // for AudioSize, UNIT
 #endif
 #ifndef LIBARCSTK_LOGGING_HPP_
-#include <arcstk/logging.hpp>   // for ARCS_LOG_ERROR, _WARNING, _INFO, _DEBUG
+#include <arcstk/logging.hpp>   // for ARCS_LOG_ERROR,...
 #endif
 
 #ifndef LIBARCSDEC_AUDIOREADER_HPP_
@@ -218,8 +218,8 @@ void FlacDefaultErrorHandler::do_error(::FLAC__StreamDecoderErrorStatus status)
 
 
 FlacAudioReaderImpl::FlacAudioReaderImpl()
-	: smplseq_          { /* empty */ }
-	, metadata_handler_ { /* empty */ }
+	//: smplseq_          { /* empty */ }
+	: metadata_handler_ { /* empty */ }
 	, error_handler_    { /* empty */ }
 {
 	// empty
@@ -230,12 +230,26 @@ FlacAudioReaderImpl::FlacAudioReaderImpl()
 		const ::FLAC__Frame* frame,
 		const ::FLAC__int32* const buffer[])
 {
-	smplseq_.wrap_int_buffer(buffer[0], buffer[1], frame->header.blocksize);
+	using arcstk::PlanarSamples;
+
+	PlanarSamples<::FLAC__int32> sequence { buffer[0], buffer[1],
+		frame->header.blocksize, false /* TODO channels may be swapped */ };
+
+	//smplseq_.wrap_int_buffer(buffer[0], buffer[1], frame->header.blocksize);
 
 	using std::cbegin;
 	using std::cend;
 
-	this->signal_appendsamples(cbegin(smplseq_), cend(smplseq_));
+	//this->signal_samples(cbegin(smplseq_), cend(smplseq_));
+	//this->signal_samples(cbegin(sequence), cend(sequence));
+
+	if (auto* proc = this->sample_processor())
+	{
+		proc->receive_samples(sequence);
+	} else
+	{
+		// TODO throw
+	}
 
 	return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
 }
@@ -248,9 +262,12 @@ void FlacAudioReaderImpl::metadata_callback(
 	{
 		case FLAC__METADATA_TYPE_STREAMINFO:
 
-			this->signal_updateaudiosize(
+			if (auto* handler = this->handler(); handler)
+			{
+				handler->audiosize(
 					to_audiosize(metadata->data.stream_info.total_samples,
 						UNIT::SAMPLES));
+			}
 
 			metadata_handler_->validate(*metadata);
 			// Note: Streaminfo could already have been validated explicitly
@@ -307,7 +324,12 @@ void FlacAudioReaderImpl::do_process_file(const std::string& filename)
 {
 	set_md5_checking(false); // TODO part of validation?
 
-	this->signal_startinput();
+	auto* handler = this->handler();
+
+	if (handler)
+	{
+		handler->start_input();
+	}
 
 	// Process decoded samples
 
@@ -364,7 +386,10 @@ void FlacAudioReaderImpl::do_process_file(const std::string& filename)
 
 	this->finish();
 
-	this->signal_endinput();
+	if (handler)
+	{
+		handler->start_input();
+	}
 
 	ARCS_LOG_INFO << "Audio file closed";
 }

@@ -24,7 +24,7 @@
 								// for FLAC__Frame
 
 #ifndef LIBARCSTK_SAMPLES_HPP_
-#include <arcstk/samples_deprecated.hpp> // for SampleSequence
+#include <arcstk/samples.hpp> // for SampleSequence
 #endif
 
 #ifndef LIBARCSDEC_AUDIOREADER_HPP_
@@ -51,7 +51,7 @@ namespace details
 namespace flac
 {
 
-using arcstk::SampleSequence;
+using arcstk::details::SampleSequence;
 
 /**
  * \internal
@@ -265,7 +265,7 @@ private:
 	/**
 	 * \brief Internal SampleSequence instance.
 	 */
-	SampleSequence<::FLAC__int32, true> smplseq_;
+	//SampleSequence<::FLAC__int32, true> smplseq_;
 
 	/**
 	 * \brief Handles each metadata block.

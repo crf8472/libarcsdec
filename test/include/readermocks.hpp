@@ -11,14 +11,14 @@
  *
  * All functions are implemented empty.
  */
-class Mock_SampleProcessor: public arcsdec::read::SampleProcessor
+class Mock_SampleProcessor final : public arcsdec::read::AudioEventHandler
 {
 	void do_start_input() final
 	{
 		// empty
 	}
 
-	void do_update_audiosize(const arcstk::AudioSize &/*size*/) final
+	void do_audiosize(const arcstk::AudioSize &/*size*/) final
 	{
 		// empty
 	}

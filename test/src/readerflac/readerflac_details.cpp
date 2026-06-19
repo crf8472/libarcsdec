@@ -45,7 +45,7 @@ TEST_CASE ("FlacAudioReaderImpl", "[readerflac]" )
 	r.register_error_handler(std::make_unique<FlacDefaultErrorHandler>());
 
 	auto proc = Mock_SampleProcessor{};
-	r.attach_processor(proc);
+	r.set_handler(&proc);
 
 	auto d = r.descriptor();
 
