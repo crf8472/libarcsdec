@@ -541,12 +541,10 @@ public:
 	 * Construct an AudioReader::Impl
 	 *
 	 * \param[in] readerimpl The AudioReaderImpl to use
-	 * \param[in] handler    The AudioEventHandler to use
 	 * \param[in] processor  The SampleProcessor to use
 	 */
 	Impl(std::unique_ptr<AudioReaderImpl> readerimpl,
-			AudioEventHandler* handler,
-			SampleProcessor& processor);
+			SampleProcessor* processor);
 
 	/**
 	 * Construct an incomplete AudioReader::Impl (without SampleProcessor).
@@ -603,7 +601,7 @@ public:
 	 *
 	 * \param[in] handler SampleProcessor for this instance
 	 */
-	void set_processor(const SampleProcessor& processor);
+	void set_processor(SampleProcessor* processor);
 
 	/**
 	 * \brief Acquire the AudioSize of a file.
@@ -645,24 +643,23 @@ private:
 	/**
 	 * \brief SampleProcessor of this instance.
 	 */
-	SampleProcessor processor_ {};
+	SampleProcessor* processor_ {};
 };
 
 
 AudioReader::Impl::Impl(std::unique_ptr<AudioReaderImpl> readerimpl,
-		AudioEventHandler* handler,
-		SampleProcessor& processor)
+		SampleProcessor* processor)
 	: readerimpl_ { std::move(readerimpl) }
-	, handler_    { handler }
+	, handler_    { processor }
 	, processor_  { processor }
 {
 	if (readerimpl_)
 	{
-		if (handler_)
+		if (processor_)
 		{
-			register_handler(handler);
+			register_processor(processor_);
+			register_handler(handler_);
 		}
-		register_processor(&processor_);
 	}
 }
 
@@ -705,17 +702,17 @@ void AudioReader::Impl::set_handler(AudioEventHandler* handler)
 
 SampleProcessor* AudioReader::Impl::processor()
 {
-	return &processor_;
+	return processor_;
 }
 
 
-void AudioReader::Impl::set_processor(const SampleProcessor& processor)
+void AudioReader::Impl::set_processor(SampleProcessor* processor)
 {
 	processor_ = processor;
 
 	if (readerimpl_)
 	{
-		register_processor(&processor_);
+		register_processor(processor_);
 	}
 }
 
@@ -813,7 +810,7 @@ SampleProcessor* AudioReader::processor() const
 }
 
 
-void AudioReader::set_processor(const SampleProcessor& processor)
+void AudioReader::set_processor(SampleProcessor* processor)
 {
 	impl_->set_processor(processor);
 }

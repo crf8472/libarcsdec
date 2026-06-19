@@ -76,74 +76,31 @@ private:
 namespace calc
 {
 
-using arcstk::InterleavedSamples;
-using arcstk::PlanarSamples;
-
-/**
- * \brief Receiver of samples.
- *
- * CRTP for receiving samples.
- */
-template <typename T>
-class SampleReceiver
-{
-public:
-
-	/**
-	 * \brief Callback for sample sequences.
-	 *
-	 * \param[in] samples Samples sequence
-	 */
-	template <typename I>
-	void receive_samples(const arcstk::PlanarSamples<I>& samples)
-	{
-		static_cast<T*>(this)->do_receive_samples(samples);
-	}
-
-	/**
-	 * \brief Callback for sample sequences.
-	 *
-	 * \param[in] samples Samples sequence
-	 */
-	template <typename I>
-	void receive_samples(const arcstk::InterleavedSamples<I>& samples)
-	{
-		static_cast<T*>(this)->do_receive_samples(samples);
-	}
-
-	/**
-	 * \brief Implements \ref append_samples().
-	 *
-	 * \param[in] start Start of the sample sequence
-	 * \param[in] stop  End of the sample sequence
-	 */
-	template <typename B, typename E>
-	void receive_samples(B start, E stop)
-	{
-		static_cast<T*>(this)->do_receive_samples(start, stop);
-	}
-
-	//SampleReceiver() = default;
-
-	virtual ~SampleReceiver() noexcept = default;
-};
-
 using arcstk::AudioSize;
 using arcstk::CalculationSet;
 using arcstk::Checksums;
 using arcstk::ChecksumtypeSet;
+using arcstk::InterleavedSamples;
+using arcstk::PlanarSamples;
 using arcstk::Points;
 using arcstk::Settings;
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wnon-virtual-dtor"
+// -Wnon-virtual-dtor is deactivated: warns about protected non-virtual dtors in
+// the base CRTP. This is a false positive since the instances are never
+// destroyed by a pointer to SampleReceiver<T> and a CRTP does not have virtual
+// members.
 
 /**
  * \brief SampleProcessor that updates a Calculation.
  */
-class CalculationProcessor final : public SampleReceiver<CalculationProcessor>
-								 , public read::AudioEventHandler
+class CalculationProcessor final : public read::AudioEventHandler
 {
 public:
 
 	CalculationProcessor()
+		: CalculationProcessor({}, {}, {}, {})
 	{
 		// empty
 	};
@@ -195,7 +152,7 @@ public:
 	 * \param[in] samples Samples sequence
 	 */
 	template <typename I>
-	void do_receive_samples(const arcstk::PlanarSamples<I>& samples)
+	void receive_samples(const arcstk::PlanarSamples<I>& samples)
 	{
 		ARCS_LOG(DEBUG2) << "CalculationProcessor received: RECEIVE SAMPLES";
 
@@ -210,7 +167,7 @@ public:
 	 * \param[in] samples Samples sequence
 	 */
 	template <typename I>
-	void do_receive_samples(const arcstk::InterleavedSamples<I>& samples)
+	void receive_samples(const arcstk::InterleavedSamples<I>& samples)
 	{
 		ARCS_LOG(DEBUG2) << "CalculationProcessor received: RECEIVE SAMPLES";
 
@@ -226,25 +183,35 @@ public:
 	 * \param[in] stop  End of the sample sequence
 	 */
 	template <typename B, typename E>
-	void do_receive_samples(B start, E stop)
+	void receive_samples(B start, E stop)
 	{
 		ARCS_LOG(DEBUG2) << "CalculationProcessor received: RECEIVE SAMPLES";
 
 		if (!calculationset_)
 		{
-			calculationset_ =
-				arcstk::make_calculationset<B, E>(types_, settings_);
-			calculationset_->init(offsets_, leadout_);
+			ARCS_LOG(DEBUG3) << "Create and initialize calculation objects";
+
+			auto cset = arcstk::make_calculationset<B, E>(types_, settings_);
+			// TODO Checks?
+			cset->init(offsets_, leadout_);
+
+			calculationset_ = std::move(cset);
+		} else
+		{
+			ARCS_LOG(DEBUG3) << "Reuse calculationset";
 		}
 
 		using updateable_type = arcstk::UpdateableCalculationSet<B, E>;
+		updateable_type* calc;
 
-		if (auto calc = dynamic_cast<updateable_type*>(calculationset_.get()))
+		if ((calc = dynamic_cast<updateable_type*>(calculationset_.get())))
 		{
+			ARCS_LOG(DEBUG3) << "Pass samples to calculation object";
+
 			calc->update(start, stop);
 		} else
 		{
-			// TODO Error!
+			ARCS_LOG(DEBUG3) << "No calculation object, discard samples";
 		}
 	}
 
@@ -257,6 +224,8 @@ public:
 	{
 		if (!calculationset_)
 		{
+			ARCS_LOG(DEBUG3) << "No calculation object, no Checksums";
+
 			return {/* empty */};
 		}
 
@@ -274,6 +243,8 @@ private:
 
 	void do_audiosize(const AudioSize& size) final
 	{
+		ARCS_LOG_DEBUG << "Updated audiosize: " << size;
+
 		leadout_ = size;
 	}
 
@@ -310,10 +281,12 @@ private:
 	std::unique_ptr<CalculationSet> calculationset_ {};
 };
 
+#pragma GCC diagnostic pop
+
 /**
  * \brief Typedef for a SampleProcessor.
  */
-using SampleProcessor = SampleReceiver<CalculationProcessor>;
+using SampleProcessor = CalculationProcessor;
 
 } // namespace calc
 

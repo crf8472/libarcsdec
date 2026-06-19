@@ -285,21 +285,6 @@ private:
 		const bool last_file_is_last_track) const;
 
 	/**
-	 * \brief Worker: process an audio file via specified SampleProcessor.
-	 *
-	 * The \c buffer_size is specified as number of 32 bit PCM samples. It is
-	 * applied to the created \link AudioReader AudioReaders\endlink.
-	 *
-	 * \param[in] audiofilename  Name of the audiofile
-	 * \param[in] reader         Audio reader
-	 * \param[in] buffer_size    Read buffer size in number of samples
-	 * \param[in] processor      The SampleProcessor to use
-	 */
-	void process_audio_file(const std::string& audiofilename,
-			AudioReader* reader, const int64_t buffer_size,
-			AudioEventHandler* handler, SampleProcessor& processor);
-
-	/**
 	 * \brief Internal checksum type.
 	 */
 	ChecksumtypeSet types_;

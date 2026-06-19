@@ -285,23 +285,42 @@ std::pair<Checksums, AudioSize> ARCSCalculator::calculate(
 	ARCS_LOG_DEBUG <<
 		"Calculate by single audiofilename and complete input data";
 
-	//using read::details::ensure_leadout;
-
-	/*
-	const auto updated_leadout {
-		ensure_leadout(leadout, *reader, audiofilename)
-		// TODO Wouldn't it be sufficient to do this exclusively for ALBUM?
-	};
-
-	*/
-
-	// Put it all together and run
-
+	// FIXME swap the following 2 lines and receive_samples<>() will break!
 	auto processor = CalculationProcessor { types, settings, offsets, leadout };
 	auto reader { create(audiofilename) };
+	// It only works if 1. processor and 2. reader
 
-	process_audio_file(audiofilename, reader.get(), read_buffer_size(),
-			&processor, processor);
+	using std::to_string;
+
+	// Configure number of samples per read
+
+	const auto buffer_size { read_buffer_size() };
+
+	if (BLOCKSIZE::MIN <= buffer_size && buffer_size <= BLOCKSIZE::MAX)
+	{
+		ARCS_LOG(DEBUG1) << "Chunk size for reading samples: "
+			<< to_string(buffer_size) << " bytes";
+
+		reader->set_samples_per_read(buffer_size);
+
+	} else
+	{
+		// Buffer size is illegal.
+		// Do nothing, AudioReaderImpl uses its default.
+
+		ARCS_LOG_WARNING << "Specified buffer size of " << buffer_size
+			<< " bytes is not within the legal range of "
+			<< BLOCKSIZE::MIN << " - " << BLOCKSIZE::MAX
+			<< " samples. Fall back to default: "
+			<< reader->samples_per_read()
+			<< " bytes";
+	}
+
+	// Perform
+
+	reader->set_handler(&processor);
+	reader->set_processor(&processor);
+	reader->process_file(audiofilename);
 
 	// Check results
 
@@ -357,40 +376,6 @@ Context ARCSCalculator::to_context(
 	}
 
 	return context;
-}
-
-
-void ARCSCalculator::process_audio_file(const std::string& audiofilename,
-		AudioReader* reader, const int64_t buffer_size,
-		AudioEventHandler* handler, SampleProcessor& processor)
-{
-	using std::to_string;
-
-	// Configure number of samples per read
-
-	if (BLOCKSIZE::MIN <= buffer_size and buffer_size <= BLOCKSIZE::MAX)
-	{
-		ARCS_LOG(DEBUG1) << "Chunk size for reading samples: "
-			<< to_string(buffer_size) << " bytes";
-
-		reader->set_samples_per_read(buffer_size);
-
-	} else
-	{
-		// Buffer size is illegal.
-		// Do nothing, AudioReaderImpl uses its default.
-
-		ARCS_LOG_WARNING << "Specified buffer size of " << buffer_size
-			<< " bytes is not within the legal range of "
-			<< BLOCKSIZE::MIN << " - " << BLOCKSIZE::MAX
-			<< " samples. Fall back to default: "
-			<< reader->samples_per_read()
-			<< " bytes";
-	}
-
-	reader->set_handler(handler);
-	reader->set_processor(processor);
-	reader->process_file(audiofilename);
 }
 
 

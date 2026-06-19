@@ -342,7 +342,7 @@ public:
 	 *
 	 * \param[in] processor SampleProcessor to use
 	 */
-	void set_processor(const SampleProcessor& processor);
+	void set_processor(SampleProcessor* processor);
 
 	/**
 	 * \brief Acquire the AudioSize of a file.
