@@ -51,7 +51,7 @@ namespace details
 namespace flac
 {
 
-using arcstk::details::SampleSequence;
+using arcstk::SampleSequence;
 
 /**
  * \internal
