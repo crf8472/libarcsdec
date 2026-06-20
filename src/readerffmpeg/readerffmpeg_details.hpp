@@ -34,7 +34,7 @@ extern "C"
 #include <fstream>
 
 #ifndef LIBARCSTK_SAMPLES_HPP_
-#include <arcstk/samples_deprecated.hpp>   // for SampleInputIterator
+#include <arcstk/samples.hpp>   // for SampleSequence
 #endif
 #ifndef LIBARCSTK_CALCULATE_HPP_
 #include <arcstk/calculate.hpp> // for AudioSize
@@ -64,13 +64,10 @@ namespace details
 namespace ffmpeg
 {
 
-using arcstk::SampleSequence;
-
-using arcstk::SampleInputIterator;
-using arcstk::SampleSequence;
 using arcstk::AudioSize;
 using arcstk::PlanarSamples;
 using arcstk::InterleavedSamples;
+using arcstk::SampleSequence;
 
 /**
  * \internal
@@ -461,65 +458,109 @@ struct ChannelOrder final
  *                   interleaved buffer
  * \tparam Container The sample object container to wrap
  */
-template <typename S, bool is_planar, typename Container,
-		typename SequenceType = SampleSequence<S, is_planar>>
-		//typename = details::IsSampleType<S>, // TODO SFINAE stuff
-class WrappingPolicy final
-{
-	/* empty */
-};
+// template <typename S, bool is_planar, typename Container,
+// 		typename SequenceType = SampleSequence<S, is_planar>>
+// 		//typename = details::IsSampleType<S>, // TODO SFINAE stuff
+// class WrappingPolicy final
+// {
+// 	/* empty */
+// };
 
 
 // TODO Functions of WrappingPolicy may make use of ChannelOrder::isleftright
 
 
 // Specialization for wrapping an ::AVFrame into a byte buffer (planar)
+// template <typename S, typename SequenceType>
+// class WrappingPolicy<S, true, AVFramePtr, SequenceType> final
+// {
+// 	using TotalBytesPerPlane = BytesPerPlane<S, true, ::AVFrame>;
+//
+// public:
+//
+// 	static SequenceType create(const details::ffmpeg::AVFramePtr& f)
+// 	{
+// 		if (!f) { return SequenceType {}; }
+//
+// 		return SequenceType { ByteBuffer(f.get(), 0), ByteBuffer(f.get(), 1),
+// 			TotalBytesPerPlane::get(f.get()) };
+// 	}
+//
+// 	static void wrap(const details::ffmpeg::AVFramePtr& f,
+// 			SequenceType& sequence)
+// 	{
+// 		sequence.wrap_byte_buffer(ByteBuffer(f.get(), 0),
+// 				ByteBuffer(f.get(), 1),
+// 				TotalBytesPerPlane::get(f.get()));
+// 	}
+// };
+
+
+// Specialization for wrapping an ::AVFrame into a byte buffer (interleaved)
+// template <typename S, typename SequenceType>
+// class WrappingPolicy<S, false, details::ffmpeg::AVFramePtr, SequenceType> final
+// {
+// 	using TotalBytesPerPlane = BytesPerPlane<S, false, ::AVFrame>;
+//
+// public:
+//
+// 	static SequenceType create(const details::ffmpeg::AVFramePtr& f)
+// 	{
+// 		if (!f) { return SequenceType {}; }
+//
+// 		return SequenceType { ByteBuffer(f.get(), 0),
+// 			TotalBytesPerPlane::get(f.get()) };
+// 	}
+//
+// 	static void wrap(const details::ffmpeg::AVFramePtr& f,
+// 			SequenceType& sequence)
+// 	{
+// 		sequence.wrap_byte_buffer(ByteBuffer(f.get(), 0),
+// 				TotalBytesPerPlane::get(f.get()));
+// 	}
+// };
+
+
+template <typename S, bool is_planar, typename Container,
+		typename SequenceType = SampleSequence<S, is_planar>>
+		//typename = details::IsSampleType<S>, // TODO SFINAE stuff
+class CreationPolicy final
+{
+	/* empty */
+};
+
+// Specialization for creating a planar SampleSequence of an ::AVFrame
 template <typename S, typename SequenceType>
-class WrappingPolicy<S, true, AVFramePtr, SequenceType> final
+class CreationPolicy<S, true, AVFramePtr, SequenceType> final
 {
 	using TotalBytesPerPlane = BytesPerPlane<S, true, ::AVFrame>;
 
 public:
 
-	static SequenceType create(const details::ffmpeg::AVFramePtr& f)
+	static SequenceType create(const AVFramePtr& f, const bool channels_swapped)
 	{
 		if (!f) { return SequenceType {}; }
 
 		return SequenceType { ByteBuffer(f.get(), 0), ByteBuffer(f.get(), 1),
-			TotalBytesPerPlane::get(f.get()) };
-	}
-
-	static void wrap(const details::ffmpeg::AVFramePtr& f,
-			SequenceType& sequence)
-	{
-		sequence.wrap_byte_buffer(ByteBuffer(f.get(), 0),
-				ByteBuffer(f.get(), 1),
-				TotalBytesPerPlane::get(f.get()));
+			TotalBytesPerPlane::get(f.get()), channels_swapped };
 	}
 };
 
 
-// Specialization for wrapping an ::AVFrame into a byte buffer (interleaved)
+// Specialization for creating an interleaved SampleSequence of an ::AVFrame
 template <typename S, typename SequenceType>
-class WrappingPolicy<S, false, details::ffmpeg::AVFramePtr, SequenceType> final
+class CreationPolicy<S, false, AVFramePtr, SequenceType> final
 {
 	using TotalBytesPerPlane = BytesPerPlane<S, false, ::AVFrame>;
 
 public:
 
-	static SequenceType create(const details::ffmpeg::AVFramePtr& f)
+	static SequenceType create(const AVFramePtr& f, const bool channels_swapped)
 	{
 		if (!f) { return SequenceType {}; }
 
 		return SequenceType { ByteBuffer(f.get(), 0),
-			TotalBytesPerPlane::get(f.get()) };
-	}
-
-	static void wrap(const details::ffmpeg::AVFramePtr& f,
-			SequenceType& sequence)
-	{
-		sequence.wrap_byte_buffer(ByteBuffer(f.get(), 0),
-				TotalBytesPerPlane::get(f.get()));
+			TotalBytesPerPlane::get(f.get()), channels_swapped };
 	}
 };
 
@@ -592,14 +633,14 @@ template<> struct SampleType<4, false> final { using type = uint32_t; };
  * \tparam is_planar \c TRUE indicates to use a planar sequence, \c FALSE
  *                   indicates to use an interleaved sequence
  */
-template <typename S, bool is_planar>
-struct SequenceInstance final
-{
-	static auto create() -> SampleSequence<S, is_planar>
-	{
-		return SampleSequence<S, is_planar> {};
-	}
-};
+// template <typename S, bool is_planar>
+// struct SequenceInstance final
+// {
+// 	static auto create() -> SampleSequence<S, is_planar>
+// 	{
+// 		return SampleSequence<S, is_planar> {};
+// 	}
+// };
 
 
 /**
@@ -615,12 +656,19 @@ template <::AVSampleFormat F,
 auto sequence_for(const AVFramePtr& frame)
 	-> SampleSequence<S, IsPlanar<F>::value>
 {
-	auto sequence = SequenceInstance<S, IsPlanar<F>::value>::create();
+	// auto sequence = SequenceInstance<S, IsPlanar<F>::value>::create();
+	//
+	// using Policy  = WrappingPolicy<S, IsPlanar<F>::value, AVFramePtr>;
+	// Policy::wrap(frame, sequence);
+	//
+	// return sequence;
 
-	using Policy  = WrappingPolicy<S, IsPlanar<F>::value, AVFramePtr>;
-	Policy::wrap(frame, sequence);
+	using Policy = CreationPolicy<S, IsPlanar<F>::value, AVFramePtr>;
 
-	return sequence;
+	const auto channels_swapped = !ChannelOrder::is_leftright(frame.get())
+		&& !ChannelOrder::is_unspecified(frame.get());
+
+	return Policy::create(frame, channels_swapped);
 }
 // Note: sequence_for is only required for FFmpegAudioReaderImpl::pass_frame()
 
@@ -1230,12 +1278,20 @@ private:
 
 	std::unique_ptr<FileReaderDescriptor> do_descriptor() const final;
 
+	//
+
+	void start_input_callback();
+
+	void audiosize_callback(const AudioSize& size);
+
 	/**
 	 * \brief Callback for decoded single frame.
 	 *
 	 * \param[in] frame Next decoded frame to update Calculation with
 	 */
 	void frame_callback(AVFramePtr frame);
+
+	void end_input_callback();
 
 	/**
 	 * \brief Pass single frame to next processor.

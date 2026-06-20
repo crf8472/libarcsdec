@@ -1279,33 +1279,42 @@ void FFmpegAudioReaderImpl::do_process_file(const std::string& filename)
 	// This imitates how a SampleProcessor is attached to a SampleProvider.
 
 	audiostream->register_start_input(
-		std::bind(&FFmpegAudioReaderImpl::signal_startinput, this));
-
-	audiostream->register_push_frame(
-		std::bind(&FFmpegAudioReaderImpl::frame_callback,
-			this,
-			std::placeholders::_1));
+		std::bind(&FFmpegAudioReaderImpl::start_input_callback, this));
 
 	audiostream->register_update_audiosize(
-		std::bind(&FFmpegAudioReaderImpl::signal_updateaudiosize,
-			this,
+		std::bind(&FFmpegAudioReaderImpl::audiosize_callback, this,
+			std::placeholders::_1));
+
+	audiostream->register_push_frame(
+		std::bind(&FFmpegAudioReaderImpl::frame_callback, this,
 			std::placeholders::_1));
 
 	audiostream->register_end_input(
-		std::bind(&FFmpegAudioReaderImpl::signal_endinput, this));
+		std::bind(&FFmpegAudioReaderImpl::end_input_callback, this));
 
 
 	// Process file
 
-	this->signal_startinput();
+	auto* handler = this->handler();
+
+	if (handler)
+	{
+		handler->start_input();
+	}
 
 	const auto declared_size { audiostream->declared_size() };
 
-	this->signal_updateaudiosize(declared_size);
+	if (handler)
+	{
+		handler->audiosize(declared_size);
+	}
 
 	const auto actual_size { audiostream->traverse_samples() };
 
-	this->signal_endinput();
+	if (handler)
+	{
+		handler->end_input();
+	}
 
 
 	// Do some logging
@@ -1338,12 +1347,39 @@ std::unique_ptr<FileReaderDescriptor> FFmpegAudioReaderImpl::do_descriptor()
 }
 
 
+void FFmpegAudioReaderImpl::start_input_callback()
+{
+	if (auto* h = handler())
+	{
+		h->start_input();
+	}
+}
+
+
+void FFmpegAudioReaderImpl::audiosize_callback(const AudioSize& size)
+{
+	if (auto* h = handler())
+	{
+		h->audiosize(size);
+	}
+}
+
+
 void FFmpegAudioReaderImpl::frame_callback(AVFramePtr frame)
 {
 	this->pass_frame(std::move(frame));
 
 	// Alternatively, pass_frame_to_buffer() could be used for a configurable
 	// frame buffer but this is currently significantly slower.
+}
+
+
+void FFmpegAudioReaderImpl::end_input_callback()
+{
+	if (auto* h = handler())
+	{
+		h->end_input();
+	}
 }
 
 
@@ -1393,7 +1429,13 @@ void FFmpegAudioReaderImpl::pass_samples(AVFramePtr frame)
 	using std::cbegin;
 	using std::cend;
 
-	this->signal_appendsamples(cbegin(sequence), cend(sequence));
+	if (auto* proc = sample_processor(); proc)
+	{
+		proc->receive_samples(sequence);
+	} else
+	{
+		// TODO Error?
+	}
 }
 
 
