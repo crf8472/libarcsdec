@@ -54,14 +54,14 @@ int main(int argc, char* argv[])
 	// to Cuesheets. We require a Cuesheet for this example since at the time of
 	// writing, Cuesheet is the only actual input format implemented. :-)
 	arcsdec::calc::ToCParser parser {};
-	auto tocptr { parser.parse(metafilename) };
+	auto toc_in { parser.parse(metafilename) };
 
 	// Read the audio file and calculate the checksums.
 	// Note that technical details of the audio input are "abstracted away" by
 	// libarcsdec. ARCSCalculator takes some audio and gives you the ARCSs.
 	arcsdec::calc::ARCSCalculator calculator {};
 	const auto [ checksums, toc ] =
-		calculator.calculate(audiofilename, *tocptr);
+		calculator.calculate(audiofilename, toc_in);
 
 	// The result is a tuple containing the checksums as well as the completed
 	// ToC. While we had to test tocptr for completeness before using it, the
@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
 	// libarcstk's Matchers or just parse them to plaintext.
 
 	// Print the ARId.
-	std::cout << "AccurateRip URL: " << arid->url() << '\n';
+	std::cout << "AccurateRip URL: " << arid.url() << '\n';
 
 	// Print the actual checksums.
 	std::cout << "Track  ARCSv1    ARCSv2" << '\n';
@@ -84,8 +84,8 @@ int main(int argc, char* argv[])
 
 	for (const auto& track_values : checksums)
 	{
-		auto arcs1 = track_values.get(type::ARCS1);
-		auto arcs2 = track_values.get(type::ARCS2);
+		auto [ arcs1, v1 ] = track_values.get(type::ARCS1);
+		auto [ arcs2, v2 ] = track_values.get(type::ARCS2);
 
 		std::cout << std::dec << " " << std::setw(2) << std::setfill(' ')
 			<< trk_no << "   " << std::hex << std::uppercase

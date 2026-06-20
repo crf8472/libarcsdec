@@ -6,8 +6,8 @@
 
 ## Project information
 PROJECT_NAME           = "@PROJECT_NAME@"
-PROJECT_NUMBER         = "@PROJECT_VERSION_STRING@"
-PROJECT_BRIEF          = "@PROJECT_BRIEF_DESC@"
+PROJECT_NUMBER         = "@LIBARCSDEC_VERSION_STRING@"
+PROJECT_BRIEF          = "@PROJECT_DESCRIPTION@"
 
 ## Which parts to show
 INTERNAL_DOCS          = @DOXYGEN_INTERNAL_DOCS@
@@ -60,7 +60,7 @@ EXCLUDE_PATTERNS       = *.cpp
 RECURSIVE              = YES
 
 ## Logging
-WARN_LOGFILE           = @PROJECT_LOG_DIR@/Doxygen_Warnings.log
+WARN_LOGFILE           = @LIBARCSDEC_LOG_DIR@/Doxygen_Warnings.log
 WARN_NO_PARAMDOC       = YES
 
 ## Output

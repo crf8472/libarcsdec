@@ -57,19 +57,19 @@ int main(int argc, char* argv[])
 	// to Cuesheets. We require a Cuesheet for this example since at the time of
 	// writing, Cuesheet is the only actual input format implemented. :-)
 	arcsdec::calc::ToCParser parser;
-	const auto tocptr { parser.parse(metafilename) };
+	const auto toc { parser.parse(metafilename) };
 
 	// Read the audio file and calculate the result.
 	// Note that technical details of the audio input are "abstracted away" by
 	// libarcsdec. ARCSCalculator takes some audio and gives you the ARCSs.
 	arcsdec::calc::ARIdCalculator calculator;
-	const auto id { calculator.calculate(*tocptr, audiofilename) };
+	const auto id { calculator.calculate(toc, audiofilename) };
 
 	// Print the ARId.
 	using std::string;
-	std::cout << "ID:          " << to_string(*id) << '\n';
-	std::cout << "Filename:    " << id->filename() << '\n';
-	std::cout << "Request-URL: " << id->url()      << '\n';
+	std::cout << "ID:          " << to_string(id) << '\n';
+	std::cout << "Filename:    " << id.filename() << '\n';
+	std::cout << "Request-URL: " << id.url()      << '\n';
 
 	return EXIT_SUCCESS;
 }

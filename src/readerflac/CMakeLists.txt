@@ -1,19 +1,16 @@
 ## CMake file for libflac based FLAC audio reader
 ## vim:fdm=marker
 
-## - Variables: PKG_REQUIRE_ARRAY, PROJECT_NAME, PROJECT_SOURCE_DIR
-
 cmake_minimum_required (VERSION 3.14.0 )
-
 
 message (STATUS "Build with fLaC reading capability for fLaC audio" )
 
+function (readerflac_pkg DEPS )
+	set  (${DEPS} "flac++ >= 1.3.1" PARENT_SCOPE )
+endfunction()
+
 find_package (Threads       REQUIRED )
 find_package (FLAC    1.3.1 REQUIRED ) ## checks libFLAC and libFLAC++
-
-list (APPEND PKG_REQUIRE_ARRAY "flac++ >= 1.3.1" )
-
-
 
 ## --- Define testcases {{{1
 
@@ -24,9 +21,9 @@ else()
 	## found by cmake/Modules/FindFLAC
 	target_include_directories (${PROJECT_NAME}
 		PRIVATE ${LIBFLACPP_INCLUDE_DIRS} )
-	target_link_libraries (${PROJECT_NAME}
-		PRIVATE ${LIBFLACPP_LIBRARIES} )
+	target_link_libraries (${PROJECT_NAME} PRIVATE ${LIBFLACPP_LIBRARIES} )
 endif()
+# 1}}}
 
 target_sources (${PROJECT_NAME} PRIVATE readerflac.cpp )
 

@@ -26,7 +26,7 @@ find_package (Doxygen ) ## must be >= 1.9.8, also ok: 1.8.15...1.8.20
 ## --- Some Variables {{{1
 
 ## Target directory for generated documentation
-set (DOC_GEN_DIR          "${PROJECT_BINARY_DIR}/generated-docs" )
+set (DOC_GEN_DIR          "${LIBARCSDEC_BINARY_DIR}/generated-docs" )
 
 ## Construct comment for doc target
 set (DOC_COMMENT          "Build documentation for APIs" )
@@ -66,13 +66,13 @@ add_custom_target (libarcsdec_create_output_dir DEPENDS "${DOC_GEN_DIR}" )
 
 ## Set CMake controlled values in the Doxyfile base template.
 ## Doxygen may *only* use theses variables prefixed by "DOXYGEN_" and
-## those from the root script prefixed by "PROJECT_".
+## those from the root script prefixed by "LIBARCSDEC_".
 
 set (DOXYGEN_OUTPUT_DIRECTORY       "${DOC_GEN_DIR}/doxygen" )
 set (DOXYGEN_FILE_PATTERNS          "*.hpp *.md" )
-set (DOXYGEN_STRIP_FROM_INC_PATH    "${PROJECT_INCLUDE_SOURCE_DIR}/" )
-set (DOXYGEN_STRIP_FROM_PATH        "${PROJECT_INCLUDE_SOURCE_DIR}/" )
-set (DOXYGEN_INPUT                  "${PROJECT_INCLUDE_SOURCE_DIR}/" )
+set (DOXYGEN_STRIP_FROM_INC_PATH    "${LIBARCSDEC_INCLUDE_SOURCE_DIR}/" )
+set (DOXYGEN_STRIP_FROM_PATH        "${LIBARCSDEC_INCLUDE_SOURCE_DIR}/" )
+set (DOXYGEN_INPUT                  "${LIBARCSDEC_INCLUDE_SOURCE_DIR}/" )
 set (DOXYGEN_INTERNAL_DOCS          "NO" )
 
 ## Activate the inline namespace only for debug purposes, it's quite broken
@@ -94,14 +94,14 @@ if (WITH_INTERNAL_DOCS )
 
 	## passed to doxygen
 
-	list (APPEND DOXYGEN_STRIP_FROM_INC_PATH "${PROJECT_SOURCE_DIR}/" )
-	list (APPEND DOXYGEN_STRIP_FROM_INC_PATH "${PROJECT_GEN_SOURCES_DIR}/" )
+	list (APPEND DOXYGEN_STRIP_FROM_INC_PATH "${LIBARCSDEC_SOURCE_DIR}/" )
+	list (APPEND DOXYGEN_STRIP_FROM_INC_PATH "${LIBARCSDEC_GENSRC_BINARY_DIR}/" )
 
-	list (APPEND DOXYGEN_STRIP_FROM_PATH     "${PROJECT_SOURCE_DIR}/" )
-	list (APPEND DOXYGEN_STRIP_FROM_PATH     "${PROJECT_GEN_SOURCES_DIR}/" )
+	list (APPEND DOXYGEN_STRIP_FROM_PATH     "${LIBARCSDEC_SOURCE_DIR}/" )
+	list (APPEND DOXYGEN_STRIP_FROM_PATH     "${LIBARCSDEC_GENSRC_BINARY_DIR}/" )
 
-	list (APPEND DOXYGEN_INPUT               "${PROJECT_SOURCE_DIR}/" )
-	list (APPEND DOXYGEN_INPUT               "${PROJECT_GEN_SOURCES_DIR}/" )
+	list (APPEND DOXYGEN_INPUT               "${LIBARCSDEC_SOURCE_DIR}/" )
+	list (APPEND DOXYGEN_INPUT               "${LIBARCSDEC_GENSRC_BINARY_DIR}/" )
 
 	set (DOXYGEN_INTERNAL_DOCS "YES" )
 
@@ -116,7 +116,9 @@ endif (WITH_INTERNAL_DOCS)
 ## --- Configure Doxyfile-base {{{1
 
 ## Normalize path lists for doxygen
-string (REPLACE ";" " " DOXYGEN_STRIP_FROM_INC_PATH "${DOXYGEN_STRIP_FROM_INC_PATH}" )
+string (REPLACE ";" " " DOXYGEN_STRIP_FROM_INC_PATH
+		"${DOXYGEN_STRIP_FROM_INC_PATH}" )
+
 string (REPLACE ";" " " DOXYGEN_STRIP_FROM_PATH "${DOXYGEN_STRIP_FROM_PATH}" )
 string (REPLACE ";" " " DOXYGEN_INPUT "${DOXYGEN_INPUT}" )
 
@@ -216,8 +218,10 @@ else() # If no Generators are Specified, Just Use Doxygen's Stock HTML
 endif()
 ## 1}}}
 
-## Add target 'doc' if it was not already added by submodules
+
+## --- Provide target doc
 if (NOT TARGET doc)
+	## add, if not already added by a submodule
 	add_custom_target (doc )
 endif()
 

@@ -26,11 +26,11 @@ extern const int LIBARCSDEC_VERSION_MINOR = std::stoi("@PROJECT_VERSION_MINOR@")
 
 extern const int LIBARCSDEC_VERSION_PATCH = std::stoi("@PROJECT_VERSION_PATCH@");
 
-extern const std::string LIBARCSDEC_VERSION_SUFFIX = "@PROJECT_VERSION_SUFFIX@";
+extern const std::string LIBARCSDEC_VERSION_SUFFIX = "@LIBARCSDEC_VERSION_SUFFIX@";
 
-extern const std::string LIBARCSDEC_VERSION = "@PROJECT_VERSION_STRING@";
+extern const std::string LIBARCSDEC_VERSION = "@LIBARCSDEC_VERSION_STRING@";
 
-extern const std::string LIBARCSDEC_GIT_VERSION = "@GIT_VERSION_STRING@";
+extern const std::string LIBARCSDEC_GIT_VERSION = "@LIBARCSDEC_GIT_VERSION_STRING@";
 
 
 /**

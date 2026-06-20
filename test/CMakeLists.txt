@@ -64,7 +64,7 @@ endif()
 ## --- Adjust compile options for tests {{{1
 ## (g++ issues many warnings when compiling Catch2 v3.x tests)
 
-set (TEST_CXX_FLAGS_WARNINGS ${PROJECT_CXX_FLAGS_WARNINGS} )
+set (TEST_CXX_FLAGS_WARNINGS ${LIBARCSDEC_CXX_FLAGS_WARNINGS} )
 
 
 
@@ -117,24 +117,24 @@ foreach (_testcase ${TEST_SETS} )
 
 
 	## Use src/ by default as include directory for the sources
-	set (COMPONENT_SOURCE_DIR "${PROJECT_SOURCE_DIR}")
-	set (COMPONENT_BINARY_DIR "${PROJECT_BINARY_DIR}")
+	set (COMPONENT_SOURCE_DIR "${LIBARCSDEC_SOURCE_DIR}")
+	set (COMPONENT_BINARY_DIR "${LIBARCSDEC_BINARY_DIR}")
 
 	## Check for subdirectory in src and use it, if it exists
 	## e.g. /src/parsercue/cuesheet
-	get_filename_component (_fullpath "${PROJECT_SOURCE_DIR}/${SOURCES_SUBDIR}"
+	get_filename_component (_fullpath "${LIBARCSDEC_SOURCE_DIR}/${SOURCES_SUBDIR}"
 		REALPATH )
 	if (EXISTS "${_fullpath}" )
-		set (COMPONENT_SOURCE_DIR "${PROJECT_SOURCE_DIR}/${SOURCES_SUBDIR}")
+		set (COMPONENT_SOURCE_DIR "${LIBARCSDEC_SOURCE_DIR}/${SOURCES_SUBDIR}")
 	endif ()
 
 	## Check for subdirectory in binary dir and use it, if it exists
 	## e.g. /build/src/parsercue
 	get_filename_component (_fullpath
-		"${PROJECT_BINARY_DIR}/src/${SOURCES_SUBDIR}"
+		"${LIBARCSDEC_BINARY_DIR}/src/${SOURCES_SUBDIR}"
 		REALPATH )
 	if (EXISTS "${_fullpath}" )
-		set (COMPONENT_BINARY_DIR "${PROJECT_BINARY_DIR}/src/${SOURCES_SUBDIR}")
+		set (COMPONENT_BINARY_DIR "${LIBARCSDEC_BINARY_DIR}/src/${SOURCES_SUBDIR}")
 	endif ()
 
 	## Add subdirectories of component e.g. /build/src/parsercue/cuesheet
@@ -168,11 +168,11 @@ foreach (_testcase ${TEST_SETS} )
 			## test headers
 			$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 			##  public libarcsdec headers
-			$<BUILD_INTERFACE:${PROJECT_INCLUDE_BINARY_DIR}>
+			$<BUILD_INTERFACE:${LIBARCSDEC_INCLUDE_BINARY_DIR}>
             ## private libarcsdec headers
-			$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
+			$<BUILD_INTERFACE:${LIBARCSDEC_SOURCE_DIR}>
 			## generated sources
-			$<BUILD_INTERFACE:${PROJECT_GEN_SOURCES_DIR}>
+			$<BUILD_INTERFACE:${LIBARCSDEC_GENSRC_BINARY_DIR}>
             ## private component headers
 			$<BUILD_INTERFACE:${COMPONENT_SOURCE_DIR}>
             ## generated component headers
@@ -198,13 +198,13 @@ foreach (_testcase ${TEST_SETS} )
 
 	## Set same optimization flags as for project sources
 	target_compile_options (${_testcase}_test
-		PRIVATE ${PROJECT_CXX_FLAGS_OPTIMIZE} )
+		PRIVATE ${LIBARCSDEC_CXX_FLAGS_OPTIMIZE} )
 
 	## Add test to ctest set
 	add_test (
 		NAME    ${_testcase}_test
 		COMMAND "${_testcase}_test"
-				-o "${PROJECT_BINARY_DIR}/report.${_testcase}.xml"
+				-o "${LIBARCSDEC_BINARY_DIR}/report.${_testcase}.xml"
 				-r junit
 		WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/data"
 	)

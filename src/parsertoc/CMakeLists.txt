@@ -1,9 +1,5 @@
 ## Root CMake file for parsertoc
 ## vim:fdm=marker
-##
-## Prerequisites from PARENT
-##
-## - Variables: PROJECT_INCLUDE_BINARY_DIR, PROJECT_SOURCE_DIR, PROJECT_NAME
 
 cmake_minimum_required (VERSION 3.10 )
 ## --- Policies {{{1
@@ -18,7 +14,6 @@ cmake_policy (SET CMP0079 NEW )
 
 add_subdirectory (cdrtoc )
 
-
 ## --- Define target libarcsdec_parsertoc {{{1
 
 add_library (libarcsdec_parsertoc OBJECT parsertoc.cpp )
@@ -28,8 +23,8 @@ set_property (TARGET libarcsdec_parsertoc
 
 target_include_directories (libarcsdec_parsertoc
 	PRIVATE
-		$<BUILD_INTERFACE:${PROJECT_INCLUDE_SOURCE_DIR}> ## public headers
-		$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>         ## private headers
+		$<BUILD_INTERFACE:${LIBARCSDEC_INCLUDE_SOURCE_DIR}> ## public headers
+		$<BUILD_INTERFACE:${LIBARCSDEC_SOURCE_DIR}>         ## private headers
 		$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/cdrtoc> ## flex/bison code
 	)
 
@@ -39,7 +34,6 @@ target_link_libraries (libarcsdec_parsertoc
 )
 
 ## 1}}}
-
 
 target_link_libraries (${PROJECT_NAME} PRIVATE libarcsdec_parsertoc )
 

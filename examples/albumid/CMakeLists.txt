@@ -1,32 +1,30 @@
 ## Build example application 'albumid', part of libarcsdec
 ## vim: fdm=marker
 
-add_executable ( albumid albumid.cpp )
+add_executable ( libarcsdec_albumid albumid.cpp )
 
-set_target_properties ( albumid
+set_target_properties ( libarcsdec_albumid
 	PROPERTIES
 	CXX_STANDARD          17
 	CXX_STANDARD_REQUIRED ON
 	CXX_EXTENSIONS        OFF )
 
-target_compile_options ( albumid PRIVATE -Wall -Wextra -pedantic )
+target_compile_options ( libarcsdec_albumid PRIVATE -Wall -Wextra -pedantic )
 
-add_dependencies ( albumid libarcsdec )
+add_dependencies ( libarcsdec_albumid libarcsdec )
 
 
 ## build
 
-set (PROJECT_BUILD_DIR "${PROJECT_ROOT_DIR}/build" )
-
 ## Always include the headers in the build/ dir - if another header is present,
 ## ignore it.
-target_include_directories ( albumid
-	PRIVATE $<BUILD_INTERFACE:${PROJECT_BUILD_DIR}/libs/libarcstk/include>
-	PRIVATE $<BUILD_INTERFACE:${PROJECT_BUILD_DIR}/include> )
+target_include_directories ( libarcsdec_albumid
+	PRIVATE $<BUILD_INTERFACE:${LIBARCSDEC_BINARY_DIR}/libs/libarcstk/include>
+	PRIVATE $<BUILD_INTERFACE:${LIBARCSDEC_BINARY_DIR}/include> )
 
 ## Always link to the binaries in the build/ dir - if another binary is present,
 ## ignore it.
-target_link_libraries ( albumid
-	PRIVATE "-Wl,--disable-new-dtags,-rpath,${PROJECT_BUILD_DIR}/libs/" libarcstk
-	PRIVATE "-Wl,--disable-new-dtags,-rpath,${PROJECT_BUILD_DIR}/" libarcsdec )
+target_link_libraries ( libarcsdec_albumid
+	PRIVATE "-Wl,--disable-new-dtags,-rpath,${LIBARCSDEC_BINARY_DIR}/libs/" libarcstk
+	PRIVATE "-Wl,--disable-new-dtags,-rpath,${LIBARCSDEC_BINARY_DIR}/"      libarcsdec )
 

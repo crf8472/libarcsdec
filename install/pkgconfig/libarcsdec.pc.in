@@ -5,9 +5,9 @@ sharedlibdir=@CMAKE_INSTALL_PREFIX@/lib
 includedir=@CMAKE_INSTALL_PREFIX@/include
 
 Name: @PROJECT_NAME@
-Description: @PROJECT_BRIEF_DESC@
-Version: @PROJECT_VERSION_STRING_WITHOUT_SUFFIX@
-URL: @PROJECT_URL@/
+Description: @PROJECT_DESCRIPTION@
+Version: @PROJECT_VERSION@
+URL: @PROJECT_HOMEPAGE_URL@/
 
 Requires.private: @PKG_REQUIRE@
 Libs: -L${libdir} -L${sharedlibdir} -l@PKG_BIND_NAME@

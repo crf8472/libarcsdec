@@ -1,10 +1,6 @@
 ## Root CMake file for parsertoc/cdrtoc
 ## vim:fdm=marker
 ##
-## Prerequisites from PARENT
-##
-## - Variables: PROJECT_INCLUDE_BINARY_DIR, WITH_SUBMODULES
-##
 ## Provides:
 ##
 ## - Target: libarcsdec_parsertoc_cdrtoc (OBJECT)
@@ -54,9 +50,9 @@ target_include_directories (libarcsdec_parsertoc_cdrtoc
 		## flex/bison generated headers
 		$<BUILD_INTERFACE:${PARSERTOC_CDRTOC_GEN_SOURCES_DIR}>
 		## libarcsdec public headers
-		$<BUILD_INTERFACE:${PROJECT_INCLUDE_SOURCE_DIR}>
+		$<BUILD_INTERFACE:${LIBARCSDEC_INCLUDE_SOURCE_DIR}>
 		## libarcsdec private headers
-		$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
+		$<BUILD_INTERFACE:${LIBARCSDEC_SOURCE_DIR}>
 	)
 
 

@@ -1,16 +1,17 @@
 ## CMake file for libwavepack based Wavpack audio reader
 ## vim:fdm=marker
 
-## - Variables: PKG_REQUIRE_ARRAY, PROJECT_NAME, PROJECT_SOURCE_DIR
-
+cmake_minimum_required (VERSION 3.14.0 )
 
 message (STATUS "Build with WavPack reading capability for wavpack audio" )
 
-find_package (libwavpack 5.0.0 REQUIRED )
-list (APPEND PKG_REQUIRE_ARRAY "wavpack >= 5.0.0" )
+function (readerwvpk_pkg DEPS )
+	set  (${DEPS} "wavpack >= 5.0.0" PARENT_SCOPE )
+endfunction()
 
-target_sources (${PROJECT_NAME} PRIVATE readerwvpk.cpp )
+find_package (libwavpack 5.0.0 REQUIRED )
 
 target_include_directories (${PROJECT_NAME} PRIVATE ${libwavpack_INCLUDE_DIRS} )
 target_link_libraries      (${PROJECT_NAME} PUBLIC  ${libwavpack_LIBRARIES} )
+target_sources             (${PROJECT_NAME} PRIVATE readerwvpk.cpp )
 

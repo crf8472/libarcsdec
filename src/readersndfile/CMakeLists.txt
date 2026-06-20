@@ -1,16 +1,15 @@
 ## CMake file for libsndfile based audio reader
 ## vim:fdm=marker
 
-## - Variables: PKG_REQUIRE_ARRAY, PROJECT_NAME, PROJECT_SOURCE_DIR
-
 cmake_minimum_required (VERSION 3.14.0 )
-
 
 message (STATUS "Build with libsndfile support for audio" )
 
-find_package (SndFile 1.0.17 REQUIRED )
+function (readersndfile_pkg DEPS )
+	set  (${DEPS} "sndfile >= 1.0.17" PARENT_SCOPE )
+endfunction()
 
-list (APPEND PKG_REQUIRE_ARRAY "sndfile >= 1.0.17" )
+find_package (SndFile 1.0.17 REQUIRED )
 
 if (TARGET SndFile::sndfile )
 	## found by libsndfile's cmake config

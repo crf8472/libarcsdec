@@ -1,12 +1,17 @@
 ## CMake file for ffmpeg based audio reader
 ## vim:fdm=marker
 
-## - Variables: PKG_REQUIRE_ARRAY, PROJECT_NAME, PROJECT_SOURCE_DIR
-
 cmake_minimum_required (VERSION 3.14.0 )
 
-
 message (STATUS "Build with ffmpeg support for audio" )
+
+function (readerffmpeg_pkg DEPS )
+	set (${DEPS}
+		"libavcodec >= 57.37.100"
+		"libavformat >= 57.33.100"
+		"libavutil >= 55.22.100"
+	PARENT_SCOPE )
+endfunction()
 
 ## find_package does not respect versions for components but the ffmpeg
 ## version is not trivial to access in a Find module.
@@ -32,9 +37,9 @@ endmacro()
 at_least_version ("57.37.100" ${avcodec_VERSION}  ) ## 2016-04-21
 at_least_version ("57.33.100" ${avformat_VERSION} ) ## 2016-04-11
 at_least_version ("55.22.100" ${avutil_VERSION}   ) ## 2016-04-14
-list (APPEND PKG_REQUIRE_ARRAY "libavcodec >= 57.37.100" )
-list (APPEND PKG_REQUIRE_ARRAY "libavformat >= 57.33.100" )
-list (APPEND PKG_REQUIRE_ARRAY "libavutil >= 55.22.100" )
+#list (APPEND LIBARCSDEC_PKG_REQUIRE_ARRAY "libavcodec >= 57.37.100" )
+#list (APPEND LIBARCSDEC_PKG_REQUIRE_ARRAY "libavformat >= 57.33.100" )
+#list (APPEND LIBARCSDEC_PKG_REQUIRE_ARRAY "libavutil >= 55.22.100" )
 
 ## Commented out, API change is small, can be distinguished in source.
 ## ffmpeg x >= 4.0:
