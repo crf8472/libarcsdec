@@ -273,6 +273,16 @@ public:
 private:
 
 	/**
+	 * \brief Achieve the actual buffer size.
+	 *
+	 * If read_buffer_size() is within the legal bounds, use it, otherwise use
+	 * default size.
+	 *
+	 * \return Buffer size
+	 */
+	int64_t get_actual_buffer_size() const;
+
+	/**
 	 * \brief Convert the flags for first and last track to a Context.
 	 *
 	 * \param[in] first_file_is_first_track Treat first file as track 1

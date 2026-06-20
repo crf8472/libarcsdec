@@ -285,53 +285,32 @@ std::pair<Checksums, AudioSize> ARCSCalculator::calculate(
 	ARCS_LOG_DEBUG <<
 		"Calculate by single audiofilename and complete input data";
 
-	// FIXME swap the following 2 lines and receive_samples<>() will break!
-	auto processor = CalculationProcessor { types, settings, offsets, leadout };
 	auto reader { create(audiofilename) };
-	// It only works if 1. processor and 2. reader
 
-	using std::to_string;
-
-	// Configure number of samples per read
-
-	const auto buffer_size { read_buffer_size() };
-
-	if (BLOCKSIZE::MIN <= buffer_size && buffer_size <= BLOCKSIZE::MAX)
+	// Set specified buffer size if it is legal, otherwise fall back to default
+	if (const auto buf_size = get_actual_buffer_size(); buf_size)
 	{
-		ARCS_LOG(DEBUG1) << "Chunk size for reading samples: "
-			<< to_string(buffer_size) << " bytes";
-
-		reader->set_samples_per_read(buffer_size);
-
-	} else
-	{
-		// Buffer size is illegal.
-		// Do nothing, AudioReaderImpl uses its default.
-
-		ARCS_LOG_WARNING << "Specified buffer size of " << buffer_size
-			<< " bytes is not within the legal range of "
-			<< BLOCKSIZE::MIN << " - " << BLOCKSIZE::MAX
-			<< " samples. Fall back to default: "
-			<< reader->samples_per_read()
-			<< " bytes";
+		reader->set_samples_per_read(buf_size);
 	}
 
-	// Perform
+	auto processor = CalculationProcessor { types, settings, offsets, leadout };
 
 	reader->set_handler(&processor);
 	reader->set_processor(&processor);
+
+	// Perform
+
 	reader->process_file(audiofilename);
+	const auto checksums = processor.result();
 
 	// Check results
-
-	const auto checksums = processor.result();
 
 	if (checksums.size() == 0)
 	{
 		ARCS_LOG_ERROR << "Calculations lead to no result, return empty set";
 	}
 
-	return { checksums, leadout }; // TODO use updated leadout
+	return { checksums, processor.leadout()/* updated(!) */ };
 }
 
 
@@ -356,6 +335,34 @@ void ARCSCalculator::set_read_buffer_size(const int64_t total_samples)
 int64_t ARCSCalculator::read_buffer_size() const
 {
 	return read_buffer_size_;
+}
+
+
+int64_t ARCSCalculator::get_actual_buffer_size() const
+{
+	auto buffer_size { read_buffer_size() };
+
+	if (BLOCKSIZE::MIN <= buffer_size && buffer_size <= BLOCKSIZE::MAX)
+	{
+		using std::to_string;
+
+		ARCS_LOG(DEBUG1) << "Chunk size for reading samples: "
+			<< to_string(buffer_size) << " bytes";
+
+		return buffer_size;
+
+	} else
+	{
+		// Buffer size is illegal.
+		// Do nothing, AudioReaderImpl uses its default.
+
+		ARCS_LOG_WARNING << "Specified buffer size of " << buffer_size
+			<< " bytes is not within the legal range of "
+			<< BLOCKSIZE::MIN << " - " << BLOCKSIZE::MAX
+			<< " samples. Fall back to default size.";
+	}
+
+	return 0;
 }
 
 

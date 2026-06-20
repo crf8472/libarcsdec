@@ -105,7 +105,7 @@ public:
 	CalculationProcessor()
 	{
 		// empty
-	};
+	}
 
 	/**
 	 * \brief Constructor.
@@ -147,6 +147,35 @@ public:
 	CalculationProcessor& operator = (CalculationProcessor&& rhs) noexcept
 		= default;
 
+	/**
+	 * \brief Total number of tracks to process.
+	 *
+	 * \return Total tracks
+	 */
+	std::size_t total_tracks() const
+	{
+		return offsets_.size();
+	}
+
+	/**
+	 * \brief Offsets.
+	 *
+	 * \return Offsets.
+	 */
+	Points offsets() const
+	{
+		return offsets_;
+	}
+
+	/**
+	 * \brief Leadout frame.
+	 *
+	 * \return Leadout.
+	 */
+	AudioSize leadout() const
+	{
+		return leadout_;
+	}
 
 	/**
 	 * \brief Callback for sample sequences.
