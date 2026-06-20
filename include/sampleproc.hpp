@@ -99,8 +99,10 @@ class CalculationProcessor final : public read::AudioEventHandler
 {
 public:
 
+	/**
+	 * \brief Constructor.
+	 */
 	CalculationProcessor()
-		: CalculationProcessor({}, {}, {}, {})
 	{
 		// empty
 	};
