@@ -179,7 +179,10 @@ public:
 	}
 
 	/**
-	 * \brief Implements \ref append_samples().
+	 * \brief Receive samples from sample provider.
+	 *
+	 * \tparam B Iterator type of begin iterator
+	 * \tparam E Iterator type of end iterator
 	 *
 	 * \param[in] start Start of the sample sequence
 	 * \param[in] stop  End of the sample sequence

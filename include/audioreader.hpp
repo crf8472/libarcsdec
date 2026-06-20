@@ -217,7 +217,7 @@ public:
 	/**
 	 * \brief Set SampleProcessor for this instance.
 	 *
-	 * \param[in] handler SampleProcessor for this instance
+	 * \param[in] processor SampleProcessor for this instance
 	 */
 	void set_sample_processor(SampleProcessor* processor);
 
