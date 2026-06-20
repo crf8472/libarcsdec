@@ -102,6 +102,13 @@ void LibsndfileAudioReaderImpl::do_process_file(const std::string& filename)
 	using std::cbegin;
 	using std::cend;
 
+	auto* handler = this->handler();
+
+	if (handler)
+	{
+		handler->start_input();
+	}
+
 	auto audiofile = SndfileHandle { filename, SFM_READ };
 
 	// TODO Check whether this was successful
@@ -136,7 +143,10 @@ void LibsndfileAudioReaderImpl::do_process_file(const std::string& filename)
 	const auto total_samples = audiofile.frames();
 	const auto audiosize     = to_audiosize(total_samples, UNIT::SAMPLES);
 
-	this->signal_updateaudiosize(audiosize);
+	if (handler)
+	{
+		handler->audiosize(audiosize);
+	}
 
 	// Prepare Read buffer (16 bit samples)
 
@@ -206,9 +216,20 @@ void LibsndfileAudioReaderImpl::do_process_file(const std::string& filename)
 				<< (buffer.size() / CDDA::NUMBER_OF_CHANNELS)
 				<< " Stereo PCM samples (32 bit)";
 
-		this->signal_appendsamples(cbegin(sequence), cend(sequence));
+		if (auto* proc = sample_processor(); proc)
+		{
+			proc->receive_samples(sequence);
+		} else
+		{
+			// TODO Error?
+		}
 
 		sample_count += sequence.size();
+	}
+
+	if (handler)
+	{
+		handler->end_input();
 	}
 }
 
