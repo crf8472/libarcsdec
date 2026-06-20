@@ -51,7 +51,7 @@ TEST_CASE ("WavpackAudioReaderImpl", "[readerwvpk]" )
 
 		auto r { WavpackAudioReaderImpl{} };
 		auto proc = Mock_SampleProcessor{};
-		r.attach_processor(proc);
+		r.set_handler(&proc);
 
 		r.process_file("test01.wv");
 		// TODO What the mock sees in its callbacks has to be tested

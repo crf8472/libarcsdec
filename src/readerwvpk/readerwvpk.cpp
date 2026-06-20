@@ -29,10 +29,10 @@ extern "C" {
 #include <arcstk/identifier.hpp>     // for CDDA
 #endif
 #ifndef LIBARCSTK_METADATA_HPP_
-#include <arcstk/metadata.hpp>       // for AudioSize
+#include <arcstk/metadata.hpp>       // for AudioSize, UNIT
 #endif
 #ifndef LIBARCSTK_SAMPLES_HPP_
-#include <arcstk/samples_deprecated.hpp>        // for InterleavedSamples
+#include <arcstk/samples.hpp>        // for InterleavedSamples
 #endif
 #ifndef LIBARCSTK_LOGGING_HPP_
 #include <arcstk/logging.hpp> // for ARCS_LOG_ERROR, _WARNING, _INFO, _DEBUG
@@ -471,14 +471,22 @@ AudioSize WavpackAudioReaderImpl::do_acquire_size(const std::string& filename)
 
 void WavpackAudioReaderImpl::do_process_file(const std::string& filename)
 {
-	this->signal_startinput();
+	auto* handler = this->handler();
+
+	if (handler)
+	{
+		handler->start_input();
+	}
 
 	const auto file = WavpackOpenFile { filename };
 
 	if (!file.success())
 	{
 		ARCS_LOG_ERROR << "File could not be opened, bail out";
-		this->signal_endinput();
+		if (handler)
+		{
+			handler->end_input();
+		}
 		return;
 	}
 
@@ -495,7 +503,10 @@ void WavpackAudioReaderImpl::do_process_file(const std::string& filename)
 		if (!perform_validations(file))
 		{
 			ARCS_LOG_ERROR << "Validation failed";
-			this->signal_endinput();
+			if (handler)
+			{
+				handler->end_input();
+			}
 			return;
 		}
 
@@ -509,7 +520,10 @@ void WavpackAudioReaderImpl::do_process_file(const std::string& filename)
 
 	{
 		const auto size = to_audiosize(file.total_pcm_samples(), UNIT::SAMPLES);
-		this->signal_updateaudiosize(size);
+		if (handler)
+		{
+			handler->audiosize(size);
+		}
 	}
 
 
@@ -520,7 +534,6 @@ void WavpackAudioReaderImpl::do_process_file(const std::string& filename)
 		using std::cbegin;
 		using std::cend;
 
-		auto sequence = InterleavedSamples<sample_t> { file.channel_order() };
 		auto buffer   = std::vector<sample_t>{};
 		buffer.resize(this->samples_per_read());
 
@@ -561,15 +574,23 @@ void WavpackAudioReaderImpl::do_process_file(const std::string& filename)
 			ARCS_LOG_DEBUG << "    Size: " << buffer.size()
 					<< " integers, add to current block";
 
-			sequence.wrap_int_buffer(buffer.data(), buffer.size());
+			auto sequence = InterleavedSamples<sample_t> { buffer.data(),
+					buffer.size(), !file.channel_order() };
 			// Note: we use the Number of 16-bit-samples _per_channel_, not
 			// the total number of 16 bit samples in the chunk.
 
-			this->signal_appendsamples(cbegin(sequence), cend(sequence));
+			auto* proc = this->sample_processor();
+			if (proc)
+			{
+				proc->receive_samples(sequence);
+			}
 		}
 	}
 
-	this->signal_endinput();
+	if (handler)
+	{
+		handler->end_input();
+	}
 }
 
 
