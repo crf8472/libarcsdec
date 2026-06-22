@@ -32,7 +32,7 @@ set (LIBARCSDEC_CXX_GNU_FLAGS_WARNINGS
 ## 1}}}
 ## --- g++ Flags: Optimize {{{1
 
-set ( LIBARCSDEC_CXX_GNU_FLAGS_OPTIMIZE
+set (LIBARCSDEC_CXX_GNU_FLAGS_OPTIMIZE
 	-march=native
 	-mtune=generic
 )
@@ -57,7 +57,7 @@ set (LIBARCSDEC_CXX_CLANG_FLAGS_WARNINGS
 	-Wundef
 	-Wunused
 	-Wzero-as-null-pointer-constant
-	# -- clang++ specific --
+	# -- clang++ specific
 	-Winconsistent-missing-destructor-override
 )
 

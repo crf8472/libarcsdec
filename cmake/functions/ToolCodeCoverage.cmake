@@ -78,6 +78,7 @@ endmacro()
 
 ## Enable tools and compiler switches
 function (libarcsdec_enable_code_coverage OUT_VAR )
+
 	set(${OUT_VAR} FALSE PARENT_SCOPE )
 
 	if (NOT CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang" )

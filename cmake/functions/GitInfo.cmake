@@ -6,7 +6,7 @@ find_package (Git QUIET REQUIRED )
 ## Execute git
 function (_libarcsdec_git_execute_command OUT_VAR )
 
-	set (${OUTPUT_VAR} "UNKNOWN" PARENT_SCOPE )
+	set (${OUT_VAR} "UNKNOWN" PARENT_SCOPE )
 
 	# ARGN contains all arguments after OUT_VAR
 	execute_process (
@@ -26,7 +26,7 @@ endfunction()
 
 
 # Get git version string
-function(libarcsdec_git_get_version_string VERSION_VAR )
+function (libarcsdec_git_get_version_string VERSION_VAR )
 
 	set (${VERSION_VAR} "v0.0.0-nogit" PARENT_SCOPE )
 
@@ -42,7 +42,7 @@ function(libarcsdec_git_get_version_string VERSION_VAR )
 endfunction()
 
 # Get git commit id
-function(libarcsdec_git_get_commit_id COMMIT_VAR )
+function (libarcsdec_git_get_commit_id COMMIT_VAR )
 
 	set (${COMMIT_VAR} "00000000" PARENT_SCOPE )
 
