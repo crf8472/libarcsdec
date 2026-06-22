@@ -17,6 +17,8 @@ add_dependencies  (libarcsdec_static_pages_files libarcsdec_create_output_dir )
 
 set (DOC_TEXTS_MAINPAGE        "${CMAKE_CURRENT_BINARY_DIR}/MAINPAGE.md" )
 
+git_get_commit_id (LIBARCSDEC_GIT_COMMIT_ID )
+
 configure_file (MAINPAGE.md.in "${DOC_TEXTS_MAINPAGE}" @ONLY )
 
 

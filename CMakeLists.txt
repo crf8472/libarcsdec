@@ -1,20 +1,7 @@
 ## Root CMake file for libarcsdec
 ## vim:fdm=marker
 
-cmake_minimum_required (VERSION 3.14.0 )
-
-## --- Policies {{{1
-
-## Set variables corresponding to unspecified versions to the empty string.
-## Required for specifying the project version along with the name in project().
-## See: https://cmake.org/cmake/help/latest/policy/CMP0048.html
-cmake_policy (SET CMP0048 NEW )
-
-## 3.14: Make bison run in CMAKE_CURRENT_BINARY_DIR
-## See: https://cmake.org/cmake/help/latest/policy/CMP0088.html
-cmake_policy (SET CMP0088 NEW )
-
-## 1}}}
+cmake_minimum_required (VERSION 3.15.0 )
 
 project (libarcsdec VERSION 0.3.0 LANGUAGES CXX )
 
@@ -25,7 +12,7 @@ set (PROJECT_DESCRIPTION "Audio decoder and TOC parser adapters for libarcstk" )
 
 set (PROJECT_HOMEPAGE_URL "https://github.com/crf8472/${PROJECT_NAME}" )
 
-set (CMAKE_EXPORT_COMPILE_COMMANDS ON ) ## required for clang-tidy and iwyu
+message (STATUS "Building ${PROJECT_NAME} ${LIBARCSDEC_VERSION_STRING}" )
 
 ## --- Includes {{{1
 set (cmake_include_dir_ "${CMAKE_CURRENT_SOURCE_DIR}/cmake/functions" )
@@ -39,22 +26,17 @@ include ("${cmake_include_dir_}/Dependencies.cmake" )
 
 ## Optional support for development
 include ("${cmake_include_dir_}/ToolClangTidy.cmake" )
-include ("${cmake_include_dir_}/ToolGraphViz.cmake" )
 include ("${cmake_include_dir_}/ToolClangIncludeGraph.cmake" )
+include ("${cmake_include_dir_}/ToolCodeCoverage.cmake" )
+include ("${cmake_include_dir_}/ToolGraphViz.cmake" )
 
 unset (cmake_include_dir_ )
 ## 1}}}
+## --- CMake Setup {{{1
 
-git_get_version_string (LIBARCSDEC_GIT_VERSION_STRING )
-git_get_commit_id      (LIBARCSDEC_GIT_COMMIT_ID )
+set (CMAKE_EXPORT_COMPILE_COMMANDS ON ) ## required for clang-tidy and iwyu
 
-enable_clang_tidy              (LIBARCSDEC_CLANG_TIDY_ENABLED )
-enable_target_dep_graph_by_dot (LIBARCSDEC_TARGET_DEPS_GRAPH_ENABLED )
-enable_clang_include_graph     (LIBARCSDEC_CLANG_INCLUDE_GRAPH_ENABLED )
-
-message (STATUS "Building ${PROJECT_NAME} ${LIBARCSDEC_VERSION_STRING}" )
-
-## --- Setup Default Build Type {{{1
+## --- Setup Default Build Type {{{2
 
 if (NOT CMAKE_BUILD_TYPE )
 
@@ -63,22 +45,20 @@ if (NOT CMAKE_BUILD_TYPE )
 
 	message (STATUS "No build type specified, set to ${CMAKE_BUILD_TYPE}" )
 endif (NOT CMAKE_BUILD_TYPE )
-## 1}}}
 
 message (STATUS "Build type: ${CMAKE_BUILD_TYPE}" )
-
-## --- CMake Modules Setup {{{1
+## 2}}}
+## --- Modules {{{2
 
 ## Tell find_package to first try locating libarcstk via system-installed
 ## .config file instead of project's FindLibarcstk.cmake module
 set (CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE ) ## since CMake 3.15
 
 ## Search path for cmake modules
-message (STATUS "CMAKE_MODULE_PATH is currently ${CMAKE_MODULE_PATH}" )
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
-message (STATUS "CMAKE_MODULE_PATH is now ${CMAKE_MODULE_PATH}" )
 
-# 1}}}
+# 2}}}
+## 1}}}
 
 ## --- Setup Build Tree {{{1
 setup_build_tree()
@@ -88,6 +68,8 @@ setup_build_tree()
 
 set_property (DIRECTORY APPEND
 	PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/.git/index" )
+
+git_get_version_string (LIBARCSDEC_GIT_VERSION_STRING )
 
 configure_file ("${LIBARCSDEC_SOURCE_DIR}/version.cpp.in"
 	"${LIBARCSDEC_GENSRC_BINARY_DIR}/version.cpp"
@@ -148,18 +130,19 @@ message (STATUS "Compile flags: ${LIBARCSDEC_CXX_FLAGS}" )
 
 if (NOT SKIP_INSTALL_ALL )
 
-	add_subdirectory (install ) # relies on LIBARCSDEC_PKG_REQUIRE_ARRAY
+	add_subdirectory (install ) ## relies on LIBARCSDEC_PKG_REQUIRE_ARRAY
 endif ()
 
 ## 1}}}
-## --- Optional: Build Tests (default: OFF) {{{1
+## --- Option: WITH_TESTS {{{1
 
 option (WITH_TESTS "Build unit tests" OFF )
 
-if (WITH_TESTS)
+if (WITH_TESTS )
 
 	message (STATUS "Build with tests" )
 
+	## idempotent (does not matter whether top-level or submodule)
 	enable_testing()
 
 	## Add Catch2 test framework if it is not already present
@@ -173,14 +156,14 @@ if (WITH_TESTS)
 	## Add tests
 	add_subdirectory ("${CMAKE_CURRENT_SOURCE_DIR}/test" )
 
-endif (WITH_TESTS)
+endif (WITH_TESTS )
 
 ## 1}}}
-## --- Optional: Build documentation (default: OFF) {{{1
+## --- Options: Build documentation {{{1
 
 option (WITH_DOCS          "Build documentation for public API"           OFF )
-option (WITH_INTERNAL_DOCS "Build documentation also for internal APIs"   OFF )
 option (USE_DOC_TOOL       "Build documentation using specified tool"     OFF )
+option (WITH_INTERNAL_DOCS "Build documentation also for internal APIs"   OFF )
 option (WITH_EXAMPLES      "Build examples"                               OFF )
 
 ## -- Process configuration for building the documentation
@@ -207,15 +190,9 @@ if (WITH_INTERNAL_DOCS )
 endif()
 
 ## 1}}}
-## --- Process configuration for building the examples {{{1
-
-if (WITH_EXAMPLES )
-	add_subdirectory ("${CMAKE_CURRENT_SOURCE_DIR}/examples" )
-endif()
-
-## 1}}}
-
 ## --- Setup dependencies {{{1
+
+option (WITH_SUBMODULES "Compile libarcstk as a submodule" OFF )
 
 set (LIBARCSDEC_PKG_REQUIRE_ARRAY )
 
@@ -224,4 +201,17 @@ setup_internal_dependencies   ()
 setup_configured_dependencies (LIBARCSDEC_PKG_REQUIRE_ARRAY )
 
 # 1}}}
+## --- Setup examples {{{1
+
+if (WITH_EXAMPLES )
+	add_subdirectory ("${CMAKE_CURRENT_SOURCE_DIR}/examples" )
+endif()
+
+## 1}}}
+## --- Setup development tools {{{1
+enable_clang_tidy              (LIBARCSDEC_CLANG_TIDY_ENABLED )
+enable_clang_include_graph     (LIBARCSDEC_CLANG_INCLUDE_GRAPH_ENABLED )
+enable_code_coverage           (LIBARCSDEC_CODE_COVERAGE_ENABLED )
+enable_target_dep_graph_by_dot (LIBARCSDEC_TARGET_DEPS_GRAPH_ENABLED )
+## 1}}}
 

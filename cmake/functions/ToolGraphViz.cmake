@@ -52,7 +52,7 @@ function (enable_target_dep_graph_by_dot OUT_VAR )
 			COMMAND ${CMAKE_COMMAND} -E rm -f ${DOT_FILE} )
 	endif()
 
-	add_custom_target (libarcsdec_target_deps
+	add_custom_target (${PROJECT_NAME}_target-deps
 		${GRAPH_COMMANDS}
 		WORKING_DIRECTORY ${LIBARCSDEC_BINARY_DIR}
 		BYPRODUCTS ${IMAGE_FILE}
