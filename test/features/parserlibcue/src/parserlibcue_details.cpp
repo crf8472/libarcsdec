@@ -28,12 +28,12 @@ TEST_CASE ("CueParserImpl", "[parserlibcue]" )
 
 		using arcsdec::read::details::libcue::CueParserImpl;
 		auto parser = CueParserImpl{};
-		const auto cue = parser.parse("cuesheet/ok01.cue");
+		const auto cue = parser.parse("data/ok01.cue");
 		// This Cuesheet is complete and syntactically correct
-		const auto filenames { cue->filenames() };
-		const auto offsets   { cue->offsets() };
+		const auto filenames { cue.filenames() };
+		const auto offsets   { cue.offsets() };
 
-		CHECK ( cue->total_tracks() == 2 );
+		CHECK ( cue.total_tracks() == 2 );
 
 		CHECK ( filenames[0] == "john_doe_album.wav" );
 		CHECK ( filenames[1] == "john_doe_album.wav" );
@@ -41,8 +41,8 @@ TEST_CASE ("CueParserImpl", "[parserlibcue]" )
 		CHECK ( offsets[0] == AudioSize { 150,   UNIT::FRAMES } );
 		CHECK ( offsets[1] == AudioSize { 25072, UNIT::FRAMES } );
 
-		CHECK ( cue->leadout().zero() ); // since last track (2) has unkown length
-		CHECK ( !cue->complete() ); // since leadout is 0
+		CHECK ( cue.leadout().zero() ); // since last track (2) has unkown length
+		CHECK ( !cue.complete() ); // since leadout is 0
 	}
 
 	SECTION ("ok02.cue: Parses a syntactically intact input correctly")
@@ -52,12 +52,12 @@ TEST_CASE ("CueParserImpl", "[parserlibcue]" )
 
 		using arcsdec::read::details::libcue::CueParserImpl;
 		auto parser = CueParserImpl{};
-		const auto cue = parser.parse("cuesheet/ok02.cue");
+		const auto cue = parser.parse("data/ok02.cue");
 		// This Cuesheet is complete and syntactically correct
-		const auto filenames { cue->filenames() };
-		const auto offsets   { cue->offsets() };
+		const auto filenames { cue.filenames() };
+		const auto offsets   { cue.offsets() };
 
-		CHECK ( cue->total_tracks() == 2 );
+		CHECK ( cue.total_tracks() == 2 );
 
 		CHECK ( filenames[0] == "john_doe_album.wav" );
 		CHECK ( filenames[1] == "john_doe_album.wav" );
@@ -65,8 +65,8 @@ TEST_CASE ("CueParserImpl", "[parserlibcue]" )
 		CHECK ( offsets[0] == AudioSize { 150,   UNIT::FRAMES } );
 		CHECK ( offsets[1] == AudioSize { 25072, UNIT::FRAMES } );
 
-		CHECK ( cue->leadout().zero() ); // since last track (2) has unkown length
-		CHECK ( !cue->complete() ); // since leadout is 0
+		CHECK ( cue.leadout().zero() ); // since last track (2) has unkown length
+		CHECK ( !cue.complete() ); // since leadout is 0
 	}
 }
 
