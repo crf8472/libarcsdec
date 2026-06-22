@@ -16,9 +16,9 @@ cmake_policy (SET CMP0088 NEW )
 
 ## 1}}}
 
-project (libarcsdec VERSION 0.2.0 LANGUAGES CXX )
+project (libarcsdec VERSION 0.3.0 LANGUAGES CXX )
 
-set (LIBARCSDEC_VERSION_SUFFIX "alpha.3" )
+set (LIBARCSDEC_VERSION_SUFFIX "alpha.1" )
 set (LIBARCSDEC_VERSION_STRING "${PROJECT_VERSION}-${LIBARCSDEC_VERSION_SUFFIX}" )
 
 set (PROJECT_DESCRIPTION "Audio decoder and TOC parser adapters for libarcstk" )
