@@ -12,8 +12,6 @@ endfunction()
 find_package (Threads       REQUIRED )
 find_package (FLAC    1.3.1 REQUIRED ) ## checks libFLAC and libFLAC++
 
-## --- Define testcases {{{1
-
 if (TARGET FLAC::FLAC++ )
 	## found by flac's cmake config
 	target_link_libraries (${PROJECT_NAME} PRIVATE FLAC::FLAC++ )
@@ -23,7 +21,6 @@ else()
 		PRIVATE ${LIBFLACPP_INCLUDE_DIRS} )
 	target_link_libraries (${PROJECT_NAME} PRIVATE ${LIBFLACPP_LIBRARIES} )
 endif()
-# 1}}}
 
 target_sources (${PROJECT_NAME} PRIVATE readerflac.cpp )
 

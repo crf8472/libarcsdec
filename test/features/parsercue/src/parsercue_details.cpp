@@ -47,13 +47,13 @@ TEST_CASE ("cuesheet", "[yycuesheet]" )
 		file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 		try
 		{
-			file.open("cuesheet/ok01.cue", std::ifstream::in);
+			file.open("data/ok01.cue", std::ifstream::in);
 		}
 		catch (const std::ifstream::failure& f)
 		{
 			throw std::runtime_error(
 				std::string { "Failed to open file "
-					"'cuesheet/ok01.cue', got: " }
+					"'data/ok01.cue', got: " }
 				+ typeid(f).name()
 				+ ", message: " + f.what());
 		}
@@ -70,13 +70,13 @@ TEST_CASE ("cuesheet", "[yycuesheet]" )
 		file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 		try
 		{
-			file.open("cuesheet/ok02.cue", std::ifstream::in);
+			file.open("data/ok02.cue", std::ifstream::in);
 		}
 		catch (const std::ifstream::failure& f)
 		{
 			throw std::runtime_error(
 				std::string { "Failed to open file "
-					"'cuesheet/ok02.cue', got: " }
+					"'data/ok02.cue', got: " }
 				+ typeid(f).name()
 				+ ", message: " + f.what());
 		}
@@ -93,13 +93,13 @@ TEST_CASE ("cuesheet", "[yycuesheet]" )
 		file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 		try
 		{
-			file.open("cuesheet/ok03.cue", std::ifstream::in);
+			file.open("data/ok03.cue", std::ifstream::in);
 		}
 		catch (const std::ifstream::failure& f)
 		{
 			throw std::runtime_error(
 				std::string { "Failed to open file "
-					"'cuesheet/ok03.cue', got: " }
+					"'data/ok03.cue', got: " }
 				+ typeid(f).name()
 				+ ", message: " + f.what());
 		}
@@ -155,13 +155,13 @@ TEST_CASE ("cuesheet", "[yycuesheet]" )
 		file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 		try
 		{
-			file.open("cuesheet/error01.cue", std::ifstream::in);
+			file.open("data/error01.cue", std::ifstream::in);
 		}
 		catch (const std::ifstream::failure& f)
 		{
 			throw std::runtime_error(
 				std::string { "Failed to open file "
-					"'cuesheet/error01.cue', got: " }
+					"'data/error01.cue', got: " }
 				+ typeid(f).name()
 				+ ", message: " + f.what());
 		}
@@ -178,13 +178,13 @@ TEST_CASE ("cuesheet", "[yycuesheet]" )
 		file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 		try
 		{
-			file.open("cuesheet/error02.cue", std::ifstream::in);
+			file.open("data/error02.cue", std::ifstream::in);
 		}
 		catch (const std::ifstream::failure& f)
 		{
 			throw std::runtime_error(
 				std::string { "Failed to open file "
-					"'cuesheet/error02.cue', got: " }
+					"'data/error02.cue', got: " }
 				+ typeid(f).name()
 				+ ", message: " + f.what());
 		}
@@ -201,13 +201,13 @@ TEST_CASE ("cuesheet", "[yycuesheet]" )
 		file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 		try
 		{
-			file.open("cuesheet/error03.cue", std::ifstream::in);
+			file.open("data/error03.cue", std::ifstream::in);
 		}
 		catch (const std::ifstream::failure& f)
 		{
 			throw std::runtime_error(
 				std::string { "Failed to open file "
-					"'cuesheet/error03.cue', got: " }
+					"'data/error03.cue', got: " }
 				+ typeid(f).name()
 				+ ", message: " + f.what());
 		}
@@ -224,13 +224,13 @@ TEST_CASE ("cuesheet", "[yycuesheet]" )
 		file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 		try
 		{
-			file.open("cuesheet/error04.cue", std::ifstream::in);
+			file.open("data/error04.cue", std::ifstream::in);
 		}
 		catch (const std::ifstream::failure& f)
 		{
 			throw std::runtime_error(
 				std::string { "Failed to open file "
-					"'cuesheet/error04.cue', got: " }
+					"'data/error04.cue', got: " }
 				+ typeid(f).name()
 				+ ", message: " + f.what());
 		}
@@ -247,13 +247,13 @@ TEST_CASE ("cuesheet", "[yycuesheet]" )
 		file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 		try
 		{
-			file.open("cuesheet/error05.cue", std::ifstream::in);
+			file.open("data/error05.cue", std::ifstream::in);
 		}
 		catch (const std::ifstream::failure& f)
 		{
 			throw std::runtime_error(
 				std::string { "Failed to open file "
-					"'cuesheet/error05.cue', got: " }
+					"'data/error05.cue', got: " }
 				+ typeid(f).name()
 				+ ", message: " + f.what());
 		}

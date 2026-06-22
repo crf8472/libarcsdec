@@ -7,7 +7,7 @@
  */
 
 #ifndef LIBARCSDEC_READERWVPK_HPP_
-#define LIBARCSDEC_READERWVPK_HPP_     // allow readerwvpk_details.hpp
+#define LIBARCSDEC_READERWVPK_HPP_      // allow readerwvpk_details.hpp
 #endif
 #ifndef LIBARCSDEC_READERWVPK_DETAILS_HPP_
 #include "readerwvpk_details.hpp"       // TO BE TESTED
@@ -53,7 +53,7 @@ TEST_CASE ("WavpackAudioReaderImpl", "[readerwvpk]" )
 		auto proc = Mock_SampleProcessor{};
 		r.set_handler(&proc);
 
-		r.process_file("test01.wv");
+		r.process_file("data/test01.wv");
 		// TODO What the mock sees in its callbacks has to be tested
 	}
 }
@@ -63,7 +63,7 @@ TEST_CASE ("WavpackOpenFile", "[readerwvpk]" )
 {
 	using arcsdec::read::details::wavpack::WavpackOpenFile;
 
-	WavpackOpenFile f {"test01.wv"};
+	WavpackOpenFile f {"data/test01.wv"};
 
 	SECTION ("Provides format specific metadata correctly")
 	{
@@ -112,7 +112,7 @@ TEST_CASE ("WavpackValidatingHandler", "[readerwvpk]" )
 	auto valid = std::make_unique<WAVPACK_CDDA_t>();
 	auto h = std::make_unique<WavpackValidatingHandler>(std::move(valid));
 
-	WavpackOpenFile file {"test01.wv"};
+	WavpackOpenFile file {"data/test01.wv"};
 
 	SECTION ("Validates for lossless compression correctly")
 	{
@@ -134,4 +134,6 @@ TEST_CASE ("WavpackValidatingHandler", "[readerwvpk]" )
 		CHECK ( h->validate_cdda(file) );
 	}
 }
+
+// TODO WavpackOpenFile file {"non-existing.wv"}; must not SEGFAULT!
 

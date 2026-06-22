@@ -87,7 +87,7 @@ TEST_CASE ( "FrameQueue", "[framequeue]" )
 	::AVFormatContext* ff_fctx = nullptr;
 
 	auto error_open_input =
-		::avformat_open_input(&ff_fctx, "test01.wav", nullptr, nullptr);
+		::avformat_open_input(&ff_fctx, "data/test01.wav", nullptr, nullptr);
 
 	if ( error_open_input != 0 )
 	{

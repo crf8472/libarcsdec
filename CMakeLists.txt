@@ -74,8 +74,9 @@ message (STATUS "Build type: ${CMAKE_BUILD_TYPE}" )
 set (CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE ) ## since CMake 3.15
 
 ## Search path for cmake modules
-set (CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules" )
-message (STATUS "Changed CMAKE_MODULE_PATH to: ${CMAKE_MODULE_PATH}" )
+message (STATUS "CMAKE_MODULE_PATH is currently ${CMAKE_MODULE_PATH}" )
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
+message (STATUS "CMAKE_MODULE_PATH is now ${CMAKE_MODULE_PATH}" )
 
 # 1}}}
 
@@ -143,16 +144,6 @@ apply_compiler_flags (${PROJECT_NAME} )
 get_target_property (LIBARCSDEC_CXX_FLAGS ${PROJECT_NAME} COMPILE_OPTIONS )
 message (STATUS "Compile flags: ${LIBARCSDEC_CXX_FLAGS}" )
 
-## --- Setup dependencies {{{1
-
-set (LIBARCSDEC_PKG_REQUIRE_ARRAY )
-
-setup_required_dependencies   (LIBARCSDEC_PKG_REQUIRE_ARRAY )
-setup_internal_dependencies   ()
-setup_configured_dependencies (LIBARCSDEC_PKG_REQUIRE_ARRAY )
-
-# 1}}}
-
 ## --- Installation {{{1
 
 if (NOT SKIP_INSTALL_ALL )
@@ -172,8 +163,11 @@ if (WITH_TESTS)
 	enable_testing()
 
 	## Add Catch2 test framework if it is not already present
+	## (i.e. if PARENT did not include it)
 	if (NOT TARGET Catch2::Catch2 )
 		add_subdirectory (thirdparty/catch2 EXCLUDE_FROM_ALL )
+	else()
+		message (WARNING "Catch2 skipped since target already exists" )
 	endif()
 
 	## Add tests
@@ -220,4 +214,14 @@ if (WITH_EXAMPLES )
 endif()
 
 ## 1}}}
+
+## --- Setup dependencies {{{1
+
+set (LIBARCSDEC_PKG_REQUIRE_ARRAY )
+
+setup_required_dependencies   (LIBARCSDEC_PKG_REQUIRE_ARRAY )
+setup_internal_dependencies   ()
+setup_configured_dependencies (LIBARCSDEC_PKG_REQUIRE_ARRAY )
+
+# 1}}}
 

@@ -1,0 +1,125 @@
+#include "catch2/catch_test_macros.hpp"
+
+/**
+ * \file
+ *
+ * \brief Fixtures for calculators.hpp.
+ */
+
+#ifndef LIBARCSDEC_CALCULATORS_HPP_
+#include "calculators.hpp"              // TO BE TESTED
+#endif
+
+#ifndef LIBARCSDEC_AUDIOREADER_HPP_
+#include "audioreader.hpp"              // for AudioReader
+#endif
+#ifndef LIBARCSDEC_METAPARSER_HPP_
+#include "metaparser.hpp"               // for MetadataParser
+#endif
+#ifndef LIBARCSDEC_SELECTION_HPP_
+#include "selection.hpp"                // for FileReaderRegistry
+#endif
+
+
+using arcsdec::select::ReaderAndFormatHolder;
+
+/**
+ * \brief Mock for ReaderAndFormatHolder.
+ *
+ * ReaderAndFormatHolder is an abstract class by its destructor. The mock is
+ * intended to add no functionality but just access the functions in its base
+ * class.
+ */
+class Mock_ReaderAndFormatHolder : public ReaderAndFormatHolder
+{
+	// empty
+};
+
+
+TEST_CASE ( "ReaderAndFormatHolder", "[readerandformatholder]")
+{
+	using arcsdec::select::FileReaderRegistry;
+
+	auto h = Mock_ReaderAndFormatHolder{};
+
+	SECTION ( "Create Holder for Readers and Formats with defaults" )
+	{
+		CHECK ( h.formats() == FileReaderRegistry::formats() );
+		CHECK ( h.readers() == FileReaderRegistry::readers() );
+	}
+
+	SECTION ( "set_formats() works as expected" )
+	{
+		CHECK ( h.formats() == FileReaderRegistry::formats() );
+
+		h.set_formats(nullptr);
+
+		CHECK ( h.formats() == nullptr );
+	}
+
+	SECTION ( "set_readers() works as expected" )
+	{
+		CHECK ( h.readers() == FileReaderRegistry::readers() );
+
+		h.set_readers(nullptr);
+
+		CHECK ( h.readers() == nullptr );
+	}
+}
+
+
+// TEST_CASE ( "ARCSCalculator", "[calculators]" )
+// {
+// 	using arcsdec::calc::ARCSCalculator;
+//
+// 	//auto c = ARCSCalculator{};
+//
+// 	// SECTION ("Initial DescriptorSet is present and complete")
+// 	// {
+// 	// 	CHECK ( 8 >= c.readers()->size() );
+// 	// 	CHECK ( not c.readers()->empty() );
+// 	// }
+//
+// 	// SECTION( "Read wav file correctly" )
+// 	// {
+// 	// 	const auto checksums = c.calculate("test01.wav", true, true);
+// 	//
+// 	// 	CHECK ( checksums.empty() );
+// 	// }
+//
+// 	// TODO Check whether flac is compiled in before testing
+// 	//
+// 	//SECTION( "Read flac file correctly" )
+// 	//{
+// 	//	const auto checksums = c.calculate("test01.flac", true, true);
+// 	//
+// 	//	CHECK ( checksums.empty() );
+// 	//}
+// }
+
+
+// TEST_CASE ( "ARIdCalculator", "[calculators]" )
+// {
+// 	using arcsdec::calc::ARIdCalculator;
+// 	using arcsdec::select::FileReaderRegistry;
+//
+// 	const auto c = ARIdCalculator{};
+//
+// 	// SECTION ("Initial set of FileReaders is present and complete")
+// 	// {
+// 	// 	CHECK ( c.readers() == FileReaderRegistry::readers() );
+// 	// 	CHECK ( not c.readers()->empty() );
+// 	// 	CHECK ( 5 <= c.readers()->size() ); // cue, wavpcm, ffmpeg, flac, wvpk
+// 	// 	CHECK ( 8 >= c.readers()->size() ); // + toc, libcue, sndfile
+// 	// }
+//
+// 	// TODO Provide test files with realistic results
+// 	//
+// 	//SECTION( "Get ARId from cue+wav file correctly" )
+// 	//{
+// 	//	const auto id = c.calculate("test01.wav", "test01_ok.cue");
+// 	//
+// 	//	CHECK ( id->to_string() == "foo" );
+// 	//}
+// }
+

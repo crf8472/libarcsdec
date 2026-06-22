@@ -1,0 +1,93 @@
+## Create a test executable from all .cpp files in a directory
+## and register tests found with catch_discover_tests.
+##
+## Usage:
+##   add_test_suite(unit
+##       LABEL "unit"
+##       TIMEOUT 10
+##   )
+function (add_test_suite CATEGORY )
+
+	set (options )
+	set (oneValueArgs LABEL TIMEOUT )
+	set (multiValueArgs )
+
+	cmake_parse_arguments (SUITE
+		"${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
+
+	## Collect all test source files in src/ directory
+	file (GLOB TEST_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp" )
+
+	if (NOT TEST_SOURCES )
+		message (FATAL_ERROR
+			"No test sources found in ${CMAKE_CURRENT_SOURCE_DIR}/src/" )
+	endif()
+
+	message (STATUS "Found ${CATEGORY} tests: ${TEST_SOURCES}" )
+
+	## Create executable
+	add_executable (${CATEGORY}_tests ${TEST_SOURCES} )
+
+	## Standard configuration
+	set_target_properties (${CATEGORY}_tests PROPERTIES
+		CXX_STANDARD           17
+		CXX_STANDARD_REQUIRED  ON
+		BUILD_RPATH            "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+		BUILD_RPATH_USE_ORIGIN ON
+		SKIP_RPATH             OFF
+	)
+
+	target_compile_options (${CATEGORY}_tests
+		PRIVATE ${TEST_CXX_FLAGS_WARNINGS}
+		PRIVATE ${LIBARCSDEC_CXX_FLAGS_OPTIMIZE}
+	)
+
+	## Include paths
+	target_include_directories (${CATEGORY}_tests
+		PRIVATE "${LIBARCSDEC_INCLUDE_SOURCE_DIR}"        ## public headers
+		PRIVATE "${LIBARCSDEC_SOURCE_DIR}"                ## private headers
+		PRIVATE "${LIBARCSDEC_SOURCE_DIR}/${SUITE_LABEL}" ## private headers
+		PRIVATE "${LIBARCSDEC_ROOT_DIR}/test/features/include"## private headers
+		PRIVATE "${LIBARCSDEC_GENSRC_BINARY_DIR}"         ## generated sources
+		PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include"     ## test suite includes
+	)
+
+	unset (_include )
+
+	## Link libraries
+	target_link_libraries (${CATEGORY}_tests
+		PRIVATE Catch2::Catch2WithMain
+		PRIVATE ${PROJECT_NAME} ## libarcsdec from build-tree
+		PRIVATE libarcstk::libarcstk
+	)
+
+	## RPATH handling (force to load from build tree)
+	#if (UNIX AND NOT APPLE )
+	#	target_link_options (${CATEGORY}_tests PRIVATE -Wl,--disable-new-dtags)
+	#endif()
+
+	## Set properties for all discovered tests
+
+	set (TEST_PROPERTIES)
+
+	if (SUITE_LABEL )
+		list (APPEND TEST_PROPERTIES LABELS ${SUITE_LABEL} )
+	endif()
+
+	if (SUITE_TIMEOUT )
+		list (APPEND TEST_PROPERTIES TIMEOUT ${SUITE_TIMEOUT} )
+	endif()
+
+
+	## Discover and register all tests from the executable to CTest
+	catch_discover_tests (${CATEGORY}_tests
+		TEST_PREFIX       "${CATEGORY}/"
+		REPORTER          "junit"
+		OUTPUT_DIR        "${LIBARCSDEC_BINARY_DIR}/reports"
+		OUTPUT_PREFIX     "report."
+		OUTPUT_SUFFIX     ".xml"
+		WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+		PROPERTIES        ${TEST_PROPERTIES}
+	)
+endfunction()
+

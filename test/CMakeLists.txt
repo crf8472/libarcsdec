@@ -3,218 +3,42 @@
 ## vim:fdm=marker
 
 cmake_minimum_required (VERSION 3.10 )
-## --- Policies {{{1
 
-## Always link library files by full path when a full path is given to the
-## target_link_libraries() command.
-cmake_policy (SET CMP0003 NEW )
+set (CMAKE_BUILD_WITH_INSTALL_RPATH    FALSE )
+set (CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE )
 
-## Link libraries by full path even in implicit directories.
-## See: https://cmake.org/cmake/help/latest/policy/CMP0060.html
-cmake_policy (SET CMP0060 NEW )
-## 1}}}
+# Specific for Catch2 made available by FetchContent {{{1
+# TODO Precondition: CMAKE_MODULE_PATH must contain ${catch2_SOURCE_DIR}/extras
+include(CTest)
+include(Catch)
+#1}}}
 
+add_custom_command (
+	OUTPUT  "${LIBARCSDEC_BINARY_DIR}/reports"
+	COMMAND "${CMAKE_COMMAND}"
+	ARGS    -E make_directory "${LIBARCSDEC_BINARY_DIR}/reports"
+	VERBATIM
+)
 
-
-## --- Define testcases {{{1
-
-set (TEST_SETS )
-
-## Mandatory sources
-list (APPEND TEST_SETS audioreader           )
-list (APPEND TEST_SETS calculators           )
-list (APPEND TEST_SETS descriptor            )
-#list (APPEND TEST_SETS libinspect            ) ## commented out
-list (APPEND TEST_SETS parsercue             )
-list (APPEND TEST_SETS parsercue_details     )
-list (APPEND TEST_SETS parsertoc             )
-list (APPEND TEST_SETS parsertoc_details     )
-list (APPEND TEST_SETS readerwav             )
-list (APPEND TEST_SETS readerwav_details     )
-list (APPEND TEST_SETS selection             )
-list (APPEND TEST_SETS dec_version           )
-
-if (WITH_LIBCUE )
-	list (APPEND TEST_SETS parserlibcue          )
-	list (APPEND TEST_SETS parserlibcue_details  )
-endif()
-
-if (WITH_FFMPEG )
-	list (APPEND TEST_SETS readerffmpeg          )
-	list (APPEND TEST_SETS readerffmpeg_details  )
-endif()
-
-if (WITH_FLAC )
-	list (APPEND TEST_SETS readerflac            )
-	list (APPEND TEST_SETS readerflac_details    )
-endif()
-
-if (WITH_WAVPACK )
-	list (APPEND TEST_SETS readerwvpk            )
-	list (APPEND TEST_SETS readerwvpk_details    )
-endif()
-
-if (WITH_LIBSNDFILE )
-	list (APPEND TEST_SETS readersndfile         )
-	list (APPEND TEST_SETS readersndfile_details )
-endif()
+add_custom_target (libarcsdec_create_reports_dir ALL
+	DEPENDS "${LIBARCSDEC_BINARY_DIR}/reports" )
 
 
-
-## --- Adjust compile options for tests {{{1
-## (g++ issues many warnings when compiling Catch2 v3.x tests)
-
-set (TEST_CXX_FLAGS_WARNINGS ${LIBARCSDEC_CXX_FLAGS_WARNINGS} )
+## Include common test helpers
+include ("${CMAKE_CURRENT_SOURCE_DIR}/cmake/functions/SetupEnvironment.cmake" )
+include ("${CMAKE_CURRENT_SOURCE_DIR}/cmake/functions/TestHelpers.cmake" )
 
 
+## Configure common test settings
+configure_test_environment()
 
-## --- Remove flags from g++ that pollute the output {{{1
+## Add tests
+add_subdirectory (units      )
+add_subdirectory (features   )
+add_subdirectory (functional )
 
-if (CMAKE_COMPILER_IS_GNUCXX )
-
-	## Remove some flags from the actual compile options, if they are present
-	list (APPEND GNUCXX_IGNORE_FLAGS
-		-Weffc++
-		-Wctor-dtor-privacy
-		-Wuseless-cast
-	)
-
-	foreach (_flag ${GNUCXX_IGNORE_FLAGS} )
-		message (STATUS
-			"Ignore compile flag ${_flag} when compiling Catch2-tests with g++" )
-		list (REMOVE_ITEM TEST_CXX_FLAGS_WARNINGS ${_flag} )
-	endforeach()
-endif()
-
-
-
-## --- Add common configuration for all testcases {{{1
-
-foreach (_testcase ${TEST_SETS} )
-
-	## Use test/src/ by default as include directory for the testcase
-	set (COMPONENT_TEST_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src" )
-
-	## Derive subdirectory name to find in src/ and test/src/
-	string (REPLACE _details ""  SOURCES_SUBDIR  "${_testcase}" )
-
-	## Check for subdirectory and add it to a loadlist, if it exists
-	get_filename_component (_fullpath
-		"${COMPONENT_TEST_SOURCE_DIR}/${SOURCES_SUBDIR}" REALPATH )
-	if (EXISTS "${_fullpath}" )
-		## Update default since we found a specific subdirectory
-		set (COMPONENT_TEST_SOURCE_DIR
-			"${COMPONENT_TEST_SOURCE_DIR}/${SOURCES_SUBDIR}" )
-
-		## Add subdirectory to loadlist
-		if (EXISTS "${COMPONENT_TEST_SOURCE_DIR}/CMakeLists.txt" )
-			if (NOT "${COMPONENT_TEST_SOURCE_DIR}" IN_LIST LOAD_DIR_LIST )
-				list (APPEND LOAD_DIR_LIST "${COMPONENT_TEST_SOURCE_DIR}" )
-			endif ()
-		endif ()
-	endif ()
-	unset (_fullpath )
-
-
-	## Use src/ by default as include directory for the sources
-	set (COMPONENT_SOURCE_DIR "${LIBARCSDEC_SOURCE_DIR}")
-	set (COMPONENT_BINARY_DIR "${LIBARCSDEC_BINARY_DIR}")
-
-	## Check for subdirectory in src and use it, if it exists
-	## e.g. /src/parsercue/cuesheet
-	get_filename_component (_fullpath "${LIBARCSDEC_SOURCE_DIR}/${SOURCES_SUBDIR}"
-		REALPATH )
-	if (EXISTS "${_fullpath}" )
-		set (COMPONENT_SOURCE_DIR "${LIBARCSDEC_SOURCE_DIR}/${SOURCES_SUBDIR}")
-	endif ()
-
-	## Check for subdirectory in binary dir and use it, if it exists
-	## e.g. /build/src/parsercue
-	get_filename_component (_fullpath
-		"${LIBARCSDEC_BINARY_DIR}/src/${SOURCES_SUBDIR}"
-		REALPATH )
-	if (EXISTS "${_fullpath}" )
-		set (COMPONENT_BINARY_DIR "${LIBARCSDEC_BINARY_DIR}/src/${SOURCES_SUBDIR}")
-	endif ()
-
-	## Add subdirectories of component e.g. /build/src/parsercue/cuesheet
-	file (GLOB SUBDIRS RELATIVE ${COMPONENT_SOURCE_DIR}
-		"${COMPONENT_SOURCE_DIR}/*" )
-	set (COMPONENT_INCLUDES "" )
-	foreach (DIR ${SUBDIRS} )
-		if (IS_DIRECTORY ${COMPONENT_BINARY_DIR}/${DIR} )
-			list (APPEND COMPONENT_INCLUDES ${COMPONENT_BINARY_DIR}/${DIR} )
-		endif()
-	endforeach()
-	unset (DIR )
-	unset (SUBDIRS )
-
-
-	## Set compile flags for testing
-	set_property (
-		SOURCE "${COMPONENT_TEST_SOURCE_DIR}/${_testcase}.cpp"
-		APPEND
-		PROPERTY COMPILE_OPTIONS ${TEST_CXX_FLAGS_WARNINGS}
-	)
-
-	## Define executable for this testcase
-	add_executable (${_testcase}_test
-		"${COMPONENT_TEST_SOURCE_DIR}/${_testcase}.cpp" )
-
-	set_property (TARGET ${_testcase}_test PROPERTY CXX_STANDARD 17 )
-
-	target_include_directories (${_testcase}_test
-		PRIVATE
-			## test headers
-			$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-			##  public libarcsdec headers
-			$<BUILD_INTERFACE:${LIBARCSDEC_INCLUDE_BINARY_DIR}>
-            ## private libarcsdec headers
-			$<BUILD_INTERFACE:${LIBARCSDEC_SOURCE_DIR}>
-			## generated sources
-			$<BUILD_INTERFACE:${LIBARCSDEC_GENSRC_BINARY_DIR}>
-            ## private component headers
-			$<BUILD_INTERFACE:${COMPONENT_SOURCE_DIR}>
-            ## generated component headers
-			$<BUILD_INTERFACE:${COMPONENT_BINARY_DIR}>
-			## list of component includes
-			"$<BUILD_INTERFACE:${COMPONENT_INCLUDES}>"
-	)
-
-	unset (COMPONENT_TEST_SOURCE_DIR )
-	unset (COMPONENT_SOURCE_DIR )
-	unset (COMPONENT_INCLUDES )
-
-	target_link_libraries (${_testcase}_test
-		PRIVATE
-		Catch2::Catch2WithMain
-		libarcstk::libarcstk
-		-Wl,--disable-new-dtags  ## set RPATH instead of RUNPATH
-		${PROJECT_NAME} ## libarcsdec from build-tree, 0003 and 0060 are used
-	)
-	## Setting the RPATH forces loading the libarcstk.so from the build tree,
-	## even if a system-wide libarcstk is installed. Using RUNPATH instead of
-	## RPATH causes the testcase to load the system-wide libfile.
-
-	## Set same optimization flags as for project sources
-	target_compile_options (${_testcase}_test
-		PRIVATE ${LIBARCSDEC_CXX_FLAGS_OPTIMIZE} )
-
-	## Add test to ctest set
-	add_test (
-		NAME    ${_testcase}_test
-		COMMAND "${_testcase}_test"
-				-o "${LIBARCSDEC_BINARY_DIR}/report.${_testcase}.xml"
-				-r junit
-		WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/data"
-	)
-
-endforeach()
-
-
-
-## --- Process build scripts for testcases {{{1
-foreach (DIR ${LOAD_DIR_LIST} )
-	add_subdirectory (${DIR} )
-endforeach()
+## Add test suites for use on CLI
+add_custom_target (libarcsdec_test_all
+    COMMAND ${CMAKE_CTEST_COMMAND} --verbose
+)
 

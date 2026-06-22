@@ -54,8 +54,8 @@ endfunction()
 option (WITH_LIBCUE     "Add libcue parsing capability"       OFF )
 option (WITH_FFMPEG     "Add ffmpeg reading capabilities"      ON )
 option (WITH_FLAC       "Add FLAC reading capability"          ON )
-option (WITH_WAVPACK    "Add WavPack reading capability"       ON )
 option (WITH_LIBSNDFILE "Add libsndfile reading capabilities" OFF )
+option (WITH_WAVPACK    "Add WavPack reading capability"       ON )
 
 function (setup_configured_dependencies PKG_LIST )
 
