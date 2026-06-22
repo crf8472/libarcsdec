@@ -55,9 +55,9 @@ find_package_handle_standard_args (libarcstk
 
 ## Export oldstyle variables for backwards compatibility
 if (libarcstk_FOUND )
-	set (libarcstk_VERSION      ${LIBARCSTK_VERSION} )
-	set (libarcstk_LIBRARIES    ${LIBARCSTK_LIBRARY} )
-	set (libarcstk_INCLUDE_DIRS ${LIBARCSTK_INCLUDE_DIR} )
+	set (libarcstk_VERSION      "${LIBARCSTK_VERSION}" )
+	set (libarcstk_LIBRARIES    "${LIBARCSTK_LIBRARY}" )
+	set (libarcstk_INCLUDE_DIRS "${LIBARCSTK_INCLUDE_DIR}" )
 endif()
 
 ## Export "modern" target
