@@ -2,7 +2,7 @@
 ## vim:fdm=marker
 
 ## Enable code coverage by gcovr
-function (enable_code_coverage_by_gcovr OUT_VAR )
+function (libarcsdec_enable_code_coverage_by_gcovr OUT_VAR )
 	set (${OUT_VAR} FALSE PARENT_SCOPE )
 
 	find_program (GCOVR_BINARY gcovr )
@@ -33,7 +33,7 @@ endfunction()
 
 
 ## Enable code coverage by lcov
-function (enable_code_coverage_by_lcov OUT_VAR )
+function (libarcsdec_enable_code_coverage_by_lcov OUT_VAR )
 	set (${OUT_VAR} FALSE PARENT_SCOPE )
 
 	find_program (LCOV_BINARY    lcov    )
@@ -70,14 +70,14 @@ endfunction()
 
 
 ## Activate code coverage on compiler
-macro (activate_code_coverage_on_compiler )
+macro (libarcsdec_activate_code_coverage_on_compiler )
 	add_compile_options (--coverage)
 	add_link_options    (--coverage)
 endmacro()
 
 
 ## Enable tools and compiler switches
-function (enable_code_coverage OUT_VAR )
+function (libarcsdec_enable_code_coverage OUT_VAR )
 	set(${OUT_VAR} FALSE PARENT_SCOPE )
 
 	if (NOT CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang" )
@@ -91,12 +91,12 @@ function (enable_code_coverage OUT_VAR )
 
 	## Preferred: use gcovr
 
-	enable_code_coverage_by_gcovr (GCOVR_ENABLED )
+	libarcsdec_enable_code_coverage_by_gcovr (GCOVR_ENABLED )
 
 	if (GCOVR_ENABLED )
 		message (STATUS "Use gcovr for code coverage" )
 
-		activate_code_coverage_on_compiler()
+		libarcsdec_activate_code_coverage_on_compiler()
 		set (${OUT_VAR} TRUE PARENT_SCOPE )
 		return()
 
@@ -104,12 +104,12 @@ function (enable_code_coverage OUT_VAR )
 
 	## Fallback: use lcov + genhtml
 
-	enable_code_coverage_by_lcov (LCOV_ENABLED )
+	libarcsdec_enable_code_coverage_by_lcov (LCOV_ENABLED )
 
 	if (LCOV_ENABLED )
 		message (STATUS "Use lcov for code coverage" )
 
-		activate_code_coverage_on_compiler()
+		libarcsdec_activate_code_coverage_on_compiler()
 		set (${OUT_VAR} TRUE PARENT_SCOPE )
 		return()
 	endif()

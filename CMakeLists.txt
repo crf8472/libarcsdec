@@ -15,22 +15,23 @@ set (PROJECT_HOMEPAGE_URL "https://github.com/crf8472/${PROJECT_NAME}" )
 message (STATUS "Building ${PROJECT_NAME} ${LIBARCSDEC_VERSION_STRING}" )
 
 ## --- Includes {{{1
-set (cmake_include_dir_ "${CMAKE_CURRENT_SOURCE_DIR}/cmake/functions" )
+set (_libarcsdec_cmake_functions_dir
+	"${CMAKE_CURRENT_SOURCE_DIR}/cmake/functions" )
 
 ## Mandatory configuration
-include ("${cmake_include_dir_}/ProjectFilesAndDirectories.cmake" )
-include ("${cmake_include_dir_}/BuildTreeSetup.cmake" )
-include ("${cmake_include_dir_}/CompilerFlags.cmake" )
-include ("${cmake_include_dir_}/GitInfo.cmake" )
-include ("${cmake_include_dir_}/Dependencies.cmake" )
+include ("${_libarcsdec_cmake_functions_dir}/ProjectFilesAndDirectories.cmake" )
+include ("${_libarcsdec_cmake_functions_dir}/BuildTreeSetup.cmake" )
+include ("${_libarcsdec_cmake_functions_dir}/CompilerFlags.cmake" )
+include ("${_libarcsdec_cmake_functions_dir}/GitInfo.cmake" )
+include ("${_libarcsdec_cmake_functions_dir}/Dependencies.cmake" )
 
 ## Optional support for development
-include ("${cmake_include_dir_}/ToolClangTidy.cmake" )
-include ("${cmake_include_dir_}/ToolClangIncludeGraph.cmake" )
-include ("${cmake_include_dir_}/ToolCodeCoverage.cmake" )
-include ("${cmake_include_dir_}/ToolGraphViz.cmake" )
+include ("${_libarcsdec_cmake_functions_dir}/ToolClangTidy.cmake" )
+include ("${_libarcsdec_cmake_functions_dir}/ToolClangIncludeGraph.cmake" )
+include ("${_libarcsdec_cmake_functions_dir}/ToolCodeCoverage.cmake" )
+include ("${_libarcsdec_cmake_functions_dir}/ToolGraphViz.cmake" )
 
-unset (cmake_include_dir_ )
+unset (_libarcsdec_cmake_functions_dir )
 ## 1}}}
 ## --- CMake Setup {{{1
 
@@ -61,7 +62,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
 ## 1}}}
 
 ## --- Setup Build Tree {{{1
-setup_build_tree()
+libarcsdec_setup_build_tree()
 
 # 1}}}
 ## --- Trigger Configuration Step Whenever Git Index Changes {{{1
@@ -69,7 +70,7 @@ setup_build_tree()
 set_property (DIRECTORY APPEND
 	PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/.git/index" )
 
-git_get_version_string (LIBARCSDEC_GIT_VERSION_STRING )
+libarcsdec_git_get_version_string (LIBARCSDEC_GIT_VERSION_STRING )
 
 configure_file ("${LIBARCSDEC_SOURCE_DIR}/version.cpp.in"
 	"${LIBARCSDEC_GENSRC_BINARY_DIR}/version.cpp"
@@ -119,7 +120,7 @@ add_dependencies (${PROJECT_NAME} libarcsdec_link_to_headers )
 ## 1}}}
 ## --- Compiler Specific Settings {{{1
 
-apply_compiler_flags (${PROJECT_NAME} )
+libarcsdec_apply_compiler_flags (${PROJECT_NAME} )
 
 ## 1}}}
 
@@ -196,9 +197,9 @@ option (WITH_SUBMODULES "Compile libarcstk as a submodule" OFF )
 
 set (LIBARCSDEC_PKG_REQUIRE_ARRAY )
 
-setup_required_dependencies   (LIBARCSDEC_PKG_REQUIRE_ARRAY )
-setup_internal_dependencies   ()
-setup_configured_dependencies (LIBARCSDEC_PKG_REQUIRE_ARRAY )
+libarcsdec_setup_required_dependencies   (LIBARCSDEC_PKG_REQUIRE_ARRAY )
+libarcsdec_setup_internal_dependencies   ()
+libarcsdec_setup_configured_dependencies (LIBARCSDEC_PKG_REQUIRE_ARRAY )
 
 # 1}}}
 ## --- Setup examples {{{1
@@ -209,9 +210,9 @@ endif()
 
 ## 1}}}
 ## --- Setup development tools {{{1
-enable_clang_tidy              (LIBARCSDEC_CLANG_TIDY_ENABLED )
-enable_clang_include_graph     (LIBARCSDEC_CLANG_INCLUDE_GRAPH_ENABLED )
-enable_code_coverage           (LIBARCSDEC_CODE_COVERAGE_ENABLED )
-enable_target_dep_graph_by_dot (LIBARCSDEC_TARGET_DEPS_GRAPH_ENABLED )
+libarcsdec_enable_clang_tidy (LIBARCSDEC_CLANG_TIDY_ENABLED )
+libarcsdec_enable_clang_include_graph (LIBARCSDEC_CLANG_INCLUDE_GRAPH_ENABLED )
+libarcsdec_enable_code_coverage (LIBARCSDEC_CODE_COVERAGE_ENABLED )
+libarcsdec_enable_target_dep_graph_by_dot (LIBARCSDEC_TARGET_DEPS_GRAPH_ENABLED )
 ## 1}}}
 

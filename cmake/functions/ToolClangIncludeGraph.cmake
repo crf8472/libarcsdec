@@ -1,7 +1,9 @@
 ## libarcsdec: CMake functions for drawing an include graph
 ## vim:fdm=marker
 
-function (enable_clang_include_graph )
+function (libarcsdec_enable_clang_include_graph OUT_VAR )
+
+	set (${OUT_VAR} FALSE PARENT_SCOPE )
 
 	set (options      KEEP_DOT_FILES )
 	set (oneValueArgs FORMAT OUTPUT_DIR )
@@ -9,8 +11,6 @@ function (enable_clang_include_graph )
 
 	cmake_parse_arguments (GRAPH
 		"${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
-
-	set (${OUT_VAR} FALSE PARENT_SCOPE )
 
 	## Find clang-include-graph
 

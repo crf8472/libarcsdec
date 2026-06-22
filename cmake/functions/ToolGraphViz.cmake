@@ -1,7 +1,9 @@
 ## libarcsdec: CMake functions for drawing a target dependency graph
 ## vim:fdm=marker
 
-function (enable_target_dep_graph_by_dot OUT_VAR )
+function (libarcsdec_enable_target_dep_graph_by_dot OUT_VAR )
+
+	set (${OUT_VAR} FALSE PARENT_SCOPE )
 
 	set (options      KEEP_DOT_FILES )
 	set (oneValueArgs FORMAT OUTPUT_DIR )
@@ -9,8 +11,6 @@ function (enable_target_dep_graph_by_dot OUT_VAR )
 
 	cmake_parse_arguments (GRAPH
 		"${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
-
-	set (${OUT_VAR} FALSE PARENT_SCOPE )
 
 	## Find dot
 

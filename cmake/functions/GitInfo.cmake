@@ -4,7 +4,9 @@
 find_package (Git QUIET REQUIRED )
 
 ## Execute git
-function (_git_execute_command OUT_VAR )
+function (_libarcsdec_git_execute_command OUT_VAR )
+
+	set (${OUTPUT_VAR} "UNKNOWN" PARENT_SCOPE )
 
 	# ARGN contains all arguments after OUT_VAR
 	execute_process (
@@ -20,20 +22,18 @@ function (_git_execute_command OUT_VAR )
 		return()
 	endif()
 
-	set (${OUTPUT_VAR} "UNKNOWN" PARENT_SCOPE )
 endfunction()
 
 
 # Get git version string
-function(git_get_version_string VERSION_VAR )
+function(libarcsdec_git_get_version_string VERSION_VAR )
 
-	_git_execute_command(GIT_VERSION describe --always HEAD )
+	set (${VERSION_VAR} "v0.0.0-nogit" PARENT_SCOPE )
+
+	_libarcsdec_git_execute_command (GIT_VERSION describe --always HEAD )
 
 	if (GIT_VERSION STREQUAL "UNKNOWN" )
-
-		set (GIT_VERSION "v0.0.0-nogit")
-		message (WARNING "Git describe failed, using fallback: ${GIT_VERSION}" )
-
+		message (WARNING "Git describe failed, using fallback: ${VERSION_VAR}" )
 	else()
 		message (STATUS "git describe --always HEAD: ${GIT_VERSION}" )
 	endif()
@@ -42,21 +42,18 @@ function(git_get_version_string VERSION_VAR )
 endfunction()
 
 # Get git commit id
-function(git_get_commit_id COMMIT_VAR )
+function(libarcsdec_git_get_commit_id COMMIT_VAR )
 
-	_git_execute_command(GIT_COMMIT_ID rev-parse HEAD )
+	set (${COMMIT_VAR} "00000000" PARENT_SCOPE )
+
+	_libarcsdec_git_execute_command (GIT_COMMIT_ID rev-parse HEAD )
 
 	if (GIT_COMMIT_ID STREQUAL "UNKNOWN")
-
-		set (GIT_COMMIT_ID "00000000")
-		message (WARNING
-			"Git rev-parse failed, using fallback: ${GIT_COMMIT_ID}" )
-
+		message (WARNING "Git rev-parse failed, using fallback: ${COMMIT_VAR}" )
 	else()
 		message (STATUS "git rev-parse HEAD: ${GIT_COMMIT_ID}" )
 	endif()
 
 	set (${COMMIT_VAR} "${GIT_COMMIT_ID}" PARENT_SCOPE )
-
 endfunction()
 

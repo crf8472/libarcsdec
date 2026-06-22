@@ -1,7 +1,7 @@
 ## CMake file for managing libarcsdec dependencies
 ## vim:fdm=marker
 
-function (setup_required_dependencies PKG_LIST )
+function (libarcsdec_setup_required_dependencies PKG_LIST )
 ## -- Required dependency: libarcstk {{{1
 if (WITH_SUBMODULES )
 
@@ -39,7 +39,7 @@ endif()
 # 1}}}
 endfunction()
 
-function (setup_internal_dependencies )
+function (libarcsdec_setup_internal_dependencies )
 ## -- Required internal features: readerwav, parsercue, parsertoc {{{1
 
 foreach (_filereader IN ITEMS "readerwav" "parsercue" "parsertoc" )
@@ -57,7 +57,7 @@ option (WITH_FLAC       "Add FLAC reading capability"          ON )
 option (WITH_LIBSNDFILE "Add libsndfile reading capabilities" OFF )
 option (WITH_WAVPACK    "Add WavPack reading capability"       ON )
 
-function (setup_configured_dependencies PKG_LIST )
+function (libarcsdec_setup_configured_dependencies PKG_LIST )
 
 ## --- Optional: parserlibcue (requires libcue, default: OFF) {{{2
 

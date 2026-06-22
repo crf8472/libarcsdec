@@ -1,7 +1,7 @@
 ## libarcsdec: Setup build tree
 ## vim:fdm=marker
 
-function (setup_build_tree)
+function (libarcsdec_setup_build_tree )
 
 ## -- Log Directory {{{1
 
