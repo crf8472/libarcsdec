@@ -22,9 +22,9 @@ if (WITH_SUBMODULES )
 
 else()
 
-	find_package (libarcstk 0.3.0 REQUIRED )
+	find_package (libarcstk 0.9.0 REQUIRED )
 
-	list (APPEND PKG_LIST "libarcstk >= 0.3.0" PARENT_SCOPE )
+	list (APPEND PKG_LIST "libarcstk >= 0.9.0" PARENT_SCOPE )
 endif (WITH_SUBMODULES )
 
 
