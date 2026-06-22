@@ -41,7 +41,7 @@ add_custom_target (libarcsdec_link_to_headers
 )
 
 add_dependencies (libarcsdec_link_to_headers libarcsdec_create_include_dir )
+##}}}1
 
 endfunction()
-##}}}1
 

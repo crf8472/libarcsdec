@@ -4,7 +4,7 @@
 cmake_minimum_required (VERSION 3.10 )
 ## --- Policies {{{1
 
-## Add link library cdrtoc to target libarcsdec that is not built in this
+## 3.13: Add link library cdrtoc to target libarcsdec that is not built in this
 ## directory.
 cmake_policy (SET CMP0079 NEW )
 
