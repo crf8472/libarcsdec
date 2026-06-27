@@ -13,7 +13,12 @@
 extern "C"
 {
 #include <dlfcn.h>     // [glibc, Linux] for dlopen, dlclose, dlerror, RTLD_LAZY
+
+#ifdef LIBARCSDEC_MACOS_BUILD
+#include <mach-o/dyld.h>
+#else
 #include <link.h>      // [glibc, Linux] for link_map
+#endif
 }
 
 #include <cstddef>     // for size_t
@@ -97,6 +102,14 @@ const std::string& first_libname_match(const std::vector<std::string>& list,
 
 std::vector<std::string> runtime_deps(const std::string& object_name)
 {
+#ifdef LIBARCSDEC_MACOS_BUILD
+
+	// no link_map available on macos
+
+	return std::vector<std::string>{}; // empty SO list on MacOS
+
+#else
+
 	//std::cerr << "Runtime deps of " << object_name << '\n';
 
 	// C-Style stuff: Messing with glibc to get shared object paths
@@ -128,6 +141,7 @@ std::vector<std::string> runtime_deps(const std::string& object_name)
 		throw std::runtime_error("Got null instead of shared object handle");
 	}
 
+
 	using LinkMap = struct link_map;
 
 	auto* lmap  = reinterpret_cast<LinkMap*>(pter->ptr);
@@ -154,6 +168,8 @@ std::vector<std::string> runtime_deps(const std::string& object_name)
 	::dlclose(handle);
 
 	return so_list;
+
+#endif
 }
 
 
