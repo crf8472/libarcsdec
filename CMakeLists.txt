@@ -116,7 +116,13 @@ set_target_properties (${PROJECT_NAME} PROPERTIES
 	SOVERSION      "${PROJECT_VERSION}" )
 
 if (APPLE)
+	## Enforce C++17 and inform consumers
+	target_compile_features (${PROJECT_NAME} PUBLIC cxx_std_17 )
+
+	## Use this as a preprocessor condition
 	target_compile_definitions (${PROJECT_NAME} PRIVATE LIBARCSDEC_MACOS_BUILD )
+
+	message (STATUS "Build on Apple platform" )
 endif ()
 
 add_dependencies (${PROJECT_NAME} libarcsdec_link_to_headers )
