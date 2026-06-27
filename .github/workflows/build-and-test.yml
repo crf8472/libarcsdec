@@ -29,15 +29,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-            # libarcstk
-            submodules: recursive
+          # libarcstk
+          submodules: recursive
 
       - name: Update libarcstk to dev if on dev branch
         if: github.ref == 'refs/heads/dev'
         run: |
-            cd libs/libarcstk
-            git fetch origin dev:dev
-            git checkout dev
+          cd libs/libarcstk
+          git fetch origin dev:dev
+          git checkout dev
 
       - name: Set up dependencies (Ubuntu 24.04 "Noble Noumbat")
         if: runner.os == 'Linux'
@@ -55,8 +55,8 @@ jobs:
       - name: Set up modern bison (macOS)
         if: runner.os == 'macOS'
         run: |
-            brew install bison
-            echo "$(brew --prefix bison)/bin" >> $GITHUB_PATH
+          brew install bison
+          echo "$(brew --prefix bison)/bin" >> $GITHUB_PATH
 
       - name: Set up dependencies (macOS)
         if: runner.os == 'macOS'
