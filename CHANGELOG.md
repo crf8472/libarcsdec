@@ -14,17 +14,17 @@ All notable changes to this project will be documented in this file.
   - API: ToCParser::parse() provides a ToC instead of std::unique_ptr<ToC>
   - API: AudioInfo provides an AudioSize instead of
     std::unique_ptr<AudioSize>
-  - readerffmpeg: remove deprecated symbols from FF_API_SUBFRAMES
-    (deprecated since 2023-05-15 by
-	commit c29a1cbd03d5dd6b3161e1acf9cb31111511ac0a)
   - Build: Reorganize CMake structure, make top-level CMakeLists.txt smaller
   - Build: Remove deprecated build switch USE_MCSS
   - Build: Add build switch WITH_EXAMPLES
   - Build: Reorganize tests
+  - readerffmpeg: remove deprecated symbols from FF_API_SUBFRAMES
+    (deprecated since 2023-05-15 by
+	commit c29a1cbd03d5dd6b3161e1acf9cb31111511ac0a)
 
 ### Fixed
   - No more breaking tests if -DWITH_FLAC=OFF
-  - readersndfile emits start_input and end_input
+  - readersndfile: emit start_input and end_input correctly
 
 
 ## [0.2.0-alpha.3] - 2026-01-03
