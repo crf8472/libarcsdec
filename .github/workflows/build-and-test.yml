@@ -43,7 +43,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get install -y cmake ninja-build
-          sudo apt-get install -y flexc++ libfl-dev
+          sudo apt-get install -y libfl-dev
           sudo apt-get install -y libflac++10   libflac++-dev
           sudo apt-get install -y libavcodec60  libavcodec-dev
           sudo apt-get install -y libavformat60 libavformat-dev
