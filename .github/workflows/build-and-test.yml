@@ -48,8 +48,8 @@ jobs:
           sudo apt-get install -y libavcodec60  libavcodec-dev
           sudo apt-get install -y libavformat60 libavformat-dev
           sudo apt-get install -y libavutil58   libavutil-dev
-          sudo apt-get install -y libsndfile1   libsndfile1-dev
           sudo apt-get install -y libwavpack1   libwavpack-dev
+          sudo apt-get install -y libsndfile1   libsndfile1-dev
           sudo apt-get install -y libcue2       libcue-dev
 
       - name: Set up modern bison (macOS)
@@ -69,9 +69,12 @@ jobs:
             -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DWITH_SUBMODULES=ON \
+            -DWITH_TESTS=ON \
+            -DWITH_FLAC=ON \
+            -DWITH_FFMPEG=ON \
+            -DWITH_WAVPACK=ON \
             -DWITH_LIBSNDFILE=ON \
             -DWITH_LIBCUE=ON \
-            -DWITH_TESTS=ON
 
       - name: Build
         run: cmake --build build
