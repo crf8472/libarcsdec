@@ -15,17 +15,10 @@ if (TARGET SndFile::sndfile )
 	## found by libsndfile's cmake config
 	target_link_libraries (${PROJECT_NAME} PRIVATE SndFile::sndfile )
 else()
-	## found by cmake/Modules/Findlibsndfile.cmake
-
-	if (NOT libsndfile_LIBRARIES )
-		find_package (libsndfile 1.0.17 REQUIRED )
-	endif()
-
+	## found by cmake/Modules/FindSndfile.cmake
 	target_include_directories (${PROJECT_NAME}
-		PRIVATE ${libsndfile_INCLUDE_DIRS} )
-
-	target_link_libraries (${PROJECT_NAME}
-		PUBLIC ${libsndfile_LIBRARIES} )
+		PRIVATE ${SndFile_INCLUDE_DIRS} )
+	target_link_libraries (${PROJECT_NAME} PUBLIC ${SndFile_LIBRARIES} )
 endif()
 
 target_sources (${PROJECT_NAME} PRIVATE readersndfile.cpp )
