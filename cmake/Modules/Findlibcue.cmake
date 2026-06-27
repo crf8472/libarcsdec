@@ -90,9 +90,8 @@ endif()
 
 find_path (LIBCUE_INCLUDE_DIR
 	NAMES "libcue/libcue.h"
-	PATHS
-	${LIBCUE_INCLUDE_DIRS}
-	${CUSTOM_PATHS}
+	HINTS /usr/include /usr/local/include /opt/homebrew/include
+	PATHS ${LIBCUE_INCLUDE_DIRS} ${CUSTOM_PATHS}
 )
 
 
@@ -118,10 +117,10 @@ if (LIBCUE_INCLUDE_DIR AND NOT LIBCUE_VERSION )
 	## pkg-config.
 
 	find_library (LIBCUE_LIBRARY
+		NAMES libcue.dylib libcue.so libcue
 		NAMES libcue.so.${LIBCUE_VERSION} libcue.so.${LIBCUE_VERSION_MAJOR}
-		PATHS
-		${PC_LIBCUE_LIBDIR}
-		${PC_LIBCUE_LIBRARY_DIRS}
+		HINTS /usr/lib /usr/local/lib /opt/homebrew/lib
+		PATHS ${PC_LIBCUE_LIBDIR} ${PC_LIBCUE_LIBRARY_DIRS}
 	)
 endif()
 
@@ -129,9 +128,8 @@ endif()
 ## 3: find library (if not yet found)
 
 find_library (LIBCUE_LIBRARY
-	NAMES cue libcue
-	PATHS
-	${LIBCUE_LIBRARIES}
+	NAMES cue libcue libcue.dylib libcue.so
+	PATHS ${LIBCUE_LIBRARIES}
 )
 
 ## 4: handle options
