@@ -4,7 +4,7 @@
 cmake_minimum_required (VERSION 3.10 )
 
 message (STATUS "Build the examples" )
-add_custom_target (libarcstk_examples ALL )
+add_custom_target (libarcsdec_examples ALL )
 
 ## Search path for cmake modules
 ## (Note that this does _not_ go to PARENT_SCOPE!)
