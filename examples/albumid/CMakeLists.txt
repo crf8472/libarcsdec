@@ -1,15 +1,18 @@
 ## Build example application 'albumid', part of libarcsdec
 ## vim: fdm=marker
 
-add_executable ( libarcsdec_albumid albumid.cpp )
+cmake_minimum_required (VERSION 3.10 )
 
-set_target_properties ( libarcsdec_albumid
-	PROPERTIES
+add_executable (libarcsdec_albumid EXCLUDE_FROM_ALL albumid.cpp )
+
+set_target_properties ( libarcsdec_albumid PROPERTIES
 	CXX_STANDARD          17
 	CXX_STANDARD_REQUIRED ON
-	CXX_EXTENSIONS        OFF )
+	CXX_EXTENSIONS        OFF
+)
 
-target_compile_options ( libarcsdec_albumid PRIVATE -Wall -Wextra -pedantic )
+target_compile_options ( libarcsdec_albumid
+	PRIVATE -Wall -Wextra -pedantic )
 
 add_dependencies ( libarcsdec_albumid libarcsdec )
 

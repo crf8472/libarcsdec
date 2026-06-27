@@ -1,35 +1,49 @@
 ## libarcsdec: CMake functions for drawing an include graph
 ## vim:fdm=marker
 
-function (libarcsdec_enable_clang_include_graph OUT_VAR )
+cmake_minimum_required (VERSION 3.18 )
+
+## Enable include-dependency graph functionality
+function (libarcsdec_enable_clang_include_graph OUT_VAR ) # {{{1
 
 	set (${OUT_VAR} FALSE PARENT_SCOPE )
 
-	set (options      KEEP_DOT_FILES )
-	set (oneValueArgs FORMAT OUTPUT_DIR )
-	set (multiValueArgs )
+	set (_options        KEEP_DOT_FILES )
+	set (_one_value_args FORMAT OUTPUT_DIR )
 
 	cmake_parse_arguments (GRAPH
-		"${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
+		"${options}" "${one_value_args}" "" ${ARGN} )
 
 	## Find clang-include-graph
 
 	find_program (CLANG_INCLUDE_GRAPH_EXECUTABLE clang-include-graph )
 
 	if (NOT CLANG_INCLUDE_GRAPH_EXECUTABLE )
-		message (WARNING "Target ${PROJECT_NAME}_include-graph not available"
-			", since executable 'clang-include-graph' was not found." )
+		message (WARNING "Target ${PROJECT_NAME}_include-graph: not provided"
+			" since executable 'clang-include-graph' was not found."
+			" This message is for developers only,"
+			" ignore it for regular builds."
+		)
 		return()
 	endif()
+
+	message (STATUS
+		"clang-include-graph found: ${CLANG_INCLUDE_GRAPH_EXECUTABLE}" )
 
 	## Find dot
 
 	find_program (DOT_EXECUTABLE dot )
 
 	if (NOT DOT_EXECUTABLE )
-		message(WARNING "dot executable not found. Install Graphviz.")
+		message (WARNING "Target ${PROJECT_NAME}_include-graph: not provided"
+			" since dot (graphviz) not found."
+			" This message is for developers only,"
+			" ignore it for regular builds."
+		)
 		return()
 	endif()
+
+	message (STATUS "dot found: ${DOT_EXECUTABLE}" )
 
 	## Defaults
 
@@ -77,5 +91,5 @@ function (libarcsdec_enable_clang_include_graph OUT_VAR )
 	)
 
 	set(${OUT_VAR} TRUE PARENT_SCOPE)
-endfunction()
+endfunction() # 1}}}
 

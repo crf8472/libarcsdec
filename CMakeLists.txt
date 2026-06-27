@@ -12,27 +12,9 @@ set (PROJECT_DESCRIPTION "Audio decoder and TOC parser adapters for libarcstk" )
 
 set (PROJECT_HOMEPAGE_URL "https://github.com/crf8472/${PROJECT_NAME}" )
 
-message (STATUS "Building ${PROJECT_NAME} ${LIBARCSDEC_VERSION_STRING}" )
+include (cmake/functions/Banner.cmake )
+banner (BEGIN "Building ${PROJECT_NAME} ${LIBARCSDEC_VERSION_STRING}" )
 
-## --- Includes {{{1
-set (_libarcsdec_cmake_functions_dir
-	"${CMAKE_CURRENT_SOURCE_DIR}/cmake/functions" )
-
-## Mandatory configuration
-include ("${_libarcsdec_cmake_functions_dir}/ProjectFilesAndDirectories.cmake" )
-include ("${_libarcsdec_cmake_functions_dir}/BuildTreeSetup.cmake" )
-include ("${_libarcsdec_cmake_functions_dir}/CompilerFlags.cmake" )
-include ("${_libarcsdec_cmake_functions_dir}/GitInfo.cmake" )
-include ("${_libarcsdec_cmake_functions_dir}/Dependencies.cmake" )
-
-## Optional support for development
-include ("${_libarcsdec_cmake_functions_dir}/ToolClangTidy.cmake" )
-include ("${_libarcsdec_cmake_functions_dir}/ToolClangIncludeGraph.cmake" )
-include ("${_libarcsdec_cmake_functions_dir}/ToolCodeCoverage.cmake" )
-include ("${_libarcsdec_cmake_functions_dir}/ToolGraphViz.cmake" )
-
-unset (_libarcsdec_cmake_functions_dir )
-## 1}}}
 ## --- CMake Setup {{{1
 
 set (CMAKE_EXPORT_COMPILE_COMMANDS ON ) ## required for clang-tidy and iwyu
@@ -60,11 +42,29 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
 
 # 2}}}
 ## 1}}}
+## --- Mandatory includes {{{1
+set (_libarcsdec_cmake_functions_dir
+	"${CMAKE_CURRENT_SOURCE_DIR}/cmake/functions" )
 
+## Mandatory configuration
+include ("${_libarcsdec_cmake_functions_dir}/ProjectFilesAndDirectories.cmake" )
+include ("${_libarcsdec_cmake_functions_dir}/BuildTreeSetup.cmake" )
+include ("${_libarcsdec_cmake_functions_dir}/CompilerFlags.cmake" )
+include ("${_libarcsdec_cmake_functions_dir}/GitInfo.cmake" )
+include ("${_libarcsdec_cmake_functions_dir}/Dependencies.cmake" )
+## 1}}}
 ## --- Setup Build Tree {{{1
 libarcsdec_setup_build_tree()
 
 # 1}}}
+## --- Includes for optional development support {{{1
+include ("${_libarcsdec_cmake_functions_dir}/ToolClangTidy.cmake" )
+include ("${_libarcsdec_cmake_functions_dir}/ToolClangIncludeGraph.cmake" )
+include ("${_libarcsdec_cmake_functions_dir}/ToolCodeCoverage.cmake" )
+include ("${_libarcsdec_cmake_functions_dir}/ToolGraphViz.cmake" )
+
+unset (_libarcsdec_cmake_functions_dir )
+## 1}}}
 ## --- Trigger Configuration Step Whenever Git Index Changes {{{1
 
 set_property (DIRECTORY APPEND
@@ -115,12 +115,16 @@ set_target_properties (${PROJECT_NAME} PROPERTIES
 	VERSION        "${PROJECT_VERSION}"
 	SOVERSION      "${PROJECT_VERSION}" )
 
+if (APPLE)
+	target_compile_definitions (${PROJECT_NAME} PRIVATE LIBARCSDEC_MACOS_BUILD )
+endif ()
+
 add_dependencies (${PROJECT_NAME} libarcsdec_link_to_headers )
 
 ## 1}}}
 ## --- Compiler Specific Settings {{{1
 
-libarcsdec_apply_compiler_flags (${PROJECT_NAME} )
+libarcsdec_apply_compiler_flags (MAIN TARGET ${PROJECT_NAME} )
 
 ## 1}}}
 
@@ -207,7 +211,6 @@ libarcsdec_setup_configured_dependencies (LIBARCSDEC_PKG_REQUIRE_ARRAY )
 if (WITH_EXAMPLES )
 	add_subdirectory ("${CMAKE_CURRENT_SOURCE_DIR}/examples" )
 endif()
-
 ## 1}}}
 ## --- Setup development tools {{{1
 libarcsdec_enable_clang_tidy (LIBARCSDEC_CLANG_TIDY_ENABLED )
@@ -215,4 +218,6 @@ libarcsdec_enable_clang_include_graph (LIBARCSDEC_CLANG_INCLUDE_GRAPH_ENABLED )
 libarcsdec_enable_code_coverage (LIBARCSDEC_CODE_COVERAGE_ENABLED )
 libarcsdec_enable_target_dep_graph_by_dot (LIBARCSDEC_TARGET_DEPS_GRAPH_ENABLED )
 ## 1}}}
+
+banner (END "Completed ${PROJECT_NAME} ${LIBARCSDEC_VERSION_STRING}" )
 

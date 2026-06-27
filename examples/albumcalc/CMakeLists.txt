@@ -1,6 +1,8 @@
 ## Build example application 'albumcalc', part of libarcsdec
 ## vim: fdm=marker
 
+cmake_minimum_required (VERSION 3.10 )
+
 add_executable ( libarcsdec_albumcalc albumcalc.cpp )
 
 set_target_properties ( libarcsdec_albumcalc
