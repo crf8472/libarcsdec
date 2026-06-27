@@ -46,6 +46,7 @@ jobs:
           sudo apt-get install -y cmake ninja-build
           sudo apt-get install -y libflac++10 libflac++-dev
           sudo apt-get install -y ffmpeg
+          sudo apt-get install -y libavcodec60 libavcodec-dev
           sudo apt-get install -y libsndfile1 libsndfile1-dev
           sudo apt-get install -y libwavpack1 libwavpack-dev
           sudo apt-get install -y libcue2 libcue-dev
