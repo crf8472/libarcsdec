@@ -32,6 +32,13 @@ jobs:
             # libarcstk
             submodules: recursive
 
+      - name: Update libarcstk to dev if on dev branch
+        if: github.ref == 'refs/heads/dev'
+        run: |
+            cd libs/libarcstk
+            git fetch origin dev:dev
+            git checkout dev
+
       - name: Set up dependencies (Ubuntu)
         if: runner.os == 'Linux'
         run: |
