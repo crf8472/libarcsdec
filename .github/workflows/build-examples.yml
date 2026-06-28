@@ -33,14 +33,24 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          # libarcstk
+          submodules: recursive
 
-      - name: Set up dependencies (Ubuntu)
+      - name: Update libarcstk to dev if on dev branch
+        if: github.ref == 'refs/heads/dev'
+        run: |
+          cd libs/libarcstk
+          git fetch origin dev:dev
+          git checkout dev
+
+      - name: Set up dependencies (ubuntu-latest)
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake ninja-build libfl-dev
 
-      - name: Set up dependencies (macOS)
+      - name: Set up dependencies (macos-latest)
         if: runner.os == 'macOS'
         run: |
           brew install cmake ninja
@@ -50,6 +60,7 @@ jobs:
           cmake -B build \
             -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
+            -DWITH_SUBMODULES=ON  \
             -DWITH_TESTS=OFF      \
             -DWITH_FLAC=OFF       \
             -DWITH_FFMPEG=OFF     \

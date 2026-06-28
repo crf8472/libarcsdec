@@ -2,7 +2,12 @@ name: Build & Test
 
 on:
   push:
-    branches: [ main, dev ]
+    branches:
+      - main
+      - dev
+      - 'feature/**'
+      - 'bugfix/**'
+      - 'hotfix/**'
   pull_request:
     branches: [ main ]
   workflow_dispatch:
@@ -39,7 +44,8 @@ jobs:
           git fetch origin dev:dev
           git checkout dev
 
-      - name: Set up dependencies (Ubuntu 24.04 "Noble Noumbat")
+      # Build & test every feature
+      - name: Set up dependencies (ubuntu-latest == 24.04 "Noble Noumbat")
         if: runner.os == 'Linux'
         run: |
           sudo apt-get install -y cmake ninja-build
@@ -52,13 +58,13 @@ jobs:
           sudo apt-get install -y libsndfile1   libsndfile1-dev
           sudo apt-get install -y libcue2       libcue-dev
 
-      - name: Set up modern bison (macOS)
+      - name: Set up modern bison (macos-latest)
         if: runner.os == 'macOS'
         run: |
           brew install bison
           echo "$(brew --prefix bison)/bin" >> $GITHUB_PATH
 
-      - name: Set up dependencies (macOS)
+      - name: Set up dependencies (macos-latest)
         if: runner.os == 'macOS'
         run: |
           brew install cmake ninja flac ffmpeg libsndfile wavpack libcue
@@ -69,18 +75,19 @@ jobs:
       #  run: |
       #    brew reinstall --build-from-source flac
 
+      # Build & test every feature
       - name: Configure
         run: |
           cmake -B build \
             -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DWITH_SUBMODULES=ON \
-            -DWITH_TESTS=ON \
-            -DWITH_FLAC=ON \
-            -DWITH_FFMPEG=ON \
-            -DWITH_WAVPACK=ON \
+            -DWITH_TESTS=ON      \
+            -DWITH_FLAC=ON       \
+            -DWITH_FFMPEG=ON     \
+            -DWITH_WAVPACK=ON    \
             -DWITH_LIBSNDFILE=ON \
-            -DWITH_LIBCUE=ON \
+            -DWITH_LIBCUE=ON
 
       - name: Build
         run: cmake --build build
