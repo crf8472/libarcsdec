@@ -63,9 +63,11 @@ jobs:
         run: |
           brew install cmake ninja flac ffmpeg libsndfile wavpack libcue
 
-      - name: Set up flac (macOS)
-        run: |
-          brew reinstall --build-from-source flac
+      # This is unneccesary, just add 'flac' in dependencies above
+      #- name: Set up flac (macOS)
+      #  if: runner.os == 'macOS'
+      #  run: |
+      #    brew reinstall --build-from-source flac
 
       - name: Configure
         run: |
