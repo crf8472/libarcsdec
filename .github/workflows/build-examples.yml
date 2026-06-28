@@ -44,14 +44,13 @@ jobs:
           git fetch origin dev:dev
           git checkout dev
 
-      # WITH_EXAMPLES=ON falls down to libarcstk and requires libsndfile+libcue
+      # Minimal build of libarcsdec (no deps, only on-board features)
+
       - name: Set up dependencies (ubuntu-latest)
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake ninja-build libfl-dev
-          sudo apt-get install -y libsndfile1   libsndfile1-dev
-          sudo apt-get install -y libcue2       libcue-dev
 
       - name: Set up modern bison (macos-latest)
         if: runner.os == 'macOS'
@@ -62,7 +61,7 @@ jobs:
       - name: Set up dependencies (macos-latest)
         if: runner.os == 'macOS'
         run: |
-          brew install cmake ninja libsndfile libcue
+          brew install cmake ninja
 
       - name: Configure
         run: |
