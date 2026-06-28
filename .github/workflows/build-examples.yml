@@ -56,7 +56,7 @@ jobs:
       - name: Set up dependencies (macos-latest)
         if: runner.os == 'macOS'
         run: |
-          brew install cmake ninja
+          brew install cmake ninja libsndfile libcue
 
       - name: Configure
         run: |
