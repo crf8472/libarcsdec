@@ -34,6 +34,8 @@ jobs:
           git fetch origin dev:dev
           git checkout dev
 
+      # Full build of libarcsdec (all deps, all features)
+
       - name: Set up dependencies (ubuntu-latest == 24.04 "Noble Noumbat")
         run: |
           sudo apt-get install -y cmake ninja-build
@@ -85,6 +87,8 @@ jobs:
           cd libs/libarcstk
           git fetch origin dev:dev
           git checkout dev
+
+      # Full build of libarcsdec (all deps, all features)
 
       - name: Set up dependencies (ubuntu-latest == 24.04 "Noble Noumbat")
         run: |

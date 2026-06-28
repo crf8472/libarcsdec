@@ -44,7 +44,8 @@ jobs:
           git fetch origin dev:dev
           git checkout dev
 
-      # Build & test every feature
+      # Full build of libarcsdec (all deps, all features)
+
       - name: Set up dependencies (ubuntu-latest == 24.04 "Noble Noumbat")
         if: runner.os == 'Linux'
         run: |
