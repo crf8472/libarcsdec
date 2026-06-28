@@ -53,6 +53,12 @@ jobs:
           sudo apt-get install -y libsndfile1   libsndfile1-dev
           sudo apt-get install -y libcue2       libcue-dev
 
+      - name: Set up modern bison (macos-latest)
+        if: runner.os == 'macOS'
+        run: |
+          brew install bison
+          echo "$(brew --prefix bison)/bin" >> $GITHUB_PATH
+
       - name: Set up dependencies (macos-latest)
         if: runner.os == 'macOS'
         run: |
