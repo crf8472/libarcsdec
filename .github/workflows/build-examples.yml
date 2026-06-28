@@ -44,11 +44,14 @@ jobs:
           git fetch origin dev:dev
           git checkout dev
 
+      # WITH_EXAMPLES=ON falls down to libarcstk and requires libsndfile+libcue
       - name: Set up dependencies (ubuntu-latest)
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake ninja-build libfl-dev
+          sudo apt-get install -y libsndfile1   libsndfile1-dev
+          sudo apt-get install -y libcue2       libcue-dev
 
       - name: Set up dependencies (macos-latest)
         if: runner.os == 'macOS'
