@@ -278,7 +278,8 @@ AVPacketPtr Make_AVPacketPtr::operator()() const
 
 void Free_AVFrame::operator()(::AVFrame* frame) const
 {
-	::av_free(frame);
+	//::av_free(frame);
+	::av_frame_free(&frame);
 	frame = nullptr;
 }
 
