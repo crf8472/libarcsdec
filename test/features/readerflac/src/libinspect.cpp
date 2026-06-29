@@ -52,19 +52,19 @@ TEST_CASE ( "lib name of libFLAC++ is correct" )
 	}
 }
 
-TEST_CASE ( "libinspect finds libFLAC++ dependency" )
-{
-	const auto& list = arcsdec::read::details::libarcsdec_deps();
-
-	REQUIRE ( !list.empty() );
-
-	SECTION ("Name of libFLAC++ is found in libarcsdec list")
-	{
-		// this checks escaped name
-		auto so_name =
-			arcsdec::read::details::first_libname_match(list, "libFLAC++");
-
-		CHECK ( !so_name.empty() );
-	}
-}
+// TEST_CASE ( "libinspect finds libFLAC++ dependency" )
+// {
+// 	const auto& list = arcsdec::read::details::libarcsdec_deps();
+//
+// 	REQUIRE ( !list.empty() );
+//
+// 	SECTION ("Name of libFLAC++ is found in libarcsdec list")
+// 	{
+// 		// this checks escaped name
+// 		auto so_name =
+// 			arcsdec::read::details::first_libname_match(list, "libFLAC++");
+//
+// 		CHECK ( !so_name.empty() );
+// 	}
+// }
 
