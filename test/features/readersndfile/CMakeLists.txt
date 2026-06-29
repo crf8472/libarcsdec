@@ -10,7 +10,8 @@ find_package (SndFile 1.0.17 REQUIRED )
 
 if (TARGET SndFile::sndfile )
 	## found by libsndfile's cmake config
-	target_link_libraries (${PROJECT_NAME} PRIVATE SndFile::sndfile )
+	target_link_libraries (libarcsdec_readersndfile_tests
+		PRIVATE SndFile::sndfile )
 else()
 	## found by cmake/Modules/FindSndfile.cmake
 	target_include_directories (libarcsdec_readersndfile_tests
