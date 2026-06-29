@@ -11,6 +11,9 @@ endfunction()
 
 find_package (libcue 2.0.0 REQUIRED )
 
+message (STATUS "libcue includes: ${libcue_INCLUDE_DIRS}" )
+message (STATUS "libcue libraries: ${libcue_LIBRARIES}" )
+
 target_include_directories (${PROJECT_NAME} PRIVATE ${libcue_INCLUDE_DIRS} )
 target_link_libraries      (${PROJECT_NAME} PRIVATE ${libcue_LIBRARIES} )
 target_sources             (${PROJECT_NAME} PRIVATE parserlibcue.cpp )

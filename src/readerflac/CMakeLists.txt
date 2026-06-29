@@ -18,7 +18,6 @@ if (TARGET FLAC::FLAC++ )
 		PRIVATE FLAC::FLAC++
 		PRIVATE FLAC::FLAC
 	)
-	message (STATUS "Found FLAC by cmake packaging")
 else()
 	## found by cmake/Modules/FindFLAC
 	target_include_directories (${PROJECT_NAME}
@@ -28,8 +27,6 @@ else()
 		PRIVATE ${LIBFLACPP_LIBRARIES}
 		PRIVATE ${LIBFLAC_LIBRARIES}
 	)
-
-	message (STATUS "Found FLAC by module")
 endif()
 
 target_sources (${PROJECT_NAME} PRIVATE readerflac.cpp )
