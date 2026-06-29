@@ -5,3 +5,12 @@ add_test_suite (libarcsdec_readerwvpk
 	LABEL "readerwvpk"
 	TIMEOUT 10 )
 
+## FIXME redundant
+find_package (libwavpack 5.0.0 REQUIRED )
+
+target_include_directories (libarcsdec_readerwvpk_tests
+	PRIVATE ${libwavpack_INCLUDE_DIRS} )
+
+target_link_libraries      (libarcsdec_readerwvpk_tests
+	PRIVATE ${libwavpack_LIBRARIES} )
+
