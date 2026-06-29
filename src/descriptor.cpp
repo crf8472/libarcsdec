@@ -315,15 +315,6 @@ bool Bytes::match(const ByteSequence& bytes, const uint32_t& ioffset) const
 
 	do
 	{
-		//const auto m = std::mismatch(in_current, in_stop, ref_current);
-
-		// if (std::distance(in_current, in_stop) !=
-		// 		std::distance(ref_current, ref_stop))
-		// {
-		// 	return false;
-		// }
-
-		// FIXME use std::equal
 		const auto m = std::mismatch(in_current, in_stop,
 				ref_current, ref_stop);
 
