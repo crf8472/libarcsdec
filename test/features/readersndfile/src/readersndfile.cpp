@@ -33,8 +33,10 @@ TEST_CASE ("DescriptorSndfile", "[readersndfile]" )
 		const auto libs = d.libraries();
 
 		CHECK ( libs.size() == 1 );
-		CHECK ( libs.front().first  == "libsndfile" );
-		CHECK ( libs.front().second.find("libsndfile") != std::string::npos );
+
+		// TODO libnames vary over platforms
+		// CHECK ( libs.front().first  == "libsndfile" );
+		// CHECK ( libs.front().second.find("libsndfile") != std::string::npos );
 	}
 
 	SECTION ("Matches accepted codecs correctly")
