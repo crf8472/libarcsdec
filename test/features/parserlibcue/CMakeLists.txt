@@ -10,3 +10,12 @@ add_custom_target (libarcsdec_test_parserlibcue
     COMMAND ${CMAKE_CTEST_COMMAND} -L "parserlibcue" --verbose
 )
 
+## FIXME this is redundant and already done in parserlibcue
+find_package (libcue 2.0.0 REQUIRED )
+
+target_include_directories (libarcsdec_test_parserlibcue
+	PRIVATE ${libcue_INCLUDE_DIRS} )
+
+target_link_libraries      (libarcsdec_test_parserlibcue
+	PRIVATE ${libcue_LIBRARIES} )
+
