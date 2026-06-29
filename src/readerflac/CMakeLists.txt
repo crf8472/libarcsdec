@@ -14,7 +14,7 @@ find_package (FLAC    1.3.1 REQUIRED ) ## checks libFLAC and libFLAC++
 
 if (TARGET FLAC::FLAC++ )
 	## found by flac's cmake config
-	target_link_libraries (${PROJECT_NAME} PRIVATE FLAC::FLAC++ )
+	target_link_libraries (${PROJECT_NAME} PRIVATE FLAC::FLAC++ FLAC::FLAC )
 else()
 	## found by cmake/Modules/FindFLAC
 	target_include_directories (${PROJECT_NAME}
