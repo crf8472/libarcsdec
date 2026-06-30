@@ -22,15 +22,14 @@ set_property (TARGET libarcsdec_parsercue
 	PROPERTY POSITION_INDEPENDENT_CODE ON )
 
 target_include_directories (libarcsdec_parsercue
-	PRIVATE
-		$<BUILD_INTERFACE:${LIBARCSDEC_INCLUDE_SOURCE_DIR}> ## public headers
-		$<BUILD_INTERFACE:${LIBARCSDEC_SOURCE_DIR}>         ## private headers
-		$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/cuesheet> ## gen. code
+	PUBLIC $<BUILD_INTERFACE:${LIBARCSDEC_INCLUDE_SOURCE_DIR}> ## public headers
+	PUBLIC $<BUILD_INTERFACE:${LIBARCSDEC_SOURCE_DIR}>         ## private headers
+	PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/cuesheet> ## gen. code
 )
 
 target_link_libraries (libarcsdec_parsercue
-	PRIVATE $<TARGET_OBJECTS:libarcsdec_parsercue_cuesheet>
-	PRIVATE libarcstk::libarcstk
+	PUBLIC $<TARGET_OBJECTS:libarcsdec_parsercue_cuesheet>
+	PUBLIC libarcstk::libarcstk
 )
 
 ## 1}}}

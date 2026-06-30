@@ -22,15 +22,14 @@ set_property (TARGET libarcsdec_parsertoc
 	PROPERTY POSITION_INDEPENDENT_CODE ON )
 
 target_include_directories (libarcsdec_parsertoc
-	PRIVATE
-		$<BUILD_INTERFACE:${LIBARCSDEC_INCLUDE_SOURCE_DIR}> ## public headers
-		$<BUILD_INTERFACE:${LIBARCSDEC_SOURCE_DIR}>         ## private headers
-		$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/cdrtoc> ## flex/bison code
-	)
+	PUBLIC $<BUILD_INTERFACE:${LIBARCSDEC_INCLUDE_SOURCE_DIR}> ## public headers
+	PUBLIC $<BUILD_INTERFACE:${LIBARCSDEC_SOURCE_DIR}>         ## private headers
+	PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/cdrtoc> ## flex/bison code
+)
 
 target_link_libraries (libarcsdec_parsertoc
-	PRIVATE $<TARGET_OBJECTS:libarcsdec_parsertoc_cdrtoc>
-	PRIVATE libarcstk::libarcstk
+	PUBLIC $<TARGET_OBJECTS:libarcsdec_parsertoc_cdrtoc>
+	PUBLIC libarcstk::libarcstk
 )
 
 ## 1}}}

@@ -19,13 +19,13 @@ function (add_test_suite CATEGORY )
 	set (one_value_args LABEL TIMEOUT LINK_TARGET )
 	cmake_parse_arguments (SUITE "" "${one_value_args}" "" ${ARGN} )
 
-	message (STATUS "Found tests of category '${CATEGORY}': ${TEST_SOURCES}" )
+	#message (STATUS "Found tests of category '${CATEGORY}': ${TEST_SOURCES}" )
 
 	set (SUITE_NAME "${CATEGORY}_tests" )
 
-	message (STATUS "CATEGORY: '${CATEGORY}'" )
-	message (STATUS "SUITE_NAME: '${SUITE_NAME}'" )
-	message (STATUS "SUITE_LINK_TARGET: '${SUITE_LINK_TARGET}'" )
+	#message (STATUS "CATEGORY: '${CATEGORY}'" )
+	#message (STATUS "SUITE_NAME: '${SUITE_NAME}'" )
+	#message (STATUS "SUITE_LINK_TARGET: '${SUITE_LINK_TARGET}'" )
 
 	## Create executable
 	add_executable (${SUITE_NAME} ${TEST_SOURCES} )

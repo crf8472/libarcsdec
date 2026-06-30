@@ -13,12 +13,6 @@ function (readerffmpeg_pkg DEPS )
 	PARENT_SCOPE )
 endfunction()
 
-## find_package does not respect versions for components but the ffmpeg
-## version is not trivial to access in a Find module.
-## Thus, instead of REQUIREing the lib versions, we verify them manually.
-
-find_package (ffmpeg REQUIRED COMPONENTS avcodec avformat avutil )
-
 ## Verify the required versions of ffmpeg libs
 macro (at_least_version _required _actual )
 
@@ -30,6 +24,12 @@ macro (at_least_version _required _actual )
 	endif()
 
 endmacro()
+
+## find_package does not respect versions for components but the ffmpeg
+## version is not trivial to access in a Find module.
+## Thus, instead of REQUIREing the lib versions, we verify them manually.
+
+find_package (ffmpeg REQUIRED COMPONENTS avcodec avformat avutil )
 
 ## ffmpeg 3.1 < x < 4.0:
 ## API Change: deprecated avcodec_decode_audio4() from ffmpeg 0.9 in favor
@@ -59,19 +59,6 @@ at_least_version ("55.22.100" ${avutil_VERSION}   ) ## 2016-04-14
 #at_least_version ("59.19.100" ${avformat_VERSION} ) ## 2022-03-15
 #at_least_version ("57.24.100" ${avutil_VERSION} )   ## 2022-03-15
 
-# TODO REMOVE:
-# target_include_directories (${PROJECT_NAME}
-# 	PRIVATE ${avcodec_INCLUDE_DIRS}
-# 	PRIVATE ${avformat_INCLUDE_DIRS}
-# 	PRIVATE ${avutil_INCLUDE_DIRS} )
-#
-# target_link_libraries (${PROJECT_NAME}
-# 	PUBLIC ${avcodec_LIBRARIES}
-# 	PUBLIC ${avformat_LIBRARIES}
-# 	PUBLIC ${avutil_LIBRARIES} )
-#
-# target_sources (${PROJECT_NAME} PRIVATE readerffmpeg.cpp )
-
 
 add_library (libarcsdec_readerffmpeg OBJECT readerffmpeg.cpp )
 
@@ -87,7 +74,7 @@ target_include_directories (libarcsdec_readerffmpeg
 )
 
 target_link_libraries      (libarcsdec_readerffmpeg
-	PUBLIC libarcstk::libarcstk # TODO Should be propagated by main target
+	PUBLIC libarcstk::libarcstk
 	PUBLIC ${avcodec_LIBRARIES}
 	PUBLIC ${avformat_LIBRARIES}
 	PUBLIC ${avutil_LIBRARIES}
