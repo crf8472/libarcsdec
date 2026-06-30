@@ -137,13 +137,28 @@ libarcsdec_apply_compiler_flags (MAIN TARGET ${PROJECT_NAME} )
 get_target_property (LIBARCSDEC_CXX_FLAGS ${PROJECT_NAME} COMPILE_OPTIONS )
 message (STATUS "Compile flags: ${LIBARCSDEC_CXX_FLAGS}" )
 
-## --- Installation {{{1
+## --- Setup dependencies {{{1
 
-if (NOT SKIP_INSTALL_ALL )
+option (WITH_SUBMODULES "Compile libarcstk as a submodule" OFF )
 
-	add_subdirectory (install ) ## relies on LIBARCSDEC_PKG_REQUIRE_ARRAY
-endif ()
+set (LIBARCSDEC_PKG_REQUIRE_ARRAY )
 
+libarcsdec_setup_required_dependencies   (LIBARCSDEC_PKG_REQUIRE_ARRAY )
+libarcsdec_setup_internal_dependencies   ()
+libarcsdec_setup_configured_dependencies (LIBARCSDEC_PKG_REQUIRE_ARRAY )
+
+# 1}}}
+## --- Setup examples {{{1
+
+if (WITH_EXAMPLES )
+	add_subdirectory ("${CMAKE_CURRENT_SOURCE_DIR}/examples" )
+endif()
+## 1}}}
+## --- Setup development tools {{{1
+libarcsdec_enable_clang_tidy (LIBARCSDEC_CLANG_TIDY_ENABLED )
+libarcsdec_enable_clang_include_graph (LIBARCSDEC_CLANG_INCLUDE_GRAPH_ENABLED )
+libarcsdec_enable_code_coverage (LIBARCSDEC_CODE_COVERAGE_ENABLED )
+libarcsdec_enable_target_dep_graph_by_dot (LIBARCSDEC_TARGET_DEPS_GRAPH_ENABLED )
 ## 1}}}
 ## --- Option: WITH_TESTS {{{1
 
@@ -201,28 +216,13 @@ if (WITH_INTERNAL_DOCS )
 endif()
 
 ## 1}}}
-## --- Setup dependencies {{{1
+## --- Installation {{{1
 
-option (WITH_SUBMODULES "Compile libarcstk as a submodule" OFF )
+if (NOT SKIP_INSTALL_ALL )
 
-set (LIBARCSDEC_PKG_REQUIRE_ARRAY )
+	add_subdirectory (install ) ## relies on LIBARCSDEC_PKG_REQUIRE_ARRAY
+endif ()
 
-libarcsdec_setup_required_dependencies   (LIBARCSDEC_PKG_REQUIRE_ARRAY )
-libarcsdec_setup_internal_dependencies   ()
-libarcsdec_setup_configured_dependencies (LIBARCSDEC_PKG_REQUIRE_ARRAY )
-
-# 1}}}
-## --- Setup examples {{{1
-
-if (WITH_EXAMPLES )
-	add_subdirectory ("${CMAKE_CURRENT_SOURCE_DIR}/examples" )
-endif()
-## 1}}}
-## --- Setup development tools {{{1
-libarcsdec_enable_clang_tidy (LIBARCSDEC_CLANG_TIDY_ENABLED )
-libarcsdec_enable_clang_include_graph (LIBARCSDEC_CLANG_INCLUDE_GRAPH_ENABLED )
-libarcsdec_enable_code_coverage (LIBARCSDEC_CODE_COVERAGE_ENABLED )
-libarcsdec_enable_target_dep_graph_by_dot (LIBARCSDEC_TARGET_DEPS_GRAPH_ENABLED )
 ## 1}}}
 
 banner (END "Completed ${PROJECT_NAME} ${LIBARCSDEC_VERSION_STRING}" )
