@@ -92,7 +92,7 @@ TEST_CASE ("DescriptorLibcue", "[parserlibcue]" )
 		CHECK ( d.formats() == std::set<Format>{ Format::CUE } );
 	}
 
-	// TODO Does create_reader() really create a CueParserImpl?
+	// TODO Does create_reader() really create a LibcueParserImpl?
 }
 
 

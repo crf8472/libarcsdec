@@ -8,7 +8,7 @@
 #include "parserlibcue.hpp"
 #endif
 #ifndef LIBARCSDEC_PARSERLIBCUE_DETAILS_HPP_
-#include "parserlibcue_details.hpp"  // for CueParserImpl, CueOpenFile
+#include "parserlibcue_details.hpp"  // for LibcueParserImpl, CueOpenFile
 #endif
 
 extern "C" {
@@ -264,16 +264,16 @@ CueInfo CueOpenFile::info() const
 }
 
 
-// CueParserImpl
+// LibcueParserImpl
 
 
-CueInfo CueParserImpl::parse_worker(const std::string& filename) const
+CueInfo LibcueParserImpl::parse_worker(const std::string& filename) const
 {
 	return CueOpenFile { filename }.info();
 }
 
 
-ToC CueParserImpl::do_parse(const std::string& filename)
+ToC LibcueParserImpl::do_parse(const std::string& filename)
 {
 	const auto cue_info = this->parse_worker(filename);
 
@@ -282,7 +282,7 @@ ToC CueParserImpl::do_parse(const std::string& filename)
 }
 
 
-std::unique_ptr<FileReaderDescriptor> CueParserImpl::do_descriptor() const
+std::unique_ptr<FileReaderDescriptor> LibcueParserImpl::do_descriptor() const
 {
 	return std::make_unique<DescriptorLibcue>();
 }
@@ -337,7 +337,7 @@ LibInfo DescriptorLibcue::do_libraries() const
 
 std::unique_ptr<FileReader> DescriptorLibcue::do_create_reader() const
 {
-	auto impl = std::make_unique<details::libcue::CueParserImpl>();
+	auto impl = std::make_unique<details::libcue::LibcueParserImpl>();
 	return std::make_unique<MetadataParser>(std::move(impl));
 }
 

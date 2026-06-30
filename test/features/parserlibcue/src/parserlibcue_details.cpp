@@ -14,20 +14,20 @@
 #endif
 
 
-TEST_CASE ("CueParserImpl", "[parserlibcue]" )
+TEST_CASE ("LibcueParserImpl", "[parserlibcue]" )
 {
-	using arcsdec::read::details::libcue::CueParserImpl;
+	using arcsdec::read::details::libcue::LibcueParserImpl;
 	//using arcsdec::read::DescriptorCue;
 
-	auto d = CueParserImpl{}.descriptor();
+	auto d = LibcueParserImpl{}.descriptor();
 
 	SECTION ("ok01.cue: Parses a syntactically intact input correctly")
 	{
 		using arcstk::AudioSize;
 		using arcstk::UNIT;
 
-		using arcsdec::read::details::libcue::CueParserImpl;
-		auto parser = CueParserImpl{};
+		using arcsdec::read::details::libcue::LibcueParserImpl;
+		auto parser = LibcueParserImpl{};
 		const auto cue = parser.parse("data/ok01.cue");
 		// This Cuesheet is complete and syntactically correct
 		const auto filenames { cue.filenames() };
@@ -50,8 +50,8 @@ TEST_CASE ("CueParserImpl", "[parserlibcue]" )
 		using arcstk::AudioSize;
 		using arcstk::UNIT;
 
-		using arcsdec::read::details::libcue::CueParserImpl;
-		auto parser = CueParserImpl{};
+		using arcsdec::read::details::libcue::LibcueParserImpl;
+		auto parser = LibcueParserImpl{};
 		const auto cue = parser.parse("data/ok02.cue");
 		// This Cuesheet is complete and syntactically correct
 		const auto filenames { cue.filenames() };

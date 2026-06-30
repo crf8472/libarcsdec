@@ -144,7 +144,7 @@ private:
 /**
  * \brief Implementation for libcue-based reading of CueSheets.
  */
-class CueParserImpl final : public MetadataParserImpl
+class LibcueParserImpl final : public MetadataParserImpl
 {
 private:
 
