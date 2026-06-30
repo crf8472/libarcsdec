@@ -8,12 +8,14 @@
 ##   )
 function (add_test_suite CATEGORY )
 
-	set (options )
-	set (oneValueArgs LABEL TIMEOUT )
-	set (multiValueArgs )
+	if (NOT TARGET ${CATEGORY} )
+		message (WARNING
+			"Requested tests for ${CATEGORY} but no respective target found" )
+	endif()
 
-	cmake_parse_arguments (SUITE
-		"${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
+	set (one_value_args LABEL TIMEOUT TARGET )
+
+	cmake_parse_arguments (SUITE "" "${one_value_args}" "" ${ARGN} )
 
 	## Collect all test source files in src/ directory
 	file (GLOB TEST_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp" )
@@ -60,6 +62,10 @@ function (add_test_suite CATEGORY )
 		PRIVATE ${PROJECT_NAME} ## libarcsdec from build-tree
 		PRIVATE libarcstk::libarcstk
 	)
+
+	if (TARGET ${SUITE_TARGET} )
+		target_link_libraries (${CATEGORY}_tests PRIVATE ${SUITE_TARGET} )
+	endif()
 
 	## RPATH handling (force to load from build tree)
 	#if (UNIX AND NOT APPLE )

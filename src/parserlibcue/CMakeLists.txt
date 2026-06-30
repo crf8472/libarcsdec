@@ -11,10 +11,22 @@ endfunction()
 
 find_package (libcue 2.0.0 REQUIRED )
 
-message (STATUS "libcue includes: ${libcue_INCLUDE_DIRS}" )
-message (STATUS "libcue libraries: ${libcue_LIBRARIES}" )
+# Debugging the build, commented out
+#message (STATUS "libcue includes: ${libcue_INCLUDE_DIRS}" )
+#message (STATUS "libcue libraries: ${libcue_LIBRARIES}" )
 
-target_include_directories (${PROJECT_NAME} PRIVATE ${libcue_INCLUDE_DIRS} )
-target_link_libraries      (${PROJECT_NAME} PRIVATE ${libcue_LIBRARIES} )
-target_sources             (${PROJECT_NAME} PRIVATE parserlibcue.cpp )
+add_library (libarcsdec_parserlibcue OBJECT parserlibcue.cpp )
+
+target_include_directories (libarcsdec_parserlibcue
+	PUBLIC $<BUILD_INTERFACE:${LIBARCSDEC_INCLUDE_SOURCE_DIR}>## public headers
+	PUBLIC $<BUILD_INTERFACE:${LIBARCSDEC_SOURCE_DIR}>        ## private headers
+	PUBLIC $<BUILD_INTERFACE:${libcue_INCLUDE_DIRS}>
+)
+
+target_link_libraries      (libarcsdec_parserlibcue
+	PUBLIC ${libcue_LIBRARIES}
+	PUBLIC libarcstk::libarcstk
+)
+
+#target_sources             (${PROJECT_NAME} PRIVATE parserlibcue.cpp )
 
