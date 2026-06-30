@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - API: ToCParser::parse() provides a ToC instead of std::unique_ptr<ToC>
   - API: AudioInfo provides an AudioSize instead of
     std::unique_ptr<AudioSize>
+  - API: Rename DescriptorCue to DescriptorLibcue
   - Build: Reorganize CMake structure, make top-level CMakeLists.txt smaller
   - Build: Remove deprecated build switch USE_MCSS
   - Build: Add build switch WITH_EXAMPLES

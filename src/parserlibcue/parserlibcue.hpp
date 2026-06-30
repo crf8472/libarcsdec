@@ -40,14 +40,14 @@ namespace read
  *
  * \brief A MetadataParser for Cuesheet files, implemented with libcue 2.
  */
-class DescriptorCue final : public FileReaderDescriptor
+class DescriptorLibcue final : public FileReaderDescriptor
 {
 public:
 
 	/**
 	 * \brief Default destructor.
 	 */
-	~DescriptorCue() noexcept final;
+	~DescriptorLibcue() noexcept final;
 
 
 private:

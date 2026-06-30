@@ -284,7 +284,7 @@ ToC CueParserImpl::do_parse(const std::string& filename)
 
 std::unique_ptr<FileReaderDescriptor> CueParserImpl::do_descriptor() const
 {
-	return std::make_unique<DescriptorCue>();
+	return std::make_unique<DiscriptorLibcue>();
 }
 
 
@@ -292,59 +292,59 @@ std::unique_ptr<FileReaderDescriptor> CueParserImpl::do_descriptor() const
 } // namespace details
 
 
-// DescriptorCue
+// DiscriptorLibcue
 
 
-DescriptorCue::~DescriptorCue() noexcept = default;
+DiscriptorLibcue::~DiscriptorLibcue() noexcept = default;
 
 
-std::string DescriptorCue::do_id() const
+std::string DiscriptorLibcue::do_id() const
 {
 	return "libcue";
 }
 
 
-std::string DescriptorCue::do_name() const
+std::string DiscriptorLibcue::do_name() const
 {
 	return "Libcue";
 }
 
 
-InputType DescriptorCue::do_input_type() const
+InputType DiscriptorLibcue::do_input_type() const
 {
 	return InputType::TOC;
 }
 
 
-bool DescriptorCue::do_accepts_codec(Codec codec) const
+bool DiscriptorLibcue::do_accepts_codec(Codec codec) const
 {
 	ARCS_LOG(DEBUG1) << "Is Codec NONE?";
 	return codec == Codec::NONE;
 }
 
 
-std::set<Format> DescriptorCue::define_formats() const
+std::set<Format> DiscriptorLibcue::define_formats() const
 {
 	return { Format::CUE };
 }
 
 
-LibInfo DescriptorCue::do_libraries() const
+LibInfo DiscriptorLibcue::do_libraries() const
 {
 	return { libinfo_entry_filepath("libcue") };
 }
 
 
-std::unique_ptr<FileReader> DescriptorCue::do_create_reader() const
+std::unique_ptr<FileReader> DiscriptorLibcue::do_create_reader() const
 {
 	auto impl = std::make_unique<details::libcue::CueParserImpl>();
 	return std::make_unique<MetadataParser>(std::move(impl));
 }
 
 
-std::unique_ptr<FileReaderDescriptor> DescriptorCue::do_clone() const
+std::unique_ptr<FileReaderDescriptor> DiscriptorLibcue::do_clone() const
 {
-	return std::make_unique<DescriptorCue>();
+	return std::make_unique<DiscriptorLibcue>();
 }
 
 } // namespace read
@@ -354,9 +354,9 @@ std::unique_ptr<FileReaderDescriptor> DescriptorCue::do_clone() const
 namespace {
 
 using select::RegisterDescriptor;
-using read::DescriptorCue;
+using read::DiscriptorLibcue;
 
-const auto d = RegisterDescriptor<DescriptorCue>{};
+const auto d = RegisterDescriptor<DiscriptorLibcue>{};
 
 } // namespace
 
