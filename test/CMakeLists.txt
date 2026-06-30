@@ -25,12 +25,8 @@ add_custom_target (libarcsdec_create_reports_dir ALL
 
 
 ## Include common test helpers
-include ("${CMAKE_CURRENT_SOURCE_DIR}/cmake/functions/SetupEnvironment.cmake" )
 include ("${CMAKE_CURRENT_SOURCE_DIR}/cmake/functions/TestHelpers.cmake" )
 
-
-## Configure common test settings
-configure_test_environment()
 
 ## Add tests
 add_subdirectory (units      )
@@ -38,6 +34,15 @@ add_subdirectory (features   )
 add_subdirectory (functional )
 
 ## Add test suites for use on CLI
+add_custom_target (libarcsdec_test_units
+    COMMAND ${CMAKE_CTEST_COMMAND} -L "units" --verbose
+)
+add_custom_target(libarcsdec_test_features
+    COMMAND ${CMAKE_CTEST_COMMAND} -L "features" --verbose
+)
+add_custom_target(libarcsdec_test_functional
+    COMMAND ${CMAKE_CTEST_COMMAND} -L "functional" --verbose
+)
 add_custom_target (libarcsdec_test_all
     COMMAND ${CMAKE_CTEST_COMMAND} --verbose
 )

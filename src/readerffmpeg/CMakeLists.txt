@@ -59,15 +59,40 @@ at_least_version ("55.22.100" ${avutil_VERSION}   ) ## 2016-04-14
 #at_least_version ("59.19.100" ${avformat_VERSION} ) ## 2022-03-15
 #at_least_version ("57.24.100" ${avutil_VERSION} )   ## 2022-03-15
 
-target_include_directories (${PROJECT_NAME}
-	PRIVATE ${avcodec_INCLUDE_DIRS}
-	PRIVATE ${avformat_INCLUDE_DIRS}
-	PRIVATE ${avutil_INCLUDE_DIRS} )
+# TODO REMOVE:
+# target_include_directories (${PROJECT_NAME}
+# 	PRIVATE ${avcodec_INCLUDE_DIRS}
+# 	PRIVATE ${avformat_INCLUDE_DIRS}
+# 	PRIVATE ${avutil_INCLUDE_DIRS} )
+#
+# target_link_libraries (${PROJECT_NAME}
+# 	PUBLIC ${avcodec_LIBRARIES}
+# 	PUBLIC ${avformat_LIBRARIES}
+# 	PUBLIC ${avutil_LIBRARIES} )
+#
+# target_sources (${PROJECT_NAME} PRIVATE readerffmpeg.cpp )
 
-target_link_libraries (${PROJECT_NAME}
+
+add_library (libarcsdec_readerffmpeg OBJECT readerffmpeg.cpp )
+
+set_property (TARGET libarcsdec_readerffmpeg
+	PROPERTY POSITION_INDEPENDENT_CODE ON )
+
+target_include_directories (libarcsdec_readerffmpeg
+	PUBLIC $<BUILD_INTERFACE:${LIBARCSDEC_INCLUDE_SOURCE_DIR}>## public headers
+	PUBLIC $<BUILD_INTERFACE:${LIBARCSDEC_SOURCE_DIR}>        ## private headers
+	PUBLIC $<BUILD_INTERFACE:${avcodec_INCLUDE_DIRS}>
+	PUBLIC $<BUILD_INTERFACE:${avformat_INCLUDE_DIRS}>
+	PUBLIC $<BUILD_INTERFACE:${avutil_INCLUDE_DIRS}>
+)
+
+target_link_libraries      (libarcsdec_readerffmpeg
+	PUBLIC libarcstk::libarcstk # TODO Should be propagated by main target
 	PUBLIC ${avcodec_LIBRARIES}
 	PUBLIC ${avformat_LIBRARIES}
-	PUBLIC ${avutil_LIBRARIES} )
+	PUBLIC ${avutil_LIBRARIES}
+)
 
-target_sources (${PROJECT_NAME} PRIVATE readerffmpeg.cpp )
+## Put this into libarcsdec
+target_link_libraries (${PROJECT_NAME} PRIVATE libarcsdec_readerffmpeg )
 

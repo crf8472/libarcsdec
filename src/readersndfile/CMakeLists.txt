@@ -11,15 +11,34 @@ endfunction()
 
 find_package (SndFile 1.0.17 REQUIRED )
 
+#target_sources (${PROJECT_NAME} PRIVATE readersndfile.cpp )
+
+add_library (libarcsdec_readersndfile OBJECT readersndfile.cpp )
+
+set_property (TARGET libarcsdec_readersndfile
+	PROPERTY POSITION_INDEPENDENT_CODE ON )
+
+target_include_directories (libarcsdec_readersndfile
+	PUBLIC $<BUILD_INTERFACE:${LIBARCSDEC_INCLUDE_SOURCE_DIR}>## public headers
+	PUBLIC $<BUILD_INTERFACE:${LIBARCSDEC_SOURCE_DIR}>        ## private headers
+)
+
+target_link_libraries      (libarcsdec_readersndfile
+	PUBLIC libarcstk::libarcstk # TODO Should be propagated by main target
+)
+
 if (TARGET SndFile::sndfile )
 	## found by libsndfile's cmake config
-	target_link_libraries (${PROJECT_NAME} PRIVATE SndFile::sndfile )
+	target_link_libraries (libarcsdec_readersndfile
+		PUBLIC SndFile::sndfile )
 else()
 	## found by cmake/Modules/FindSndfile.cmake
-	target_include_directories (${PROJECT_NAME}
-		PRIVATE ${SndFile_INCLUDE_DIRS} )
-	target_link_libraries (${PROJECT_NAME} PUBLIC ${SndFile_LIBRARIES} )
+	target_include_directories (libarcsdec_readersndfile
+		PUBLIC $<BUILD_INTERFACE:${SndFile_INCLUDE_DIRS}> )
+	target_link_libraries (libarcsdec_readersndfile
+		PUBLIC ${SndFile_LIBRARIES} )
 endif()
 
-target_sources (${PROJECT_NAME} PRIVATE readersndfile.cpp )
+## Put this into libarcsdec
+target_link_libraries (${PROJECT_NAME} PRIVATE libarcsdec_readersndfile )
 
