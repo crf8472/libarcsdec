@@ -15,13 +15,13 @@
 #endif
 
 
-TEST_CASE ("DescriptorCue", "[parserlibcue]" )
+TEST_CASE ("DescriptorLibcue", "[parserlibcue]" )
 {
-	using arcsdec::read::DescriptorCue;
+	using arcsdec::read::DescriptorLibcue;
 	using arcsdec::read::Format;
 	using arcsdec::read::Codec;
 
-	auto d = DescriptorCue{};
+	auto d = DescriptorLibcue{};
 
 	SECTION ("Returns own name correctly")
 	{
