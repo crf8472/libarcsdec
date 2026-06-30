@@ -90,8 +90,8 @@ function (libarcsdec_setup_configured_dependencies PKG_LIST )
 if (WITH_LIBCUE )
 
 	add_subdirectory (${LIBARCSDEC_SOURCE_DIR}/parserlibcue )
-	parserlibcue_pkg (_parserlibcue_deps )
 
+	parserlibcue_pkg (_parserlibcue_deps )
 	list (APPEND ${PKG_LIST} ${_parserlibcue_deps} )
 
 else (WITH_LIBCUE)
@@ -105,8 +105,8 @@ endif (WITH_LIBCUE)
 if (WITH_FLAC )
 
 	add_subdirectory (${LIBARCSDEC_SOURCE_DIR}/readerflac )
-	readerflac_pkg (_readerflac_deps )
 
+	readerflac_pkg (_readerflac_deps )
 	list (APPEND ${PKG_LIST} ${_readerflac_deps} )
 
 else (WITH_FLAC)
@@ -120,8 +120,8 @@ endif (WITH_FLAC)
 if (WITH_WAVPACK)
 
 	add_subdirectory (${LIBARCSDEC_SOURCE_DIR}/readerwvpk )
-	readerwvpk_pkg (_readerwvpk_deps )
 
+	readerwvpk_pkg (_readerwvpk_deps )
 	list (APPEND ${PKG_LIST} ${_readerwvpk_deps} )
 
 else (WITH_WAVPACK)
@@ -135,8 +135,8 @@ endif (WITH_WAVPACK)
 if (WITH_FFMPEG)
 
 	add_subdirectory (${LIBARCSDEC_SOURCE_DIR}/readerffmpeg )
-	readerffmpeg_pkg (_readerffmpeg_deps )
 
+	readerffmpeg_pkg (_readerffmpeg_deps )
 	list (APPEND ${PKG_LIST} ${_readerffmpeg_deps} )
 
 else (WITH_FFMPEG)
@@ -150,8 +150,8 @@ endif (WITH_FFMPEG)
 if (WITH_LIBSNDFILE )
 
 	add_subdirectory (${LIBARCSDEC_SOURCE_DIR}/readersndfile )
-	readersndfile_pkg (_readersndfile_deps )
 
+	readersndfile_pkg (_readersndfile_deps )
 	list (APPEND ${PKG_LIST} ${_readersndfile_deps} )
 
 else (WITH_LIBSNDFILE )
