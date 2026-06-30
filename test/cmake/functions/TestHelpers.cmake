@@ -8,15 +8,6 @@
 ##   )
 function (add_test_suite CATEGORY )
 
-	if (NOT TARGET ${CATEGORY} )
-		message (WARNING
-			"Requested tests for ${CATEGORY} but no respective target found" )
-	endif()
-
-	set (one_value_args LABEL TIMEOUT TARGET )
-
-	cmake_parse_arguments (SUITE "" "${one_value_args}" "" ${ARGN} )
-
 	## Collect all test source files in src/ directory
 	file (GLOB TEST_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp" )
 
@@ -25,13 +16,19 @@ function (add_test_suite CATEGORY )
 			"No test sources found in ${CMAKE_CURRENT_SOURCE_DIR}/src/" )
 	endif()
 
-	message (STATUS "Found ${CATEGORY} tests: ${TEST_SOURCES}" )
+	## Arguments
+	set (one_value_args LABEL TIMEOUT TARGET )
+	cmake_parse_arguments (SUITE "" "${one_value_args}" "" ${ARGN} )
+
+	message (STATUS "Found of category '${CATEGORY}': ${TEST_SOURCES}" )
+
+	set (SUITE_NAME "${CATEGORY}_tests" )
 
 	## Create executable
-	add_executable (${CATEGORY}_tests ${TEST_SOURCES} )
+	add_executable (${SUITE_NAME} ${TEST_SOURCES} )
 
 	## Standard configuration
-	set_target_properties (${CATEGORY}_tests PROPERTIES
+	set_target_properties (${SUITE_NAME} PROPERTIES
 		CXX_STANDARD           17
 		CXX_STANDARD_REQUIRED  ON
 		BUILD_RPATH            "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
@@ -39,13 +36,13 @@ function (add_test_suite CATEGORY )
 		SKIP_RPATH             OFF
 	)
 
-	target_compile_options (${CATEGORY}_tests
+	target_compile_options (${SUITE_NAME}
 		PRIVATE ${TEST_CXX_FLAGS_WARNINGS}
 		PRIVATE ${LIBARCSDEC_CXX_FLAGS_OPTIMIZE}
 	)
 
 	## Include paths
-	target_include_directories (${CATEGORY}_tests
+	target_include_directories (${SUITE_NAME}
 		PRIVATE "${LIBARCSDEC_INCLUDE_SOURCE_DIR}"        ## public headers
 		PRIVATE "${LIBARCSDEC_SOURCE_DIR}"                ## private headers
 		PRIVATE "${LIBARCSDEC_SOURCE_DIR}/${SUITE_LABEL}" ## private headers
@@ -57,20 +54,16 @@ function (add_test_suite CATEGORY )
 	unset (_include )
 
 	## Link libraries
-	target_link_libraries (${CATEGORY}_tests
+	target_link_libraries (${SUITE_NAME}
 		PRIVATE Catch2::Catch2WithMain
 		PRIVATE ${PROJECT_NAME} ## libarcsdec from build-tree
 		PRIVATE libarcstk::libarcstk
 	)
 
+	## Link to specified target
 	if (TARGET ${SUITE_TARGET} )
-		target_link_libraries (${CATEGORY}_tests PRIVATE ${SUITE_TARGET} )
+		target_link_libraries (${SUITE_NAME} PRIVATE ${SUITE_TARGET} )
 	endif()
-
-	## RPATH handling (force to load from build tree)
-	#if (UNIX AND NOT APPLE )
-	#	target_link_options (${CATEGORY}_tests PRIVATE -Wl,--disable-new-dtags)
-	#endif()
 
 	## Set properties for all discovered tests
 
@@ -86,7 +79,7 @@ function (add_test_suite CATEGORY )
 
 
 	## Discover and register all tests from the executable to CTest
-	catch_discover_tests (${CATEGORY}_tests
+	catch_discover_tests (${SUITE_NAME}
 		TEST_PREFIX       "${CATEGORY}/"
 		REPORTER          "junit"
 		OUTPUT_DIR        "${LIBARCSDEC_BINARY_DIR}/reports"

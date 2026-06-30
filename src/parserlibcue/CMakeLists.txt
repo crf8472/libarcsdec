@@ -17,6 +17,9 @@ find_package (libcue 2.0.0 REQUIRED )
 
 add_library (libarcsdec_parserlibcue OBJECT parserlibcue.cpp )
 
+set_property (TARGET libarcsdec_parserlibcue
+	PROPERTY POSITION_INDEPENDENT_CODE ON )
+
 target_include_directories (libarcsdec_parserlibcue
 	PUBLIC $<BUILD_INTERFACE:${LIBARCSDEC_INCLUDE_SOURCE_DIR}>## public headers
 	PUBLIC $<BUILD_INTERFACE:${LIBARCSDEC_SOURCE_DIR}>        ## private headers
@@ -25,8 +28,9 @@ target_include_directories (libarcsdec_parserlibcue
 
 target_link_libraries      (libarcsdec_parserlibcue
 	PUBLIC ${libcue_LIBRARIES}
-	PUBLIC libarcstk::libarcstk
+	PUBLIC libarcstk::libarcstk # TODO Should be propagated by main target
 )
 
-#target_sources             (${PROJECT_NAME} PRIVATE parserlibcue.cpp )
+## Put this into libarcsdec
+target_link_libraries (${PROJECT_NAME} PRIVATE libarcsdec_parserlibcue )
 
