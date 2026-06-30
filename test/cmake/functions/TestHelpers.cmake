@@ -10,19 +10,22 @@ function (add_test_suite CATEGORY )
 
 	## Collect all test source files in src/ directory
 	file (GLOB TEST_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp" )
-
 	if (NOT TEST_SOURCES )
 		message (FATAL_ERROR
 			"No test sources found in ${CMAKE_CURRENT_SOURCE_DIR}/src/" )
 	endif()
 
 	## Arguments
-	set (one_value_args LABEL TIMEOUT TARGET )
+	set (one_value_args LABEL TIMEOUT LINK_TARGET )
 	cmake_parse_arguments (SUITE "" "${one_value_args}" "" ${ARGN} )
 
-	message (STATUS "Found of category '${CATEGORY}': ${TEST_SOURCES}" )
+	message (STATUS "Found tests of category '${CATEGORY}': ${TEST_SOURCES}" )
 
 	set (SUITE_NAME "${CATEGORY}_tests" )
+
+	message (STATUS "CATEGORY: '${CATEGORY}'" )
+	message (STATUS "SUITE_NAME: '${SUITE_NAME}'" )
+	message (STATUS "SUITE_LINK_TARGET: '${SUITE_LINK_TARGET}'" )
 
 	## Create executable
 	add_executable (${SUITE_NAME} ${TEST_SOURCES} )
@@ -57,12 +60,20 @@ function (add_test_suite CATEGORY )
 	target_link_libraries (${SUITE_NAME}
 		PRIVATE Catch2::Catch2WithMain
 		PRIVATE ${PROJECT_NAME} ## libarcsdec from build-tree
-		PRIVATE libarcstk::libarcstk
 	)
 
 	## Link to specified target
-	if (TARGET ${SUITE_TARGET} )
-		target_link_libraries (${SUITE_NAME} PRIVATE ${SUITE_TARGET} )
+	if (TARGET ${SUITE_LINK_TARGET} )
+
+		target_link_libraries (${SUITE_NAME}
+			PRIVATE ${SUITE_LINK_TARGET} )
+
+		#target_include_directories (${SUITE_NAME}
+		#	PRIVATE $<TARGET_PROPERTY:${SUITE_LINK_TARGET},INCLUDE_DIRECTORIES>
+		#)
+	else ()
+		target_link_libraries (${SUITE_NAME}
+			PRIVATE libarcstk::libarcstk )
 	endif()
 
 	## Set properties for all discovered tests

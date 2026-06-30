@@ -1,9 +1,9 @@
 ## CMake build script for configuring and building feature tests
 ## vim:fdm=marker
 
-add_test_suite (libarcsdec_parserlibcue
-	LABEL   "parserlibcue"
-	TARGET  libarcsdec_parserlibcue
+add_test_suite (libarcsdec_x_parserlibcue
+	LABEL       "parserlibcue"
+	LINK_TARGET libarcsdec_parserlibcue
 	TIMEOUT 10
 )
 
