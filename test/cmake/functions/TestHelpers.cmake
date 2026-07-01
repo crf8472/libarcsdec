@@ -1,5 +1,21 @@
 ## Create a test executable from all .cpp files in a directory
 ## and register tests found with catch_discover_tests.
+
+## Link libraries of _feature_target in _test_target without introducing
+## a dependency between the targets.
+function (link_feature_deps _test_target _feature_target)
+
+	message (STATUS "Link target ${_test_target} "
+		"to the dependencies of target ${_feature_target}" )
+
+	get_target_property (_feature_libs ${_feature_target} LINK_LIBRARIES )
+
+	if (_feature_libs)
+
+		target_link_libraries (${_test_target} PRIVATE ${_feature_libs} )
+	endif ()
+endfunction()
+
 ##
 ## Usage:
 ##   add_test_suite(unit
@@ -62,19 +78,18 @@ function (add_test_suite CATEGORY )
 		PRIVATE ${PROJECT_NAME} ## libarcsdec from build-tree
 	)
 
-	## Link to specified target
+	## Get deps from specified target
 	if (TARGET ${SUITE_LINK_TARGET} )
 
-		target_link_libraries (${SUITE_NAME}
-			PRIVATE ${SUITE_LINK_TARGET} )
-
-		#target_include_directories (${SUITE_NAME}
-		#	PRIVATE $<TARGET_PROPERTY:${SUITE_LINK_TARGET},INCLUDE_DIRECTORIES>
-		#)
-	else ()
-		target_link_libraries (${SUITE_NAME}
-			PRIVATE libarcstk::libarcstk )
+		## We do NOT just make SUITE_LINK_TARGET a dependency of SUITE_NAME
+		## because SUITE_LINK_TARGET will already be linked against the
+		## main target and the main target deps - to which also the test will
+		## link. This multiplicity may cause ODR violations and other problems
+		## within the build.
+		link_feature_deps (${SUITE_NAME} ${SUITE_LINK_TARGET} )
 	endif()
+
+	target_link_libraries (${SUITE_NAME} PRIVATE libarcstk::libarcstk )
 
 	## Set properties for all discovered tests
 
