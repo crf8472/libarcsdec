@@ -3,7 +3,7 @@
 
 add_test_suite (libarcsdec_readersndfile
 	LABEL "readersndfile"
-	LINK_TARGET libarcsdec_readersndfile
+	DEPS_FROM libarcsdec_readersndfile
 	TIMEOUT 10 )
 
 ## redundant

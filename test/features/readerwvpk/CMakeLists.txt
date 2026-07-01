@@ -3,7 +3,7 @@
 
 add_test_suite (libarcsdec_readerwvpk
 	LABEL "readerwvpk"
-	LINK_TARGET libarcsdec_readerwvpk
+	DEPS_FROM libarcsdec_readerwvpk
 	TIMEOUT 10 )
 
 ## FIXME redundant

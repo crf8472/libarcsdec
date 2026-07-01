@@ -3,7 +3,7 @@
 
 add_test_suite (libarcsdec_x_parserlibcue
 	LABEL       "parserlibcue"
-	LINK_TARGET libarcsdec_parserlibcue
+	DEPS_FROM libarcsdec_parserlibcue
 	TIMEOUT 10
 )
 

@@ -32,7 +32,7 @@ function (add_test_suite CATEGORY )
 	endif()
 
 	## Arguments
-	set (one_value_args LABEL TIMEOUT LINK_TARGET )
+	set (one_value_args LABEL TIMEOUT DEPS_FROM )
 	cmake_parse_arguments (SUITE "" "${one_value_args}" "" ${ARGN} )
 
 	#message (STATUS "Found tests of category '${CATEGORY}': ${TEST_SOURCES}" )
@@ -41,7 +41,7 @@ function (add_test_suite CATEGORY )
 
 	#message (STATUS "CATEGORY: '${CATEGORY}'" )
 	#message (STATUS "SUITE_NAME: '${SUITE_NAME}'" )
-	#message (STATUS "SUITE_LINK_TARGET: '${SUITE_LINK_TARGET}'" )
+	#message (STATUS "SUITE_DEPS_FROM: '${SUITE_DEPS_FROM}'" )
 
 	## Create executable
 	add_executable (${SUITE_NAME} ${TEST_SOURCES} )
@@ -79,14 +79,14 @@ function (add_test_suite CATEGORY )
 	)
 
 	## Get deps from specified target
-	if (TARGET ${SUITE_LINK_TARGET} )
+	if (TARGET ${SUITE_DEPS_FROM} )
 
-		## We do NOT just make SUITE_LINK_TARGET a dependency of SUITE_NAME
-		## because SUITE_LINK_TARGET will already be linked against the
+		## We do NOT just make SUITE_DEPS_FROM a dependency of SUITE_NAME
+		## because SUITE_DEPS_FROM will already be linked against the
 		## main target and the main target deps - to which also the test will
 		## link. This multiplicity may cause ODR violations and other problems
 		## within the build.
-		link_feature_deps (${SUITE_NAME} ${SUITE_LINK_TARGET} )
+		link_feature_deps (${SUITE_NAME} ${SUITE_DEPS_FROM} )
 	endif()
 
 	target_link_libraries (${SUITE_NAME} PRIVATE libarcstk::libarcstk )

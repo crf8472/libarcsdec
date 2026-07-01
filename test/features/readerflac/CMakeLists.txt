@@ -3,7 +3,7 @@
 
 add_test_suite (libarcsdec_readerflac
 	LABEL "readerflac"
-	LINK_TARGET libarcsdec_readerflac
+	DEPS_FROM libarcsdec_readerflac
 	TIMEOUT 10 )
 
 ## FLAC dependency details belong here, but we lack some information

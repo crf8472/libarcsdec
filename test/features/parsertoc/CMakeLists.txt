@@ -3,7 +3,7 @@
 
 add_test_suite (libarcsdec_parsertoc
 	LABEL "parsertoc"
-	LINK_TARGET libarcsdec_parsertoc
+	DEPS_FROM libarcsdec_parsertoc
 	TIMEOUT 10 )
 
 ## FIXME Should not know the target name
