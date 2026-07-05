@@ -72,7 +72,8 @@ function (libarcsdec_enable_clang_tidy OUT_VAR ) # {{{1
 		return()
 	endif()
 
-	_libarcsdec_add_clang_tidy_target (TARGET_NAME ${PROJECT_NAME}_clang-tidy
+	_libarcsdec_add_clang_tidy_target (
+		TARGET_NAME   ${PROJECT_NAME}_clang-tidy
 		IGNORE_ISSUES
 	)
 
