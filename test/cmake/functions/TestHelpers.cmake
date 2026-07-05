@@ -1,5 +1,29 @@
 ## Create a test executable from all .cpp files in a directory
 ## and register tests found with catch_discover_tests.
+
+## Link libraries of _feature_target in _test_target without introducing
+## a dependency between the targets.
+function (link_feature_deps _test_target _feature_target)
+
+	message (STATUS "Link target ${_test_target} "
+		"to the dependencies of target ${_feature_target}" )
+
+	get_target_property (_feature_libs ${_feature_target} LINK_LIBRARIES )
+	get_target_property (_feature_incl ${_feature_target} INCLUDE_DIRECTORIES )
+
+	if (_feature_libs)
+
+		#target_link_libraries (${_test_target} PRIVATE ${_feature_libs} )
+		foreach (_lib IN LISTS _feature_libs)
+			if (NOT _lib MATCHES "\\$<TARGET_OBJECTS:" )
+				target_link_libraries (${_test_target} PRIVATE ${_lib} )
+			endif ()
+		endforeach ()
+
+		target_include_directories (${_test_target} PRIVATE ${_feature_incl} )
+	endif ()
+endfunction()
+
 ##
 ## Usage:
 ##   add_test_suite(unit
@@ -8,28 +32,30 @@
 ##   )
 function (add_test_suite CATEGORY )
 
-	set (options )
-	set (oneValueArgs LABEL TIMEOUT )
-	set (multiValueArgs )
-
-	cmake_parse_arguments (SUITE
-		"${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
-
 	## Collect all test source files in src/ directory
 	file (GLOB TEST_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp" )
-
 	if (NOT TEST_SOURCES )
 		message (FATAL_ERROR
 			"No test sources found in ${CMAKE_CURRENT_SOURCE_DIR}/src/" )
 	endif()
 
-	message (STATUS "Found ${CATEGORY} tests: ${TEST_SOURCES}" )
+	## Arguments
+	set (one_value_args LABEL TIMEOUT DEPS_FROM )
+	cmake_parse_arguments (SUITE "" "${one_value_args}" "" ${ARGN} )
+
+	#message (STATUS "Found tests of category '${CATEGORY}': ${TEST_SOURCES}" )
+
+	set (SUITE_NAME "${CATEGORY}_tests" )
+
+	#message (STATUS "CATEGORY: '${CATEGORY}'" )
+	#message (STATUS "SUITE_NAME: '${SUITE_NAME}'" )
+	#message (STATUS "SUITE_DEPS_FROM: '${SUITE_DEPS_FROM}'" )
 
 	## Create executable
-	add_executable (${CATEGORY}_tests ${TEST_SOURCES} )
+	add_executable (${SUITE_NAME} ${TEST_SOURCES} )
 
 	## Standard configuration
-	set_target_properties (${CATEGORY}_tests PROPERTIES
+	set_target_properties (${SUITE_NAME} PROPERTIES
 		CXX_STANDARD           17
 		CXX_STANDARD_REQUIRED  ON
 		BUILD_RPATH            "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
@@ -37,16 +63,16 @@ function (add_test_suite CATEGORY )
 		SKIP_RPATH             OFF
 	)
 
-	target_compile_options (${CATEGORY}_tests
+	target_compile_options (${SUITE_NAME}
 		PRIVATE ${TEST_CXX_FLAGS_WARNINGS}
 		PRIVATE ${LIBARCSDEC_CXX_FLAGS_OPTIMIZE}
 	)
 
 	## Include paths
-	target_include_directories (${CATEGORY}_tests
+	target_include_directories (${SUITE_NAME}
 		PRIVATE "${LIBARCSDEC_INCLUDE_SOURCE_DIR}"        ## public headers
 		PRIVATE "${LIBARCSDEC_SOURCE_DIR}"                ## private headers
-		PRIVATE "${LIBARCSDEC_SOURCE_DIR}/${SUITE_LABEL}" ## private headers
+		PRIVATE "${LIBARCSDEC_SOURCE_DIR}/features/${SUITE_LABEL}/src" ## private headers
 		PRIVATE "${LIBARCSDEC_ROOT_DIR}/test/features/include"## private headers
 		PRIVATE "${LIBARCSDEC_GENSRC_BINARY_DIR}"         ## generated sources
 		PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include"     ## test suite includes
@@ -55,16 +81,23 @@ function (add_test_suite CATEGORY )
 	unset (_include )
 
 	## Link libraries
-	target_link_libraries (${CATEGORY}_tests
+	target_link_libraries (${SUITE_NAME}
 		PRIVATE Catch2::Catch2WithMain
 		PRIVATE ${PROJECT_NAME} ## libarcsdec from build-tree
 		PRIVATE libarcstk::libarcstk
 	)
 
-	## RPATH handling (force to load from build tree)
-	#if (UNIX AND NOT APPLE )
-	#	target_link_options (${CATEGORY}_tests PRIVATE -Wl,--disable-new-dtags)
-	#endif()
+	## Get deps from specified target
+	if (TARGET ${SUITE_DEPS_FROM} )
+		## feature target
+
+		## We do NOT just make SUITE_DEPS_FROM a dependency of SUITE_NAME
+		## because SUITE_DEPS_FROM will already be linked against the
+		## main target and the main target deps - to which also the test will
+		## link. This multiplicity may cause ODR violations and other problems
+		## within the build.
+		link_feature_deps (${SUITE_NAME} ${SUITE_DEPS_FROM} )
+	endif()
 
 	## Set properties for all discovered tests
 
@@ -80,7 +113,7 @@ function (add_test_suite CATEGORY )
 
 
 	## Discover and register all tests from the executable to CTest
-	catch_discover_tests (${CATEGORY}_tests
+	catch_discover_tests (${SUITE_NAME}
 		TEST_PREFIX       "${CATEGORY}/"
 		REPORTER          "junit"
 		OUTPUT_DIR        "${LIBARCSDEC_BINARY_DIR}/reports"

@@ -1,0 +1,89 @@
+## CMake file for feature readerffmpeg (ffmpeg based audio reader)
+## vim:fdm=marker
+
+cmake_minimum_required (VERSION 3.14.0 )
+
+message (STATUS "Build with ffmpeg support for audio" )
+
+function (readerffmpeg_pkg DEPS )
+	set (${DEPS}
+		"libavcodec >= 57.37.100"
+		"libavformat >= 57.33.100"
+		"libavutil >= 55.22.100"
+	PARENT_SCOPE )
+endfunction()
+
+## Verify the required versions of ffmpeg libs
+macro (at_least_version _required _actual )
+
+	if (${_actual} VERSION_LESS ${_required})
+
+		message (FATAL_ERROR
+		"Actual version is ${_actual}, required is at least ${_required}." )
+
+	endif()
+
+endmacro()
+
+## find_package does not respect versions for components but the ffmpeg
+## version is not trivial to access in a Find module.
+## Thus, instead of REQUIREing the lib versions, we verify them manually.
+
+find_package (ffmpeg REQUIRED COMPONENTS avcodec avformat avutil )
+
+## ffmpeg 3.1 < x < 4.0:
+## API Change: deprecated avcodec_decode_audio4() from ffmpeg 0.9 in favor
+## of avcodec_send_packet()/avcodec_receive_frame()
+at_least_version ("57.37.100" ${avcodec_VERSION}  ) ## 2016-04-21
+at_least_version ("57.33.100" ${avformat_VERSION} ) ## 2016-04-11
+at_least_version ("55.22.100" ${avutil_VERSION}   ) ## 2016-04-14
+#list (APPEND LIBARCSDEC_PKG_REQUIRE_ARRAY "libavcodec >= 57.37.100" )
+#list (APPEND LIBARCSDEC_PKG_REQUIRE_ARRAY "libavformat >= 57.33.100" )
+#list (APPEND LIBARCSDEC_PKG_REQUIRE_ARRAY "libavutil >= 55.22.100" )
+
+## Commented out, API change is small, can be distinguished in source.
+## ffmpeg x >= 4.0:
+## API Change: deprecated av_register_all() in favor of av_muxer_iterate()
+## and av_demuxer_iterate(), registering is obsolete
+#at_least_version ("58.17.100" ${avcodec_VERSION} )  ## 2018-04-11
+#at_least_version ("58.9.100"  ${avformat_VERSION} ) ## 2018-04-01
+#at_least_version ("56.13.100" ${avutil_VERSION} )   ## 2018-04-03
+
+## TODO
+## ffmpeg x >= 5.1:
+## AVFrame::channels, AVFrame::channel_layout is deprecated in favor of
+## AVFrame::ch_layout (nb_channels and ch_layout).
+## AVCodecContext::channels, AVCodecContext::channel_layout is deprecated
+## in favor of AVCodecContext::ch_layout (nb_channels and ch_layout).
+#at_least_version ("59.24.100" ${avcodec_VERSION} )  ## 2022-03-15
+#at_least_version ("59.19.100" ${avformat_VERSION} ) ## 2022-03-15
+#at_least_version ("57.24.100" ${avutil_VERSION} )   ## 2022-03-15
+
+
+add_library (libarcsdec_readerffmpeg OBJECT src/readerffmpeg.cpp )
+
+set_property (TARGET libarcsdec_readerffmpeg
+	PROPERTY POSITION_INDEPENDENT_CODE ON )
+
+target_include_directories (libarcsdec_readerffmpeg
+	PUBLIC $<BUILD_INTERFACE:${LIBARCSDEC_INCLUDE_SOURCE_DIR}>## public headers
+	PUBLIC $<BUILD_INTERFACE:${LIBARCSDEC_SOURCE_DIR}>        ## private headers
+	PUBLIC $<BUILD_INTERFACE:${avcodec_INCLUDE_DIRS}>
+	PUBLIC $<BUILD_INTERFACE:${avformat_INCLUDE_DIRS}>
+	PUBLIC $<BUILD_INTERFACE:${avutil_INCLUDE_DIRS}>
+)
+
+target_link_libraries      (libarcsdec_readerffmpeg
+	PUBLIC libarcstk::libarcstk
+	PUBLIC ${avcodec_LIBRARIES}
+	PUBLIC ${avformat_LIBRARIES}
+	PUBLIC ${avutil_LIBRARIES}
+)
+
+## Put this into libarcsdec
+target_link_libraries (${PROJECT_NAME} PRIVATE libarcsdec_readerffmpeg )
+
+if (WITH_TESTS )
+	add_subdirectory (test )
+endif()
+

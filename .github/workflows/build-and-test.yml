@@ -76,7 +76,6 @@ jobs:
       #  run: |
       #    brew reinstall --build-from-source flac
 
-      # Build & test every feature
       - name: Configure
         run: |
           cmake -B build \
@@ -89,6 +88,14 @@ jobs:
             -DWITH_WAVPACK=ON    \
             -DWITH_LIBSNDFILE=ON \
             -DWITH_LIBCUE=ON
+
+      - name: Configure (macos-latest)
+        if: runner.os == 'macOS'
+        run: |
+          cmake -B build \
+            -G Ninja \
+            -DCMAKE_OSX_ARCHITECTURES=arm64 \
+            -DCMAKE_PREFIX_PATH=$(brew --prefix)
 
       - name: Build
         run: cmake --build build
