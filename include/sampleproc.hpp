@@ -102,10 +102,7 @@ public:
 	/**
 	 * \brief Constructor.
 	 */
-	CalculationProcessor()
-	{
-		// empty
-	}
+	CalculationProcessor() = default;
 
 	/**
 	 * \brief Constructor.

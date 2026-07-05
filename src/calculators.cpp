@@ -38,11 +38,11 @@
 #ifndef LIBARCSDEC_DESCRIPTOR_HPP_
 #include "descriptor.hpp"
 #endif
+#ifndef LIBARCSDEC_METAPARSER_HPP_
+#include "metaparser.hpp"
+#endif
 #ifndef LIBARCSDEC_SELECTION_HPP_
 #include "selection.hpp"        // for FormatList,FileReaders,FileReaderSelector
-#endif
-#ifndef LIBARCSDEC_METAPARSER_HPP_
-#include "metaparser.hpp"       // for MetadataParser
 #endif
 #ifndef LIBARCSDEC_SAMPLEPROC_HPP_
 #include "sampleproc.hpp"       // for SampleProcessor, BLOCKSIZE
@@ -67,30 +67,30 @@ using arcstk::make_arid;
 
 // calculate_details.hpp
 
-namespace read
-{
-namespace details
-{
-
-// ensure_leadout
-
-
-AudioSize ensure_leadout(const AudioSize& leadout,
-		const AudioReader& reader, const std::string& audiofilename)
-{
-	if (!leadout.zero())
-	{
-		return leadout;
-	}
-
-	ARCS_LOG_DEBUG <<
-		"Empty leadout passed, acquire size from audio file";
-
-	return reader.acquire_size(audiofilename);
-}
-
-} // namespace details
-} // namespace read
+// namespace read
+// {
+// namespace details
+// {
+//
+// // ensure_leadout
+//
+//
+// AudioSize ensure_leadout(const AudioSize& leadout,
+// 		const AudioReader& reader, const std::string& audiofilename)
+// {
+// 	if (!leadout.zero())
+// 	{
+// 		return leadout;
+// 	}
+//
+// 	ARCS_LOG_DEBUG <<
+// 		"Empty leadout passed, acquire size from audio file";
+//
+// 	return reader.acquire_size(audiofilename);
+// }
+//
+// } // namespace details
+// } // namespace read
 
 
 // calculate.hpp
@@ -387,13 +387,6 @@ Context ARCSCalculator::to_context(
 
 
 // ARIdCalculator
-
-
-ARIdCalculator::ARIdCalculator()
-	: audio_ { /* default */ }
-{
-	/* empty */
-}
 
 
 ARId ARIdCalculator::calculate(const std::string& metafilename,

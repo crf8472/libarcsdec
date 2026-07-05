@@ -145,6 +145,10 @@ public:
 	 */
 	AudioReaderImpl();
 
+	// non-copyable
+	AudioReaderImpl(const AudioReaderImpl&)            = delete;
+	AudioReaderImpl& operator=(const AudioReaderImpl&) = delete;
+
 	/**
 	 * \brief Default destructor.
 	 */
@@ -222,9 +226,6 @@ public:
 	void set_sample_processor(SampleProcessor* processor);
 
 protected:
-
-	AudioReaderImpl(const AudioReaderImpl&)            = delete;
-	AudioReaderImpl& operator=(const AudioReaderImpl&) = delete;
 
 	AudioReaderImpl(AudioReaderImpl&&) noexcept            = default;
 	AudioReaderImpl& operator=(AudioReaderImpl&&) noexcept = default;
@@ -466,11 +467,6 @@ public:
 	using codec_set_type = std::set<Codec>;
 
 	/**
-	 * \brief Empty constructor.
-	 */
-	AudioValidator();
-
-	/**
 	 * \brief Virtual default destructor.
 	 */
 	virtual ~AudioValidator() noexcept;
@@ -555,12 +551,6 @@ public:
 	const error_list_type& get_errors() const;
 
 protected:
-
-	AudioValidator(AudioValidator&&) noexcept
-		= default;
-
-	AudioValidator& operator = (AudioValidator&&) noexcept
-		= default;
 
 	/**
 	 * \brief Call on_failure() iff condition is TRUE.

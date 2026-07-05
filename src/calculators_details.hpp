@@ -41,8 +41,8 @@ using arcstk::AudioSize;
  * If it is non-zero, use the leadout passed, otherwise call acquire_size()
  * on the \c reader for the \c audiofilename passed and return the result.
  */
-AudioSize ensure_leadout(const AudioSize& leadout,
-		const AudioReader& reader, const std::string& audiofilename);
+// AudioSize ensure_leadout(const AudioSize& leadout,
+//		const AudioReader& reader, const std::string& audiofilename);
 
 } // namespace details
 } // namespace read

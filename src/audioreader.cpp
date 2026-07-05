@@ -47,7 +47,7 @@ constexpr int32_t MAX_SAMPLES_TO_READ =
 
 int16_t LittleEndianBytes::to_int16(const char& b1, const char& b2)
 {
-	uint16_t val =
+	const uint16_t val =
 			static_cast<uint16_t>(b2 & 0xFF) << 8 |
 			static_cast<uint16_t>(b1 & 0xFF);
 
@@ -91,7 +91,7 @@ int32_t LittleEndianBytes::to_int32(const char& b1,
 		const char& b3,
 		const char& b4)
 {
-	uint32_t val =
+	const uint32_t val =
 			static_cast<uint32_t>(b4 & 0xFF) << 24 |
 			static_cast<uint32_t>(b3 & 0xFF) << 16 |
 			static_cast<uint32_t>(b2 & 0xFF) <<  8 |
@@ -184,13 +184,6 @@ InvalidAudioException::InvalidAudioException(const char* what_arg)
 
 
 // AudioValidator
-
-
-AudioValidator::AudioValidator()
-	: errors_ { /* empty */ }
-{
-  // empty
-}
 
 
 AudioValidator::~AudioValidator() noexcept = default;
@@ -633,7 +626,7 @@ private:
 	/**
 	 * \brief Internal AudioReaderImpl instance.
 	 */
-	std::unique_ptr<AudioReaderImpl> readerimpl_;
+	std::unique_ptr<AudioReaderImpl> readerimpl_ {};
 
 	/**
 	 * \brief AudioEventHandler of this instance.

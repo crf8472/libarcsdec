@@ -695,7 +695,7 @@ public:
 	 *
 	 * \param[in] capacity Capacity in number of ::AVPacket instances to enqueue
 	 */
-	FrameQueue(const std::size_t capacity);
+	explicit FrameQueue(const std::size_t capacity);
 
 	/**
 	 * \brief Constructor.

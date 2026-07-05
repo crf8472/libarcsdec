@@ -91,16 +91,13 @@ std::string name(Codec codec)
 
 
 ByteSeq::ByteSeq(ByteSeq::sequence_type::size_type length)
-	: sequence_(length)
-	, wildcards_ { /* empty */ }
+	: sequence_ (length)
 {
 	// empty
 }
 
 
 ByteSeq::ByteSeq(std::initializer_list<unsigned> values)
-	: sequence_  { /* empty */ }
-	, wildcards_ { /* empty */ }
 {
 	if (values.size() == 0) // TODO empty() only since C++17
 	{
@@ -141,7 +138,7 @@ bool ByteSeq::is_wildcard(sequence_type::size_type i) const
 }
 
 
-ByteSeq& ByteSeq::swap(ByteSeq& rhs)
+ByteSeq& ByteSeq::swap(ByteSeq& rhs) noexcept
 {
 	using std::swap;
 	swap(this->sequence_,  rhs.sequence_);
@@ -222,7 +219,7 @@ bool operator == (const ByteSeq& lhs, const ByteSeq& rhs)
 }
 
 
-void swap(ByteSeq& lhs, ByteSeq& rhs)
+void swap(ByteSeq& lhs, ByteSeq& rhs) noexcept
 {
 	lhs.swap(rhs);
 }
@@ -238,14 +235,6 @@ bool operator == (const Bytes& lhs, const Bytes& rhs)
 
 
 constexpr unsigned int Bytes::any;
-
-
-Bytes::Bytes()
-	: offset_ { 0 }
-	, seq_    { /* empty */ }
-{
-	// empty
-}
 
 
 Bytes::Bytes(const uint32_t offset, const ByteSequence& bytes)
@@ -384,7 +373,7 @@ ByteSequence::const_reference Bytes::operator[](
 }
 
 
-Bytes& Bytes::swap(Bytes& b) // noexcept
+Bytes& Bytes::swap(Bytes& b) noexcept
 {
 	using std::swap;
 	swap(this->seq_,    b.seq_); // noexcept only since C++17
@@ -767,7 +756,7 @@ bool operator == (const FileReaderDescriptor& lhs,
 }
 
 
-void swap(Bytes& lhs, Bytes& rhs)
+void swap(Bytes& lhs, Bytes& rhs) noexcept
 {
 	lhs.swap(rhs);
 }

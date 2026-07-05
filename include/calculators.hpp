@@ -317,11 +317,6 @@ class ARIdCalculator final : public FileReaderProvider<MetadataParser>
 public:
 
 	/**
-	 * \brief Constructor.
-	 */
-	ARIdCalculator();
-
-	/**
 	 * \brief Calculate ARId using the specified metadata and audio file.
 	 *
 	 * \param[in] metafilename  Name of the metadata file
@@ -365,7 +360,7 @@ private:
 	/**
 	 * \brief Internal worker to determine the AudioSize if required.
 	 */
-	AudioInfo audio_;
+	AudioInfo audio_ {};
 };
 
 /// @}

@@ -74,7 +74,7 @@ public:
 	 *
 	 * \param[in] filename File to read
 	 */
-	FileType(const std::string& filename);
+	explicit FileType(const std::string& filename);
 
 	/**
 	 * \brief Determine file type.

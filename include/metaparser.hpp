@@ -77,6 +77,10 @@ public:
 	 */
 	virtual ~MetadataParserImpl() noexcept;
 
+	// non-copyable
+	MetadataParserImpl(const MetadataParserImpl&) noexcept = delete;
+	MetadataParserImpl& operator= (const MetadataParserImpl&) noexcept = delete;
+
 	/**
 	 * \brief Parses a metadata file.
 	 *
@@ -141,7 +145,13 @@ public:
 	 *
 	 * \param[in] impl The concrete implementation of the MetadataParser
 	 */
-	MetadataParser(std::unique_ptr<MetadataParserImpl> impl);
+	explicit MetadataParser(std::unique_ptr<MetadataParserImpl> impl);
+
+	~MetadataParser() noexcept final = default;
+
+	// non-copyable
+	MetadataParser(const MetadataParser&) noexcept = delete;
+	MetadataParser& operator = (const MetadataParser&) noexcept = delete;
 
 	MetadataParser(MetadataParser&&) noexcept;
 	MetadataParser& operator = (MetadataParser&&) noexcept;

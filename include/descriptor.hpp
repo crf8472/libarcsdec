@@ -197,7 +197,7 @@ class ByteSeq;
 
 bool operator == (const ByteSeq& lhs, const ByteSeq& rhs);
 
-void swap(ByteSeq& lhs, ByteSeq& rhs);
+void swap(ByteSeq& lhs, ByteSeq& rhs) noexcept;
 
 /**
  * \brief Byte sequence with or without wildcards.
@@ -216,7 +216,7 @@ private:
 	/**
 	 * \brief Internal byte sequence.
 	 */
-	std::vector<byte_type> sequence_;
+	std::vector<byte_type> sequence_ {};
 
 	/**
 	 * \brief Type of the internal sequence.
@@ -226,7 +226,7 @@ private:
 	/**
 	 * \brief List of wildcard positions in the sequence.
 	 */
-	std::set<sequence_type::size_type> wildcards_;
+	std::set<sequence_type::size_type> wildcards_ {};
 
 public:
 
@@ -250,7 +250,7 @@ public:
 	 *
 	 * \param[in] length Actual length for a yet empty sequence
 	 */
-	ByteSeq(sequence_type::size_type length);
+	explicit ByteSeq(sequence_type::size_type length);
 
 	/**
 	 * \brief TRUE if byte on position \c i of the sequence has value \c b.
@@ -280,7 +280,7 @@ public:
 	 *
 	 * \return Instance after swapping
 	 */
-	ByteSeq& swap(ByteSeq& rhs) ; //TODO noexcept possible when C++17
+	ByteSeq& swap(ByteSeq& rhs) noexcept;
 
 
 	// Wrappers for functions delegated to the sequence_type
@@ -320,7 +320,7 @@ class Bytes;
 
 bool operator == (const Bytes& lhs, const Bytes& rhs);
 
-void swap(Bytes& lhs, Bytes& rhs);
+void swap(Bytes& lhs, Bytes& rhs) noexcept;
 
 /**
  * \brief A sequence of bytes read from a specific offset in a file.
@@ -339,11 +339,9 @@ public:
 	static constexpr unsigned int any = ByteSequence::max_byte_value + 1;
 
 	/**
-	 * \brief Constructor.
-	 *
-	 * Initiates an empty internal ByteSequence with an offset() of 0.
+	 * \brief Default constructor.
 	 */
-	Bytes();
+	Bytes() = default;
 
 	/**
 	 * \brief Constructor.
@@ -434,7 +432,7 @@ public:
 	 *
 	 * \return Instance after swapping
 	 */
-	Bytes& swap(Bytes& rhs) ; //TODO noexcept possible when C++17
+	Bytes& swap(Bytes& rhs) noexcept;
 
 private:
 
@@ -448,12 +446,12 @@ private:
 	/**
 	 * \brief Offset of the internal ByteSequence in the file.
 	 */
-	uint32_t offset_;
+	uint32_t offset_ {};
 
 	/**
 	 * \brief Internal ByteSequence.
 	 */
-	ByteSequence seq_;
+	ByteSequence seq_ {};
 };
 
 
@@ -717,7 +715,7 @@ public:
 	/**
 	 * \brief Virtual default destructor.
 	 */
-	inline virtual ~FormatMatcher() noexcept = default;
+	~FormatMatcher() noexcept final = default;
 
 private:
 

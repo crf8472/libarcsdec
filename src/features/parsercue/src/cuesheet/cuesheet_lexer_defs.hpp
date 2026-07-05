@@ -74,17 +74,17 @@ class Lexer final : public Cuesheet_FlexLexer
 	/**
 	 * \brief Internal token position.
 	 */
-	position current_pos_;
+	position current_pos_ {};
 
 	/**
 	 * \brief Internal token location.
 	 */
-	LocationClass* current_loc_;
+	LocationClass* current_loc_ {};
 
 	/**
 	 * \brief Class for interfacing the lexer from calling code.
 	 */
-	LexerHandler* lexer_handler_;
+	LexerHandler* lexer_handler_ {};
 
 public:
 
@@ -94,8 +94,7 @@ public:
 	 * \param[in] driver The cdrtoc::Driver that constructed this lexer.
 	 */
 	explicit Lexer(LocationClass* loc, LexerHandler* handler)
-		: current_pos_   { /* empty */ }
-		, current_loc_   { loc }
+		: current_loc_   { loc }
 		, lexer_handler_ { handler }
 	{
 		/* empty */
@@ -104,7 +103,7 @@ public:
 	/**
 	 * \brief Destructor.
 	 */
-	~Lexer() noexcept = default;
+	~Lexer() noexcept = default; /* FIXME not virtual in FlexLexer */
 
 	/**
 	 * \brief Return next token.
@@ -159,7 +158,8 @@ public:
 
 } // namespace yycuesheet
 } // namespace cuesheet
-} /*details*/ } /*read*/ } /*v_1_0_0*/ } /*arcsdec*/
+} /*namespace details*/ } /*namespace read*/
+} /*namespace v_1_0_0*/ } /*namespace arcsdec*/
 
 #endif // LIBARCSDEC_CUESHEET_LEXER_DEFS_HPP_
 

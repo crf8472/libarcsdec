@@ -272,7 +272,7 @@ public:
 	 *
 	 * \param[in] reader_id Select reader with this id, if available
 	 */
-	IdSelector(const std::string& reader_id);
+	explicit IdSelector(const std::string& reader_id);
 
 	/**
 	 * \brief Reader id to select.
@@ -367,9 +367,8 @@ public:
 	 * \tparam Args Arguments passed to the selector's constructor.
 	 */
 	template <typename... Args>
-	inline FileReaderPreferenceSelection(Args&&... args)
-		: preference_ { /* empty */ }
-		, selector_   { std::forward<Args>(args)... }
+	explicit FileReaderPreferenceSelection(Args&&... args)
+		: selector_   { std::forward<Args>(args)... }
 	{
 		// empty
 	}
@@ -379,7 +378,7 @@ public:
 	 *
 	 * \param[in] preference The preference model to use
 	 */
-	inline void set_preference(const preference_type& preference)
+	void set_preference(const preference_type& preference)
 	{
 		preference_ = preference;
 	}
@@ -389,7 +388,7 @@ public:
 	 *
 	 * \return Preference model for this selection.
 	 */
-	inline const DescriptorPreference* preference() const
+	const DescriptorPreference* preference() const
 	{
 		return &preference_;
 	}
@@ -399,7 +398,7 @@ public:
 	 *
 	 * \param[in] selector The selector to use
 	 */
-	inline void set_selector(const selector_type& selector)
+	void set_selector(const selector_type& selector)
 	{
 		selector_ = selector;
 	}
@@ -409,7 +408,7 @@ public:
 	 *
 	 * \return Selector for this selection.
 	 */
-	inline const FileReaderSelector* selector() const
+	const FileReaderSelector* selector() const
 	{
 		return &selector_;
 	}
@@ -419,12 +418,12 @@ private:
 	/**
 	 * \brief Internal preference model.
 	 */
-	preference_type preference_;
+	preference_type preference_ {};
 
 	/**
 	 * \brief Internal selector.
 	 */
-	selector_type selector_;
+	selector_type selector_ {};
 
 
 	inline std::unique_ptr<FileReaderDescriptor> do_get(const Format format,
@@ -641,7 +640,7 @@ namespace details
 template <class T, typename... Args>
 std::unique_ptr<FileReaderDescriptor> make_descriptor(Args&&... args)
 {
-	static_assert(std::is_convertible<T*, FileReaderDescriptor*>::value,
+	static_assert(std::is_convertible_v<T*, FileReaderDescriptor*>,
 			"Cannot convert type to FileReaderDescriptor");
 
 	return std::make_unique<T>(std::forward<Args>(args)...);
