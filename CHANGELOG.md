@@ -13,8 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
   - API: Organize everything in 3 namespaces: read, select, calc
-  - API: ARCSCalculator::calculate() overloads provide
-  - API: ARIdCalculator::calculate() overloads provide
+  - API: ARCSCalculator::calculate() overloads provides instance instead of
+    unique_ptr
+  - API: ARIdCalculator::calculate() overloads provides instance instead of
+    unique_ptr
   - API: ToCParser::parse() provides a ToC instead of std::unique_ptr<ToC>
   - API: AudioInfo provides an AudioSize instead of
     std::unique_ptr<AudioSize>
