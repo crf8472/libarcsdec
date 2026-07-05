@@ -1,6 +1,8 @@
 ## CMake file for managing libarcsdec dependencies
 ## vim:fdm=marker
 
+set (_libarcstk_MINIMUM_REQUIRED_VERSION "9.0.0" )
+
 function (libarcsdec_setup_required_dependencies PKG_LIST )
 ## -- Required dependency: libarcstk {{{1
 if (WITH_SUBMODULES )
@@ -48,9 +50,11 @@ if (WITH_SUBMODULES )
 
 else()
 
-	find_package (libarcstk 0.9.0 REQUIRED )
+	find_package (libarcstk ${_libarcstk_MINIMUM_REQUIRED_VERSION} REQUIRED )
 
-	list (APPEND PKG_LIST "libarcstk >= 0.9.0" PARENT_SCOPE )
+	list (APPEND PKG_LIST "libarcstk >= ${_libarcstk_MINIMUM_REQUIRED_VERSION}"
+		PARENT_SCOPE )
+
 endif (WITH_SUBMODULES )
 
 
