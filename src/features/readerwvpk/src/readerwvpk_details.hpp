@@ -66,6 +66,21 @@ struct Free_WavpackContext final
 
 
 /**
+ * \brief Functor for freeing C-string instances.
+ */
+struct Free_CString final
+{
+	void operator()(char* s) const;
+};
+
+
+/**
+ * \brief Pointer to error strings.
+ */
+using CStringPtr = std::unique_ptr<char, Free_CString>;
+
+
+/**
  * \brief A unique_ptr for WavpackContext using Free_WavpackContext as a
  * custom deleter.
  */
@@ -80,7 +95,7 @@ using WavpackContextPtr =
  *
  * \return WavpackContext
  */
-extern WavpackContextPtr get_context(const std::string& filename) noexcept;
+extern WavpackContextPtr get_context(const std::string& filename);
 
 
 /**
@@ -117,11 +132,6 @@ private:
 class WAVPACK_CDDA_t final
 {
 public:
-
-	/**
-	 * \brief Default destructor.
-	 */
-	~WAVPACK_CDDA_t() noexcept;
 
 	/**
 	 * \brief Expect lossless compression.
@@ -192,11 +202,15 @@ public:
 	/**
 	 * \brief Default destructor.
 	 */
-	~WavpackOpenFile() noexcept;
+	~WavpackOpenFile() noexcept = default;
 
 	// class is non-copyable
-	WavpackOpenFile(const WavpackOpenFile& file) = delete;
-	WavpackOpenFile& operator = (WavpackOpenFile& file) = delete;
+	WavpackOpenFile(const WavpackOpenFile& file)              = delete;
+	WavpackOpenFile& operator = (const WavpackOpenFile& file) = delete;
+
+	// class is movable
+	WavpackOpenFile(WavpackOpenFile&& file)              = default;
+	WavpackOpenFile& operator = (WavpackOpenFile&& file) = default;
 
 	/**
 	 * \brief Returns TRUE if file is lossless.
