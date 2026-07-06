@@ -266,10 +266,10 @@ bool FlacAudioFile::channels_swapped(
 
 ::FLAC__StreamDecoderWriteStatus FlacAudioFile::write_callback(
 		const ::FLAC__Frame* frame,
-		const ::FLAC__int32* const buffer[]) // NOLINT (*-avoid-c-arrays)
+		const ::FLAC__int32* const buffer[]) // NOLINT(*-avoid-c-arrays)
 {
 	const arcstk::PlanarSamples<::FLAC__int32> sequence {
-		// NOLINTNEXTLINE (cppcoreguidelines-pro-bounds-pointer-arithmetic)
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 		buffer[0], buffer[1],
 		frame->header.blocksize,
 		channels_swapped(frame->header.channel_assignment)

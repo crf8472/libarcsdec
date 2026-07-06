@@ -212,7 +212,7 @@ protected:
 	 */
 	::FLAC__StreamDecoderWriteStatus write_callback(
 			const ::FLAC__Frame* frame,
-			// NOLINTNEXTLINE (*-avoid-c-arrays)
+			// NOLINTNEXTLINE(*-avoid-c-arrays)
 			const ::FLAC__int32* const buffer[]) final;
 
 	/**
