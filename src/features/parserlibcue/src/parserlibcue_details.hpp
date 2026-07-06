@@ -74,9 +74,9 @@ using lba_type = int32_t;
  * \brief Type for raw Cue data.
  */
 using CueInfo = std::tuple<uint16_t, // track count
+	std::vector<std::string>,        // filenames
 	std::vector<lba_type>,           // offsets
-	std::vector<lba_type>,           // lengths
-	std::vector<std::string>>;       // filenames
+	std::vector<lba_type>>;          // lengths
 
 
 /**
@@ -104,6 +104,31 @@ struct Make_CdPtr final
 
 
 /**
+ * \brief Close FILE instances.
+ */
+struct Close_FILEPtr final
+{
+	void operator()(FILE* f) const;
+};
+
+
+/**
+ * \brief A unique_ptr for FILE using Close_FILEPtr as a custom deleter.
+ */
+using FILEPtr = std::unique_ptr<FILE, Close_FILEPtr>;
+
+
+/**
+ * \brief Open \c filename and return a handle.
+ *
+ * \param[in] filename Name of the file to open
+ *
+ * \return Handle to \c filename
+ */
+FILEPtr safe_open_for_read(const std::string& filename);
+
+
+/**
  * \brief Represents an opened Cuesheet file.
  *
  * Instances of this class are non-copyable but movable.
@@ -122,8 +147,14 @@ public:
 	 */
 	explicit CueOpenFile(const std::string& filename);
 
+	// non-copyable
+	CueOpenFile(const CueOpenFile& file) noexcept              = delete;
+	CueOpenFile& operator = (const CueOpenFile& file) noexcept = delete;
+
 	CueOpenFile(CueOpenFile&& file) noexcept;
 	CueOpenFile& operator = (CueOpenFile&& file) noexcept;
+
+	~CueOpenFile() noexcept = default;
 
 	/**
 	 * \brief Returns all ToC information from the file.
@@ -137,7 +168,7 @@ private:
 	/**
 	 * \brief Internal libcue-based representation.
 	 */
-	CdPtr cd_info_;
+	CdPtr cd_info_ {};
 };
 
 
