@@ -247,19 +247,43 @@ void ParserToCHandler::do_end_input()
 
 void ParserToCHandler::append_offset(const uint64_t& frames)
 {
-	offsets_.push_back(frames);
+	if (frames <= arcstk::CDDA::MAX_BLOCK_ADDRESS)
+	{
+		offsets_.push_back(static_cast<int>(frames));
+	} else
+	{
+		// TODO fail
+	}
 }
 
 
 void ParserToCHandler::set_offset(const std::size_t t, const uint64_t& frames)
 {
-	offsets_[to_index(t)] = frames;
+	using arcstk::CDDA;
+
+	if (t <= CDDA::MAX_TRACKCOUNT && frames <= CDDA::MAX_BLOCK_ADDRESS)
+	{
+		const auto index { to_index(t) };
+
+		if (index < offsets_.size())
+		{
+			offsets_[to_index(t)] = static_cast<int>(frames);
+		}
+	} else
+	{
+		// TODO fail
+	}
 }
 
 
 int32_t ParserToCHandler::offset(const std::size_t t) const
 {
-	return offsets_.at(to_index(t));
+	if (t <= arcstk::CDDA::MAX_TRACKCOUNT)
+	{
+		return offsets_.at(to_index(t));
+	}
+
+	return 0;
 }
 
 
@@ -271,7 +295,12 @@ void ParserToCHandler::append_filename(const std::string& filename)
 
 std::string ParserToCHandler::filename(const std::size_t t) const
 {
-	return filenames_.at(to_index(t));
+	if (t <= arcstk::CDDA::MAX_TRACKCOUNT)
+	{
+		return filenames_.at(to_index(t));
+	}
+
+	return {};
 }
 
 
