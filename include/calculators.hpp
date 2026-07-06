@@ -149,7 +149,7 @@ public:
 	 *
 	 * \param[in] type The Checksum type to calculate.
 	 */
-	explicit ARCSCalculator(const ChecksumtypeSet& type);
+	explicit ARCSCalculator(ChecksumtypeSet type);
 
 	/**
 	 * \brief Constructor.

@@ -190,6 +190,10 @@ struct Comparable
 	{
 		return !(lhs == rhs);
 	}
+
+protected:
+
+	Comparable() = default; // NOLINT(bugprone-crtp-constructor-accessibility)
 };
 
 
@@ -349,7 +353,7 @@ public:
 	 * \param[in] byte_offset 0-based start position
 	 * \param[in] byte_seq    Sequence of bytes
 	 */
-	Bytes(const uint32_t byte_offset, const ByteSequence& byte_seq);
+	Bytes(const uint32_t byte_offset, ByteSequence byte_seq);
 
 	/**
 	 * \brief Match a byte sequence with this instance.
@@ -689,10 +693,10 @@ public:
 	 * \param[in] bytes     A byte sequence accepted by this Format
 	 * \param[in] codecs    Codecs supported for this Format
 	 */
-	FormatMatcher(const SuffixSet& suffices, const Bytes& bytes,
+	FormatMatcher(SuffixSet suffices, Bytes bytes,
 			const std::set<Codec>& codecs)
-		: suffices_ { suffices }
-		, bytes_    { bytes }
+		: suffices_ { std::move(suffices) }
+		, bytes_    { std::move(bytes)    }
 		, codecs_   { codecs }
 	{
 		/* empty */
@@ -719,38 +723,38 @@ public:
 
 private:
 
-	inline std::string do_name() const final
+	std::string do_name() const final
 	{
 		using arcsdec::read::name;
 		return name(F);
 	}
 
-	inline bool do_matches(const Bytes& bytes) const final
+	bool do_matches(const Bytes& bytes) const final
 	{
 		return bytes_.match(bytes);
 	}
 
-	inline bool do_matches(const std::string& filename) const final
+	bool do_matches(const std::string& filename) const final
 	{
 		return details::ci_match_suffix(suffices_, filename);
 	}
 
-	inline Format do_format() const final
+	Format do_format() const final
 	{
 		return F;
 	}
 
-	inline std::set<Codec> do_codecs() const final
+	std::set<Codec> do_codecs() const final
 	{
 		return codecs_;
 	}
 
-	inline Bytes do_reference_bytes() const final
+	Bytes do_reference_bytes() const final
 	{
 		return bytes_;
 	}
 
-	inline std::unique_ptr<Matcher> do_clone() const final
+	std::unique_ptr<Matcher> do_clone() const final
 	{
 		return
 			std::make_unique<FormatMatcher<F>>(suffices_, bytes_, codecs_);
@@ -759,17 +763,17 @@ private:
 	/**
 	 * \brief Internal set of supported suffices.
 	 */
-	SuffixSet suffices_;
+	SuffixSet suffices_ {};
 
 	/**
 	 * \brief Internal reference byte sequence.
 	 */
-	Bytes bytes_;
+	Bytes bytes_ {};
 
 	/**
 	 * \brief Internal set of codecs supported for this Format.
 	 */
-	std::set<Codec> codecs_;
+	std::set<Codec> codecs_ {};
 };
 
 
@@ -867,7 +871,7 @@ private:
 	/**
 	 * \brief Internal byte position.
 	 */
-	int64_t byte_pos_;
+	int64_t byte_pos_ {};
 };
 
 
@@ -944,7 +948,7 @@ public:
 	/**
 	 * \brief Virtual default destructor.
 	 */
-	virtual ~FileReaderDescriptor() noexcept;
+	~FileReaderDescriptor() noexcept override;
 
 	/**
 	 * \brief Id of this FileReaderDescriptor type.

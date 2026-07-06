@@ -112,11 +112,11 @@ public:
 	 * \param[in] offsets  Track offsets (in LBA frames)
 	 * \param[in] leadout  Leadout frame
 	 */
-	CalculationProcessor(const ChecksumtypeSet& types, const Settings& settings,
-		const Points& offsets, const AudioSize& leadout)
-		: types_    { types    }
+	CalculationProcessor(ChecksumtypeSet types, Settings settings,
+		Points offsets, const AudioSize& leadout)
+		: types_    { std::move(types)   }
 		, settings_ { settings }
-		, offsets_  { offsets  }
+		, offsets_  { std::move(offsets) }
 		, leadout_  { leadout  }
 		, calculationset_ { nullptr }
 	{
@@ -233,9 +233,9 @@ public:
 		}
 
 		using updateable_type = arcstk::UpdateableCalculationSet<B, E>;
-		updateable_type* calc;
+		auto* calc = dynamic_cast<updateable_type*>(calculationset_.get());
 
-		if ((calc = dynamic_cast<updateable_type*>(calculationset_.get())))
+		if (calc)
 		{
 			ARCS_LOG(DEBUG3) << "Pass samples to calculation object";
 

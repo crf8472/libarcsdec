@@ -272,7 +272,7 @@ public:
 	 *
 	 * \param[in] reader_id Select reader with this id, if available
 	 */
-	explicit IdSelector(const std::string& reader_id);
+	explicit IdSelector(std::string reader_id);
 
 	/**
 	 * \brief Reader id to select.
@@ -695,7 +695,7 @@ auto cast_reader(std::unique_ptr<FileReader> file_reader) noexcept
 	// Create ReaderType manually by downcasting and reassignment
 
 	FileReader *file_reader_rptr = file_reader.get();
-	ReaderType *reader_type_rptr = nullptr;
+	const ReaderType *reader_type_rptr = nullptr;
 
 	// Dry run:
 	// Casting succeeds iff the FileReader created is in fact a ReaderType.

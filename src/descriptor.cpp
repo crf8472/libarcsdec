@@ -59,7 +59,7 @@ std::string name(Format format)
 		// ... add more audio formats here
 	};
 
-	return names[std::underlying_type_t<Format>(format)];
+	return names[static_cast<std::underlying_type_t<Format>>(format)];
 }
 
 
@@ -83,7 +83,7 @@ std::string name(Codec codec)
 		"none" // Allows combination with a non-audio format
 	};
 
-	return names[std::underlying_type_t<Codec>(codec)];
+	return names[static_cast<std::underlying_type_t<Codec>>(codec)];
 }
 
 
@@ -237,9 +237,9 @@ bool operator == (const Bytes& lhs, const Bytes& rhs)
 constexpr unsigned int Bytes::any;
 
 
-Bytes::Bytes(const uint32_t offset, const ByteSequence& bytes)
+Bytes::Bytes(const uint32_t offset, ByteSequence bytes)
 	: offset_ { offset }
-	, seq_    { bytes }
+	, seq_    { std::move(bytes) }
 {
 	// empty
 }
@@ -293,16 +293,16 @@ bool Bytes::match(const ByteSequence& bytes, const uint32_t& ioffset) const
 	const bool longer_input = bytes.size() > ref_size;
 
 	const auto in_stop  = longer_input
-		? bytes.begin() + static_cast<long>(ref_size) + 1 /* past-the-end */
+		? bytes.begin() + static_cast<int64_t>(ref_size) + 1 /*past-the-end*/
 		: bytes.end();
 
 	const auto ref_stop = longer_input
 		? ref_bytes().end()
-		: ref_current + static_cast<long>(bytes.size()) + 1 /* past-the-end */;
+		: ref_current + static_cast<int64_t>(bytes.size()) + 1 /*past-the-end*/;
 
 	auto on_wildcard = bool { false };
 
-	do
+	do // NOLINT(cppcoreguidelines-avoid-do-while)
 	{
 		const auto m = std::mismatch(in_current, in_stop,
 				ref_current, ref_stop);
@@ -444,7 +444,7 @@ Bytes read_bytes(const std::string& filename,
 	// Do not consume new lines in binary mode
 	in.unsetf(std::ios::skipws);
 
-	std::ios_base::iostate exception_mask = in.exceptions()
+	const std::ios_base::iostate exception_mask = in.exceptions()
 		| std::ios::failbit | std::ios::badbit | std::ios::eofbit;
 
 	in.exceptions(exception_mask);
@@ -476,7 +476,7 @@ Bytes read_bytes(const std::string& filename,
 	}
 	catch (const std::ios_base::failure& f)
 	{
-		int64_t total_bytes_read = 1 + in.gcount();
+		const int64_t total_bytes_read = 1 + in.gcount();
 
 		in.close();
 
@@ -492,12 +492,14 @@ Bytes read_bytes(const std::string& filename,
 			throw FileReadException(msg, total_bytes_read);
 		} else
 		{
+			using std::to_string;
+
 			auto msg = std::string { "Content failure on file: " };
 			msg += filename;
 			msg += ", message: ";
 			msg += f.what();
 			msg += ", read ";
-			msg += total_bytes_read;
+			msg += to_string(total_bytes_read);
 			msg += " bytes";
 
 			throw InputFormatException(msg);

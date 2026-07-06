@@ -390,8 +390,8 @@ std::unique_ptr<FileReaderDescriptor> DefaultSelector::do_select(
 // IdSelector
 
 
-IdSelector::IdSelector(const std::string& reader_id)
-	: reader_id_ { reader_id }
+IdSelector::IdSelector(std::string reader_id)
+	: reader_id_ { std::move(reader_id) }
 {
 	// empty
 }

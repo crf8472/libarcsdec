@@ -37,8 +37,8 @@ namespace details
  */
 template <typename S, typename T>
 struct signedness final : public std::integral_constant<bool,
-	(std::is_signed<S>::value && std::is_signed<T>::value)
-	|| (std::is_unsigned<S>::value && std::is_unsigned<T>::value)>
+	(std::is_signed_v<S> && std::is_signed_v<T>)
+	|| (std::is_unsigned_v<S> && std::is_unsigned_v<T>)>
 {
 	// empty
 };
@@ -93,7 +93,7 @@ inline auto cast_or_throw(const T value) -> S
  *
  * \return Total number of CDDA frames
  */
-long msf_to_frames(const int m, const int s, const int f);
+int64_t msf_to_frames(const int m, const int s, const int f);
 
 
 /**
@@ -104,7 +104,7 @@ long msf_to_frames(const int m, const int s, const int f);
  * \param[out] s      Seconds
  * \param[out] f      Frames
  */
-void frames_to_msf(long frames, int* m, int* s, int* f);
+void frames_to_msf(int64_t frames, int64_t* m, int64_t* s, int64_t* f);
 
 
 } // namespace details

@@ -177,18 +177,6 @@ void validate_disc_id(const std::string& disc_id)
 // ParserTocHandler
 
 
-ParserToCHandler::ParserToCHandler()
-	: offsets_       { /* empty */ }
-	, filenames_     { /* empty */ }
-	, isrcs_         { /* empty */ }
-	, current_track_ { 0 }
-	, mcn_           { /* empty */ }
-	, disc_id_       { /* empty */ }
-{
-	// empty
-}
-
-
 ParserToCHandler::~ParserToCHandler() noexcept = default;
 
 
@@ -227,7 +215,7 @@ void ParserToCHandler::dump_log() const
 			isrc = this->isrc(static_cast<std::size_t>(t));
 		} catch (const std::exception& e)
 		{
-			// do nothing
+			ARCS_LOG(DEBUG2) << "<Exception on ISRC>";
 		}
 
 		if (isrc.empty())

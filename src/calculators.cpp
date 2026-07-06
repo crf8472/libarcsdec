@@ -131,8 +131,8 @@ AudioSize AudioInfo::size(const std::string& filename) const
 // ARCSCalculator
 
 
-ARCSCalculator::ARCSCalculator(const ChecksumtypeSet& typeset)
-	: types_             { typeset }
+ARCSCalculator::ARCSCalculator(ChecksumtypeSet typeset)
+	: types_             { std::move(typeset) }
 	, read_buffer_size_  { BLOCKSIZE::DEFAULT }
 {
 	/* empty */
@@ -236,7 +236,7 @@ Checksums ARCSCalculator::calculate(
 
 	// Calculate second to second last track
 
-	for (uint16_t i = 1; i < audiofilenames.size() - 1; ++i)
+	for (std::size_t i = 1; i < audiofilenames.size() - 1; ++i)
 	{
 		track = calculate(audiofilenames[i], false, false);
 
