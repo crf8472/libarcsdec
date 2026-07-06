@@ -86,7 +86,7 @@ void Free_CString::operator()(char* s) const
 {
 	if (s)
 	{
-		::free(s); // NOLINT (cppcoreguidelines-no-malloc,cppcoreguidelines-owning-memory)
+		::free(s); // NOLINT(cppcoreguidelines-no-malloc,cppcoreguidelines-owning-memory)
 		s = nullptr;
 	}
 }
