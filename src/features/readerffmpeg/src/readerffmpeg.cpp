@@ -78,13 +78,13 @@ std::string v_format_string(const char* fmt, std::va_list args_list)
 
 	while (error_count < 3)/*TODO kind of random magic number*/
 	{
-		// NOLINTNEXTLINE (cppcoreguidelines-pro-type-vararg)
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
 		std::va_list args; /* use a copy(!) of the va_list for each loop run */
-		// NOLINTBEGIN (cppcoreguidelines-pro-bounds-array-to-pointer-decay)
+		// NOLINTBEGIN(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
 		va_copy(args, args_list);
 		total_chars = std::vsnprintf(buf.data(), buf_size, fmt, args);
 		va_end(args);
-		// NOLINTEND (cppcoreguidelines-pro-bounds-array-to-pointer-decay)
+		// NOLINTEND(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
 
 		if (total_chars > -1) // no error
 		{
@@ -653,7 +653,7 @@ AVCodecContextPtr create_codec_context(::AVFormatContext* fctx,
 		throw std::invalid_argument("Stream index is negative");
 	}
 
-	// NOLINTNEXTLINE (cppcoreguidelines-pro-bounds-pointer-arithmetic)
+	// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 	const auto* stream { fctx->streams[stream_idx] };
 	// ::AVStream*
 
@@ -679,7 +679,7 @@ AVCodecContextPtr create_codec_context(::AVFormatContext* fctx,
 #else
 		for (auto i = int { 0 }; i < stream->codecpar->nb_coded_side_data; ++i)
 		{
-			// NOLINTNEXTLINE (cppcoreguidelines-pro-bounds-pointer-arithmetic)
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 			const auto* const sd_data { &stream->codecpar->coded_side_data[i] };
 			//const AVPacketSideData* const
 
