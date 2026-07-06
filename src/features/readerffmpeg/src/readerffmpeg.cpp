@@ -1287,18 +1287,22 @@ void FFmpegAudioReaderImpl::do_process_file(const std::string& filename)
 	// This imitates how a SampleProcessor is attached to a SampleProvider.
 
 	audiostream->register_start_input(
-		std::bind(&FFmpegAudioReaderImpl::start_input_callback, this));
+		[this]() { this->start_input_callback(); });
+		//std::bind(&FFmpegAudioReaderImpl::start_input_callback, this));
 
 	audiostream->register_update_audiosize(
-		std::bind(&FFmpegAudioReaderImpl::audiosize_callback, this,
-			std::placeholders::_1));
+		[this](const AudioSize& size) { this->audiosize_callback(size); });
+		// std::bind(&FFmpegAudioReaderImpl::audiosize_callback, this,
+		// 	std::placeholders::_1));
 
 	audiostream->register_push_frame(
-		std::bind(&FFmpegAudioReaderImpl::frame_callback, this,
-			std::placeholders::_1));
+		[this](AVFramePtr frame) { this->frame_callback(std::move(frame)); });
+		// std::bind(&FFmpegAudioReaderImpl::frame_callback, this,
+		// 	std::placeholders::_1));
 
 	audiostream->register_end_input(
-		std::bind(&FFmpegAudioReaderImpl::end_input_callback, this));
+		[this]() { this->end_input_callback(); });
+		//std::bind(&FFmpegAudioReaderImpl::end_input_callback, this));
 
 
 	// Process file
