@@ -129,7 +129,7 @@ std::vector<std::string> runtime_deps(const std::string& object_name)
 	using OpaqueStruct =
 		struct opaque_struct
 		{
-			void* pointers[3];
+			void* pointers[3]; // NOLINT(*-avoid-c-arrays)
 			struct opaque_struct* ptr;
 		};
 
