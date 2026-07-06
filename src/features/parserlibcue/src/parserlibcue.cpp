@@ -122,7 +122,7 @@ void Close_FILEPtr::operator()(FILE* f) const
 {
 	if (f)
 	{
-		// NOLINTNEXTLINE (cppcoreguidelines-owning-memory)
+		// NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
 		if (std::fclose(f)) // fclose returns 0 on success & EOF on error
 		{
 			ARCS_LOG_ERROR << "Failed to close Cuesheet file";
@@ -207,8 +207,8 @@ CueInfo CueOpenFile::info() const
 	filenames.reserve(static_cast<filenames_sz>(track_count));
 
 	// Types according to libcue-API
-	auto trk_offset = long { 0 }; // NOLINT (google-runtime-int)
-	auto trk_length = long { 0 }; // NOLINT (google-runtime-int)
+	auto trk_offset = long { 0 }; // NOLINT(google-runtime-int)
+	auto trk_length = long { 0 }; // NOLINT(google-runtime-int)
 	const ::Track* trk = nullptr;
 
 	// Read offset, length + filename for each track in Cue file
