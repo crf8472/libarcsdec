@@ -1,11 +1,9 @@
-## CMake script for executing clang-tidy
+## libarcsdec: CMake script for executing clang-tidy
 ##
 ## Note that clang-tidy does not have an option to specify file output. One has
 ## capture the output and pipe it to a file. This should be done platform
 ## independent by execute_process. Since we must use execute_process we use
 ## this standalone script tied to a custom target.
-
-#set (IGNORE_ISSUES FALSE CACHE BOOL "Ignore issues and always return 0" )
 
 file (WRITE "${REPORT_FILE}" "")
 
