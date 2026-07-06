@@ -68,6 +68,11 @@ using arcstk::SampleSequence;
  */
 class FlacMetadataHandler
 {
+	AudioEventHandler* handler_ {};
+
+	virtual void do_update(const FLAC::Metadata::StreamInfo& streaminfo)
+	= 0;
+
 	virtual void do_validate(const FLAC::Metadata::StreamInfo& streaminfo)
 	= 0;
 
@@ -79,7 +84,9 @@ public:
 	/**
 	 * \brief Virtual default destructor.
 	 */
-	virtual ~FlacMetadataHandler() noexcept;
+	virtual ~FlacMetadataHandler() noexcept = default;
+
+	void update(const FLAC::Metadata::StreamInfo& streaminfo);
 
 	/**
 	 * \brief To be called manually by the AudioReaderImpl to trigger
@@ -100,30 +107,10 @@ public:
 	 * \param[in] cuesheet CueSheet data found in FLAC file
 	 */
 	void cuesheet(const FLAC::Metadata::CueSheet& cuesheet);
-};
 
-/**
- * \brief Interface: Error handler for FLAC files.
- */
-class FlacErrorHandler
-{
-	virtual void do_error(::FLAC__StreamDecoderErrorStatus status)
-	= 0;
+	void register_handler(AudioEventHandler* handler);
 
-public:
-
-	/**
-	 * \brief Virtual default destructor.
-	 */
-	virtual ~FlacErrorHandler() noexcept;
-
-	/**
-	 * \brief To be called manually by the AudioReaderImpl to signal a decoder
-	 * error.
-	 *
-	 * \param[in] status Error status signalled by the decoder
-	 */
-	void error(::FLAC__StreamDecoderErrorStatus status);
+	AudioEventHandler* handler();
 };
 
 /**
@@ -139,25 +126,7 @@ public:
 class FlacDefaultMetadataHandler final  : public FlacMetadataHandler
 										, public DefaultValidator
 {
-public:
-
-	/**
-	 * \brief Default constructor.
-	 */
-	FlacDefaultMetadataHandler();
-
-	// class is non-copyable
-	FlacDefaultMetadataHandler(const FlacDefaultMetadataHandler&)
-	= delete;
-	FlacDefaultMetadataHandler& operator = (const FlacDefaultMetadataHandler&)
-	= delete;
-
-	// class is movable
-	FlacDefaultMetadataHandler(FlacDefaultMetadataHandler&&) noexcept;
-	FlacDefaultMetadataHandler& operator = (FlacDefaultMetadataHandler&&)
-		noexcept;
-
-private:
+	void do_update(const FLAC::Metadata::StreamInfo& streaminfo) final;
 
 	void do_validate(const FLAC::Metadata::StreamInfo& streaminfo) final;
 
@@ -178,6 +147,29 @@ private:
 	bool validate_streaminfo(const FLAC::Metadata::StreamInfo& streaminfo);
 };
 
+/**
+ * \brief Interface: Error handler for FLAC files.
+ */
+class FlacErrorHandler
+{
+	virtual void do_error(::FLAC__StreamDecoderErrorStatus status)
+	= 0;
+
+public:
+
+	/**
+	 * \brief Virtual default destructor.
+	 */
+	virtual ~FlacErrorHandler() noexcept = default;
+
+	/**
+	 * \brief To be called manually by the AudioReaderImpl to signal a decoder
+	 * error.
+	 *
+	 * \param[in] status Error status signalled by the decoder
+	 */
+	void error(::FLAC__StreamDecoderErrorStatus status);
+};
 
 /**
  * \brief Default error handler for FLAC files.
@@ -187,28 +179,28 @@ class FlacDefaultErrorHandler final : public FlacErrorHandler
 	void do_error(::FLAC__StreamDecoderErrorStatus status) final;
 };
 
-
 /**
- * \brief File reader implementation for files in CDDA/Flac format, i.e.
- * containing 44.100 Hz/16 bit Stereo PCM data samples.
- *
- * This class provides the PCM sample data as a succession of blocks of 32 bit
- * PCM samples to its \c Calculation. The first block starts with the very
- * first PCM sample in the file. The streaminfo metadata block is validated to
- * conform to CDDA.
+ * \brief Flac audio file.
  */
-class FlacAudioReaderImpl final : public AudioReaderImpl, FLAC::Decoder::File
+class FlacAudioFile final : public FLAC::Decoder::File
 {
-public:
+	/**
+	 * \brief Handles each metadata block.
+	 */
+	FlacMetadataHandler* metadata_handler_ {};
 
 	/**
-	 * \brief Default constructor.
+	 * \brief Handles errors.
 	 */
-	FlacAudioReaderImpl();
+	FlacErrorHandler* error_handler_ {};
 
-	// class is non-copyable
-	FlacAudioReaderImpl(const FlacAudioReaderImpl&) = delete;
-	FlacAudioReaderImpl& operator = (const FlacAudioReaderImpl&) = delete;
+	calc::CalculationProcessor* processor_ {};
+
+	bool channels_swapped(const ::FLAC__ChannelAssignment channel_layout) const;
+
+protected:
+
+	// FLAC::Decoder::File
 
 	/**
 	 * \brief Pass frames to internal handler.
@@ -220,6 +212,7 @@ public:
 	 */
 	::FLAC__StreamDecoderWriteStatus write_callback(
 			const ::FLAC__Frame* frame,
+			// NOLINTNEXTLINE (*-avoid-c-arrays)
 			const ::FLAC__int32* const buffer[]) final;
 
 	/**
@@ -240,6 +233,33 @@ public:
 	 */
 	void error_callback(::FLAC__StreamDecoderErrorStatus status) final;
 
+public:
+
+	// FlacAudioFile
+
+	void register_sample_processor(calc::CalculationProcessor* processor);
+
+	void register_metadata_handler(FlacMetadataHandler* handler);
+
+	void register_error_handler(FlacErrorHandler* handler);
+
+	void process(const std::string& filename);
+};
+
+
+/**
+ * \brief File reader implementation for files in CDDA/Flac format, i.e.
+ * containing 44.100 Hz/16 bit Stereo PCM data samples.
+ *
+ * This class provides the PCM sample data as a succession of blocks of 32 bit
+ * PCM samples to its \c Calculation. The first block starts with the very
+ * first PCM sample in the file. The streaminfo metadata block is validated to
+ * conform to CDDA.
+ */                                               /* FIXME Use separate class */
+class FlacAudioReaderImpl final : public AudioReaderImpl
+{
+public:
+
 	/**
 	 * \brief Register a metadata handler to this instance.
 	 *
@@ -256,26 +276,25 @@ public:
 
 private:
 
+	// AudioReaderImpl
+
 	AudioSize do_acquire_size(const std::string& filename) final;
 
 	void do_process_file(const std::string& filename) final;
 
 	std::unique_ptr<FileReaderDescriptor> do_descriptor() const final;
 
-	/**
-	 * \brief Internal SampleSequence instance.
-	 */
-	//SampleSequence<::FLAC__int32, true> smplseq_;
+	// FlacAudioReaderImpl
 
 	/**
 	 * \brief Handles each metadata block.
 	 */
-	std::unique_ptr<FlacMetadataHandler> metadata_handler_;
+	std::unique_ptr<FlacMetadataHandler> metadata_handler_ {};
 
 	/**
 	 * \brief Handles errors.
 	 */
-	std::unique_ptr<FlacErrorHandler> error_handler_;
+	std::unique_ptr<FlacErrorHandler> error_handler_ {};
 };
 
 /** @} */
