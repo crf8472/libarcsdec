@@ -472,7 +472,10 @@ Bytes read_bytes(const std::string& filename,
 
 		in.ignore(offset);
 
-		in.read(reinterpret_cast<char*>(&bytes[0]), length * byte_size);
+		const auto str_size = std::streamsize {
+			static_cast<int64_t>(length) * static_cast<int>(byte_size) };
+
+		in.read(reinterpret_cast<char*>(&bytes[0]), str_size);
 	}
 	catch (const std::ios_base::failure& f)
 	{
