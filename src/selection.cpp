@@ -59,6 +59,9 @@ constexpr uint32_t TOTAL_BYTES_TO_READ = 44;
 // sufficient to identify all other formats currently supported.
 
 
+namespace
+{
+
 // FileType
 
 
@@ -246,6 +249,9 @@ Bytes FileType::bytes() const
 {
 	return bytes_;
 }
+
+
+} // namespace
 
 
 // DescriptorPreference
