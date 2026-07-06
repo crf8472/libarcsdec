@@ -228,42 +228,6 @@ void FlacDefaultErrorHandler::do_error(::FLAC__StreamDecoderErrorStatus status)
 // FlacAudioFile
 
 
-bool FlacAudioFile::channels_swapped(
-		const ::FLAC__ChannelAssignment channel_layout) const
-{
-	// FLAC says: "Where defined, the channel order follows SMPTE/ITU-R
-	// recommendations." and only defines left/right orderings.
-
-	switch (channel_layout)
-	{
-		case ::FLAC__CHANNEL_ASSIGNMENT_INDEPENDENT:
-			ARCS_LOG_INFO << "Channel assignment: left/right";
-			return false; /* just left/right */
-
-		case ::FLAC__CHANNEL_ASSIGNMENT_LEFT_SIDE:
-			ARCS_LOG_INFO << "Channel assignment: left/side stereo";
-			// TODO
-			break;
-
-		case ::FLAC__CHANNEL_ASSIGNMENT_RIGHT_SIDE:
-			ARCS_LOG_INFO << "Channel assignment: right/side stereo";
-			// TODO
-			break;
-
-		case ::FLAC__CHANNEL_ASSIGNMENT_MID_SIDE:
-			ARCS_LOG_INFO << "Channel assignment: mid/side stereo";
-			// TODO
-			break;
-
-		default:
-			// TODO
-			break;
-	}
-
-	return false;
-}
-
-
 ::FLAC__StreamDecoderWriteStatus FlacAudioFile::write_callback(
 		const ::FLAC__Frame* frame,
 		const ::FLAC__int32* const buffer[]) // NOLINT(*-avoid-c-arrays)
@@ -272,8 +236,12 @@ bool FlacAudioFile::channels_swapped(
 		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 		buffer[0], buffer[1],
 		frame->header.blocksize,
-		channels_swapped(frame->header.channel_assignment)
+		false /* channels are never swapped in fLaC */
 	};
+
+	// fLaC says: "Where defined, the channel order follows SMPTE/ITU-R
+	// recommendations." and only defines left/right orderings.
+	// We only respect left/right ordering here.
 
 	if (processor_)
 	{
@@ -354,9 +322,6 @@ void FlacAudioFile::process(const std::string& filename)
 	}
 
 	ARCS_LOG(DEBUG3) << "Initialized decoder successfully";
-
-	// Note:
-	// Use this->get_channel_assignment() to get the channel ordering (once).
 
 	// Process decoded samples
 

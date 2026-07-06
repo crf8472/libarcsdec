@@ -196,8 +196,6 @@ class FlacAudioFile final : public FLAC::Decoder::File
 
 	calc::CalculationProcessor* processor_ {};
 
-	bool channels_swapped(const ::FLAC__ChannelAssignment channel_layout) const;
-
 protected:
 
 	// FLAC::Decoder::File
