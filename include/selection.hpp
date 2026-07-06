@@ -923,7 +923,7 @@ private:
  * for AudioReaders as provided by FileReaderRegistry.
  */
 template <class ReaderType>
-class SelectionPerformer
+class SelectionPerformer final
 {
 public:
 
@@ -934,7 +934,6 @@ public:
 	 */
 	explicit SelectionPerformer(const FileReaderSelection* selection)
 		: selection_ { selection }
-		, create_    { /* default */ }
 	{
 		/* empty */
 	}
@@ -945,7 +944,7 @@ public:
 	 * Initializes the instance with the default_selection() for the ReaderType.
 	 */
 	SelectionPerformer()
-		: SelectionPerformer(default_selection<ReaderType>())
+		: SelectionPerformer { default_selection<ReaderType>() }
 	{
 		/* empty */
 	}
@@ -953,7 +952,7 @@ public:
 	/**
 	 * \brief Virtual default destructor.
 	 */
-	virtual ~SelectionPerformer() noexcept = default;
+	~SelectionPerformer() noexcept = default;
 
 	/**
 	 * \brief Set the selection to be used for selecting AudioReaders.
@@ -1000,7 +999,7 @@ private:
 	/**
 	 * \brief Internal FileReader creator.
 	 */
-	details::CreateReader<ReaderType> create_;
+	details::CreateReader<ReaderType> create_ {};
 };
 
 // Re-activate -Weffc++ for all what follows
@@ -1015,8 +1014,12 @@ private:
  */
 template <class ReaderType>
 class FileReaderProvider : public ReaderAndFormatHolder
-						 , public SelectionPerformer<ReaderType>
 {
+	/**
+	 * \brief Internal SelectionPerformer.
+	 */
+	SelectionPerformer<ReaderType> selector_ {};
+
 protected:
 
 	/**
@@ -1028,7 +1031,45 @@ protected:
 	 */
 	std::unique_ptr<ReaderType> create(const std::string& filename) const
 	{
-		return this->file_reader(filename, this);
+		return selector_.file_reader(filename, this);
+	}
+
+public:
+
+	/**
+	 * \brief Default constructor.
+	 */
+	FileReaderProvider() = default;
+
+	/**
+	 * \brief Constructor.
+	 *
+	 * \param[in] selection The selection to use
+	 */
+	explicit FileReaderProvider(const FileReaderSelection* selection)
+		: selector_ { selection }
+	{
+		/* empty */
+	}
+
+	/**
+	 * \brief Set the selection to be used for selecting AudioReaders.
+	 *
+	 * \param[in] selection Selection for AudioReaders
+	 */
+	void set_selection(const FileReaderSelection* selection)
+	{
+		selector_.set_selection(selection);
+	}
+
+	/**
+	 * \brief Get the selection to be used for selecting AudioReaders.
+	 *
+	 * \return Selection for AudioReaders
+	 */
+	const FileReaderSelection* selection() const
+	{
+		return selector_.selection();
 	}
 };
 
