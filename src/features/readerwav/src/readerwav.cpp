@@ -230,9 +230,6 @@ WavChunkDescriptor::WavChunkDescriptor(
 }
 
 
-WavChunkDescriptor::~WavChunkDescriptor() noexcept = default;
-
-
 // WavSubchunkHeader
 
 
@@ -242,9 +239,6 @@ WavSubchunkHeader::WavSubchunkHeader(uint32_t id_, int64_t size_)
 {
 	// empty
 }
-
-
-WavSubchunkHeader::~WavSubchunkHeader() noexcept = default;
 
 
 // WavFormatSubchunk
@@ -270,9 +264,6 @@ WavFormatSubchunk::WavFormatSubchunk(
 {
 	// empty
 }
-
-
-WavFormatSubchunk::~WavFormatSubchunk() noexcept = default;
 
 
 // WavValidator
@@ -327,8 +318,18 @@ void WavValidator::subchunk_format(const WavFormatSubchunk& fmt)
 
 	// by DefaultValidator:
 	validate_bits_per_sample(fmt.wBitsPerSample);
-	validate_samples_per_second(fmt.dwSamplesPerSec);
 	validate_num_channels(fmt.wChannels);
+
+	const auto samples_per_second = fmt.dwSamplesPerSec;
+
+	if (samples_per_second < 0
+			|| samples_per_second > std::numeric_limits<int>::max())
+	{
+		validate_samples_per_second(static_cast<int>(samples_per_second));
+	} else
+	{
+		// TODO validation failed
+	}
 
 	fail_if(not assert_equals("Test: wFormatTag is PCM",
 		fmt.wFormatTag, valid_->wFormatTag(),
@@ -391,16 +392,6 @@ AudioValidator::codec_set_type WavValidator::do_codecs() const
 
 
 // WavAudioHandler
-
-
-WavAudioHandler::WavAudioHandler()
-	: phys_file_size_ { 0 }
-	, config_ { C_RESPECT_HEADER | C_RESPECT_FORMAT | C_RESPECT_DATA }
-	, state_  { S_INITIAL }
-	, validator_ { /* default */ }
-{
-	// empty
-}
 
 
 int64_t WavAudioHandler::physical_file_size() const
@@ -561,9 +552,6 @@ WavAudioReaderImpl::WavAudioReaderImpl(std::unique_ptr<WavAudioHandler> hndlr)
 }
 
 
-WavAudioReaderImpl::~WavAudioReaderImpl() noexcept = default;
-
-
 AudioSize WavAudioReaderImpl::do_acquire_size(const std::string& audiofilename)
 {
 	auto total_pcm_bytes = int64_t { 0 };
@@ -688,9 +676,26 @@ int64_t WavAudioReaderImpl::wav_process_file_worker(std::ifstream& in,
 
 	// byte buffer
 	auto bytes { std::vector<char>(WAV::BYTES_PER_RIFF_HEADER) };
-	// total number of bytes to read next
-	auto bytes_to_read { std::streamsize {
+
+	// amount of bytes to read from header
+	const auto total_header_bytes { std::streamsize {
 		WAV::BYTES_PER_RIFF_HEADER * sizeof(bytes[0]) }};
+
+	if (total_header_bytes < 0
+			|| total_header_bytes > std::numeric_limits<int32_t>::max())
+	{
+		ARCS_LOG_ERROR << "RIFF Header is too big, bail out";
+
+		if (handler)
+		{
+			handler->end_input();
+		}
+		return 0;
+	}
+
+	// total number of bytes to read next
+	auto bytes_to_read = static_cast<int32_t>(total_header_bytes);
+
 	// total number of bytes read so far
 	auto total_bytes_read = int64_t { 0 };
 
@@ -698,6 +703,7 @@ int64_t WavAudioReaderImpl::wav_process_file_worker(std::ifstream& in,
 	// Parse RIFF chunk descriptor
 
 	wav_read_bytes(in, bytes_to_read, bytes, total_bytes_read);
+
 	if (audio_handler)
 	{
 		audio_handler->chunk_descriptor(wav_parse_chunk_descriptor(bytes));
@@ -719,6 +725,7 @@ int64_t WavAudioReaderImpl::wav_process_file_worker(std::ifstream& in,
 		// Read subchunk header
 
 		bytes_to_read = WAV::BYTES_PER_SUBCHUNK_HEADER * sizeof(bytes[0]);
+
 		wav_read_bytes(in, bytes_to_read, bytes, total_bytes_read);
 
 		++subchunk_counter;
@@ -755,7 +762,7 @@ int64_t WavAudioReaderImpl::wav_process_file_worker(std::ifstream& in,
 			std::vector<char> fmt_bytes(
 				static_cast<std::size_t>(subchunk_header.size) * sizeof(char));
 
-			bytes_to_read = subchunk_header.size *
+			bytes_to_read = cast_to_int32(subchunk_header.size) *
 				static_cast<int>(sizeof(fmt_bytes[0]));
 			// TODO Is sizeof(char) guaranteed to be less or equal to max<int>?
 
@@ -866,10 +873,35 @@ int64_t WavAudioReaderImpl::wav_process_file_worker(std::ifstream& in,
 
 
 int64_t WavAudioReaderImpl::wav_read_pcm_data(std::ifstream& in,
-		const int64_t    samples_per_read,
-		//WavAudioReaderImpl& audio_reader,
-		const int64_t&   total_pcm_bytes)
+		const int64_t  samples_per_read,
+		const int64_t& total_pcm_bytes)
 {
+	// Validate
+
+	if (samples_per_read <= 0)
+	{
+		ARCS_LOG_ERROR << "Chunksize must be positive, bail out";
+		return 0;
+	}
+	if (samples_per_read > std::numeric_limits<int>::max())
+	{
+		ARCS_LOG_ERROR << "Chunk is too big, bail out";
+		return 0;
+	}
+
+	if (total_pcm_bytes <= 0)
+	{
+		ARCS_LOG_ERROR << "Streamsize must be positive, bail out";
+		return 0;
+	}
+	if (total_pcm_bytes > std::numeric_limits<int32_t>::max())
+	{
+		ARCS_LOG_ERROR << "Stream is too big, bail out";
+		return 0;
+	}
+
+	//
+
 	using std::to_string;
 
 	auto samples = std::vector<sample_t>();
@@ -879,14 +911,16 @@ int64_t WavAudioReaderImpl::wav_read_pcm_data(std::ifstream& in,
 	const auto bytes_per_block =
 		int64_t { samples_per_read * CDDA::BYTES_PER_SAMPLE };
 
-	const int estimated_blocks = total_pcm_bytes / bytes_per_block
+	// for logging only
+	const int64_t estimated_blocks = total_pcm_bytes / bytes_per_block
 				+ (total_pcm_bytes % bytes_per_block ? 1 : 0);
 
 	ARCS_LOG_DEBUG << "START READING " << total_pcm_bytes
 		<< " bytes in " << to_string(estimated_blocks) << " blocks with "
 		<< bytes_per_block << " bytes per block";
 
-	int32_t samples_todo = total_pcm_bytes / CDDA::BYTES_PER_SAMPLE;
+	int32_t samples_todo = /* cast is safe by validation */
+		static_cast<int32_t>(total_pcm_bytes) / CDDA::BYTES_PER_SAMPLE;
 
 	auto total_bytes_read  = int64_t { 0 };
 	auto total_blocks_read = int64_t { 0 };
@@ -1005,10 +1039,10 @@ WavChunkDescriptor wav_parse_chunk_descriptor(const std::vector<char>& bytes)
 {
 	if (bytes.size() < WAV::BYTES_PER_RIFF_HEADER)
 	{
-		return WavChunkDescriptor(0, 0, 0, 0);
+		return { 0, 0, 0, 0 };
 	}
 
-	return WavChunkDescriptor(
+	return {
 
 		// parse RIFF/RIFX header
 		BigEndianBytes::to_uint32(bytes[0], bytes[1], bytes[ 2], bytes[ 3]),
@@ -1021,7 +1055,7 @@ WavChunkDescriptor wav_parse_chunk_descriptor(const std::vector<char>& bytes)
 
 		// parse file format declaration ("WAV")
 		BigEndianBytes::to_uint32(bytes[8], bytes[9], bytes[10], bytes[11])
-	);
+	};
 }
 
 
@@ -1032,10 +1066,10 @@ WavSubchunkHeader wav_parse_subchunk_header(const std::vector<char>& bytes)
 {
 	if (bytes.size() < WAV::BYTES_PER_SUBCHUNK_HEADER)
 	{
-		return WavSubchunkHeader(0, 0);
+		return { 0, 0 };
 	}
 
-	return WavSubchunkHeader(
+	return {
 
 		// parse subchunk id
 		BigEndianBytes::to_uint32(bytes[0], bytes[1], bytes[2], bytes[3]),
@@ -1044,7 +1078,7 @@ WavSubchunkHeader wav_parse_subchunk_header(const std::vector<char>& bytes)
 		static_cast<int64_t>(
 			LittleEndianBytes::to_uint32(
 				bytes[4], bytes[5], bytes[6], bytes[7]))
-	);
+	};
 }
 
 
@@ -1056,10 +1090,10 @@ WavFormatSubchunk wav_format_subchunk(const WavSubchunkHeader& header,
 {
 	if (bytes.size() < WAV::BYTES_IN_FMT_SUBCHUNK)
 	{
-		return WavFormatSubchunk(WavSubchunkHeader(0, 0), 0, 0, 0, 0, 0, 0);
+		return { /*WavSubchunkHeader*/{ 0, 0 }, 0, 0, 0, 0, 0, 0 };
 	}
 
-	return WavFormatSubchunk(
+	return {
 
 		// subchunk id and size
 		header,
@@ -1085,7 +1119,7 @@ WavFormatSubchunk wav_format_subchunk(const WavSubchunkHeader& header,
 
 		// wBitsPerSample
 		LittleEndianBytes::to_uint16(bytes[14], bytes[15])
-	);
+	};
 }
 
 
