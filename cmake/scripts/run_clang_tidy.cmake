@@ -10,6 +10,7 @@
 file (WRITE "${REPORT_FILE}" "")
 
 file (GLOB_RECURSE ALL_SOURCES "${SOURCES_DIR}/*.cpp" )
+list (FILTER ALL_SOURCES EXCLUDE REGEX ".*/test/.*" ) # do not clean tests
 
 execute_process(
 	COMMAND ${CLANG_TIDY_BINARY} ${ALL_SOURCES}
@@ -17,6 +18,8 @@ execute_process(
 		-p ${COMPILEDB_DIR}
 		--
 		-I${INCLUDE_DIR}
+		-I${SOURCES_DIR}
+		-I${LIBARCSTK_INCLUDE_DIR} # find libarcstk headers
 		-std=c++17
 	OUTPUT_FILE "${REPORT_FILE}"
 	ERROR_FILE  "${LOG_FILE}"

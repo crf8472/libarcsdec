@@ -18,6 +18,7 @@ function (_libarcsdec_add_clang_tidy_target )
 	set (_REPORT_FILE "${_REPORT_NAME}.txt" )
 	set (_LOG_FILE    "${_REPORT_NAME}.log" )
 
+	# TODO LIBARCSTK_INCLUDE_DIR seems fragile
 	add_custom_command(
 		OUTPUT "${_REPORT_FILE}"
 		COMMAND ${CMAKE_COMMAND}
@@ -26,6 +27,7 @@ function (_libarcsdec_add_clang_tidy_target )
 			-DSOURCES_DIR="${LIBARCSDEC_SOURCE_DIR}"
 			-DCOMPILEDB_DIR="${LIBARCSDEC_BINARY_DIR}/"
 			-DINCLUDE_DIR="${LIBARCSDEC_INCLUDE_SOURCE_DIR}"
+			-DLIBARCSTK_INCLUDE_DIR="${LIBARCSDEC_BINARY_DIR}/libs/libarcstk/include"
 			-DREPORT_FILE="${_REPORT_FILE}"
 			-DLOG_FILE="${_LOG_FILE}"
 			-DIGNORE_ISSUES="${TIDY_IGNORE_ISSUES}"
