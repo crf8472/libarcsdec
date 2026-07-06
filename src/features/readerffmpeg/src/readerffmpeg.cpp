@@ -78,10 +78,13 @@ std::string v_format_string(const char* fmt, std::va_list args_list)
 
 	while (error_count < 3)/*TODO kind of random magic number*/
 	{
+		// NOLINTNEXTLINE (cppcoreguidelines-pro-type-vararg)
 		std::va_list args; /* use a copy(!) of the va_list for each loop run */
+		// NOLINTBEGIN (cppcoreguidelines-pro-bounds-array-to-pointer-decay)
 		va_copy(args, args_list);
 		total_chars = std::vsnprintf(buf.data(), buf_size, fmt, args);
 		va_end(args);
+		// NOLINTEND (cppcoreguidelines-pro-bounds-array-to-pointer-decay)
 
 		if (total_chars > -1) // no error
 		{
@@ -555,8 +558,8 @@ void open_input_or_throw(::AVFormatContext** fctx, const std::string& filename)
 {
 	ARCS_LOG(DEBUG1) << "Try to open format context";
 
-	::AVInputFormat* detect { nullptr }; // TODO Currently unused
-	::AVDictionary* options { nullptr }; // TODO Currently unused
+	const ::AVInputFormat* detect { nullptr }; // TODO Currently unused
+	::AVDictionary* options { nullptr };       // TODO Currently unused
 
 	const auto error_open { ::avformat_open_input(fctx , filename.c_str(),
 			detect, &options) };
@@ -650,8 +653,9 @@ AVCodecContextPtr create_codec_context(::AVFormatContext* fctx,
 		throw std::invalid_argument("Stream index is negative");
 	}
 
-	// ::AVStream*
+	// NOLINTNEXTLINE (cppcoreguidelines-pro-bounds-pointer-arithmetic)
 	const auto* stream { fctx->streams[stream_idx] };
+	// ::AVStream*
 
 	if (!stream)
 	{
@@ -675,8 +679,9 @@ AVCodecContextPtr create_codec_context(::AVFormatContext* fctx,
 #else
 		for (auto i = int { 0 }; i < stream->codecpar->nb_coded_side_data; ++i)
 		{
-			//const AVPacketSideData* const
+			// NOLINTNEXTLINE (cppcoreguidelines-pro-bounds-pointer-arithmetic)
 			const auto* const sd_data { &stream->codecpar->coded_side_data[i] };
+			//const AVPacketSideData* const
 
 			if (::AV_PKT_DATA_SKIP_SAMPLES == sd_data->type)
 			{
@@ -826,7 +831,25 @@ int64_t get_total_samples(::AVCodecContext* cctx, ::AVStream* stream)
 
 	ARCS_LOG_DEBUG << "Estimate duration:       " << duration_secs << " secs";
 
-	return duration_secs * cctx->sample_rate;
+	// for safety
+
+	if (!std::isfinite(duration_secs) || duration_secs < 0.0)
+	{
+		throw std::invalid_argument("Invalid duration");
+	}
+
+	const double max_samples =
+		static_cast<double>(std::numeric_limits<int64_t>::max()) /
+		static_cast<double>(cctx->sample_rate);
+
+	if (duration_secs > max_samples)
+	{
+		throw std::overflow_error("Duration exceeds representable range");
+	}
+
+    return static_cast<int64_t>(duration_secs * cctx->sample_rate);
+	// Outcommented old code TODO Remove
+	//return duration_secs * cctx->sample_rate;
 }
 
 
@@ -1025,22 +1048,6 @@ std::unique_ptr<FFmpegAudioStream> FFmpegAudioStreamLoader::load(
 // FFmpegAudioStream
 
 
-FFmpegAudioStream::FFmpegAudioStream()
-	: formatContext_    { nullptr }
-	, codecContext_     { nullptr }
-	, stream_index_     { 0 }
-	, num_planes_       { 0 }
-	, channels_swapped_ { false }
-	, size_             { arcstk::AudioSize{} /* zero */ }
-	, start_input_      { /* empty */ }
-	, push_frame_       { /* empty */ }
-	, update_audiosize_ { /* empty */ }
-	, end_input_        { /* empty */ }
-{
-	// empty
-}
-
-
 AudioSize FFmpegAudioStream::declared_size() const
 {
 	return size_;
@@ -1067,27 +1074,27 @@ bool FFmpegAudioStream::channels_swapped() const
 
 void FFmpegAudioStream::register_start_input(std::function<void()> func)
 {
-	start_input_ = func;
+	start_input_ = std::move(func);
 }
 
 
 void FFmpegAudioStream::register_push_frame(
 		std::function<void(AVFramePtr frame)> func)
 {
-	push_frame_ = func;
+	push_frame_ = std::move(func);
 }
 
 
 void FFmpegAudioStream::register_update_audiosize(
 		std::function<void(const AudioSize& size)> func)
 {
-	update_audiosize_ = func;
+	update_audiosize_ = std::move(func);
 }
 
 
 void FFmpegAudioStream::register_end_input(std::function<void()> func)
 {
-	end_input_ = func;
+	end_input_ = std::move(func);
 }
 
 
@@ -1187,6 +1194,7 @@ AudioSize FFmpegAudioStream::traverse_samples()
 				// TODO This is an error, handle it!
 			} else
 			{
+				// NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
 				goto flush; // Flush again in "draining" mode
 			}
 		}
@@ -1441,7 +1449,7 @@ void FFmpegAudioReaderImpl::pass_samples(AVFramePtr frame)
 
 void print_dictionary(std::ostream& out, const ::AVDictionary* dict)
 {
-	::AVDictionaryEntry* e { nullptr };
+	const ::AVDictionaryEntry* e { nullptr };
 
 	while ((e = ::av_dict_get(dict, "", e, /*macro*/AV_DICT_IGNORE_SUFFIX)))
 	{
