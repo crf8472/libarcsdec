@@ -79,7 +79,7 @@ using arcstk::UNIT;
 
 constexpr int           RIFFWAV_PCM_CDDA_t::HEADER_FIELD_COUNT_;
 
-constexpr unsigned int  RIFFWAV_PCM_CDDA_t::BYTES_[13][2];
+static constexpr std::array<std::array<unsigned int, 2>, 13> BYTES_ {};
 
 constexpr unsigned char RIFFWAV_PCM_CDDA_t::any_;
 
@@ -101,10 +101,10 @@ const std::array<unsigned char, 40> RIFFWAV_PCM_CDDA_t::WAVPCM_HEADER_ =
 };
 
 
-uint32_t RIFFWAV_PCM_CDDA_t::header(FIELD field) const
+uint32_t RIFFWAV_PCM_CDDA_t::header(const FIELD field) const
 {
-	const auto offset = BYTES_[field][OFFSET];
-	const auto endpos = BYTES_[field][LENGTH] - 1;
+	const auto offset = get_offset(field);
+	const auto endpos = get_length(field) - 1;
 
 	uint32_t field_val = 0;
 
@@ -114,19 +114,25 @@ uint32_t RIFFWAV_PCM_CDDA_t::header(FIELD field) const
 		case WAVE:
 		case FMT_SC_NAME:
 		case DATA_SC_NAME:
-			// Big endian decode
-			for (unsigned int i = endpos; i < BYTES_[field][LENGTH]; --i)
 			{
-				field_val |= static_cast<uint32_t>(
-						WAVPCM_HEADER_[offset + i] << (endpos - i) * 8);
+				// Big endian decode
+				const auto length { get_length(field) };
+				for (unsigned int i = endpos; i < length; --i)
+				{
+					field_val |= static_cast<uint32_t>(
+							header_byte(offset + i) << (endpos - i) * 8);
+				}
+				break;
 			}
-			break;
 		default:
-			// Little endian decode
-			for (unsigned int i = endpos; i < BYTES_[field][LENGTH]; --i)
 			{
-				field_val |= static_cast<uint32_t>(
-						WAVPCM_HEADER_[offset + i] << i * 8);
+				// Little endian decode
+				const auto length { get_length(field) };
+				for (unsigned int i = endpos; i < length; --i)
+				{
+					field_val |= static_cast<uint32_t>(
+							header_byte(offset + i) << i * 8);
+				}
 			}
 	}
 
@@ -321,7 +327,6 @@ void WavValidator::subchunk_format(const WavFormatSubchunk& fmt)
 	validate_num_channels(fmt.wChannels);
 
 	const auto samples_per_second = fmt.dwSamplesPerSec;
-
 	if (samples_per_second < 0
 			|| samples_per_second > std::numeric_limits<int>::max())
 	{

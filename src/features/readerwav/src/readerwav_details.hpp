@@ -214,8 +214,8 @@ private:
 	/**
 	 * \brief Offsets and lengths for interpreting a RIFF WAVE header.
 	 */
-	static constexpr unsigned int BYTES_[HEADER_FIELD_COUNT_][2] =
-	{
+	static constexpr std::array<std::array<unsigned, 2>, HEADER_FIELD_COUNT_>
+	BYTES_ = {{
 		{  0, 4}, // Chunk descriptor id 'RIFF'
 		{  4, 4}, // Filesize - 8
 		{  8, 4}, // Chunk descriptor format 'WAVE'
@@ -229,7 +229,7 @@ private:
 		{ 34, 2}, // wBitsPerSample
 		{ 36, 4}, // Data: Subchunk name
 		{ 40, 4}  // Data: Subchunk size
-	};
+	}};
 
 	/**
 	 * \brief Encodes access to \c BYTES_[i]
@@ -239,6 +239,22 @@ private:
 		OFFSET = 0,
 		LENGTH = 1
 	};
+
+	/**
+	 * \brief Get offset of field \c field.
+	 */
+	static constexpr unsigned int get_offset(const FIELD field)
+	{
+		return BYTES_.at(static_cast<std::size_t>(field))[OFFSET];
+	}
+
+	/**
+	 * \brief Get offset of field \c field.
+	 */
+	static constexpr unsigned int get_length(const FIELD field)
+	{
+		return BYTES_.at(static_cast<std::size_t>(field))[LENGTH];
+	}
 
 	/**
 	 * \brief Mark a position as "any byte value accepted here".
@@ -251,13 +267,21 @@ private:
 	static const std::array<unsigned char, 40> WAVPCM_HEADER_;
 
 	/**
+	 * \brief Get offset of field \c field.
+	 */
+	static constexpr unsigned char header_byte(const unsigned int index)
+	{
+		return WAVPCM_HEADER_.at(index);
+	}
+
+	/**
 	 * \brief Returns canonical value of specified header field
 	 *
 	 * \param[in] field The header field to read
 	 *
 	 * \return The value of \c field
 	 */
-	uint32_t header(FIELD field) const;
+	uint32_t header(const FIELD field) const;
 
 public:
 
