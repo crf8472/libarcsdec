@@ -99,50 +99,16 @@ void FlacErrorHandler::error(::FLAC__StreamDecoderErrorStatus status)
 }
 
 
-// FlacDefaultMetadataHandler
+// FlacValidator
 
 
-void FlacDefaultMetadataHandler::do_update(
-		const FLAC::Metadata::StreamInfo& metadata)
+AudioValidator::codec_set_type FlacValidator::do_codecs() const
 {
-	if (auto* handler = this->handler())
-	{
-		const auto total_samples =
-					::FLAC::Metadata::StreamInfo{*metadata}.get_total_samples();
-
-		handler->audiosize(
-						{ cast_to_int32(total_samples), UNIT::SAMPLES });
-	}
-
-	this->validate(*metadata);
-	// Note: Streaminfo could already have been validated explicitly
+	return { Codec::FLAC };
 }
 
 
-void FlacDefaultMetadataHandler::do_validate(
-		const FLAC::Metadata::StreamInfo& metadata)
-{
-	if (!validate_streaminfo(metadata))
-	{
-		ARCS_LOG_ERROR << "Validation of Flac file failed. Error is:"
-			<< last_error();
-
-		throw InvalidAudioException(last_error());
-	}
-}
-
-
-void FlacDefaultMetadataHandler::do_cuesheet(
-		const FLAC::Metadata::CueSheet& /*cuesheet*/)
-{
-	ARCS_LOG_INFO << "Ignore CueSheet found in FLAC file";
-
-	// TODO Implement
-}
-
-
-bool FlacDefaultMetadataHandler::validate_streaminfo(
-		const FLAC::Metadata::StreamInfo& streaminfo)
+bool FlacValidator::validate(const FLAC::Metadata::StreamInfo& streaminfo)
 {
 	ARCS_LOG_DEBUG << "Found FLAC streaminfo metadata block";
 
@@ -185,9 +151,43 @@ bool FlacDefaultMetadataHandler::validate_streaminfo(
 }
 
 
-AudioValidator::codec_set_type FlacDefaultMetadataHandler::do_codecs() const
+// FlacDefaultMetadataHandler
+
+
+void FlacDefaultMetadataHandler::do_update(
+		const FLAC::Metadata::StreamInfo& metadata)
 {
-	return { Codec::FLAC };
+	if (auto* handler = this->handler())
+	{
+		const auto total_samples =
+					::FLAC::Metadata::StreamInfo{*metadata}.get_total_samples();
+
+		handler->audiosize({ cast_to_int32(total_samples), UNIT::SAMPLES });
+	}
+
+	this->validate(*metadata);
+	// Note: Streaminfo could already have been validated explicitly
+}
+
+
+void FlacDefaultMetadataHandler::do_validate(
+		const FLAC::Metadata::StreamInfo& metadata)
+{
+	if (!validator_.validate(metadata))
+	{
+		const auto error = validator_.last_error();
+		ARCS_LOG_ERROR << "Validation of Flac file failed. Error is:" << error;
+		throw InvalidAudioException(error);
+	}
+}
+
+
+void FlacDefaultMetadataHandler::do_cuesheet(
+		const FLAC::Metadata::CueSheet& /*cuesheet*/)
+{
+	ARCS_LOG_INFO << "Ignore CueSheet found in FLAC file";
+
+	// TODO Implement
 }
 
 

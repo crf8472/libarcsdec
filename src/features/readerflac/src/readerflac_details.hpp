@@ -68,6 +68,9 @@ using arcstk::SampleSequence;
  */
 class FlacMetadataHandler
 {
+	/**
+	 * \brief Internal pointer to AudioEventHandler.
+	 */
 	AudioEventHandler* handler_ {};
 
 	virtual void do_update(const FLAC::Metadata::StreamInfo& streaminfo)
@@ -86,6 +89,14 @@ public:
 	 */
 	virtual ~FlacMetadataHandler() noexcept = default;
 
+	/**
+	 * \brief To be called manually by the AudioReaderImpl to trigger an
+	 * update by current streaminfo.
+	 *
+	 * \param[in] streaminfo The Streaminfo object from FLAC++
+	 *
+	 * \throw InvalidMetadataException If validation fails
+	 */
 	void update(const FLAC::Metadata::StreamInfo& streaminfo);
 
 	/**
@@ -108,9 +119,45 @@ public:
 	 */
 	void cuesheet(const FLAC::Metadata::CueSheet& cuesheet);
 
+	/**
+	 * \brief Register an AudioEventHandler.
+	 *
+	 * This handler will be called by update() for the AudioSize.
+	 *
+	 * \param[in] handler AudioEventHandler to register to this instance
+	 */
 	void register_handler(AudioEventHandler* handler);
 
+	/**
+	 * \brief Registered AudioEventHandler.
+	 *
+	 * \return Registered AudioEventHandler
+	 */
 	AudioEventHandler* handler();
+};
+
+/**
+ * \brief Validator for FLAC audio.
+ */
+class FlacValidator final : public DefaultValidator
+{
+	// AudioValidator
+
+	codec_set_type do_codecs() const final;
+
+public:
+
+	/**
+	 * \brief To be called manually by the AudioReaderImpl to trigger
+	 * validation.
+	 *
+	 * Validates it for CDDA compliance.
+	 *
+	 * \param[in] streaminfo The Streaminfo object from FLAC++
+	 *
+	 * \return TRUE if metadata indicates CDDA conformity, otherwise FALSE
+	 */
+	bool validate(const FLAC::Metadata::StreamInfo& streaminfo);
 };
 
 /**
@@ -123,28 +170,20 @@ public:
  * internal \c Calculation about the total number of samples or bytes. This is
  * done within the implementation of metadata_callback().
  */
-class FlacDefaultMetadataHandler final  : public FlacMetadataHandler
-										, public DefaultValidator
+class FlacDefaultMetadataHandler final : public FlacMetadataHandler
 {
+	/**
+	 * \brief Internal validator instance.
+	 */
+	FlacValidator validator_ {};
+
+	// FlacMetadataHandler
+
 	void do_update(const FLAC::Metadata::StreamInfo& streaminfo) final;
 
 	void do_validate(const FLAC::Metadata::StreamInfo& streaminfo) final;
 
 	void do_cuesheet(const FLAC::Metadata::CueSheet& cuesheet) final;
-
-	codec_set_type do_codecs() const final;
-
-	/**
-	 * \brief To be called manually by the AudioReaderImpl to trigger
-	 * validation.
-	 *
-	 * Validates it for CDDA compliance.
-	 *
-	 * \param[in] streaminfo The Streaminfo object from FLAC++
-	 *
-	 * \return TRUE if metadata indicates CDDA conformity, otherwise FALSE
-	 */
-	bool validate_streaminfo(const FLAC::Metadata::StreamInfo& streaminfo);
 };
 
 /**
@@ -176,6 +215,8 @@ public:
  */
 class FlacDefaultErrorHandler final : public FlacErrorHandler
 {
+	// FlacErrorHandler
+
 	void do_error(::FLAC__StreamDecoderErrorStatus status) final;
 };
 
@@ -194,6 +235,9 @@ class FlacAudioFile final : public FLAC::Decoder::File
 	 */
 	FlacErrorHandler* error_handler_ {};
 
+	/**
+	 * \brief Processes samples.
+	 */
 	calc::CalculationProcessor* processor_ {};
 
 protected:
@@ -210,8 +254,8 @@ protected:
 	 */
 	::FLAC__StreamDecoderWriteStatus write_callback(
 			const ::FLAC__Frame* frame,
-			// NOLINTNEXTLINE(*-avoid-c-arrays)
-			const ::FLAC__int32* const buffer[]) final;
+			const ::FLAC__int32* const buffer[]) // NOLINT(*-avoid-c-arrays)
+			final;
 
 	/**
 	 * \brief Pass metadata by type to internal handler.
@@ -253,7 +297,7 @@ public:
  * PCM samples to its \c Calculation. The first block starts with the very
  * first PCM sample in the file. The streaminfo metadata block is validated to
  * conform to CDDA.
- */                                               /* FIXME Use separate class */
+ */
 class FlacAudioReaderImpl final : public AudioReaderImpl
 {
 public:
