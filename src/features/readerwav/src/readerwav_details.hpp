@@ -179,7 +179,7 @@ private:
 	/**
 	 * \brief Constants for accessing first dimension of WAV_CDDA_.
 	 */
-	enum class FIELD : unsigned char
+	enum class FIELD : uint8_t
 	{
 		// chunk descriptor
 		RIFF                     =  0,  // chunk descriptor id
@@ -623,7 +623,7 @@ public:
 /**
  * \brief Config flags for WavAudioHandler.
  */
-enum CONFIG : uint32_t
+enum CONFIG : uint8_t // NOLINT(cppcoreguidelines-use-enum-class)
 {
 	C_DO_NOTHING        =    0,
 	C_RESPECT_HEADER    =    1,
@@ -651,7 +651,7 @@ private:
 	 * \brief State flags of the audio handler. More than one state can be
 	 * active.
 	 */
-	enum STATE : uint32_t
+	enum STATE : uint8_t // NOLINT(cppcoreguidelines-use-enum-class)
 	{
 		S_INITIAL           =    0,
 		S_STARTED_FORMAT    =    1,
