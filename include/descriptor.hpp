@@ -96,7 +96,7 @@ namespace read
  * The intention is to support inspecting the capabilities of
  * \link FileReader FileReaders\endlink.
  */
-enum class Format : unsigned
+enum class Format : uint8_t
 {
 	UNKNOWN,  // 0, guaranteed to be first
 	CUE,
@@ -139,7 +139,7 @@ std::string name(Format format);
  * The intention is to support inspecting the capabilities of
  * \link FileReader FileReaders\endlink.
  */
-enum class Codec : unsigned
+enum class Codec : uint8_t
 {
 	UNKNOWN,  // 0, guaranteed to be first
 	PCM_S16BE,
@@ -920,7 +920,7 @@ bool operator == (const FileReaderDescriptor& lhs,
 /**
  * \brief Input filetype.
  */
-enum class InputType: unsigned
+enum class InputType: uint8_t
 {
 	AUDIO,
 	TOC

@@ -438,7 +438,7 @@ Bytes read_bytes(const std::string& filename,
 {
 	// Read a specified number of bytes from a file offset
 
-	ByteSequence bytes(length);
+	ByteSequence bytes(length); // intentionally parentheses
 	const auto byte_size = sizeof(bytes[0]);
 
 	std::ifstream in;
