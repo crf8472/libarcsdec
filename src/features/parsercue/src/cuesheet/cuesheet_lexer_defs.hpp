@@ -41,7 +41,7 @@
 /* the Lexer class without specifiying the inline namespace for version!    */
 
 namespace arcsdec { inline namespace v_1_0_0 {
-namespace read { namespace details {
+namespace read::details {
 
 // forward declared from flexbisondriver.hpp
 
@@ -54,9 +54,7 @@ using cuesheet::yycuesheet::position;
 using cuesheet::yycuesheet::location;
 using LocationClass = TokenLocation<position, location>;
 
-namespace cuesheet
-{
-namespace yycuesheet
+namespace cuesheet::yycuesheet
 {
 
 // NOTE What is declared here receives its implementation from the third
@@ -156,9 +154,8 @@ public:
 	void shift_pos(const int line_no, const int token_length);
 };
 
-} // namespace yycuesheet
-} // namespace cuesheet
-} /*namespace details*/ } /*namespace read*/
+} // namespace cuesheet::yycuesheet
+} // namespace read::details
 } /*namespace v_1_0_0*/ } /*namespace arcsdec*/
 
 #endif // LIBARCSDEC_CUESHEET_LEXER_DEFS_HPP_

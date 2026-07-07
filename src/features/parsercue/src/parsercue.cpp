@@ -45,9 +45,7 @@ inline namespace v_1_0_0
 {
 namespace read
 {
-namespace details
-{
-namespace cuesheet
+namespace details::cuesheet
 {
 
 using arcstk::ToC;
@@ -89,8 +87,7 @@ std::unique_ptr<FileReaderDescriptor> CuesheetParserImpl::do_descriptor() const
 	return std::make_unique<DescriptorCuesheet>();
 }
 
-} // namespace cuesheet
-} // namespace details
+} // namespace details::cuesheet
 
 
 // DescriptorCuesheet

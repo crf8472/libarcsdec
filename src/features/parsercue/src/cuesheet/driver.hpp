@@ -26,9 +26,7 @@ namespace arcsdec
 inline namespace v_1_0_0
 {
                                                                  /** \endcond */
-namespace read
-{
-namespace details
+namespace read::details // NOLINT(modernize-concat-nested-namespaces)
 {
 
 /**
@@ -46,12 +44,11 @@ using Driver = FlexBisonDriver<yycuesheet::Lexer, yycuesheet::Parser,
 /**
  * \brief Flex/Bison implementation of parsercue.
  */
-namespace yycuesheet
+namespace yycuesheet // NOLINT(modernize-concat-nested-namespaces)
 {/*for doxygen*/}
 
 } // namespace cuesheet
-} // namespace details
-} // namespace read
+} // namespace read::details
                                                   /** \cond NAMESPACE_v_1_0_0 */
 } // namespace v_1_0_0
                                                                  /** \endcond */
