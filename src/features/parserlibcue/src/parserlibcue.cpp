@@ -61,9 +61,7 @@ inline namespace v_1_0_0
 {
 namespace read
 {
-namespace details
-{
-namespace libcue
+namespace details::libcue
 {
 
 using arcstk::ToC;
@@ -305,9 +303,7 @@ std::unique_ptr<FileReaderDescriptor> LibcueParserImpl::do_descriptor() const
 	return std::make_unique<DescriptorLibcue>();
 }
 
-
-} // namespace libcue
-} // namespace details
+} // namespace details::libcue
 
 
 // DescriptorLibcue
