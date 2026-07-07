@@ -60,9 +60,7 @@ inline namespace v_1_0_0
 {
 namespace read
 {
-namespace details
-{
-namespace ffmpeg
+namespace details::ffmpeg
 {
 
 using arcstk::AudioSize;
@@ -1723,8 +1721,7 @@ void operator << (std::ostream& out, const ::AVStream* stream)
 	print_stream_info(out, stream);
 }
 
-} // namespace ffmpeg
-} // namespace details
+} // namespace details::ffmpeg
 
 
 // DescriptorFFmpeg
