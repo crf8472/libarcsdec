@@ -6,7 +6,7 @@
  * \brief Add inclusion guard to bison generated parser header.
  */
 
-#include "cdrtoc.tab.hpp" // auto-generated
+#include "cdrtoc.tab.hpp" // NOLINT
 
 #endif
 
