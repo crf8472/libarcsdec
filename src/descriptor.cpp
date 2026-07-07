@@ -59,6 +59,7 @@ std::string name(Format format)
 		// ... add more audio formats here
 	};
 
+	// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
 	return names[static_cast<std::underlying_type_t<Format>>(format)];
 }
 
@@ -83,6 +84,7 @@ std::string name(Codec codec)
 		"none" // Allows combination with a non-audio format
 	};
 
+	// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
 	return names[static_cast<std::underlying_type_t<Codec>>(codec)];
 }
 

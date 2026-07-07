@@ -83,9 +83,18 @@ using arcstk::SampleSequence;
 #undef av_err2str
 av_always_inline char* av_err2str(int errnum)
 {
-    static char str[AV_ERROR_MAX_STRING_SIZE];
+	// This is C-style with the means of C++
+    static char str[AV_ERROR_MAX_STRING_SIZE]; // NOLINT (*-avoid-c-arrays)
+	// NOLINTBEGIN(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
     memset(str, 0, sizeof(str));
     return av_make_error_string(str, AV_ERROR_MAX_STRING_SIZE, errnum);
+	// NOLINTEND(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
+
+	// Outcommented: a C++ version that is not much clearer.
+	// The static trick remains.
+	//static std::array<char, AV_ERROR_MAX_STRING_SIZE> str {};
+	//str.fill('\0');
+	//return av_make_error_string(str.data(), AV_ERROR_MAX_STRING_SIZE, errnum);
 }
 #endif
 
@@ -294,6 +303,7 @@ uint8_t* ByteBuffer(const T* object, const unsigned i);
 template <>
 inline uint8_t* ByteBuffer(const ::AVFrame* f, const unsigned i)
 {
+	// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
 	return f->data[i];
 }
 
@@ -404,6 +414,7 @@ struct ChannelOrder final
 #else // ffmpeg >= 5.1
 		// Does object specify native ordering and is it FL+FR?
 		return (p->ch_layout.order == ::AV_CHANNEL_ORDER_NATIVE)
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-type-union-access)
 			&& (p->ch_layout.u.mask & AV_CH_LAYOUT_STEREO);
 #endif
 	}
@@ -429,6 +440,7 @@ struct ChannelOrder final
 #else // ffmpeg >= 5.1
 		// Does object either not specify an ordering or has other than FL+FR?
 		return p->ch_layout.order  == ::AV_CHANNEL_ORDER_UNSPEC
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-type-union-access)
 			|| (p->ch_layout.u.mask == 0);
 #endif
 	}

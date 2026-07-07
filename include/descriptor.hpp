@@ -487,8 +487,8 @@ struct ci_char_traits final : public std::char_traits<char>
 			if( toupper(*s1) < toupper(*s2) ) { return -1; }
 			if( toupper(*s1) > toupper(*s2) ) { return  1; }
 
-			++s1;
-			++s2;
+			++s1; // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+			++s2; // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 		}
 
 		return 0;
@@ -496,6 +496,7 @@ struct ci_char_traits final : public std::char_traits<char>
 
 	static const char* find(const char* s, int n, char a)
 	{
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 		while(n-- > 0 && toupper(*s) != toupper(a)) { ++s; }
 
 		return s;

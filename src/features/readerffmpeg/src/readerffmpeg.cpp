@@ -857,7 +857,9 @@ int64_t get_total_samples(::AVCodecContext* cctx, ::AVStream* stream)
 AudioSize get_declared_size(::AVFormatContext* fctx, ::AVCodecContext* cctx,
 		const int stream_idx)
 {
-	auto stream = fctx->streams[stream_idx];
+	// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+	auto* stream = fctx->streams[stream_idx];
+
 	ARCS_LOG(DEBUG1) << stream;
 
 	const auto total_samples = get_total_samples(cctx, stream);
