@@ -17,7 +17,7 @@ execute_process(
 		--
 		-I${INCLUDE_DIR}
 		-I${SOURCES_DIR}
-		-I${LIBARCSTK_INCLUDE_DIR} # find libarcstk headers
+		-isystem${LIBARCSTK_INCLUDE_DIR} # find libarcstk headers
 		-std=c++17
 	OUTPUT_FILE "${REPORT_FILE}"
 	ERROR_FILE  "${LOG_FILE}"
