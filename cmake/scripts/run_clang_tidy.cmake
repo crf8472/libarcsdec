@@ -13,10 +13,12 @@ list (FILTER ALL_SOURCES EXCLUDE REGEX ".*/test/.*" ) # do not clean tests
 execute_process(
 	COMMAND ${CLANG_TIDY_BINARY} ${ALL_SOURCES}
 		--config-file=${CLANG_TIDY_CONFIG}
-		-p ${COMPILEDB_DIR}
+		-p ${BUILD_DIR}
 		--
 		-I${INCLUDE_DIR}
 		-I${SOURCES_DIR}
+		-isystem${BUILD_DIR}/src/features/parsercue
+		-isystem${BUILD_DIR}/src/features/parsertoc
 		-isystem${LIBARCSTK_INCLUDE_DIR} # find libarcstk headers
 		-std=c++17
 	OUTPUT_FILE "${REPORT_FILE}"
