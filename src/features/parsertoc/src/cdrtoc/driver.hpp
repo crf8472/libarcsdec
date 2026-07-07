@@ -7,10 +7,10 @@
  */
 
 #ifndef LIBARCSDEC_CDRTOC_LEXER_HPP_
-#include "cdrtoc_lexer.hpp"     // for Lexer declaration
+#include "cdrtoc_lexer.hpp"     // for Lexer (flex)
 #endif
-#ifndef LIBARCSDEC_CDRTOC_TAB_HPP_
-#include "cdrtoc_tab.hpp"       // auto-generated
+#ifndef LIBARCSDEC_CDRTOC_PARSER_HPP_
+#include "cdrtoc_parser.hpp"    // for Parser (bison)
 #endif
 #ifndef LIBARCSDEC_FLEXBISONDRIVER_HPP_
 #include "flexbisondriver.hpp"  // for FlexBisonDriver
