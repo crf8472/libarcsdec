@@ -75,8 +75,8 @@
 #include "cuesheet_lexer_defs.hpp" /* for Lexer (user-defined) */
 #endif
 
-#ifndef LIBARCSDEC_CUESHEET_TAB_HPP_
-#include "cuesheet.tab.hpp"       /* auto-generated: bison token definitions */
+#ifndef LIBARCSDEC_CUESHEET_PARSER_HPP_
+#include "cuesheet_parser.hpp"    /* auto-generated: bison token definitions */
 #endif
 
 #include "cuesheet_location.hpp"  /* auto-generated: position + location */

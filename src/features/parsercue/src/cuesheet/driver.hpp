@@ -7,10 +7,10 @@
  */
 
 #ifndef LIBARCSDEC_CUESHEET_LEXER_HPP_
-#include "cuesheet_lexer.hpp"     // for Lexer declaration
+#include "cuesheet_lexer.hpp"     // for Lexer (flex)
 #endif
-#ifndef LIBARCSDEC_CUESHEET_TAB_HPP_
-#include "cuesheet_tab.hpp"       // auto-generated
+#ifndef LIBARCSDEC_CUESHEET_PARSER_HPP_
+#include "cuesheet_parser.hpp"    // for Parser (bison)
 #endif
 #ifndef LIBARCSDEC_FLEXBISONDRIVER_HPP_
 #include "flexbisondriver.hpp"    // for FlexBisonDriver
