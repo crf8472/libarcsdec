@@ -11,14 +11,14 @@ find_package (FLEX  ) # 2.6.4
 function (add_bison_command )
 
 	## Arguments
-	set (one_value_args OUTPUT_CPP OUTPUT_HPP Y_FILE FLAGS WORKING_DIR )
+	set (one_value_args NAME OUTPUT_CPP OUTPUT_HPP Y_FILE FLAGS WORKING_DIR )
 	cmake_parse_arguments (BISON "" "${one_value_args}" "" ${ARGN} )
 
 	add_custom_command (
 		OUTPUT ${BISON_OUTPUT_CPP} ${BISON_OUTPUT_HPP}
 		COMMAND bison ${BISON_FLAGS}
 			--defines=${BISON_OUTPUT_HPP} -o ${BISON_OUTPUT_CPP} ${BISON_Y_FILE}
-		COMMENT "Generating parser for format Cuesheet (via bison)"
+		COMMENT "Generating parser for format ${BISON_NAME} (via bison)"
 		WORKING_DIRECTORY ${BISON_WORKING_DIR}
 	)
 endfunction()

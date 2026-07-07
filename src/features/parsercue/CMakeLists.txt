@@ -17,6 +17,7 @@ set (CUESHEET_TAB_HPP ${CMAKE_CURRENT_BINARY_DIR}/cuesheet.tab.hpp )
 set (CUESHEET_YY_CPP  ${CMAKE_CURRENT_BINARY_DIR}/cuesheet.yy.cpp  )
 
 add_bison_command (
+	NAME        "Cuesheet"
 	OUTPUT_CPP  ${CUESHEET_TAB_CPP}
 	OUTPUT_HPP  ${CUESHEET_TAB_HPP}
 	Y_FILE      ${CUESHEET_Y}
@@ -27,6 +28,7 @@ add_bison_command (
 ## FLAGS "--verbose --debug -Wconflicts-sr -Wconflicts-rr -Wcounterexamples"
 
 add_flex_command (
+	NAME        "Cuesheet"
 	OUTPUT_CPP    ${CUESHEET_YY_CPP}
 	L_FILE        ${CUESHEET_L}
 	INPUT_HEADERS ${CUESHEET_TAB_HPP}
