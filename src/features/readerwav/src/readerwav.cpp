@@ -110,10 +110,10 @@ uint32_t RIFFWAV_PCM_CDDA_t::header(const FIELD field) const
 
 	switch (field)
 	{
-		case RIFF:
-		case WAVE:
-		case FMT_SC_NAME:
-		case DATA_SC_NAME:
+		case FIELD::RIFF:
+		case FIELD::WAVE:
+		case FIELD::FMT_SC_NAME:
+		case FIELD::DATA_SC_NAME:
 			{
 				// Big endian decode
 				const auto length { get_length(field) };

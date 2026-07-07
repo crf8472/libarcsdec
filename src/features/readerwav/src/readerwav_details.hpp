@@ -179,7 +179,7 @@ private:
 	/**
 	 * \brief Constants for accessing first dimension of WAV_CDDA_.
 	 */
-	enum FIELD : int
+	enum class FIELD : unsigned char
 	{
 		// chunk descriptor
 		RIFF                     =  0,  // chunk descriptor id
@@ -230,28 +230,19 @@ private:
 	}};
 
 	/**
-	 * \brief Encodes access to \c BYTES_[i]
-	 */
-	enum BYTES : int
-	{
-		OFFSET = 0,
-		LENGTH = 1
-	};
-
-	/**
-	 * \brief Get offset of field \c field.
+	 * \brief Access BYTES_ to get offset of field \c field.
 	 */
 	static constexpr unsigned int get_offset(const FIELD field)
 	{
-		return BYTES_.at(static_cast<std::size_t>(field))[OFFSET];
+		return BYTES_.at(static_cast<std::size_t>(field))[0 /*OFFSET*/];
 	}
 
 	/**
-	 * \brief Get offset of field \c field.
+	 * \brief Access BYTES_ to get length of field \c field.
 	 */
 	static constexpr unsigned int get_length(const FIELD field)
 	{
-		return BYTES_.at(static_cast<std::size_t>(field))[LENGTH];
+		return BYTES_.at(static_cast<std::size_t>(field))[1 /*LENGTH*/];
 	}
 
 	/**
