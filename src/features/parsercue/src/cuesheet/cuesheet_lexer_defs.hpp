@@ -30,7 +30,7 @@
 // Include the Token definitions as well as the redefined yylex()
 // in section "code top" (that calls get_next_token())
 #ifndef LIBARCSDEC_CUESHEET_TAB_HPP_
-#include "cuesheet.tab.hpp"
+#include "cuesheet_tab.hpp"
 #endif
 
 #if defined(__clang__)
