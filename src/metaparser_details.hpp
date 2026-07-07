@@ -24,9 +24,7 @@ namespace arcsdec
 inline namespace v_1_0_0
 {
                                                                  /** \endcond */
-namespace read
-{
-namespace details
+namespace read::details // NOLINT(modernize-concat-nested-namespaces)
 {
 
 /**
@@ -107,8 +105,7 @@ int64_t msf_to_frames(const int m, const int s, const int f);
 void frames_to_msf(int64_t frames, int64_t* m, int64_t* s, int64_t* f);
 
 
-} // namespace details
-} // namespace read
+} // namespace read::details
                                                   /** \cond NAMESPACE_v_1_0_0 */
 } // namespace v_1_0_0
                                                                  /** \endcond */

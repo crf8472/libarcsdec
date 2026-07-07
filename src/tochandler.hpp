@@ -25,9 +25,7 @@ namespace arcsdec
 inline namespace v_1_0_0
 {
                                                                  /** \endcond */
-namespace read
-{
-namespace details
+namespace read::details
 {
 
 using arcstk::AudioSize;
@@ -248,8 +246,7 @@ public:
 	void set_disc_id(const std::string& disc_id);
 };
 
-} // namespace details
-} // namespace read
+} // namespace read::details
                                                   /** \cond NAMESPACE_v_1_0_0 */
 } // namespace v_1_0_0
                                                                  /** \endcond */

@@ -24,11 +24,8 @@ namespace arcsdec
 {
 inline namespace v_1_0_0
 {
-namespace read
+namespace read::details
 {
-namespace details
-{
-
 
 // LexerHandler
 
@@ -84,8 +81,7 @@ std::string lexer_strip_quotes(const std::string& s)
 	return s.substr(1, s.length() - 2);
 }
 
-} // namespace details
-} // namespace read
+} // namespace read::details
 } // namespace v_1_0_0
 } // namespace arcsdec
 

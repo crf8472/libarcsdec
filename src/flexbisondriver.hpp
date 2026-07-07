@@ -24,11 +24,8 @@ namespace arcsdec
 inline namespace v_1_0_0
 {
                                                                  /** \endcond */
-namespace read
+namespace read::details
 {
-namespace details
-{
-
 
 /**
  * \brief Interface: lexer handler defines reaction on the occurrence of tokens.
@@ -554,8 +551,7 @@ public:
 #pragma GCC diagnostic pop
 #endif
 
-} // namespace details
-} // namespace read
+} // namespace read::details
                                                   /** \cond NAMESPACE_v_1_0_0 */
 } // namespace v_1_0_0
                                                                  /** \endcond */

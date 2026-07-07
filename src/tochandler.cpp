@@ -26,9 +26,7 @@ namespace arcsdec
 {
 inline namespace v_1_0_0
 {
-namespace read
-{
-namespace details
+namespace read::details // NOLINT(modernize-concat-nested-namespaces)
 {
 
 using arcstk::ToC;
@@ -346,8 +344,7 @@ void ParserToCHandler::set_disc_id(const std::string& disc_id)
 }
 
 
-} // namespace details
-} // namespace read
+} // namespace read::details
 } // namespace v_1_0_0
 } // namespace arcsdec
 

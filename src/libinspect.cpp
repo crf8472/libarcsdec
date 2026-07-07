@@ -38,9 +38,7 @@ namespace arcsdec
 {
 inline namespace v_1_0_0
 {
-namespace read
-{
-namespace details
+namespace read::details
 {
 
 void escape(std::string& input, const char c, const std::string& escape_seq)
@@ -215,8 +213,7 @@ const std::string& libfile(const std::string& libname)
 	return first_libname_match(libarcsdec_deps(), libname);
 }
 
-} // namespace details
-} // namespace read
+} // namespace read::details
 } // namespace v_1_0_0
 } // namespace arcsdec
 
