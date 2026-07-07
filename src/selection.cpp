@@ -462,17 +462,11 @@ std::unique_ptr<FileReaders> FileReaderRegistry::readers_;
 
 
 std::unique_ptr<FileReaderSelection>
-	FileReaderRegistry::default_audio_selection_ =
-		std::make_unique<FileReaderPreferenceSelection<
-			FormatPreference, DefaultSelector>
-		>();
+	FileReaderRegistry::default_audio_selection_; // statically initialized
 
 
 std::unique_ptr<FileReaderSelection>
-	FileReaderRegistry::default_toc_selection_ =
-		std::make_unique<FileReaderPreferenceSelection<
-			FormatPreference, DefaultSelector>
-		>();
+	FileReaderRegistry::default_toc_selection_; // statically initialized
 
 
 bool FileReaderRegistry::has_format(const Format f)
@@ -516,29 +510,59 @@ const FileReaderSelection* FileReaderRegistry::default_toc_selection()
 }
 
 
-void FileReaderRegistry::add_format(std::unique_ptr<Matcher> m)
+void FileReaderRegistry::add_format(std::unique_ptr<Matcher> m) noexcept
 {
 	// ... does not seem to require any further static initialization
-	if (m) { formats_.push_back(std::move(m)); }
+	//if (m) { formats_.push_back(std::move(m)); }
+	if (m)
+	{
+		try
+		{
+			formats_.push_back(std::move(m));
+		} catch (const std::bad_alloc&) {
+
+			ARCS_LOG_ERROR << "Error while inserting matcher";
+		}
+	}
 }
 
 
 void FileReaderRegistry::add_reader(std::unique_ptr<FileReaderDescriptor> d)
+	noexcept
 {
-	static const bool r_guard = []{
-		FileReaderRegistry::readers_ = std::make_unique<FileReaders>();
+	static const bool r_guard = []() noexcept {
+		try {
+			FileReaderRegistry::readers_ = std::make_unique<FileReaders>();
+		} catch (const std::bad_alloc&)
+		{
+			return false;
+		}
 		return true;
 	}();
 	// add_reader() is called several times via RegisterDescriptor before
 	// entering main(), so readers_ will be initialized when reader() is called
 	// for the first time. Ugly, nonetheless.
 
-	if (d)
+	if (r_guard && d && readers_)
 	{
-		readers_->emplace(std::make_pair(d->id(), std::move(d)));
+		try {
+			readers_->emplace(std::make_pair(d->id(), std::move(d)));
+		} catch (const std::bad_alloc&)
+		{
+			ARCS_LOG_ERROR << "Error while emplacing descriptor";
+		}
+	} else
+	{
+		if (!r_guard || !readers_)
+		{
+			ARCS_LOG_ERROR << "Could not initialize FileReaderRegistry readers";
+		} else
+		{
+			ARCS_LOG_WARNING << "Cannot register a nullptr";
+		}
 	}
 
-	if (r_guard){} /* avoid -Wunused-variable firing */
+	//if (r_guard){} /* avoid -Wunused-variable firing */
 }
 
 
@@ -638,14 +662,65 @@ const FileReaders* ReaderAndFormatHolder::readers() const
 }
 
 
+// FileReaderRegistry::SelectionInitializer
+
+
+class FileReaderRegistry::SelectionInitializer
+{
+public:
+
+    static void init_default_audio_selection() noexcept
+	{
+        try
+		{
+            FileReaderRegistry::default_audio_selection_ =
+                std::make_unique<
+				FileReaderPreferenceSelection<FormatPreference, DefaultSelector>
+			>();
+        } catch (const std::bad_alloc&)
+		{
+			ARCS_LOG_ERROR
+				<< "bad_alloc when trying to init Audioreader selection";
+		}
+    }
+
+    static void init_default_toc_selection() noexcept
+	{
+		try
+		{
+			FileReaderRegistry::default_toc_selection_ =
+				std::make_unique<
+				FileReaderPreferenceSelection<FormatPreference, DefaultSelector>
+			>();
+		} catch (const std::bad_alloc&)
+		{
+			ARCS_LOG_ERROR
+				<< "bad_alloc when trying to init Metaparser selection";
+		}
+    }
+};
+
+
 namespace {
+
+// Safely initialize default selections
+
+const bool default_audio_selection_guard = []() noexcept {
+	FileReaderRegistry::SelectionInitializer::init_default_audio_selection();
+	return true;
+}();
+
+const bool default_toc_selection_guard = []() noexcept {
+	FileReaderRegistry::SelectionInitializer::init_default_toc_selection();
+	return true;
+}();
 
 // Register all supported file formats.
 // This will not guarantee that a matching reader will be available!
 
 // TOC/Meta
 
-const auto dm1 = RegisterFormat<Format::CUE>({ "cue" }, { Codec::NONE} );
+const auto dm1 = RegisterFormat<Format::CUE>({ "cue" }, { Codec::NONE } );
 
 const auto dm2 = RegisterFormat<Format::CDRDAO>({ "toc" }, { Codec::NONE } );
 

@@ -411,7 +411,7 @@ std::unique_ptr<FileReaderDescriptor> FlacAudioReaderImpl::do_descriptor()
 DescriptorFlac::~DescriptorFlac() noexcept = default;
 
 
-std::string DescriptorFlac::do_id() const
+std::string DescriptorFlac::do_id() const noexcept
 {
 	return "flac";
 }

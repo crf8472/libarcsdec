@@ -634,7 +634,7 @@ bool WavpackAudioReaderImpl::perform_validations(const WavpackOpenFile& file)
 DescriptorWavpack::~DescriptorWavpack() noexcept = default;
 
 
-std::string DescriptorWavpack::do_id() const
+std::string DescriptorWavpack::do_id() const noexcept
 {
 	return "wavpack";
 }

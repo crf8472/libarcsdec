@@ -96,7 +96,7 @@ std::unique_ptr<FileReaderDescriptor> CuesheetParserImpl::do_descriptor() const
 DescriptorCuesheet::~DescriptorCuesheet() noexcept = default;
 
 
-std::string DescriptorCuesheet::do_id() const
+std::string DescriptorCuesheet::do_id() const noexcept
 {
 	return "cuesheet";
 }

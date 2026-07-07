@@ -312,7 +312,7 @@ std::unique_ptr<FileReaderDescriptor> LibcueParserImpl::do_descriptor() const
 DescriptorLibcue::~DescriptorLibcue() noexcept = default;
 
 
-std::string DescriptorLibcue::do_id() const
+std::string DescriptorLibcue::do_id() const noexcept
 {
 	return "libcue";
 }

@@ -1200,7 +1200,7 @@ int64_t retrieve_file_size_bytes(const std::string& filename)
 DescriptorWavPCM::~DescriptorWavPCM() noexcept = default;
 
 
-std::string DescriptorWavPCM::do_id() const
+std::string DescriptorWavPCM::do_id() const noexcept
 {
 	return "wavpcm";
 }

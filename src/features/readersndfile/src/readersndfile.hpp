@@ -64,7 +64,7 @@ public:
 
 private:
 
-	std::string do_id() const final;
+	std::string do_id() const noexcept final;
 
 	/**
 	 * \brief Returns "unknown (handled by sndfile)"

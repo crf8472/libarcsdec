@@ -958,7 +958,7 @@ public:
 	 *
 	 * \return A human-readable id of this FileReaderDescriptor
 	 */
-	std::string id() const;
+	std::string id() const noexcept;
 
 	/**
 	 * \brief Name of this FileReaderDescriptor type.
@@ -1059,7 +1059,7 @@ public:
 
 private:
 
-	virtual std::string do_id() const
+	virtual std::string do_id() const noexcept
 	= 0;
 
 	virtual std::string do_name() const

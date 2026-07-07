@@ -259,7 +259,7 @@ std::unique_ptr<FileReaderDescriptor> LibsndfileAudioReaderImpl::do_descriptor()
 DescriptorSndfile::~DescriptorSndfile() noexcept = default;
 
 
-std::string DescriptorSndfile::do_id() const
+std::string DescriptorSndfile::do_id() const noexcept
 {
 	return "libsndfile";
 }

@@ -1732,7 +1732,7 @@ void operator << (std::ostream& out, const ::AVStream* stream)
 DescriptorFFmpeg::~DescriptorFFmpeg() noexcept = default;
 
 
-std::string DescriptorFFmpeg::do_id() const
+std::string DescriptorFFmpeg::do_id() const noexcept
 {
 	return "ffmpeg";
 }

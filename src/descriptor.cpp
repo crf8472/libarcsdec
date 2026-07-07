@@ -630,7 +630,7 @@ int64_t FileReadException::byte_pos() const
 FileReaderDescriptor::~FileReaderDescriptor() noexcept = default;
 
 
-std::string FileReaderDescriptor::id() const
+std::string FileReaderDescriptor::id() const noexcept
 {
 	return this->do_id();
 }

@@ -461,6 +461,10 @@ using FunctionReturningUniquePtr = std::unique_ptr<T>(*)();
  * Format type.
  *
  * \note
+ * Static data is initialized via helper guards in translation units to ensure
+ * exception safety during static initialization.
+ *
+ * \note
  * This class does not support polymorphic deletion. It is not suitable to
  * derive subclasses from it.
  *
@@ -544,6 +548,10 @@ public:
 	 */
 	static const FileReaderSelection* default_toc_selection();
 
+	// intentionally not documented
+	class SelectionInitializer;
+	friend class SelectionInitializer;
+
 protected:
 
 	/**
@@ -551,14 +559,14 @@ protected:
 	 *
 	 * \param[in] m Matcher to add.
 	 */
-	static void add_format(std::unique_ptr<Matcher> m);
+	static void add_format(std::unique_ptr<Matcher> m) noexcept;
 
 	/**
 	 * \brief Add a descriptor to this registry.
 	 *
 	 * \param[in] d Descriptor to add.
 	 */
-	static void add_reader(std::unique_ptr<FileReaderDescriptor> d);
+	static void add_reader(std::unique_ptr<FileReaderDescriptor> d) noexcept;
 
 	/**
 	 * \brief Instantiate the concrete Matcher with the given name.
@@ -600,8 +608,17 @@ struct RegisterFormat final : private FileReaderRegistry
 	 * \param[in] codecs   Set of codecs supported with \c F
 	 */
 	RegisterFormat(const SuffixSet& suffices, const std::set<Codec>& codecs)
+		noexcept
 	{
-		add_format(std::make_unique<FormatMatcher<F>>(suffices, codecs));
+		auto matcher = std::unique_ptr<FormatMatcher<F>> {};
+
+		try {
+			matcher = std::make_unique<FormatMatcher<F>>(suffices, codecs);
+			add_format(std::move(matcher));
+		} catch (const std::exception&)
+		{
+			ARCS_LOG_ERROR << "Failed to register format";
+		}
 	}
 
 	/**
@@ -612,9 +629,18 @@ struct RegisterFormat final : private FileReaderRegistry
 	 * \param[in] codecs   Set of codecs supported with \c F
 	 */
 	RegisterFormat(const SuffixSet& suffices, const Bytes& bytes,
-			const std::set<Codec>& codecs)
+			const std::set<Codec>& codecs) noexcept
 	{
-		add_format(std::make_unique<FormatMatcher<F>>(suffices, bytes, codecs));
+		auto matcher = std::unique_ptr<FormatMatcher<F>> {};
+
+		try {
+			matcher = std::make_unique<FormatMatcher<F>>(
+					suffices, bytes, codecs);
+			add_format(std::move(matcher));
+		} catch (const std::exception&)
+		{
+			ARCS_LOG_ERROR << "Failed to register format";
+		}
 	}
 };
 
@@ -638,12 +664,19 @@ namespace details
  * \return FileReaderDescriptor
  */
 template <class T, typename... Args>
-std::unique_ptr<FileReaderDescriptor> make_descriptor(Args&&... args)
+std::unique_ptr<FileReaderDescriptor> make_descriptor(Args&&... args) noexcept
 {
 	static_assert(std::is_convertible_v<T*, FileReaderDescriptor*>,
 			"Cannot convert type to FileReaderDescriptor");
 
-	return std::make_unique<T>(std::forward<Args>(args)...);
+	try {
+		return std::make_unique<T>(std::forward<Args>(args)...);
+	} catch (const std::bad_alloc&)
+	{
+		ARCS_LOG_ERROR << "make_descriptor() failed due to bad_alloc";
+	}
+
+	return nullptr;
 }
 
 } // namespace details
@@ -660,7 +693,7 @@ struct RegisterDescriptor final : private FileReaderRegistry
 	/**
 	 * \brief Registers a descriptor of the template type \c D.
 	 */
-	RegisterDescriptor()
+	RegisterDescriptor() noexcept
 	{
 		add_reader(call_maker(&details::make_descriptor<D>));
 	}
