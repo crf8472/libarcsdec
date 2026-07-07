@@ -45,9 +45,7 @@ inline namespace v_1_0_0
 {
 namespace read
 {
-namespace details
-{
-namespace cdrtoc
+namespace details::cdrtoc
 {
 
 using arcstk::ToC;
@@ -91,9 +89,7 @@ std::unique_ptr<FileReaderDescriptor> TocParserImpl::do_descriptor() const
 	return std::make_unique<DescriptorToc>();
 }
 
-
-} // namespace cdrtoc
-} // namespace details
+} // namespace details::cdrtoc
 
 
 // DescriptorToc

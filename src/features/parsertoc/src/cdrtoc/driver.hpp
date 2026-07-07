@@ -26,9 +26,7 @@ namespace arcsdec
 inline namespace v_1_0_0
 {
                                                                  /** \endcond */
-namespace read
-{
-namespace details
+namespace read::details // NOLINT(modernize-concat-nested-namespaces)
 {
 
 /**
@@ -50,8 +48,7 @@ namespace yycdrtoc
 {/*for doxygen*/}
 
 } // namespace cdrtoc
-} // namespace details
-} // namespace read
+} // namespace read::details
                                                   /** \cond NAMESPACE_v_1_0_0 */
 } // namespace v_1_0_0
                                                                  /** \endcond */
