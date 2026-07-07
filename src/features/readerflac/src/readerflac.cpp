@@ -49,9 +49,7 @@ inline namespace v_1_0_0
 {
 namespace read
 {
-namespace details
-{
-namespace flac
+namespace details::flac
 {
 
 using arcstk::AudioSize;
@@ -404,9 +402,7 @@ std::unique_ptr<FileReaderDescriptor> FlacAudioReaderImpl::do_descriptor()
 	return std::make_unique<DescriptorFlac>();
 }
 
-
-} // namespace flac
-} // namespace details
+} // namespace details::flac
 
 
 // DescriptorFlac
