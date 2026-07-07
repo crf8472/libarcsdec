@@ -101,7 +101,7 @@ public:
 	/**
 	 * \brief Destructor.
 	 */
-	~Lexer() noexcept = default; /* FIXME not virtual in FlexLexer */
+	~Lexer() noexcept final = default;
 
 	/**
 	 * \brief Return next token.
