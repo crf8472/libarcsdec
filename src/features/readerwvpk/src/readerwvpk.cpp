@@ -55,9 +55,7 @@ inline namespace v_1_0_0
 {
 namespace read
 {
-namespace details
-{
-namespace wavpack
+namespace details::wavpack
 {
 
 using arcstk::AudioSize;
@@ -627,8 +625,7 @@ bool WavpackAudioReaderImpl::perform_validations(const WavpackOpenFile& file)
 		&&  validate_handler_->validate_version(file);
 }
 
-} // namespace wavpack
-} // namespace details
+} // namespace details::wavpack
 
 
 // DescriptorWavpack
