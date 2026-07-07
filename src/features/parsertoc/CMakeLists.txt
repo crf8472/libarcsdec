@@ -46,7 +46,8 @@ add_library (libarcsdec_parsertoc OBJECT
 )
 
 set_property (TARGET libarcsdec_parsertoc
-	PROPERTY POSITION_INDEPENDENT_CODE ON )
+	PROPERTY POSITION_INDEPENDENT_CODE ON
+)
 
 target_sources (libarcsdec_parsertoc
 	PRIVATE ${CDRTOC_TAB_CPP}
