@@ -58,9 +58,7 @@ using arcstk::CDDA;
 using arcstk::InterleavedSamples;
 
 
-namespace details
-{
-namespace sndfile
+namespace details::sndfile
 {
 
 
@@ -252,9 +250,7 @@ std::unique_ptr<FileReaderDescriptor> LibsndfileAudioReaderImpl::do_descriptor()
 	return std::make_unique<DescriptorSndfile>();
 }
 
-
-} // namespace sndfile
-} // namespace details
+} // namespace details::sndfile
 
 
 // DescriptorSndfile
