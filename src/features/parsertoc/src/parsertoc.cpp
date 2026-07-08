@@ -14,6 +14,7 @@
 #include <memory>    // for unique_ptr
 #include <set>       // for set
 #include <string>    // for string
+#include <utility>   // for move
 
 #ifndef LIBARCSTK_METADATA_HPP_
 #include <arcstk/metadata.hpp> // for ToC
@@ -22,6 +23,9 @@
 #include <arcstk/logging.hpp>
 #endif
 
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP_
+#include "descriptor.hpp"      // for Codec, Format
+#endif
 #ifndef LIBARCSDEC_CDRTOC_DRIVER_HPP_
 #include "cdrtoc/driver.hpp"
 #endif
@@ -45,6 +49,11 @@ inline namespace v_1_0_0
 {
 namespace read
 {
+
+// forward declarations
+class FileReader;
+class FileReaderDescriptor;
+
 namespace details::cdrtoc
 {
 
