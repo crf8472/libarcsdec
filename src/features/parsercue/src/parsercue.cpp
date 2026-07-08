@@ -14,6 +14,7 @@
 #include <memory>    // for unique_ptr
 #include <set>       // for set
 #include <string>    // for string
+#include <utility>   // for move
 
 #ifndef LIBARCSTK_METADATA_HPP_
 #include <arcstk/metadata.hpp> // for ToC
@@ -24,6 +25,9 @@
 
 #ifndef LIBARCSDEC_CUESHEET_DRIVER_HPP_
 #include "cuesheet/driver.hpp" // for Driver
+#endif
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP_
+#include "descriptor.hpp"      // for Format, Codec
 #endif
 #ifndef LIBARCSDEC_LIBINSPECT_HPP_
 #include "libinspect.hpp"      // for first_libname_match
@@ -45,6 +49,11 @@ inline namespace v_1_0_0
 {
 namespace read
 {
+
+// forward declarations
+class FileReader;
+class FileReaderDescriptor;
+
 namespace details::cuesheet
 {
 
