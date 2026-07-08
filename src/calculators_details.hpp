@@ -12,15 +12,15 @@
  * \brief Implementation details of calculators.hpp.
  */
 
+#ifndef LIBARCSTK_METADATA_HPP_
+#include "metadata.hpp"           // for AudioSize
+#endif
+
 #ifndef LIBARCSDEC_AUDIOREADER_HPP_
 #include "audioreader.hpp"        // for AudioEventHandler
 #endif
 #ifndef LIBARCSDEC_SAMPLEPROC_HPP_
 #include "sampleproc.hpp"         // for CalculationProcessor
-#endif
-
-#ifndef LIBARCSTK_METADATA_HPP_
-#include "metadata.hpp"           // for AudioSize
 #endif
 
 namespace arcsdec
