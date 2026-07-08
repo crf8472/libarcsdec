@@ -13,14 +13,21 @@
 #include "calculators_details.hpp"  // for CalculationHandler
 #endif
 
+#include <cstddef>       // for size_t
 #include <cstdint>       // for uint16_t, int64_t
 #include <memory>        // for unique_ptr, make_unique
 #include <string>        // for string, to_string
 #include <utility>       // for pair, move, make_pair
 #include <vector>        // for vector
 
+#ifndef LIBARCSTK_ALGORITHM_HPP_
+#include <arcstk/algorithm.hpp> // for Context, Points
+#endif
 #ifndef LIBARCSTK_CALCULATE_HPP_
-#include <arcstk/calculate.hpp> // for Checksums, Points...
+#include <arcstk/calculate.hpp> // for
+#endif
+#ifndef LIBARCSTK_CHECKSUM_HPP_
+#include <arcstk/checksum.hpp>  // for ChecksumSet, Checksums
 #endif
 #ifndef LIBARCSTK_IDENTIFIER_HPP_
 #include <arcstk/identifier.hpp>// for ARId, make_arid

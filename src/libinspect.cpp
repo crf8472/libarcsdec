@@ -21,9 +21,12 @@ extern "C"
 #endif
 }
 
+#include <algorithm>   // for find_if
 #include <cstddef>     // for size_t
 #include <regex>       // for regex, regex_match
+#include <stdexcept>   // for runtime_error
 #include <string>      // for string
+#include <vector>      // for vector
 
 #ifndef LIBARCSTK_LOGGING_HPP_
 #include <arcstk/logging.hpp> // for ARCS_LOG_WARNING, ARCS_LOG_DEBUG

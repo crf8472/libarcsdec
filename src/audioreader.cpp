@@ -32,6 +32,9 @@ inline namespace v_1_0_0
 namespace read
 {
 
+// forward declarations
+class FileReaderDescriptor;
+
 using arcstk::CDDA;
 
 

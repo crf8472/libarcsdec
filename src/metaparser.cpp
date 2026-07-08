@@ -14,7 +14,9 @@
 #include "metaparser_details.hpp"
 #endif
 
+#include <cstdint>      // for int64_t
 #include <memory>       // for unique_ptr
+#include <stdexcept>    // for runtime_error
 #include <string>       // for string
 #include <utility>      // for move
 
@@ -29,6 +31,10 @@ inline namespace v_1_0_0
 {
 namespace read
 {
+
+// forward declarations
+class FileReaderDescriptor;
+
 
 // MetadataParserImpl
 

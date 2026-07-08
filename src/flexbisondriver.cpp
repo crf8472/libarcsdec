@@ -10,10 +10,7 @@
 #include "flexbisondriver.hpp"
 #endif
 
-#include <fstream>     // for ifstream
-#include <stdexcept>   // for invalid_argument
-#include <string>      // for vector
-#include <vector>      // for string
+#include <string>      // for string
 
 #ifndef LIBARCSTK_LOGGING_HPP_
 #include <arcstk/logging.hpp>

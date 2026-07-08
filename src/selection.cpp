@@ -11,9 +11,13 @@
 #endif
 
 #include <algorithm>    // for find_if
+#include <cstdint>      // for uint32_t
 #include <iterator>     // for begin, end
 #include <memory>       // for unique_ptr, make_unique
+#include <mutex>        // for call_once, once_flag
+#include <new>          // for bad_alloc
 #include <set>          // for set
+#include <exception>    // for exception
 #include <string>       // for string
 #include <utility>      // for pair, make_pair, move
 

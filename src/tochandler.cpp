@@ -10,8 +10,14 @@
 #include "tochandler.hpp"
 #endif
 
+#include <algorithm>   // for all_of
 #include <cctype>      // for isalnum, isdigit
+#include <cstddef>     // for size_t
+#include <cstdint>     // for int32_t, uint64_t
+#include <exception>   // for exception
 #include <iomanip>     // for setw
+#include <limits>      // for numeric_limits
+#include <stdexcept>   // for runtime_error
 #include <string>      // for vector
 #include <vector>      // for string
 
@@ -20,6 +26,9 @@
 #endif
 #ifndef LIBARCSTK_LOGGING_HPP_
 #include <arcstk/logging.hpp>
+#endif
+#ifndef LIBARCSTK_LOGLEVEL_HPP_
+#include <arcstk/loglevel.hpp>    // for LOGLEVEL
 #endif
 
 namespace arcsdec

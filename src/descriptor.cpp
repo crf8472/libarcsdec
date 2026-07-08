@@ -23,6 +23,7 @@
 #include <string>           // for string, to_string
 #include <type_traits>      // for underlying_type_t
 #include <vector>           // for vector
+#include <utility>          // for move
 
 #ifndef LIBARCSTK_LOGGING_HPP_
 #include <arcstk/logging.hpp>      // for ARCS_LOG, _WARNING, _DEBUG
