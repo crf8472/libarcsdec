@@ -1,3 +1,5 @@
+// NOLINTBEGIN(misc-include-cleaner)
+
 /**
  * \file
  *
@@ -15,17 +17,20 @@ extern "C"
 {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
-#include <libavformat/version.h>   // for LIBAVFORMAT_VERSION_INT
+#include <libavformat/version.h>
 #include <libavutil/avutil.h>
 }
 
 #include <algorithm>  // for remove
 #include <cerrno>     // for EAGAIN
 #include <climits>    // for CHAR_BIT
+#include <cmath>      // for isfinite
 #include <cstdarg>    // for va_list
 #include <cstdlib>    // for size_t, abs
+#include <cstdint>    // for int32_t, int64_t
 #include <cstdio>     // for vsnprintf
 #include <functional> // for function, bind, placeholders
+#include <limits>     // for numeric_limits
 #include <memory>     // for unique_ptr, make_unique
 #include <new>        // for bad_alloc
 #include <ostream>    // for ostream, endl
@@ -42,12 +47,15 @@ extern "C"
 #ifndef LIBARCSTK_LOGGING_HPP_
 #include <arcstk/logging.hpp>   // for ARCS_LOG, _ERROR, _WARNING, _INFO, _DEBUG
 #endif
+#ifndef LIBARCSTK_LOGLEVEL_HPP_
+#include <arcstk/loglevel.hpp>  // for LOGLEVEL, CLIP_LOGGING_LEVEL
+#endif
 
 #ifndef LIBARCSDEC_AUDIOREADER_HPP_
 #include "audioreader.hpp"  // for AudioReaderImpl, InvalidAudioException
 #endif
-#ifndef LIBARCSDEC_LIBINSPECT_HPP_
-#include "libinspect.hpp"   // for first_libname_match
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP_
+#include "descriptor.hpp"   // for Codec, Format
 #endif
 #ifndef LIBARCSDEC_SELECTION_HPP_
 #include "selection.hpp"    // for RegisterDescriptor
@@ -1819,4 +1827,5 @@ const auto d = RegisterDescriptor<DescriptorFFmpeg>{};
 
 } // namespace v_1_0_0
 } // namespace arcsdec
+// NOLINTEND(misc-include-cleaner)
 
