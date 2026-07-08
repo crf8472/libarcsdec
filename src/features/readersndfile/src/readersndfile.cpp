@@ -11,11 +11,13 @@
 #include "readersndfile_details.hpp" // for LibsndfileAudioReaderImpl
 #endif
 
+#include <cstddef>  // for size_t
 #include <cstdint>  // for int16_t, unit32_t, uint64_t
 #include <limits>   // for numeric_limits
 #include <memory>   // for unique_ptr
 #include <set>      // for set
 #include <sstream>  // for ostringstream
+#include <stdexcept>// for runtime_error
 #include <string>   // for string, to_string
 #include <utility>  // for make_unique, move
 #include <vector>   // for vector
@@ -37,8 +39,8 @@
 #ifndef LIBARCSDEC_AUDIOREADER_HPP_
 #include "audioreader.hpp"  // for AudioReaderImpl, InvalidAudioException
 #endif
-#ifndef LIBARCSDEC_LIBINSPECT_HPP_
-#include "libinspect.hpp"   // for first_libname_match
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP_
+#include "descriptor.hpp"   // for Codec, Format
 #endif
 #ifndef LIBARCSDEC_SELECTION_HPP_
 #include "selection.hpp"    // for RegisterDescriptor
@@ -107,6 +109,7 @@ void LibsndfileAudioReaderImpl::do_process_file(const std::string& filename)
 		handler->start_input();
 	}
 
+	// NOLINTNEXTLINE(misc-include-cleaner)
 	auto audiofile = SndfileHandle { filename, SFM_READ };
 
 	// TODO Check whether this was successful
@@ -126,6 +129,7 @@ void LibsndfileAudioReaderImpl::do_process_file(const std::string& filename)
 		return;
 	}
 
+	// NOLINTNEXTLINE(misc-include-cleaner)
 	if (!(audiofile.format() | SF_FORMAT_PCM_16))
 	{
 		using std::to_string;
@@ -153,6 +157,7 @@ void LibsndfileAudioReaderImpl::do_process_file(const std::string& filename)
 
 	// Check for cast to required type
 
+	// NOLINTNEXTLINE(misc-include-cleaner)
 	if (buffer_len > std::numeric_limits<sf_count_t>::max())
 	{
 		ARCS_LOG_ERROR << "Buffer length exceeds integral type";
