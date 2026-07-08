@@ -17,20 +17,29 @@ extern "C" {
 
 #include <cstdio>    // for fopen, fclose, FILE
 #include <iomanip>   // for setw
+#include <ios>       // for right
 #include <memory>    // for unique_ptr
 #include <set>       // for set
 #include <sstream>   // for ostringstream
 #include <stdexcept> // for invalid_argument
 #include <string>    // for string
+#include <tuple>     // for make_tuple
 #include <vector>    // for vector
+#include <utility>   // for move
 
 #ifndef LIBARCSTK_METADATA_HPP_
 #include <arcstk/metadata.hpp>    // for ToC, make_toc
+#endif
+#ifndef LIBARCSTK_LOGLEVEL_HPP_
+#include <arcstk/loglevel.hpp>
 #endif
 #ifndef LIBARCSTK_LOGGING_HPP_
 #include <arcstk/logging.hpp>
 #endif
 
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP_
+#include "descriptor.hpp"         // for Codec, Format
+#endif
 #ifndef LIBARCSDEC_METAPARSER_HPP_
 #include "metaparser.hpp"         // for MetadataParseException
 #endif
@@ -61,9 +70,7 @@ inline namespace v_1_0_0
 {
 namespace read
 {
-namespace details
-{
-namespace libcue
+namespace details::libcue
 {
 
 using arcstk::ToC;
@@ -88,41 +95,18 @@ void Free_Cd::operator()(::Cd* cd) const
 
 CdPtr Make_CdPtr::operator()(const std::string& filename) const
 {
-	auto cd_ptr = CdPtr{};
+	// Parse file using libcue
 
-	{ // begin scope of FILE f
-#ifdef MSC_SAFECODE
-		FILE* f = 0;
-		fopen_s(&f, filename.c_str(), "r");
-#else
-		FILE* f = std::fopen(filename.c_str(), "r");
-#endif
+	ARCS_LOG(DEBUG1) << "Start reading Cuesheet file with libcue: "
+		<< filename;
 
-		// Parse file using libcue
+	auto f = safe_open_for_read(filename);
 
-		if (!f)
-		{
-			auto message = std::ostringstream{};
-			message << "Failed to open Cuesheet file: " << filename;
+	// cue_parse_file() must complete synchronously and read the entire file
+    // before returning. The FILE* is closed immediately after this call.
+	auto cd_ptr = CdPtr { ::cue_parse_file(f.get()) };
 
-			throw FileReadException(message.str());
-		}
-
-		ARCS_LOG(DEBUG1) << "Start reading Cuesheet file with libcue";
-
-		cd_ptr = CdPtr(::cue_parse_file(f));
-
-		// Close file
-
-		if (std::fclose(f)) // fclose returns 0 on success and EOF on error
-		{
-			auto message = std::ostringstream{};
-			message << "Failed to close Cuesheet file after reading: "
-				<< filename;
-
-			throw FileReadException(message.str());
-		}
-	} // scope of FILE f
+	// Close file
 
 	if (!cd_ptr.get())
 	{
@@ -135,6 +119,49 @@ CdPtr Make_CdPtr::operator()(const std::string& filename) const
 	ARCS_LOG(DEBUG1) << "Cuesheet file successfully read";
 
 	return cd_ptr;
+}
+
+
+// Close_FILEPtr
+
+
+void Close_FILEPtr::operator()(FILE* f) const
+{
+	if (f)
+	{
+		// NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
+		if (std::fclose(f)) // fclose returns 0 on success & EOF on error
+		{
+			ARCS_LOG_ERROR << "Failed to close Cuesheet file";
+		}
+		f = nullptr;
+	}
+}
+
+
+// safe_open_for_read()
+
+
+FILEPtr safe_open_for_read(const std::string& filename)
+{
+#ifdef MSC_SAFECODE
+	FILE* temp = nullptr; // NOLINT(cppcoreguidelines-owning-memory)
+	const int err = fopen_s(&temp, filename.c_str(), "r");
+	auto f = FILEPtr { temp };
+	const bool has_failed { err != 0 || f == nullptr };
+#else
+	auto f = FILEPtr { std::fopen(filename.c_str(), "r") };
+	const bool has_failed { f == nullptr };
+#endif
+
+	if (has_failed)
+	{
+		auto message = std::ostringstream{};
+		message << "Failed to open Cuesheet file: " << filename;
+		throw FileReadException(message.str());
+	}
+
+	return f;
 }
 
 
@@ -158,7 +185,9 @@ CueOpenFile::CueOpenFile(const std::string& filename)
 
 CueInfo CueOpenFile::info() const
 {
-	const auto cd_info = cd_info_.get();
+	const auto* cd_info = cd_info_.get();
+
+	// track count
 
 	const int track_count = ::cd_get_ntrack(cd_info);
 
@@ -169,6 +198,8 @@ CueInfo CueOpenFile::info() const
 
 		throw MetadataParseException(msg.str());
 	}
+
+	// offset, lengths, filenames
 
 	auto offsets   = std::vector<lba_type>{};
 	auto lengths   = std::vector<lba_type>{};
@@ -182,10 +213,10 @@ CueInfo CueOpenFile::info() const
 	lengths.reserve(static_cast<lengths_sz>(track_count));
 	filenames.reserve(static_cast<filenames_sz>(track_count));
 
-	// types according to libcue-API
-	auto trk_offset = long { 0 };
-	auto trk_length = long { 0 };
-	::Track* trk = nullptr;
+	// Types according to libcue-API
+	auto trk_offset = long { 0 }; // NOLINT(google-runtime-int)
+	auto trk_length = long { 0 }; // NOLINT(google-runtime-int)
+	const ::Track* trk = nullptr;
 
 	// Read offset, length + filename for each track in Cue file
 
@@ -203,11 +234,8 @@ CueInfo CueOpenFile::info() const
 
 		if (trk_offset < 0)
 		{
-			auto msg = std::ostringstream{};
-			msg << "Offset for track " << i
+			ARCS_LOG_WARNING  << "Offset for track "   << i
 				<< " is not expected to be negative: " << trk_offset;
-			//throw InvalidMetadataException(msg.str());
-			throw std::invalid_argument(msg.str());
 		}
 
 		trk_length = ::track_get_length(trk);
@@ -215,11 +243,8 @@ CueInfo CueOpenFile::info() const
 		// Length of last track is allowed to be -1.
 		if (i < track_count and trk_length < 0)
 		{
-			auto msg = std::ostringstream{};
-			msg << "Length for track " << i
+			ARCS_LOG_WARNING << "Length for track "    << i
 				<< " is not expected to be negative: " << trk_length;
-			//throw InvalidMetadataException(msg.str());
-			throw std::invalid_argument(msg.str());
 		}
 
 		auto audiofilename = std::string { ::track_get_filename(trk) };
@@ -256,11 +281,11 @@ CueInfo CueOpenFile::info() const
 			throw std::invalid_argument(msg.str());
 		}
 
-		filenames.emplace_back(audiofilename);
+		filenames.emplace_back(std::move(audiofilename));
 	}
 
-	return std::make_tuple(track_count, std::move(offsets),
-			std::move(lengths), std::move(filenames));
+	return std::make_tuple(track_count, std::move(filenames),
+			std::move(offsets), std::move(lengths));
 }
 
 
@@ -277,8 +302,8 @@ ToC LibcueParserImpl::do_parse(const std::string& filename)
 {
 	const auto cue_info = this->parse_worker(filename);
 
-	return make_toc(std::get<1>(cue_info),  // offsets
-					std::get<3>(cue_info)); // filenames
+	return make_toc(std::get<2>(cue_info),  // offsets
+					std::get<1>(cue_info)); // filenames
 }
 
 
@@ -287,9 +312,7 @@ std::unique_ptr<FileReaderDescriptor> LibcueParserImpl::do_descriptor() const
 	return std::make_unique<DescriptorLibcue>();
 }
 
-
-} // namespace libcue
-} // namespace details
+} // namespace details::libcue
 
 
 // DescriptorLibcue
@@ -298,7 +321,7 @@ std::unique_ptr<FileReaderDescriptor> LibcueParserImpl::do_descriptor() const
 DescriptorLibcue::~DescriptorLibcue() noexcept = default;
 
 
-std::string DescriptorLibcue::do_id() const
+std::string DescriptorLibcue::do_id() const noexcept
 {
 	return "libcue";
 }

@@ -30,9 +30,7 @@ namespace arcsdec
 inline namespace v_1_0_0
 {
                                                                  /** \endcond */
-namespace read
-{
-namespace details
+namespace read::details // NOLINT(modernize-concat-nested-namespaces)
 {
 
 /**
@@ -181,7 +179,7 @@ private:
 	/**
 	 * \brief Constants for accessing first dimension of WAV_CDDA_.
 	 */
-	enum FIELD : int
+	enum class FIELD : uint8_t
 	{
 		// chunk descriptor
 		RIFF                     =  0,  // chunk descriptor id
@@ -214,8 +212,8 @@ private:
 	/**
 	 * \brief Offsets and lengths for interpreting a RIFF WAVE header.
 	 */
-	static constexpr unsigned int BYTES_[HEADER_FIELD_COUNT_][2] =
-	{
+	static constexpr std::array<std::array<unsigned, 2>, HEADER_FIELD_COUNT_>
+	BYTES_ = {{
 		{  0, 4}, // Chunk descriptor id 'RIFF'
 		{  4, 4}, // Filesize - 8
 		{  8, 4}, // Chunk descriptor format 'WAVE'
@@ -229,16 +227,23 @@ private:
 		{ 34, 2}, // wBitsPerSample
 		{ 36, 4}, // Data: Subchunk name
 		{ 40, 4}  // Data: Subchunk size
-	};
+	}};
 
 	/**
-	 * \brief Encodes access to \c BYTES_[i]
+	 * \brief Access BYTES_ to get offset of field \c field.
 	 */
-	enum BYTES : int
+	static constexpr unsigned int get_offset(const FIELD field)
 	{
-		OFFSET = 0,
-		LENGTH = 1
-	};
+		return BYTES_.at(static_cast<std::size_t>(field))[0 /*OFFSET*/];
+	}
+
+	/**
+	 * \brief Access BYTES_ to get length of field \c field.
+	 */
+	static constexpr unsigned int get_length(const FIELD field)
+	{
+		return BYTES_.at(static_cast<std::size_t>(field))[1 /*LENGTH*/];
+	}
 
 	/**
 	 * \brief Mark a position as "any byte value accepted here".
@@ -251,13 +256,21 @@ private:
 	static const std::array<unsigned char, 40> WAVPCM_HEADER_;
 
 	/**
+	 * \brief Get offset of field \c field.
+	 */
+	static constexpr unsigned char header_byte(const unsigned int index)
+	{
+		return WAVPCM_HEADER_.at(index);
+	}
+
+	/**
 	 * \brief Returns canonical value of specified header field
 	 *
 	 * \param[in] field The header field to read
 	 *
 	 * \return The value of \c field
 	 */
-	uint32_t header(FIELD field) const;
+	uint32_t header(const FIELD field) const;
 
 public:
 
@@ -354,7 +367,8 @@ public:
 	static const unsigned char& any_byte();
 };
 
-
+// NOLINTBEGIN(misc-non-private-member-variables-in-classes)
+// NOLINTBEGIN(cppcoreguidelines-avoid-const-or-ref-data-members)
 /**
  * \brief Represents the parsed chunk descriptor of a WAV file.
  *
@@ -362,7 +376,6 @@ public:
  */
 class WavChunkDescriptor final
 {
-
 public:
 
 	/**
@@ -383,7 +396,7 @@ public:
 	/**
 	 * \brief Virtual default destructor.
 	 */
-	~WavChunkDescriptor() noexcept;
+	~WavChunkDescriptor() noexcept = default;
 
 	/**
 	 * \brief ChunkId, either RIFF or RIFX.
@@ -427,7 +440,6 @@ public:
  */
 class WavSubchunkHeader final
 {
-
 public:
 
 	/**
@@ -441,7 +453,7 @@ public:
 	/**
 	 * \brief Virtual default destructor.
 	 */
-	~WavSubchunkHeader() noexcept;
+	~WavSubchunkHeader() noexcept = default;
 
 	/**
 	 * \brief Id of the subchunk.
@@ -462,7 +474,6 @@ public:
  */
 class WavFormatSubchunk final
 {
-
 public:
 
 	/**
@@ -481,7 +492,7 @@ public:
 	/**
 	 * \brief Virtual default destructor.
 	 */
-	~WavFormatSubchunk() noexcept;
+	~WavFormatSubchunk() noexcept = default;
 
 	/**
 	 * \brief Parsed id of this format subchunk.
@@ -523,6 +534,9 @@ public:
 	 */
 	const int wBitsPerSample;
 };
+
+// NOLINTEND(cppcoreguidelines-avoid-const-or-ref-data-members)
+// NOLINTEND(misc-non-private-member-variables-in-classes)
 
 
 struct WAV final
@@ -609,7 +623,7 @@ public:
 /**
  * \brief Config flags for WavAudioHandler.
  */
-enum CONFIG : uint32_t
+enum CONFIG : uint8_t // NOLINT(cppcoreguidelines-use-enum-class)
 {
 	C_DO_NOTHING        =    0,
 	C_RESPECT_HEADER    =    1,
@@ -637,7 +651,7 @@ private:
 	 * \brief State flags of the audio handler. More than one state can be
 	 * active.
 	 */
-	enum STATE : uint32_t
+	enum STATE : uint8_t // NOLINT(cppcoreguidelines-use-enum-class)
 	{
 		S_INITIAL           =    0,
 		S_STARTED_FORMAT    =    1,
@@ -648,13 +662,6 @@ private:
 	};
 
 public:
-
-	/**
-	 * \brief Constructor.
-	 *
-	 * \param[in] valid_values An object representing the valid reference values
-	 */
-	WavAudioHandler();
 
 	/**
 	 * \brief Return phyiscal file size.
@@ -799,22 +806,22 @@ private:
 	 * This is required as a reference value for checking the
 	 * consistency of the file size declaration in the chunk descriptor.
 	 */
-	int64_t phys_file_size_;
+	int64_t phys_file_size_ { 0 };
 
 	/**
 	 * \brief Configuration: configuration flags.
 	 */
-	uint32_t config_;
+	uint32_t config_ { C_RESPECT_HEADER | C_RESPECT_FORMAT | C_RESPECT_DATA };
 
 	/**
 	 * \brief State: state flags.
 	 */
-	uint32_t state_;
+	uint32_t state_ { S_INITIAL };
 
 	/**
 	 * \brief Validator for WAV chunks.
 	 */
-	WavValidator validator_;
+	WavValidator validator_ {};
 };
 
 
@@ -828,7 +835,7 @@ private:
  * the 4 bytes following byte 0x2C. The format subchunk is validated to conform
  * to CDDA.
  */
-class WavAudioReaderImpl : public AudioReaderImpl
+class WavAudioReaderImpl final : public AudioReaderImpl
 {
 
 public:
@@ -848,7 +855,7 @@ public:
 	/**
 	 * \brief Virtual destructor.
 	 */
-	~WavAudioReaderImpl() noexcept;
+	~WavAudioReaderImpl() noexcept final = default;
 
 	/**
 	 * \brief Get the current WavAudioHandler.
@@ -1005,8 +1012,7 @@ int64_t retrieve_file_size_bytes(const std::string& filename);
 /// @}
 
 } // namespace wave
-} // namespace details
-} // namespace read
+} // namespace read::details
                                                   /** \cond NAMESPACE_v_1_0_0 */
 } // namespace v_1_0_0
                                                                  /** \endcond */

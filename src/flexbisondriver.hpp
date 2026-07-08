@@ -24,11 +24,8 @@ namespace arcsdec
 inline namespace v_1_0_0
 {
                                                                  /** \endcond */
-namespace read
+namespace read::details
 {
-namespace details
-{
-
 
 /**
  * \brief Interface: lexer handler defines reaction on the occurrence of tokens.
@@ -222,7 +219,7 @@ class TokenLocation
 	/**
 	 * \brief Internal location.
 	 */
-	LOCATION current_token_location_;
+	LOCATION current_token_location_ {};
 
 	/**
 	 * \brief Create an initial location.
@@ -233,15 +230,6 @@ class TokenLocation
 	}
 
 public:
-
-	/**
-	 * \brief Constructor.
-	 */
-	TokenLocation()
-		: current_token_location_ { /* empty */ }
-	{
-		// empty
-	}
 
 	/**
 	 * \brief Reset this location to its initial value.
@@ -332,12 +320,12 @@ class BisonParser
 	/**
 	 * \brief Internal bison parser instance.
 	 */
-	std::unique_ptr<PARSER> parser_;
+	std::unique_ptr<PARSER> parser_ {};
 
 	/**
 	 * \brief Debug wrapper.
 	 */
-	IsDebugEnabled<PARSER>  debug_;
+	IsDebugEnabled<PARSER>  debug_ {};
 
 public:
 
@@ -353,7 +341,6 @@ public:
 	 */
 	explicit BisonParser(std::unique_ptr<PARSER> parser)
 		: parser_ { std::move(parser) }
-		, debug_  { /* default */ }
 	{
 		// empty
 	}
@@ -406,27 +393,27 @@ class FlexBisonDriver final
 	/**
 	 * \brief Internal pointer to LexerHandler.
 	 */
-	LexerHandler* l_handler_;
+	LexerHandler* l_handler_ {};
 
 	/**
 	 * \brief Internal pointer to ParserHandler.
 	 */
-	HANDLER* p_handler_;
+	HANDLER* p_handler_ {};
 
 	/**
 	 * \brief Internal token location.
 	 */
-	TokenLocation<POSITION, LOCATION> current_loc_;
+	TokenLocation<POSITION, LOCATION> current_loc_ {};
 
 	/**
 	 * \brief Internal lexer instance.
 	 */
-	std::unique_ptr<LEXER> lexer_;
+	std::unique_ptr<LEXER> lexer_ {};
 
 	/**
 	 * \brief Internal parser instance.
 	 */
-	BisonParser<PARSER> parser_;
+	BisonParser<PARSER> parser_ {};
 
 public:
 
@@ -438,7 +425,6 @@ public:
 	explicit FlexBisonDriver(LexerHandler* l_handler, HANDLER* p_handler)
 		: l_handler_   { l_handler }
 		, p_handler_   { p_handler }
-		, current_loc_ { /* empty */ }
 		, lexer_       { std::make_unique<LEXER>(&current_loc_, l_handler_) }
 		, parser_      { std::make_unique<PARSER>(
 								&current_loc_, lexer_.get(), p_handler_) }
@@ -565,8 +551,7 @@ public:
 #pragma GCC diagnostic pop
 #endif
 
-} // namespace details
-} // namespace read
+} // namespace read::details
                                                   /** \cond NAMESPACE_v_1_0_0 */
 } // namespace v_1_0_0
                                                                  /** \endcond */

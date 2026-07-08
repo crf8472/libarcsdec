@@ -96,7 +96,7 @@ namespace read
  * The intention is to support inspecting the capabilities of
  * \link FileReader FileReaders\endlink.
  */
-enum class Format : unsigned
+enum class Format : uint8_t
 {
 	UNKNOWN,  // 0, guaranteed to be first
 	CUE,
@@ -139,7 +139,7 @@ std::string name(Format format);
  * The intention is to support inspecting the capabilities of
  * \link FileReader FileReaders\endlink.
  */
-enum class Codec : unsigned
+enum class Codec : uint8_t
 {
 	UNKNOWN,  // 0, guaranteed to be first
 	PCM_S16BE,
@@ -190,6 +190,10 @@ struct Comparable
 	{
 		return !(lhs == rhs);
 	}
+
+protected:
+
+	Comparable() = default; // NOLINT(bugprone-crtp-constructor-accessibility)
 };
 
 
@@ -197,7 +201,7 @@ class ByteSeq;
 
 bool operator == (const ByteSeq& lhs, const ByteSeq& rhs);
 
-void swap(ByteSeq& lhs, ByteSeq& rhs);
+void swap(ByteSeq& lhs, ByteSeq& rhs) noexcept;
 
 /**
  * \brief Byte sequence with or without wildcards.
@@ -216,7 +220,7 @@ private:
 	/**
 	 * \brief Internal byte sequence.
 	 */
-	std::vector<byte_type> sequence_;
+	std::vector<byte_type> sequence_ {};
 
 	/**
 	 * \brief Type of the internal sequence.
@@ -226,7 +230,7 @@ private:
 	/**
 	 * \brief List of wildcard positions in the sequence.
 	 */
-	std::set<sequence_type::size_type> wildcards_;
+	std::set<sequence_type::size_type> wildcards_ {};
 
 public:
 
@@ -250,7 +254,7 @@ public:
 	 *
 	 * \param[in] length Actual length for a yet empty sequence
 	 */
-	ByteSeq(sequence_type::size_type length);
+	explicit ByteSeq(sequence_type::size_type length);
 
 	/**
 	 * \brief TRUE if byte on position \c i of the sequence has value \c b.
@@ -280,7 +284,7 @@ public:
 	 *
 	 * \return Instance after swapping
 	 */
-	ByteSeq& swap(ByteSeq& rhs) ; //TODO noexcept possible when C++17
+	ByteSeq& swap(ByteSeq& rhs) noexcept;
 
 
 	// Wrappers for functions delegated to the sequence_type
@@ -320,7 +324,7 @@ class Bytes;
 
 bool operator == (const Bytes& lhs, const Bytes& rhs);
 
-void swap(Bytes& lhs, Bytes& rhs);
+void swap(Bytes& lhs, Bytes& rhs) noexcept;
 
 /**
  * \brief A sequence of bytes read from a specific offset in a file.
@@ -339,11 +343,9 @@ public:
 	static constexpr unsigned int any = ByteSequence::max_byte_value + 1;
 
 	/**
-	 * \brief Constructor.
-	 *
-	 * Initiates an empty internal ByteSequence with an offset() of 0.
+	 * \brief Default constructor.
 	 */
-	Bytes();
+	Bytes() = default;
 
 	/**
 	 * \brief Constructor.
@@ -351,7 +353,7 @@ public:
 	 * \param[in] byte_offset 0-based start position
 	 * \param[in] byte_seq    Sequence of bytes
 	 */
-	Bytes(const uint32_t byte_offset, const ByteSequence& byte_seq);
+	Bytes(const uint32_t byte_offset, ByteSequence byte_seq);
 
 	/**
 	 * \brief Match a byte sequence with this instance.
@@ -434,7 +436,7 @@ public:
 	 *
 	 * \return Instance after swapping
 	 */
-	Bytes& swap(Bytes& rhs) ; //TODO noexcept possible when C++17
+	Bytes& swap(Bytes& rhs) noexcept;
 
 private:
 
@@ -448,12 +450,12 @@ private:
 	/**
 	 * \brief Offset of the internal ByteSequence in the file.
 	 */
-	uint32_t offset_;
+	uint32_t offset_ {};
 
 	/**
 	 * \brief Internal ByteSequence.
 	 */
-	ByteSequence seq_;
+	ByteSequence seq_ {};
 };
 
 
@@ -485,8 +487,8 @@ struct ci_char_traits final : public std::char_traits<char>
 			if( toupper(*s1) < toupper(*s2) ) { return -1; }
 			if( toupper(*s1) > toupper(*s2) ) { return  1; }
 
-			++s1;
-			++s2;
+			++s1; // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+			++s2; // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 		}
 
 		return 0;
@@ -494,6 +496,7 @@ struct ci_char_traits final : public std::char_traits<char>
 
 	static const char* find(const char* s, int n, char a)
 	{
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 		while(n-- > 0 && toupper(*s) != toupper(a)) { ++s; }
 
 		return s;
@@ -691,10 +694,10 @@ public:
 	 * \param[in] bytes     A byte sequence accepted by this Format
 	 * \param[in] codecs    Codecs supported for this Format
 	 */
-	FormatMatcher(const SuffixSet& suffices, const Bytes& bytes,
+	FormatMatcher(SuffixSet suffices, Bytes bytes,
 			const std::set<Codec>& codecs)
-		: suffices_ { suffices }
-		, bytes_    { bytes }
+		: suffices_ { std::move(suffices) }
+		, bytes_    { std::move(bytes)    }
 		, codecs_   { codecs }
 	{
 		/* empty */
@@ -717,42 +720,42 @@ public:
 	/**
 	 * \brief Virtual default destructor.
 	 */
-	inline virtual ~FormatMatcher() noexcept = default;
+	~FormatMatcher() noexcept final = default;
 
 private:
 
-	inline std::string do_name() const final
+	std::string do_name() const final
 	{
 		using arcsdec::read::name;
 		return name(F);
 	}
 
-	inline bool do_matches(const Bytes& bytes) const final
+	bool do_matches(const Bytes& bytes) const final
 	{
 		return bytes_.match(bytes);
 	}
 
-	inline bool do_matches(const std::string& filename) const final
+	bool do_matches(const std::string& filename) const final
 	{
 		return details::ci_match_suffix(suffices_, filename);
 	}
 
-	inline Format do_format() const final
+	Format do_format() const final
 	{
 		return F;
 	}
 
-	inline std::set<Codec> do_codecs() const final
+	std::set<Codec> do_codecs() const final
 	{
 		return codecs_;
 	}
 
-	inline Bytes do_reference_bytes() const final
+	Bytes do_reference_bytes() const final
 	{
 		return bytes_;
 	}
 
-	inline std::unique_ptr<Matcher> do_clone() const final
+	std::unique_ptr<Matcher> do_clone() const final
 	{
 		return
 			std::make_unique<FormatMatcher<F>>(suffices_, bytes_, codecs_);
@@ -761,17 +764,17 @@ private:
 	/**
 	 * \brief Internal set of supported suffices.
 	 */
-	SuffixSet suffices_;
+	SuffixSet suffices_ {};
 
 	/**
 	 * \brief Internal reference byte sequence.
 	 */
-	Bytes bytes_;
+	Bytes bytes_ {};
 
 	/**
 	 * \brief Internal set of codecs supported for this Format.
 	 */
-	std::set<Codec> codecs_;
+	std::set<Codec> codecs_ {};
 };
 
 
@@ -869,7 +872,7 @@ private:
 	/**
 	 * \brief Internal byte position.
 	 */
-	int64_t byte_pos_;
+	int64_t byte_pos_ {};
 };
 
 
@@ -917,7 +920,7 @@ bool operator == (const FileReaderDescriptor& lhs,
 /**
  * \brief Input filetype.
  */
-enum class InputType: unsigned
+enum class InputType: uint8_t
 {
 	AUDIO,
 	TOC
@@ -946,7 +949,7 @@ public:
 	/**
 	 * \brief Virtual default destructor.
 	 */
-	virtual ~FileReaderDescriptor() noexcept;
+	~FileReaderDescriptor() noexcept override;
 
 	/**
 	 * \brief Id of this FileReaderDescriptor type.
@@ -955,7 +958,7 @@ public:
 	 *
 	 * \return A human-readable id of this FileReaderDescriptor
 	 */
-	std::string id() const;
+	std::string id() const noexcept;
 
 	/**
 	 * \brief Name of this FileReaderDescriptor type.
@@ -1056,7 +1059,7 @@ public:
 
 private:
 
-	virtual std::string do_id() const
+	virtual std::string do_id() const noexcept
 	= 0;
 
 	virtual std::string do_name() const

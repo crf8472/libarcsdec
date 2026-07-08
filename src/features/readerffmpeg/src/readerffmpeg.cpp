@@ -1,3 +1,5 @@
+// NOLINTBEGIN(misc-include-cleaner)
+
 /**
  * \file
  *
@@ -15,17 +17,20 @@ extern "C"
 {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
-#include <libavformat/version.h>   // for LIBAVFORMAT_VERSION_INT
+#include <libavformat/version.h>
 #include <libavutil/avutil.h>
 }
 
 #include <algorithm>  // for remove
 #include <cerrno>     // for EAGAIN
 #include <climits>    // for CHAR_BIT
+#include <cmath>      // for isfinite
 #include <cstdarg>    // for va_list
 #include <cstdlib>    // for size_t, abs
+#include <cstdint>    // for int32_t, int64_t
 #include <cstdio>     // for vsnprintf
 #include <functional> // for function, bind, placeholders
+#include <limits>     // for numeric_limits
 #include <memory>     // for unique_ptr, make_unique
 #include <new>        // for bad_alloc
 #include <ostream>    // for ostream, endl
@@ -42,12 +47,15 @@ extern "C"
 #ifndef LIBARCSTK_LOGGING_HPP_
 #include <arcstk/logging.hpp>   // for ARCS_LOG, _ERROR, _WARNING, _INFO, _DEBUG
 #endif
+#ifndef LIBARCSTK_LOGLEVEL_HPP_
+#include <arcstk/loglevel.hpp>  // for LOGLEVEL, CLIP_LOGGING_LEVEL
+#endif
 
 #ifndef LIBARCSDEC_AUDIOREADER_HPP_
 #include "audioreader.hpp"  // for AudioReaderImpl, InvalidAudioException
 #endif
-#ifndef LIBARCSDEC_LIBINSPECT_HPP_
-#include "libinspect.hpp"   // for first_libname_match
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP_
+#include "descriptor.hpp"   // for Codec, Format
 #endif
 #ifndef LIBARCSDEC_SELECTION_HPP_
 #include "selection.hpp"    // for RegisterDescriptor
@@ -60,9 +68,7 @@ inline namespace v_1_0_0
 {
 namespace read
 {
-namespace details
-{
-namespace ffmpeg
+namespace details::ffmpeg
 {
 
 using arcstk::AudioSize;
@@ -78,10 +84,13 @@ std::string v_format_string(const char* fmt, std::va_list args_list)
 
 	while (error_count < 3)/*TODO kind of random magic number*/
 	{
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
 		std::va_list args; /* use a copy(!) of the va_list for each loop run */
+		// NOLINTBEGIN(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
 		va_copy(args, args_list);
 		total_chars = std::vsnprintf(buf.data(), buf_size, fmt, args);
 		va_end(args);
+		// NOLINTEND(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
 
 		if (total_chars > -1) // no error
 		{
@@ -555,8 +564,8 @@ void open_input_or_throw(::AVFormatContext** fctx, const std::string& filename)
 {
 	ARCS_LOG(DEBUG1) << "Try to open format context";
 
-	::AVInputFormat* detect { nullptr }; // TODO Currently unused
-	::AVDictionary* options { nullptr }; // TODO Currently unused
+	const ::AVInputFormat* detect { nullptr }; // TODO Currently unused
+	::AVDictionary* options { nullptr };       // TODO Currently unused
 
 	const auto error_open { ::avformat_open_input(fctx , filename.c_str(),
 			detect, &options) };
@@ -650,8 +659,9 @@ AVCodecContextPtr create_codec_context(::AVFormatContext* fctx,
 		throw std::invalid_argument("Stream index is negative");
 	}
 
-	// ::AVStream*
+	// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 	const auto* stream { fctx->streams[stream_idx] };
+	// ::AVStream*
 
 	if (!stream)
 	{
@@ -675,8 +685,9 @@ AVCodecContextPtr create_codec_context(::AVFormatContext* fctx,
 #else
 		for (auto i = int { 0 }; i < stream->codecpar->nb_coded_side_data; ++i)
 		{
-			//const AVPacketSideData* const
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 			const auto* const sd_data { &stream->codecpar->coded_side_data[i] };
+			//const AVPacketSideData* const
 
 			if (::AV_PKT_DATA_SKIP_SAMPLES == sd_data->type)
 			{
@@ -826,7 +837,25 @@ int64_t get_total_samples(::AVCodecContext* cctx, ::AVStream* stream)
 
 	ARCS_LOG_DEBUG << "Estimate duration:       " << duration_secs << " secs";
 
-	return duration_secs * cctx->sample_rate;
+	// for safety
+
+	if (!std::isfinite(duration_secs) || duration_secs < 0.0)
+	{
+		throw std::invalid_argument("Invalid duration");
+	}
+
+	const double max_samples =
+		static_cast<double>(std::numeric_limits<int64_t>::max()) /
+		static_cast<double>(cctx->sample_rate);
+
+	if (duration_secs > max_samples)
+	{
+		throw std::overflow_error("Duration exceeds representable range");
+	}
+
+    return static_cast<int64_t>(duration_secs * cctx->sample_rate);
+	// Outcommented old code TODO Remove
+	//return duration_secs * cctx->sample_rate;
 }
 
 
@@ -836,7 +865,9 @@ int64_t get_total_samples(::AVCodecContext* cctx, ::AVStream* stream)
 AudioSize get_declared_size(::AVFormatContext* fctx, ::AVCodecContext* cctx,
 		const int stream_idx)
 {
-	auto stream = fctx->streams[stream_idx];
+	// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+	auto* stream = fctx->streams[stream_idx];
+
 	ARCS_LOG(DEBUG1) << stream;
 
 	const auto total_samples = get_total_samples(cctx, stream);
@@ -1025,22 +1056,6 @@ std::unique_ptr<FFmpegAudioStream> FFmpegAudioStreamLoader::load(
 // FFmpegAudioStream
 
 
-FFmpegAudioStream::FFmpegAudioStream()
-	: formatContext_    { nullptr }
-	, codecContext_     { nullptr }
-	, stream_index_     { 0 }
-	, num_planes_       { 0 }
-	, channels_swapped_ { false }
-	, size_             { arcstk::AudioSize{} /* zero */ }
-	, start_input_      { /* empty */ }
-	, push_frame_       { /* empty */ }
-	, update_audiosize_ { /* empty */ }
-	, end_input_        { /* empty */ }
-{
-	// empty
-}
-
-
 AudioSize FFmpegAudioStream::declared_size() const
 {
 	return size_;
@@ -1067,27 +1082,27 @@ bool FFmpegAudioStream::channels_swapped() const
 
 void FFmpegAudioStream::register_start_input(std::function<void()> func)
 {
-	start_input_ = func;
+	start_input_ = std::move(func);
 }
 
 
 void FFmpegAudioStream::register_push_frame(
 		std::function<void(AVFramePtr frame)> func)
 {
-	push_frame_ = func;
+	push_frame_ = std::move(func);
 }
 
 
 void FFmpegAudioStream::register_update_audiosize(
 		std::function<void(const AudioSize& size)> func)
 {
-	update_audiosize_ = func;
+	update_audiosize_ = std::move(func);
 }
 
 
 void FFmpegAudioStream::register_end_input(std::function<void()> func)
 {
-	end_input_ = func;
+	end_input_ = std::move(func);
 }
 
 
@@ -1187,6 +1202,7 @@ AudioSize FFmpegAudioStream::traverse_samples()
 				// TODO This is an error, handle it!
 			} else
 			{
+				// NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
 				goto flush; // Flush again in "draining" mode
 			}
 		}
@@ -1279,18 +1295,22 @@ void FFmpegAudioReaderImpl::do_process_file(const std::string& filename)
 	// This imitates how a SampleProcessor is attached to a SampleProvider.
 
 	audiostream->register_start_input(
-		std::bind(&FFmpegAudioReaderImpl::start_input_callback, this));
+		[this]() { this->start_input_callback(); });
+		//std::bind(&FFmpegAudioReaderImpl::start_input_callback, this));
 
 	audiostream->register_update_audiosize(
-		std::bind(&FFmpegAudioReaderImpl::audiosize_callback, this,
-			std::placeholders::_1));
+		[this](const AudioSize& size) { this->audiosize_callback(size); });
+		// std::bind(&FFmpegAudioReaderImpl::audiosize_callback, this,
+		// 	std::placeholders::_1));
 
 	audiostream->register_push_frame(
-		std::bind(&FFmpegAudioReaderImpl::frame_callback, this,
-			std::placeholders::_1));
+		[this](AVFramePtr frame) { this->frame_callback(std::move(frame)); });
+		// std::bind(&FFmpegAudioReaderImpl::frame_callback, this,
+		// 	std::placeholders::_1));
 
 	audiostream->register_end_input(
-		std::bind(&FFmpegAudioReaderImpl::end_input_callback, this));
+		[this]() { this->end_input_callback(); });
+		//std::bind(&FFmpegAudioReaderImpl::end_input_callback, this));
 
 
 	// Process file
@@ -1441,7 +1461,7 @@ void FFmpegAudioReaderImpl::pass_samples(AVFramePtr frame)
 
 void print_dictionary(std::ostream& out, const ::AVDictionary* dict)
 {
-	::AVDictionaryEntry* e { nullptr };
+	const ::AVDictionaryEntry* e { nullptr };
 
 	while ((e = ::av_dict_get(dict, "", e, /*macro*/AV_DICT_IGNORE_SUFFIX)))
 	{
@@ -1711,8 +1731,7 @@ void operator << (std::ostream& out, const ::AVStream* stream)
 	print_stream_info(out, stream);
 }
 
-} // namespace ffmpeg
-} // namespace details
+} // namespace details::ffmpeg
 
 
 // DescriptorFFmpeg
@@ -1721,7 +1740,7 @@ void operator << (std::ostream& out, const ::AVStream* stream)
 DescriptorFFmpeg::~DescriptorFFmpeg() noexcept = default;
 
 
-std::string DescriptorFFmpeg::do_id() const
+std::string DescriptorFFmpeg::do_id() const noexcept
 {
 	return "ffmpeg";
 }
@@ -1808,4 +1827,5 @@ const auto d = RegisterDescriptor<DescriptorFFmpeg>{};
 
 } // namespace v_1_0_0
 } // namespace arcsdec
+// NOLINTEND(misc-include-cleaner)
 

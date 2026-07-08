@@ -21,9 +21,12 @@ extern "C"
 #endif
 }
 
+#include <algorithm>   // for find_if
 #include <cstddef>     // for size_t
 #include <regex>       // for regex, regex_match
+#include <stdexcept>   // for runtime_error
 #include <string>      // for string
+#include <vector>      // for vector
 
 #ifndef LIBARCSTK_LOGGING_HPP_
 #include <arcstk/logging.hpp> // for ARCS_LOG_WARNING, ARCS_LOG_DEBUG
@@ -38,15 +41,13 @@ namespace arcsdec
 {
 inline namespace v_1_0_0
 {
-namespace read
-{
-namespace details
+namespace read::details
 {
 
 void escape(std::string& input, const char c, const std::string& escape_seq)
 {
-	std::size_t lookHere = 0;
-	std::size_t foundHere;
+	std::size_t lookHere  { 0 };
+	std::size_t foundHere { 0 };
 
 	const auto replacement = escape_seq + c;
 	while((foundHere = input.find(c, lookHere)) != std::string::npos)
@@ -129,7 +130,7 @@ std::vector<std::string> runtime_deps(const std::string& object_name)
 	using OpaqueStruct =
 		struct opaque_struct
 		{
-			void*  pointers[3];
+			void* pointers[3]; // NOLINT(*-avoid-c-arrays)
 			struct opaque_struct* ptr;
 		};
 
@@ -158,7 +159,8 @@ std::vector<std::string> runtime_deps(const std::string& object_name)
 
 	while (lmap)
 	{
-		so_list.push_back(lmap->l_name);
+		so_list.emplace_back(lmap->l_name);
+		//so_list.push_back(lmap->l_name);
 		//std::cerr << "Add: " << lmap->l_name << '\n';
 
 		lmap = lmap->l_next;
@@ -214,8 +216,7 @@ const std::string& libfile(const std::string& libname)
 	return first_libname_match(libarcsdec_deps(), libname);
 }
 
-} // namespace details
-} // namespace read
+} // namespace read::details
 } // namespace v_1_0_0
 } // namespace arcsdec
 

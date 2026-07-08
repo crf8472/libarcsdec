@@ -11,11 +11,13 @@
 #include "readersndfile_details.hpp" // for LibsndfileAudioReaderImpl
 #endif
 
+#include <cstddef>  // for size_t
 #include <cstdint>  // for int16_t, unit32_t, uint64_t
 #include <limits>   // for numeric_limits
 #include <memory>   // for unique_ptr
 #include <set>      // for set
 #include <sstream>  // for ostringstream
+#include <stdexcept>// for runtime_error
 #include <string>   // for string, to_string
 #include <utility>  // for make_unique, move
 #include <vector>   // for vector
@@ -37,8 +39,8 @@
 #ifndef LIBARCSDEC_AUDIOREADER_HPP_
 #include "audioreader.hpp"  // for AudioReaderImpl, InvalidAudioException
 #endif
-#ifndef LIBARCSDEC_LIBINSPECT_HPP_
-#include "libinspect.hpp"   // for first_libname_match
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP_
+#include "descriptor.hpp"   // for Codec, Format
 #endif
 #ifndef LIBARCSDEC_SELECTION_HPP_
 #include "selection.hpp"    // for RegisterDescriptor
@@ -58,9 +60,7 @@ using arcstk::CDDA;
 using arcstk::InterleavedSamples;
 
 
-namespace details
-{
-namespace sndfile
+namespace details::sndfile
 {
 
 
@@ -109,6 +109,7 @@ void LibsndfileAudioReaderImpl::do_process_file(const std::string& filename)
 		handler->start_input();
 	}
 
+	// NOLINTNEXTLINE(misc-include-cleaner)
 	auto audiofile = SndfileHandle { filename, SFM_READ };
 
 	// TODO Check whether this was successful
@@ -128,6 +129,7 @@ void LibsndfileAudioReaderImpl::do_process_file(const std::string& filename)
 		return;
 	}
 
+	// NOLINTNEXTLINE(misc-include-cleaner)
 	if (!(audiofile.format() | SF_FORMAT_PCM_16))
 	{
 		using std::to_string;
@@ -153,13 +155,22 @@ void LibsndfileAudioReaderImpl::do_process_file(const std::string& filename)
 	const std::size_t buffer_len =
 		this->samples_per_read() * CDDA::NUMBER_OF_CHANNELS;
 
-	auto buffer   = std::vector<int16_t>(buffer_len);
+	// Check for cast to required type
+
+	// NOLINTNEXTLINE(misc-include-cleaner)
+	if (buffer_len > std::numeric_limits<sf_count_t>::max())
+	{
+		ARCS_LOG_ERROR << "Buffer length exceeds integral type";
+		// TODO throw
+	}
+
+	auto buffer = std::vector<int16_t>(buffer_len);
+
 	using sequence_type = arcstk::InterleavedSamples<int16_t>;
-	// SampleSequence<int16_t, false>{};
 
 	// Checking
 
-	auto ints_in_block = int { 0 };
+	auto ints_in_block = sf_count_t { 0 };
 
 	// Logging
 
@@ -168,7 +179,9 @@ void LibsndfileAudioReaderImpl::do_process_file(const std::string& filename)
 
 	// Read blocks
 
-	while ((ints_in_block = audiofile.read (&buffer[0], buffer_len)))
+	const auto buf_len { static_cast<sf_count_t>(buffer_len) };
+
+	while ((ints_in_block = audiofile.read (&buffer[0], buf_len)))
 	{
 		++blocks_processed;
 
@@ -208,7 +221,9 @@ void LibsndfileAudioReaderImpl::do_process_file(const std::string& filename)
 		}
 
 		// FIXME respect channel ordering
-		auto sequence = sequence_type { &buffer[0], buffer.size(), false };
+		const bool ch_swapped = false;
+
+		auto sequence = sequence_type { &buffer[0], buffer.size(), ch_swapped };
 
 		ARCS_LOG(DEBUG1) << "  Size: "
 				<< (buffer.size() * sizeof(buffer[0])) << " bytes";
@@ -240,9 +255,7 @@ std::unique_ptr<FileReaderDescriptor> LibsndfileAudioReaderImpl::do_descriptor()
 	return std::make_unique<DescriptorSndfile>();
 }
 
-
-} // namespace sndfile
-} // namespace details
+} // namespace details::sndfile
 
 
 // DescriptorSndfile
@@ -251,7 +264,7 @@ std::unique_ptr<FileReaderDescriptor> LibsndfileAudioReaderImpl::do_descriptor()
 DescriptorSndfile::~DescriptorSndfile() noexcept = default;
 
 
-std::string DescriptorSndfile::do_id() const
+std::string DescriptorSndfile::do_id() const noexcept
 {
 	return "libsndfile";
 }

@@ -36,6 +36,7 @@ inline namespace v_1_0_0
                                                                  /** \endcond */
 namespace read // forward declarations
 {
+class AudioEventHandler;
 class AudioReader;
 class MetadataParser;
 } // namespace read
@@ -149,7 +150,7 @@ public:
 	 *
 	 * \param[in] type The Checksum type to calculate.
 	 */
-	explicit ARCSCalculator(const ChecksumtypeSet& type);
+	explicit ARCSCalculator(ChecksumtypeSet type);
 
 	/**
 	 * \brief Constructor.
@@ -317,11 +318,6 @@ class ARIdCalculator final : public FileReaderProvider<MetadataParser>
 public:
 
 	/**
-	 * \brief Constructor.
-	 */
-	ARIdCalculator();
-
-	/**
 	 * \brief Calculate ARId using the specified metadata and audio file.
 	 *
 	 * \param[in] metafilename  Name of the metadata file
@@ -365,7 +361,7 @@ private:
 	/**
 	 * \brief Internal worker to determine the AudioSize if required.
 	 */
-	AudioInfo audio_;
+	AudioInfo audio_ {};
 };
 
 /// @}

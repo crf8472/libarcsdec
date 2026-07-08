@@ -12,10 +12,15 @@
  * \brief Implementation details of calculators.hpp.
  */
 
-#include <string>   // for string
-
 #ifndef LIBARCSTK_METADATA_HPP_
 #include "metadata.hpp"           // for AudioSize
+#endif
+
+#ifndef LIBARCSDEC_AUDIOREADER_HPP_
+#include "audioreader.hpp"        // for AudioEventHandler
+#endif
+#ifndef LIBARCSDEC_SAMPLEPROC_HPP_
+#include "sampleproc.hpp"         // for CalculationProcessor
 #endif
 
 namespace arcsdec
@@ -24,29 +29,59 @@ namespace arcsdec
 inline namespace v_1_0_0
 {
                                                                  /** \endcond */
-namespace read
-{
-
-// forward delcaration
-class AudioReader;
-
-namespace details
+namespace calc::details
 {
 
 using arcstk::AudioSize;
 
+using read::AudioEventHandler;
+
 /**
- * \brief Ensure a non-zero leadout.
- *
- * If it is non-zero, use the leadout passed, otherwise call acquire_size()
- * on the \c reader for the \c audiofilename passed and return the result.
+ * \brief AudioEventHandler that acts as an adaptor to an CalculationProcessor.
  */
-AudioSize ensure_leadout(const AudioSize& leadout,
-		const AudioReader& reader, const std::string& audiofilename);
+class CalculationHandler final : public AudioEventHandler
+{
+	CalculationProcessor* processor_ {};
 
-} // namespace details
-} // namespace read
+	void do_start_input() final
+	{
+		// empty
+	}
 
+	void do_audiosize(const arcstk::AudioSize& size) final
+	{
+		if (!processor_)
+		{
+			ARCS_LOG_ERROR << "Missed updated leadout: no CalculationProcessor";
+			return;
+		}
+
+		processor_->set_leadout(size);
+	}
+
+	void do_end_input() final
+	{
+		// empty
+	}
+
+public:
+
+	explicit CalculationHandler(CalculationProcessor* processor)
+		: processor_ { processor }
+	{
+		// empty
+	}
+
+	CalculationHandler(const CalculationHandler&) = default;
+	CalculationHandler& operator = (const CalculationHandler&) = default;
+
+	CalculationHandler(CalculationHandler&&) noexcept = default;
+	CalculationHandler& operator = (CalculationHandler&&) noexcept = default;
+
+	~CalculationHandler() noexcept final = default;
+};
+
+} // namespace calc::details
                                                   /** \cond NAMESPACE_v_1_0_0 */
 } // namespace v_1_0_0
                                                                  /** \endcond */

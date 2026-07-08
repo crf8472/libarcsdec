@@ -272,7 +272,7 @@ public:
 	 *
 	 * \param[in] reader_id Select reader with this id, if available
 	 */
-	IdSelector(const std::string& reader_id);
+	explicit IdSelector(std::string reader_id);
 
 	/**
 	 * \brief Reader id to select.
@@ -367,9 +367,8 @@ public:
 	 * \tparam Args Arguments passed to the selector's constructor.
 	 */
 	template <typename... Args>
-	inline FileReaderPreferenceSelection(Args&&... args)
-		: preference_ { /* empty */ }
-		, selector_   { std::forward<Args>(args)... }
+	explicit FileReaderPreferenceSelection(Args&&... args)
+		: selector_   { std::forward<Args>(args)... }
 	{
 		// empty
 	}
@@ -379,7 +378,7 @@ public:
 	 *
 	 * \param[in] preference The preference model to use
 	 */
-	inline void set_preference(const preference_type& preference)
+	void set_preference(const preference_type& preference)
 	{
 		preference_ = preference;
 	}
@@ -389,7 +388,7 @@ public:
 	 *
 	 * \return Preference model for this selection.
 	 */
-	inline const DescriptorPreference* preference() const
+	const DescriptorPreference* preference() const
 	{
 		return &preference_;
 	}
@@ -399,7 +398,7 @@ public:
 	 *
 	 * \param[in] selector The selector to use
 	 */
-	inline void set_selector(const selector_type& selector)
+	void set_selector(const selector_type& selector)
 	{
 		selector_ = selector;
 	}
@@ -409,7 +408,7 @@ public:
 	 *
 	 * \return Selector for this selection.
 	 */
-	inline const FileReaderSelector* selector() const
+	const FileReaderSelector* selector() const
 	{
 		return &selector_;
 	}
@@ -419,12 +418,12 @@ private:
 	/**
 	 * \brief Internal preference model.
 	 */
-	preference_type preference_;
+	preference_type preference_ {};
 
 	/**
 	 * \brief Internal selector.
 	 */
-	selector_type selector_;
+	selector_type selector_ {};
 
 
 	inline std::unique_ptr<FileReaderDescriptor> do_get(const Format format,
@@ -460,6 +459,10 @@ using FunctionReturningUniquePtr = std::unique_ptr<T>(*)();
  * A Format along with its byte and filename characteristics is registered via
  * instantiating the template subclass RegisterFormat with the appropriate
  * Format type.
+ *
+ * \note
+ * Static data is initialized via helper guards in translation units to ensure
+ * exception safety during static initialization.
  *
  * \note
  * This class does not support polymorphic deletion. It is not suitable to
@@ -545,6 +548,10 @@ public:
 	 */
 	static const FileReaderSelection* default_toc_selection();
 
+	// intentionally not documented
+	class SelectionInitializer;
+	friend class SelectionInitializer;
+
 protected:
 
 	/**
@@ -552,14 +559,14 @@ protected:
 	 *
 	 * \param[in] m Matcher to add.
 	 */
-	static void add_format(std::unique_ptr<Matcher> m);
+	static void add_format(std::unique_ptr<Matcher> m) noexcept;
 
 	/**
 	 * \brief Add a descriptor to this registry.
 	 *
 	 * \param[in] d Descriptor to add.
 	 */
-	static void add_reader(std::unique_ptr<FileReaderDescriptor> d);
+	static void add_reader(std::unique_ptr<FileReaderDescriptor> d) noexcept;
 
 	/**
 	 * \brief Instantiate the concrete Matcher with the given name.
@@ -601,8 +608,17 @@ struct RegisterFormat final : private FileReaderRegistry
 	 * \param[in] codecs   Set of codecs supported with \c F
 	 */
 	RegisterFormat(const SuffixSet& suffices, const std::set<Codec>& codecs)
+		noexcept
 	{
-		add_format(std::make_unique<FormatMatcher<F>>(suffices, codecs));
+		auto matcher = std::unique_ptr<FormatMatcher<F>> {};
+
+		try {
+			matcher = std::make_unique<FormatMatcher<F>>(suffices, codecs);
+			add_format(std::move(matcher));
+		} catch (const std::exception&)
+		{
+			ARCS_LOG_ERROR << "Failed to register format";
+		}
 	}
 
 	/**
@@ -613,9 +629,18 @@ struct RegisterFormat final : private FileReaderRegistry
 	 * \param[in] codecs   Set of codecs supported with \c F
 	 */
 	RegisterFormat(const SuffixSet& suffices, const Bytes& bytes,
-			const std::set<Codec>& codecs)
+			const std::set<Codec>& codecs) noexcept
 	{
-		add_format(std::make_unique<FormatMatcher<F>>(suffices, bytes, codecs));
+		auto matcher = std::unique_ptr<FormatMatcher<F>> {};
+
+		try {
+			matcher = std::make_unique<FormatMatcher<F>>(
+					suffices, bytes, codecs);
+			add_format(std::move(matcher));
+		} catch (const std::exception&)
+		{
+			ARCS_LOG_ERROR << "Failed to register format";
+		}
 	}
 };
 
@@ -639,12 +664,19 @@ namespace details
  * \return FileReaderDescriptor
  */
 template <class T, typename... Args>
-std::unique_ptr<FileReaderDescriptor> make_descriptor(Args&&... args)
+std::unique_ptr<FileReaderDescriptor> make_descriptor(Args&&... args) noexcept
 {
-	static_assert(std::is_convertible<T*, FileReaderDescriptor*>::value,
+	static_assert(std::is_convertible_v<T*, FileReaderDescriptor*>,
 			"Cannot convert type to FileReaderDescriptor");
 
-	return std::make_unique<T>(std::forward<Args>(args)...);
+	try {
+		return std::make_unique<T>(std::forward<Args>(args)...);
+	} catch (const std::bad_alloc&)
+	{
+		ARCS_LOG_ERROR << "make_descriptor() failed due to bad_alloc";
+	}
+
+	return nullptr;
 }
 
 } // namespace details
@@ -661,7 +693,7 @@ struct RegisterDescriptor final : private FileReaderRegistry
 	/**
 	 * \brief Registers a descriptor of the template type \c D.
 	 */
-	RegisterDescriptor()
+	RegisterDescriptor() noexcept
 	{
 		add_reader(call_maker(&details::make_descriptor<D>));
 	}
@@ -696,7 +728,7 @@ auto cast_reader(std::unique_ptr<FileReader> file_reader) noexcept
 	// Create ReaderType manually by downcasting and reassignment
 
 	FileReader *file_reader_rptr = file_reader.get();
-	ReaderType *reader_type_rptr = nullptr;
+	const ReaderType *reader_type_rptr = nullptr;
 
 	// Dry run:
 	// Casting succeeds iff the FileReader created is in fact a ReaderType.
@@ -924,7 +956,7 @@ private:
  * for AudioReaders as provided by FileReaderRegistry.
  */
 template <class ReaderType>
-class SelectionPerformer
+class SelectionPerformer final
 {
 public:
 
@@ -935,7 +967,6 @@ public:
 	 */
 	explicit SelectionPerformer(const FileReaderSelection* selection)
 		: selection_ { selection }
-		, create_    { /* default */ }
 	{
 		/* empty */
 	}
@@ -946,7 +977,7 @@ public:
 	 * Initializes the instance with the default_selection() for the ReaderType.
 	 */
 	SelectionPerformer()
-		: SelectionPerformer(default_selection<ReaderType>())
+		: SelectionPerformer { default_selection<ReaderType>() }
 	{
 		/* empty */
 	}
@@ -954,7 +985,7 @@ public:
 	/**
 	 * \brief Virtual default destructor.
 	 */
-	virtual ~SelectionPerformer() noexcept = default;
+	~SelectionPerformer() noexcept = default;
 
 	/**
 	 * \brief Set the selection to be used for selecting AudioReaders.
@@ -1001,7 +1032,7 @@ private:
 	/**
 	 * \brief Internal FileReader creator.
 	 */
-	details::CreateReader<ReaderType> create_;
+	details::CreateReader<ReaderType> create_ {};
 };
 
 // Re-activate -Weffc++ for all what follows
@@ -1016,8 +1047,12 @@ private:
  */
 template <class ReaderType>
 class FileReaderProvider : public ReaderAndFormatHolder
-						 , public SelectionPerformer<ReaderType>
 {
+	/**
+	 * \brief Internal SelectionPerformer.
+	 */
+	SelectionPerformer<ReaderType> selector_ {};
+
 protected:
 
 	/**
@@ -1029,7 +1064,45 @@ protected:
 	 */
 	std::unique_ptr<ReaderType> create(const std::string& filename) const
 	{
-		return this->file_reader(filename, this);
+		return selector_.file_reader(filename, this);
+	}
+
+public:
+
+	/**
+	 * \brief Default constructor.
+	 */
+	FileReaderProvider() = default;
+
+	/**
+	 * \brief Constructor.
+	 *
+	 * \param[in] selection The selection to use
+	 */
+	explicit FileReaderProvider(const FileReaderSelection* selection)
+		: selector_ { selection }
+	{
+		/* empty */
+	}
+
+	/**
+	 * \brief Set the selection to be used for selecting AudioReaders.
+	 *
+	 * \param[in] selection Selection for AudioReaders
+	 */
+	void set_selection(const FileReaderSelection* selection)
+	{
+		selector_.set_selection(selection);
+	}
+
+	/**
+	 * \brief Get the selection to be used for selecting AudioReaders.
+	 *
+	 * \return Selection for AudioReaders
+	 */
+	const FileReaderSelection* selection() const
+	{
+		return selector_.selection();
 	}
 };
 

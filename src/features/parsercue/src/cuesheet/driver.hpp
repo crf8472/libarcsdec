@@ -7,10 +7,10 @@
  */
 
 #ifndef LIBARCSDEC_CUESHEET_LEXER_HPP_
-#include "cuesheet_lexer.hpp"     // for Lexer declaration
+#include "cuesheet_lexer.hpp"     // for Lexer (flex)
 #endif
-#ifndef LIBARCSDEC_CUESHEET_TAB_HPP_
-#include "cuesheet_tab.hpp"       // auto-generated
+#ifndef LIBARCSDEC_CUESHEET_PARSER_HPP_
+#include "cuesheet_parser.hpp"    // for Parser (bison)
 #endif
 #ifndef LIBARCSDEC_FLEXBISONDRIVER_HPP_
 #include "flexbisondriver.hpp"    // for FlexBisonDriver
@@ -26,9 +26,7 @@ namespace arcsdec
 inline namespace v_1_0_0
 {
                                                                  /** \endcond */
-namespace read
-{
-namespace details
+namespace read::details // NOLINT(modernize-concat-nested-namespaces)
 {
 
 /**
@@ -46,12 +44,11 @@ using Driver = FlexBisonDriver<yycuesheet::Lexer, yycuesheet::Parser,
 /**
  * \brief Flex/Bison implementation of parsercue.
  */
-namespace yycuesheet
+namespace yycuesheet // NOLINT(modernize-concat-nested-namespaces)
 {/*for doxygen*/}
 
 } // namespace cuesheet
-} // namespace details
-} // namespace read
+} // namespace read::details
                                                   /** \cond NAMESPACE_v_1_0_0 */
 } // namespace v_1_0_0
                                                                  /** \endcond */

@@ -30,7 +30,7 @@
 // Include the Token definitions as well as the redefined yylex()
 // in section "code top" (that calls get_next_token())
 #ifndef LIBARCSDEC_CDRTOC_TAB_HPP_
-#include "cdrtoc_tab.hpp"
+#include "cdrtoc_parser.hpp"
 #endif
 
 #if defined(__clang__)
@@ -41,7 +41,7 @@
 /* the Lexer class without specifiying the inline namespace for version!    */
 
 namespace arcsdec { inline namespace v_1_0_0 {
-namespace read { namespace details {
+namespace read::details {
 
 // forward declared from flexbisondriver.hpp
 
@@ -54,9 +54,7 @@ using cdrtoc::yycdrtoc::position;
 using cdrtoc::yycdrtoc::location;
 using LocationClass = TokenLocation<position, location>;
 
-namespace cdrtoc
-{
-namespace yycdrtoc
+namespace cdrtoc::yycdrtoc
 {
 
 // NOTE What is declared here receives its implementation from the third
@@ -76,17 +74,17 @@ class Lexer final : public CDRTOC_FlexLexer
 	 *
 	 * Always the _end_ of the current token!
 	 */
-	position current_pos_;
+	position current_pos_ {};
 
 	/**
 	 * \brief Internal token location.
 	 */
-	LocationClass* current_loc_;
+	LocationClass* current_loc_ {};
 
 	/**
 	 * \brief Class for interfacing the lexer from calling code.
 	 */
-	LexerHandler* lexer_handler_;
+	LexerHandler* lexer_handler_ {};
 
 public:
 
@@ -96,8 +94,7 @@ public:
 	 * \param[in] driver The cdrtoc::Driver that constructed this lexer.
 	 */
 	explicit Lexer(LocationClass* loc, LexerHandler* handler)
-		: current_pos_   { /* empty */ }
-		, current_loc_   { loc }
+		: current_loc_   { loc }
 		, lexer_handler_ { handler }
 	{
 		/* empty */
@@ -106,7 +103,7 @@ public:
 	/**
 	 * \brief Destructor.
 	 */
-	~Lexer() noexcept = default;
+	~Lexer() noexcept final = default;
 
 	/**
 	 * \brief Return next token.
@@ -159,9 +156,9 @@ public:
 	void shift_pos(const int line_no, const int token_length);
 };
 
-} // namespace yycdrtoc
-} // namespace cdrtoc
-} /*details*/ } /*read*/ } /*v_1_0_0*/ } /*arcsdec*/
+} // namespace cdrtoc::yycdrtoc
+} // namespace read::details
+} /*namespace v_1_0_0*/ } /*namespace arcsdec*/
 
 #endif // LIBARCSDEC_CDRTOC_LEXER_DEFS_HPP_
 

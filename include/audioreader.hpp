@@ -22,7 +22,7 @@
 #include "descriptor.hpp"        // for Codec, FileReaderDescriptor, ...
 #endif
 #ifndef LIBARCSDEC_SAMPLEPROC_HPP_
-#include "sampleproc.hpp"        // for SampleProcessor, AudioEventHandler
+#include "sampleproc.hpp"        // for CalculationProcessor
 #endif
 
 
@@ -128,6 +128,57 @@ struct BLOCKSIZE final
 
 
 /**
+ * \brief Interface: event handler for audio read events.
+ */
+class AudioEventHandler // TODO Should be MetadataHandler
+{
+public:
+
+	/**
+	 * \brief Virtual default destructor.
+	 */
+	virtual ~AudioEventHandler() noexcept = default;
+
+	/**
+	 * \brief Call on signal start_input.
+	 */
+	void start_input()
+	{
+		return do_start_input();
+	}
+
+	/**
+	 * \brief Call on signal size.
+	 *
+	 * \param[in] size Updated audio size
+	 */
+	void audiosize(const arcstk::AudioSize& size)
+	{
+		return do_audiosize(size);
+	}
+
+	/**
+	 * \brief Call on signal end_input.
+	 */
+	void end_input()
+	{
+		return do_end_input();
+	}
+
+private:
+
+	virtual void do_start_input()
+	= 0;
+
+	virtual void do_audiosize(const arcstk::AudioSize& size)
+	= 0;
+
+	virtual void do_end_input()
+	= 0;
+};
+
+
+/**
  * \brief Abstract base class for AudioReader implementations.
  *
  * Concrete subclasses of AudioReaderImpl implement AudioReaders for a concrete
@@ -144,6 +195,10 @@ public:
 	 * \brief Default constructor.
 	 */
 	AudioReaderImpl();
+
+	// non-copyable
+	AudioReaderImpl(const AudioReaderImpl&)            = delete;
+	AudioReaderImpl& operator=(const AudioReaderImpl&) = delete;
 
 	/**
 	 * \brief Default destructor.
@@ -222,9 +277,6 @@ public:
 	void set_sample_processor(SampleProcessor* processor);
 
 protected:
-
-	AudioReaderImpl(const AudioReaderImpl&)            = delete;
-	AudioReaderImpl& operator=(const AudioReaderImpl&) = delete;
 
 	AudioReaderImpl(AudioReaderImpl&&) noexcept            = default;
 	AudioReaderImpl& operator=(AudioReaderImpl&&) noexcept = default;
@@ -466,11 +518,6 @@ public:
 	using codec_set_type = std::set<Codec>;
 
 	/**
-	 * \brief Empty constructor.
-	 */
-	AudioValidator();
-
-	/**
 	 * \brief Virtual default destructor.
 	 */
 	virtual ~AudioValidator() noexcept;
@@ -555,12 +602,6 @@ public:
 	const error_list_type& get_errors() const;
 
 protected:
-
-	AudioValidator(AudioValidator&&) noexcept
-		= default;
-
-	AudioValidator& operator = (AudioValidator&&) noexcept
-		= default;
 
 	/**
 	 * \brief Call on_failure() iff condition is TRUE.

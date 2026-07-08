@@ -10,17 +10,24 @@
 #include "calculators.hpp"
 #endif
 #ifndef LIBARCSDEC_CALCULATORS_DETAILS_HPP_
-#include "calculators_details.hpp"
+#include "calculators_details.hpp"  // for CalculationHandler
 #endif
 
+#include <cstddef>       // for size_t
 #include <cstdint>       // for uint16_t, int64_t
 #include <memory>        // for unique_ptr, make_unique
 #include <string>        // for string, to_string
 #include <utility>       // for pair, move, make_pair
 #include <vector>        // for vector
 
+#ifndef LIBARCSTK_ALGORITHM_HPP_
+#include <arcstk/algorithm.hpp> // for Context, Points
+#endif
 #ifndef LIBARCSTK_CALCULATE_HPP_
-#include <arcstk/calculate.hpp> // for Checksums, Points...
+#include <arcstk/calculate.hpp> // for
+#endif
+#ifndef LIBARCSTK_CHECKSUM_HPP_
+#include <arcstk/checksum.hpp>  // for ChecksumSet, Checksums
 #endif
 #ifndef LIBARCSTK_IDENTIFIER_HPP_
 #include <arcstk/identifier.hpp>// for ARId, make_arid
@@ -38,11 +45,11 @@
 #ifndef LIBARCSDEC_DESCRIPTOR_HPP_
 #include "descriptor.hpp"
 #endif
+#ifndef LIBARCSDEC_METAPARSER_HPP_
+#include "metaparser.hpp"
+#endif
 #ifndef LIBARCSDEC_SELECTION_HPP_
 #include "selection.hpp"        // for FormatList,FileReaders,FileReaderSelector
-#endif
-#ifndef LIBARCSDEC_METAPARSER_HPP_
-#include "metaparser.hpp"       // for MetadataParser
 #endif
 #ifndef LIBARCSDEC_SAMPLEPROC_HPP_
 #include "sampleproc.hpp"       // for SampleProcessor, BLOCKSIZE
@@ -63,35 +70,6 @@ using arcstk::Points;
 using arcstk::Settings;
 using arcstk::ToC;
 using arcstk::make_arid;
-
-
-// calculate_details.hpp
-
-namespace read
-{
-namespace details
-{
-
-// ensure_leadout
-
-
-AudioSize ensure_leadout(const AudioSize& leadout,
-		const AudioReader& reader, const std::string& audiofilename)
-{
-	if (!leadout.zero())
-	{
-		return leadout;
-	}
-
-	ARCS_LOG_DEBUG <<
-		"Empty leadout passed, acquire size from audio file";
-
-	return reader.acquire_size(audiofilename);
-}
-
-} // namespace details
-} // namespace read
-
 
 // calculate.hpp
 
@@ -131,8 +109,8 @@ AudioSize AudioInfo::size(const std::string& filename) const
 // ARCSCalculator
 
 
-ARCSCalculator::ARCSCalculator(const ChecksumtypeSet& typeset)
-	: types_             { typeset }
+ARCSCalculator::ARCSCalculator(ChecksumtypeSet typeset)
+	: types_             { std::move(typeset) }
 	, read_buffer_size_  { BLOCKSIZE::DEFAULT }
 {
 	/* empty */
@@ -236,7 +214,7 @@ Checksums ARCSCalculator::calculate(
 
 	// Calculate second to second last track
 
-	for (uint16_t i = 1; i < audiofilenames.size() - 1; ++i)
+	for (std::size_t i = 1; i < audiofilenames.size() - 1; ++i)
 	{
 		track = calculate(audiofilenames[i], false, false);
 
@@ -294,8 +272,9 @@ std::pair<Checksums, AudioSize> ARCSCalculator::calculate(
 	}
 
 	auto processor = CalculationProcessor { types, settings, offsets, leadout };
+	auto handler   = details::CalculationHandler { &processor };
 
-	reader->set_handler(&processor);
+	reader->set_handler(&handler);
 	reader->set_processor(&processor);
 
 	// Perform
@@ -387,13 +366,6 @@ Context ARCSCalculator::to_context(
 
 
 // ARIdCalculator
-
-
-ARIdCalculator::ARIdCalculator()
-	: audio_ { /* default */ }
-{
-	/* empty */
-}
 
 
 ARId ARIdCalculator::calculate(const std::string& metafilename,

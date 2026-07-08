@@ -17,6 +17,7 @@ extern "C" {
 
 #include <cstdint>   // for uint8_t, uint64_t, int32_t, int64_t
 #include <cstdlib>   // for size_t, free
+#include <limits>    // for numeric_limits
 #include <memory>    // for unique_ptr
 #include <set>       // for set
 #include <sstream>   // for ostringstream
@@ -41,8 +42,8 @@ extern "C" {
 #ifndef LIBARCSDEC_AUDIOREADER_HPP_
 #include "audioreader.hpp"  // for AudioReaderImpl, InvalidAudioException
 #endif
-#ifndef LIBARCSDEC_LIBINSPECT_HPP_
-#include "libinspect.hpp"   // for first_libname_match
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP_
+#include "descriptor.hpp"   // for Codec, Format
 #endif
 #ifndef LIBARCSDEC_SELECTION_HPP_
 #include "selection.hpp"    // for RegisterDescriptor
@@ -55,9 +56,7 @@ inline namespace v_1_0_0
 {
 namespace read
 {
-namespace details
-{
-namespace wavpack
+namespace details::wavpack
 {
 
 using arcstk::AudioSize;
@@ -82,20 +81,27 @@ void Free_WavpackContext::operator()(::WavpackContext* ctx) const
 }
 
 
-WavpackContextPtr get_context(const std::string& filename) noexcept
+void Free_CString::operator()(char* s) const
+{
+	if (s)
+	{
+		::free(s); // NOLINT(cppcoreguidelines-no-malloc,cppcoreguidelines-owning-memory)
+		s = nullptr;
+	}
+}
+
+
+WavpackContextPtr get_context(const std::string& filename)
 {
 	const int flags = OPEN_WVC | OPEN_NO_CHECKSUM ;
-	char*     error = nullptr;
+	auto error = CStringPtr { nullptr };
 
 	auto ctxp = WavpackContextPtr {
-		::WavpackOpenFileInput(filename.c_str(), error, flags, 0) };
+		::WavpackOpenFileInput(filename.c_str(), error.get(), flags, 0) };
 
 	if (error)
 	{
-		const auto error_msg = std::string { error };
-
-		::free(error);
-		error = nullptr;
+		const auto error_msg = std::string { error.get() };
 
 		ARCS_LOG_ERROR << "Error while opening Wavpack file: " << error_msg;
 	}
@@ -132,9 +138,6 @@ char const * LibwavpackException::what() const noexcept
 
 
 // WAVPACK_CDDA_t
-
-
-WAVPACK_CDDA_t::~WAVPACK_CDDA_t() noexcept = default;
 
 
 bool WAVPACK_CDDA_t::lossless() const
@@ -175,9 +178,6 @@ WavpackOpenFile::WavpackOpenFile(const std::string& filename)
 {
 	// empty
 }
-
-
-WavpackOpenFile::~WavpackOpenFile() noexcept = default;
 
 
 bool WavpackOpenFile::is_lossless() const
@@ -265,8 +265,11 @@ bool WavpackOpenFile::channel_order() const
 		return true;
 	}
 
-	ARCS_LOG_DEBUG << "Channel order: channel 0 = '" << identities[0]
-		<< "', channel 1 = '" << identities[1] << "'";
+	ARCS_LOG_DEBUG << "Channel order: channel 0 = '"
+		<< static_cast<unsigned>(identities[0])
+		<< "', channel 1 = '"
+		<< static_cast<unsigned>(identities[1])
+		<< "'";
 
 	return false;
 }
@@ -401,8 +404,18 @@ bool WavpackValidatingHandler::validate_cdda(const WavpackOpenFile& file)
 
 	validate_num_channels(file.num_channels());
 
-	validate_samples_per_second(file.samples_per_second());
+	const auto samples_per_second = file.samples_per_second();
 
+	if (not this->assert_true("Test: samples/sec have a legal value",
+		samples_per_second >= 0
+			&& samples_per_second <= std::numeric_limits<int>::max(),
+		"Total number of samples/sec is illegal"))
+	{
+		ARCS_LOG_ERROR << this->last_error();
+		return false;
+	}
+
+	validate_samples_per_second(static_cast<int>(samples_per_second));
 
 	if (not this->assert_equals("Test: Channel Mask",
 		file.channel_mask(), 3,
@@ -513,19 +526,14 @@ void WavpackAudioReaderImpl::do_process_file(const std::string& filename)
 		ARCS_LOG_DEBUG << "Completed validation of Wavpack file";
 	}
 
-
 	// Notify about correct size
 
 	const int64_t total_samples { file.total_pcm_samples() };
 
+	if (handler)
 	{
-		const auto size = to_audiosize(file.total_pcm_samples(), UNIT::SAMPLES);
-		if (handler)
-		{
-			handler->audiosize(size);
-		}
+		handler->audiosize(to_audiosize(total_samples, UNIT::SAMPLES));
 	}
-
 
 	// Samples reading loop
 
@@ -534,7 +542,7 @@ void WavpackAudioReaderImpl::do_process_file(const std::string& filename)
 		using std::cbegin;
 		using std::cend;
 
-		auto buffer   = std::vector<sample_t>{};
+		auto buffer = std::vector<sample_t>{};
 		buffer.resize(this->samples_per_read());
 
 		// Request Half the Number of Samples in a Block in one Read.
@@ -579,10 +587,12 @@ void WavpackAudioReaderImpl::do_process_file(const std::string& filename)
 			// Note: we use the Number of 16-bit-samples _per_channel_, not
 			// the total number of 16 bit samples in the chunk.
 
-			auto* proc = this->sample_processor();
-			if (proc)
+			if (auto* proc = this->sample_processor())
 			{
 				proc->receive_samples(sequence);
+			} else
+			{
+				// TODO throw
 			}
 		}
 	}
@@ -616,8 +626,7 @@ bool WavpackAudioReaderImpl::perform_validations(const WavpackOpenFile& file)
 		&&  validate_handler_->validate_version(file);
 }
 
-} // namespace wavpack
-} // namespace details
+} // namespace details::wavpack
 
 
 // DescriptorWavpack
@@ -626,7 +635,7 @@ bool WavpackAudioReaderImpl::perform_validations(const WavpackOpenFile& file)
 DescriptorWavpack::~DescriptorWavpack() noexcept = default;
 
 
-std::string DescriptorWavpack::do_id() const
+std::string DescriptorWavpack::do_id() const noexcept
 {
 	return "wavpack";
 }

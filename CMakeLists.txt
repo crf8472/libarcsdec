@@ -13,7 +13,7 @@ set (PROJECT_DESCRIPTION "Audio decoder and TOC parser adapters for libarcstk" )
 set (PROJECT_HOMEPAGE_URL "https://github.com/crf8472/${PROJECT_NAME}" )
 
 include (cmake/functions/Banner.cmake )
-banner (BEGIN "Building ${PROJECT_NAME} ${LIBARCSDEC_VERSION_STRING}" )
+banner (BEGIN "Configure ${PROJECT_NAME} ${LIBARCSDEC_VERSION_STRING}" )
 
 ## --- CMake Setup {{{1
 
@@ -145,18 +145,6 @@ set (LIBARCSDEC_PKG_REQUIRE_ARRAY )
 
 libarcsdec_setup_required_dependencies   (LIBARCSDEC_PKG_REQUIRE_ARRAY )
 # 1}}}
-## --- Setup examples {{{1
-
-if (WITH_EXAMPLES )
-	add_subdirectory ("${CMAKE_CURRENT_SOURCE_DIR}/examples" )
-endif()
-## 1}}}
-## --- Setup development tools {{{1
-libarcsdec_enable_clang_tidy (LIBARCSDEC_CLANG_TIDY_ENABLED )
-libarcsdec_enable_clang_include_graph (LIBARCSDEC_CLANG_INCLUDE_GRAPH_ENABLED )
-#libarcsdec_enable_code_coverage (LIBARCSDEC_CODE_COVERAGE_ENABLED )
-libarcsdec_enable_target_dep_graph_by_dot (LIBARCSDEC_TARGET_DEPS_GRAPH_ENABLED )
-## 1}}}
 ## --- Option: WITH_TESTS {{{1
 
 option (WITH_TESTS "Build unit tests" OFF )
@@ -185,9 +173,14 @@ endif (WITH_TESTS )
 ## --- Setup features {{{1
 
 add_subdirectory (src/features ) # Relies on LIBARCSDEC_PKG_REQUIRE_ARRAY
-
-#libarcsdec_setup_configured_features (LIBARCSDEC_PKG_REQUIRE_ARRAY )
 # 1}}}
+## --- Installation {{{1
+
+if (NOT SKIP_INSTALL_ALL )
+
+	add_subdirectory (install ) ## relies on LIBARCSDEC_PKG_REQUIRE_ARRAY
+endif ()
+## 1}}}
 ## --- Options: Build documentation {{{1
 
 option (WITH_DOCS          "Build documentation for public API"           OFF )
@@ -219,14 +212,19 @@ if (WITH_INTERNAL_DOCS )
 endif()
 
 ## 1}}}
-## --- Installation {{{1
+## --- Setup examples {{{1
 
-if (NOT SKIP_INSTALL_ALL )
-
-	add_subdirectory (install ) ## relies on LIBARCSDEC_PKG_REQUIRE_ARRAY
-endif ()
-
+if (WITH_EXAMPLES )
+	add_subdirectory ("${CMAKE_CURRENT_SOURCE_DIR}/examples" )
+endif()
+## 1}}}
+## --- Setup development tools {{{1
+libarcsdec_enable_clang_tidy (LIBARCSDEC_CLANG_TIDY_ENABLED )
+libarcsdec_enable_clang_include_graph (LIBARCSDEC_CLANG_INCLUDE_GRAPH_ENABLED )
+#libarcsdec_enable_code_coverage (LIBARCSDEC_CODE_COVERAGE_ENABLED )
+libarcsdec_enable_target_dep_graph_by_dot (LIBARCSDEC_TARGET_DEPS_GRAPH_ENABLED )
 ## 1}}}
 
-banner (END "Completed ${PROJECT_NAME} ${LIBARCSDEC_VERSION_STRING}" )
+banner (END
+	"Configuration completed ${PROJECT_NAME} ${LIBARCSDEC_VERSION_STRING}" )
 

@@ -10,10 +10,7 @@
 #include "flexbisondriver.hpp"
 #endif
 
-#include <fstream>     // for ifstream
-#include <stdexcept>   // for invalid_argument
-#include <string>      // for vector
-#include <vector>      // for string
+#include <string>      // for string
 
 #ifndef LIBARCSTK_LOGGING_HPP_
 #include <arcstk/logging.hpp>
@@ -24,11 +21,8 @@ namespace arcsdec
 {
 inline namespace v_1_0_0
 {
-namespace read
+namespace read::details
 {
-namespace details
-{
-
 
 // LexerHandler
 
@@ -84,8 +78,7 @@ std::string lexer_strip_quotes(const std::string& s)
 	return s.substr(1, s.length() - 2);
 }
 
-} // namespace details
-} // namespace read
+} // namespace read::details
 } // namespace v_1_0_0
 } // namespace arcsdec
 

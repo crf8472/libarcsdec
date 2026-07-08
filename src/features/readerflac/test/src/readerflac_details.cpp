@@ -22,14 +22,14 @@
 
 TEST_CASE ("FlacDefaultMetadataHandler", "[readerflac]" )
 {
-	using arcsdec::read::details::flac::FlacDefaultMetadataHandler;
+	using arcsdec::read::details::flac::FlacValidator;
 	using arcsdec::read::Codec;
 
-	FlacDefaultMetadataHandler h;
+	FlacValidator v;
 
 	SECTION ("Accepted set of codecs is only FLAC")
 	{
-		CHECK ( h.codecs() == std::set<Codec>{ Codec::FLAC } );
+		CHECK ( v.codecs() == std::set<Codec>{ Codec::FLAC } );
 	}
 }
 

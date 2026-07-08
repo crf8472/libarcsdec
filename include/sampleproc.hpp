@@ -18,61 +18,6 @@ namespace arcsdec
 inline namespace v_1_0_0
 {
                                                                  /** \endcond */
-namespace read
-{
-
-/**
- * \brief Event handler for audio read events.
- */
-class AudioEventHandler // TODO Should be MetadataHandler
-{
-public:
-
-	/**
-	 * \brief Virtual default destructor.
-	 */
-	virtual ~AudioEventHandler() noexcept = default;
-
-	/**
-	 * \brief Call on signal start_input.
-	 */
-	void start_input()
-	{
-		return do_start_input();
-	}
-
-	/**
-	 * \brief Call on signal size.
-	 *
-	 * \param[in] size Updated audio size
-	 */
-	void audiosize(const arcstk::AudioSize& size)
-	{
-		return do_audiosize(size);
-	}
-
-	/**
-	 * \brief Call on signal end_input.
-	 */
-	void end_input()
-	{
-		return do_end_input();
-	}
-
-private:
-
-	virtual void do_start_input()
-	= 0;
-
-	virtual void do_audiosize(const arcstk::AudioSize& size)
-	= 0;
-
-	virtual void do_end_input()
-	= 0;
-};
-
-} // namespace read
-
 namespace calc
 {
 
@@ -95,17 +40,14 @@ using arcstk::Settings;
 /**
  * \brief SampleProcessor that updates a Calculation.
  */
-class CalculationProcessor final : public read::AudioEventHandler
+class CalculationProcessor final
 {
 public:
 
 	/**
 	 * \brief Constructor.
 	 */
-	CalculationProcessor()
-	{
-		// empty
-	}
+	CalculationProcessor() = default;
 
 	/**
 	 * \brief Constructor.
@@ -115,11 +57,11 @@ public:
 	 * \param[in] offsets  Track offsets (in LBA frames)
 	 * \param[in] leadout  Leadout frame
 	 */
-	CalculationProcessor(const ChecksumtypeSet& types, const Settings& settings,
-		const Points& offsets, const AudioSize& leadout)
-		: types_    { types    }
+	CalculationProcessor(ChecksumtypeSet types, Settings settings,
+		Points offsets, const AudioSize& leadout)
+		: types_    { std::move(types)   }
 		, settings_ { settings }
-		, offsets_  { offsets  }
+		, offsets_  { std::move(offsets) }
 		, leadout_  { leadout  }
 		, calculationset_ { nullptr }
 	{
@@ -129,7 +71,7 @@ public:
 	/**
 	 * \brief Default destructor.
 	 */
-	~CalculationProcessor() noexcept final = default;
+	~CalculationProcessor() noexcept = default;
 
 	// not copy-constructible, not copy-assignable
 
@@ -167,6 +109,11 @@ public:
 		return offsets_;
 	}
 
+	void set_offsets(const Points& offsets)
+	{
+		offsets_ = offsets;
+	}
+
 	/**
 	 * \brief Leadout frame.
 	 *
@@ -175,6 +122,13 @@ public:
 	AudioSize leadout() const
 	{
 		return leadout_;
+	}
+
+	void set_leadout(const AudioSize& leadout)
+	{
+		ARCS_LOG_DEBUG << "Updated leadout: " << leadout;
+
+		leadout_ = leadout;
 	}
 
 	/**
@@ -236,9 +190,9 @@ public:
 		}
 
 		using updateable_type = arcstk::UpdateableCalculationSet<B, E>;
-		updateable_type* calc;
+		auto* calc = dynamic_cast<updateable_type*>(calculationset_.get());
 
-		if ((calc = dynamic_cast<updateable_type*>(calculationset_.get())))
+		if (calc)
 		{
 			ARCS_LOG(DEBUG3) << "Pass samples to calculation object";
 
@@ -267,25 +221,6 @@ public:
 	}
 
 private:
-
-	// SampleProcessor
-
-	void do_start_input() final
-	{
-		// TODO Log sth
-	}
-
-	void do_audiosize(const AudioSize& size) final
-	{
-		ARCS_LOG_DEBUG << "Updated audiosize: " << size;
-
-		leadout_ = size;
-	}
-
-	void do_end_input() final
-	{
-		// TODO Log sth
-	}
 
 	// For lazy initialization we have to cache all the stuff
 

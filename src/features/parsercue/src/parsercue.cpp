@@ -14,6 +14,7 @@
 #include <memory>    // for unique_ptr
 #include <set>       // for set
 #include <string>    // for string
+#include <utility>   // for move
 
 #ifndef LIBARCSTK_METADATA_HPP_
 #include <arcstk/metadata.hpp> // for ToC
@@ -24,6 +25,9 @@
 
 #ifndef LIBARCSDEC_CUESHEET_DRIVER_HPP_
 #include "cuesheet/driver.hpp" // for Driver
+#endif
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP_
+#include "descriptor.hpp"      // for Format, Codec
 #endif
 #ifndef LIBARCSDEC_LIBINSPECT_HPP_
 #include "libinspect.hpp"      // for first_libname_match
@@ -45,9 +49,12 @@ inline namespace v_1_0_0
 {
 namespace read
 {
-namespace details
-{
-namespace cuesheet
+
+// forward declarations
+class FileReader;
+class FileReaderDescriptor;
+
+namespace details::cuesheet
 {
 
 using arcstk::ToC;
@@ -89,8 +96,7 @@ std::unique_ptr<FileReaderDescriptor> CuesheetParserImpl::do_descriptor() const
 	return std::make_unique<DescriptorCuesheet>();
 }
 
-} // namespace cuesheet
-} // namespace details
+} // namespace details::cuesheet
 
 
 // DescriptorCuesheet
@@ -99,7 +105,7 @@ std::unique_ptr<FileReaderDescriptor> CuesheetParserImpl::do_descriptor() const
 DescriptorCuesheet::~DescriptorCuesheet() noexcept = default;
 
 
-std::string DescriptorCuesheet::do_id() const
+std::string DescriptorCuesheet::do_id() const noexcept
 {
 	return "cuesheet";
 }

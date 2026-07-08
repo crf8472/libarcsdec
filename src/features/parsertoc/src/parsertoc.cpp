@@ -14,6 +14,7 @@
 #include <memory>    // for unique_ptr
 #include <set>       // for set
 #include <string>    // for string
+#include <utility>   // for move
 
 #ifndef LIBARCSTK_METADATA_HPP_
 #include <arcstk/metadata.hpp> // for ToC
@@ -22,6 +23,9 @@
 #include <arcstk/logging.hpp>
 #endif
 
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP_
+#include "descriptor.hpp"      // for Codec, Format
+#endif
 #ifndef LIBARCSDEC_CDRTOC_DRIVER_HPP_
 #include "cdrtoc/driver.hpp"
 #endif
@@ -45,9 +49,12 @@ inline namespace v_1_0_0
 {
 namespace read
 {
-namespace details
-{
-namespace cdrtoc
+
+// forward declarations
+class FileReader;
+class FileReaderDescriptor;
+
+namespace details::cdrtoc
 {
 
 using arcstk::ToC;
@@ -91,9 +98,7 @@ std::unique_ptr<FileReaderDescriptor> TocParserImpl::do_descriptor() const
 	return std::make_unique<DescriptorToc>();
 }
 
-
-} // namespace cdrtoc
-} // namespace details
+} // namespace details::cdrtoc
 
 
 // DescriptorToc
@@ -102,7 +107,7 @@ std::unique_ptr<FileReaderDescriptor> TocParserImpl::do_descriptor() const
 DescriptorToc::~DescriptorToc() noexcept = default;
 
 
-std::string DescriptorToc::do_id() const
+std::string DescriptorToc::do_id() const noexcept
 {
 	return "cdrtoc";
 }

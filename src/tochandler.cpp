@@ -10,8 +10,14 @@
 #include "tochandler.hpp"
 #endif
 
+#include <algorithm>   // for all_of
 #include <cctype>      // for isalnum, isdigit
+#include <cstddef>     // for size_t
+#include <cstdint>     // for int32_t, uint64_t
+#include <exception>   // for exception
 #include <iomanip>     // for setw
+#include <limits>      // for numeric_limits
+#include <stdexcept>   // for runtime_error
 #include <string>      // for vector
 #include <vector>      // for string
 
@@ -21,14 +27,15 @@
 #ifndef LIBARCSTK_LOGGING_HPP_
 #include <arcstk/logging.hpp>
 #endif
+#ifndef LIBARCSTK_LOGLEVEL_HPP_
+#include <arcstk/loglevel.hpp>    // for LOGLEVEL
+#endif
 
 namespace arcsdec
 {
 inline namespace v_1_0_0
 {
-namespace read
-{
-namespace details
+namespace read::details // NOLINT(modernize-concat-nested-namespaces)
 {
 
 using arcstk::ToC;
@@ -177,18 +184,6 @@ void validate_disc_id(const std::string& disc_id)
 // ParserTocHandler
 
 
-ParserToCHandler::ParserToCHandler()
-	: offsets_       { /* empty */ }
-	, filenames_     { /* empty */ }
-	, isrcs_         { /* empty */ }
-	, current_track_ { 0 }
-	, mcn_           { /* empty */ }
-	, disc_id_       { /* empty */ }
-{
-	// empty
-}
-
-
 ParserToCHandler::~ParserToCHandler() noexcept = default;
 
 
@@ -227,7 +222,7 @@ void ParserToCHandler::dump_log() const
 			isrc = this->isrc(static_cast<std::size_t>(t));
 		} catch (const std::exception& e)
 		{
-			// do nothing
+			ARCS_LOG(DEBUG2) << "<Exception on ISRC>";
 		}
 
 		if (isrc.empty())
@@ -259,19 +254,43 @@ void ParserToCHandler::do_end_input()
 
 void ParserToCHandler::append_offset(const uint64_t& frames)
 {
-	offsets_.push_back(frames);
+	if (frames <= arcstk::CDDA::MAX_BLOCK_ADDRESS)
+	{
+		offsets_.push_back(static_cast<int>(frames));
+	} else
+	{
+		// TODO fail
+	}
 }
 
 
 void ParserToCHandler::set_offset(const std::size_t t, const uint64_t& frames)
 {
-	offsets_[to_index(t)] = frames;
+	using arcstk::CDDA;
+
+	if (t <= CDDA::MAX_TRACKCOUNT && frames <= CDDA::MAX_BLOCK_ADDRESS)
+	{
+		const auto index { to_index(t) };
+
+		if (index < offsets_.size())
+		{
+			offsets_[to_index(t)] = static_cast<int>(frames);
+		}
+	} else
+	{
+		// TODO fail
+	}
 }
 
 
 int32_t ParserToCHandler::offset(const std::size_t t) const
 {
-	return offsets_.at(to_index(t));
+	if (t <= arcstk::CDDA::MAX_TRACKCOUNT)
+	{
+		return offsets_.at(to_index(t));
+	}
+
+	return 0;
 }
 
 
@@ -283,7 +302,12 @@ void ParserToCHandler::append_filename(const std::string& filename)
 
 std::string ParserToCHandler::filename(const std::size_t t) const
 {
-	return filenames_.at(to_index(t));
+	if (t <= arcstk::CDDA::MAX_TRACKCOUNT)
+	{
+		return filenames_.at(to_index(t));
+	}
+
+	return {};
 }
 
 
@@ -329,8 +353,7 @@ void ParserToCHandler::set_disc_id(const std::string& disc_id)
 }
 
 
-} // namespace details
-} // namespace read
+} // namespace read::details
 } // namespace v_1_0_0
 } // namespace arcsdec
 

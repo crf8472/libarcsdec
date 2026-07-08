@@ -1,22 +1,25 @@
-## CMake script for executing clang-tidy
+## libarcsdec: CMake script for executing clang-tidy
 ##
 ## Note that clang-tidy does not have an option to specify file output. One has
 ## capture the output and pipe it to a file. This should be done platform
 ## independent by execute_process. Since we must use execute_process we use
 ## this standalone script tied to a custom target.
 
-#set (IGNORE_ISSUES FALSE CACHE BOOL "Ignore issues and always return 0" )
-
 file (WRITE "${REPORT_FILE}" "")
 
 file (GLOB_RECURSE ALL_SOURCES "${SOURCES_DIR}/*.cpp" )
+list (FILTER ALL_SOURCES EXCLUDE REGEX ".*/test/.*" ) # do not clean tests
 
 execute_process(
 	COMMAND ${CLANG_TIDY_BINARY} ${ALL_SOURCES}
 		--config-file=${CLANG_TIDY_CONFIG}
-		-p ${COMPILEDB_DIR}
+		-p ${BUILD_DIR}
 		--
 		-I${INCLUDE_DIR}
+		-I${SOURCES_DIR}
+		-isystem${BUILD_DIR}/src/features/parsercue
+		-isystem${BUILD_DIR}/src/features/parsertoc
+		-isystem${LIBARCSTK_INCLUDE_DIR} # find libarcstk headers
 		-std=c++17
 	OUTPUT_FILE "${REPORT_FILE}"
 	ERROR_FILE  "${LOG_FILE}"

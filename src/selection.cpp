@@ -11,9 +11,13 @@
 #endif
 
 #include <algorithm>    // for find_if
+#include <cstdint>      // for uint32_t
 #include <iterator>     // for begin, end
 #include <memory>       // for unique_ptr, make_unique
+#include <mutex>        // for call_once, once_flag
+#include <new>          // for bad_alloc
 #include <set>          // for set
+#include <exception>    // for exception
 #include <string>       // for string
 #include <utility>      // for pair, make_pair, move
 
@@ -59,6 +63,9 @@ constexpr uint32_t TOTAL_BYTES_TO_READ = 44;
 // sufficient to identify all other formats currently supported.
 
 
+namespace
+{
+
 // FileType
 
 
@@ -74,7 +81,7 @@ public:
 	 *
 	 * \param[in] filename File to read
 	 */
-	FileType(const std::string& filename);
+	explicit FileType(const std::string& filename);
 
 	/**
 	 * \brief Determine file type.
@@ -248,6 +255,9 @@ Bytes FileType::bytes() const
 }
 
 
+} // namespace
+
+
 // DescriptorPreference
 
 
@@ -390,8 +400,8 @@ std::unique_ptr<FileReaderDescriptor> DefaultSelector::do_select(
 // IdSelector
 
 
-IdSelector::IdSelector(const std::string& reader_id)
-	: reader_id_ { reader_id }
+IdSelector::IdSelector(std::string reader_id)
+	: reader_id_ { std::move(reader_id) }
 {
 	// empty
 }
@@ -456,17 +466,11 @@ std::unique_ptr<FileReaders> FileReaderRegistry::readers_;
 
 
 std::unique_ptr<FileReaderSelection>
-	FileReaderRegistry::default_audio_selection_ =
-		std::make_unique<FileReaderPreferenceSelection<
-			FormatPreference, DefaultSelector>
-		>();
+	FileReaderRegistry::default_audio_selection_; // statically initialized
 
 
 std::unique_ptr<FileReaderSelection>
-	FileReaderRegistry::default_toc_selection_ =
-		std::make_unique<FileReaderPreferenceSelection<
-			FormatPreference, DefaultSelector>
-		>();
+	FileReaderRegistry::default_toc_selection_; // statically initialized
 
 
 bool FileReaderRegistry::has_format(const Format f)
@@ -510,29 +514,57 @@ const FileReaderSelection* FileReaderRegistry::default_toc_selection()
 }
 
 
-void FileReaderRegistry::add_format(std::unique_ptr<Matcher> m)
+void FileReaderRegistry::add_format(std::unique_ptr<Matcher> m) noexcept
 {
 	// ... does not seem to require any further static initialization
-	if (m) { formats_.push_back(std::move(m)); }
+	//if (m) { formats_.push_back(std::move(m)); }
+	if (m)
+	{
+		try
+		{
+			formats_.push_back(std::move(m));
+		} catch (const std::bad_alloc&) {
+
+			ARCS_LOG_ERROR << "Error while inserting matcher";
+		}
+	}
 }
 
 
 void FileReaderRegistry::add_reader(std::unique_ptr<FileReaderDescriptor> d)
+	noexcept
 {
-	static const bool r_guard = []{
-		FileReaderRegistry::readers_ = std::make_unique<FileReaders>();
+	static const bool r_guard = []() noexcept {
+		try {
+			FileReaderRegistry::readers_ = std::make_unique<FileReaders>();
+		} catch (const std::bad_alloc&)
+		{
+			return false;
+		}
 		return true;
 	}();
 	// add_reader() is called several times via RegisterDescriptor before
 	// entering main(), so readers_ will be initialized when reader() is called
 	// for the first time. Ugly, nonetheless.
 
-	if (d)
+	if (r_guard && d && readers_)
 	{
-		readers_->emplace(std::make_pair(d->id(), std::move(d)));
+		try {
+			readers_->emplace(std::make_pair(d->id(), std::move(d)));
+		} catch (const std::bad_alloc&)
+		{
+			ARCS_LOG_ERROR << "Error while emplacing descriptor";
+		}
+	} else
+	{
+		if (!r_guard || !readers_)
+		{
+			ARCS_LOG_ERROR << "Could not initialize FileReaderRegistry readers";
+		} else
+		{
+			ARCS_LOG_WARNING << "Cannot register a nullptr";
+		}
 	}
-
-	if (r_guard){} /* avoid -Wunused-variable firing */
 }
 
 
@@ -632,20 +664,92 @@ const FileReaders* ReaderAndFormatHolder::readers() const
 }
 
 
+// FileReaderRegistry::SelectionInitializer
+
+
+/**
+ * \internal
+ *
+ * \brief Encapsulate the static initialization of the default selections.
+ *
+ * \see FormatInitializer
+ */
+class FileReaderRegistry::SelectionInitializer
+{
+	/**
+	 * \brief Implement the static initialization of a default selection.
+	 *
+	 * \param[in] s The selection to initialize
+	 */
+	static void init_default_selection(
+			std::unique_ptr<FileReaderSelection>& s) noexcept
+	{
+        try
+		{
+            s = std::make_unique<
+				FileReaderPreferenceSelection<FormatPreference, DefaultSelector>
+			>();
+        } catch (const std::bad_alloc&)
+		{
+			s = nullptr;
+
+			ARCS_LOG_ERROR
+				<< "Got std::bad_alloc when trying to init default selection";
+		}
+	}
+
+public:
+
+    static void init_default_audio_selection() noexcept
+	{
+		FileReaderRegistry::SelectionInitializer::init_default_selection(
+            FileReaderRegistry::default_audio_selection_
+		);
+    }
+
+    static void init_default_toc_selection() noexcept
+	{
+		FileReaderRegistry::SelectionInitializer::init_default_selection(
+            FileReaderRegistry::default_toc_selection_
+		);
+    }
+};
+
+
+// Anonymous namespace for safe handling/bypassing static initializations of:
+// 1. Default selections for audio and toc selections
+// 2. Catalogue of supported FileFormats
 namespace {
 
-// Register all supported file formats.
-// This will not guarantee that a matching reader will be available!
+// Safely initialize default selections of FileReaders
+
+const bool default_audio_selection_guard = []() noexcept {
+	FileReaderRegistry::SelectionInitializer::init_default_audio_selection();
+	return true;
+}();
+
+const bool default_toc_selection_guard = []() noexcept {
+	FileReaderRegistry::SelectionInitializer::init_default_toc_selection();
+	return true;
+}();
+
+// Safely register all (principally) supported file formats.
 
 // TOC/Meta
+void register_toc_formats()
+{
+	[[maybe_unused]] const auto format_cuesheet =
+		RegisterFormat<Format::CUE>({ "cue" }, { Codec::NONE } );
 
-const auto dm1 = RegisterFormat<Format::CUE>({ "cue" }, { Codec::NONE} );
-
-const auto dm2 = RegisterFormat<Format::CDRDAO>({ "toc" }, { Codec::NONE } );
+	[[maybe_unused]] const auto format_cdrtoc =
+		RegisterFormat<Format::CDRDAO>({ "toc" }, { Codec::NONE } );
+}
 
 // Audio
-
-const auto da1 = RegisterFormat<Format::WAV>({ "wav", "wave" },
+void register_audio_formats()
+{
+	[[maybe_unused]] const auto format_wav =
+		RegisterFormat<Format::WAV>({ "wav", "wave" },
 		{0, {
 		0x52, 0x49, 0x46, 0x46, // BE: 'R','I','F','F'
 		Bytes::any, Bytes::any, Bytes::any, Bytes::any,
@@ -667,33 +771,40 @@ const auto da1 = RegisterFormat<Format::WAV>({ "wav", "wave" },
 		  Codec::PCM_S32BE, Codec::PCM_S32BE_PLANAR,
 		  Codec::PCM_S32LE, Codec::PCM_S32LE_PLANAR });
 
-const auto da2 = RegisterFormat<Format::FLAC>({ "flac" },
+	[[maybe_unused]] const auto format_flac =
+		RegisterFormat<Format::FLAC>({ "flac" },
 		{0, { 0x66 /* f */, 0x4C /* L */, 0x61 /* a */, 0x43 /* C */}},
 		{ Codec::FLAC } );
 
-const auto da3 = RegisterFormat<Format::APE>({ "ape" },
+	[[maybe_unused]] const auto format_ape =
+		RegisterFormat<Format::APE>({ "ape" },
 		{0, { 0x4D /* M */, 0x41 /* A */, 0x43 /* C */, 0x20 /*   */}},
 		{ Codec::MONKEY } );
 
-const auto da4 = RegisterFormat<Format::CAF>({ "caf" },
+	[[maybe_unused]] const auto format_caf =
+		RegisterFormat<Format::CAF>({ "caf" },
 		{0, { 0x63 /* c */, 0x61 /* a */, 0x66 /* f */, 0x66 /* f */,
 			  0x00,         0x01,         0x00,         0x00        }},
 		{ Codec::ALAC } );
 
-const auto da5 = RegisterFormat<Format::M4A>({ "m4a" },
+	[[maybe_unused]] const auto format_m4a =
+		RegisterFormat<Format::M4A>({ "m4a" },
 		{4, { 0x66 /* f */, 0x74 /* t */, 0x79 /* y */, 0x70 /* p */,
 			  0x4D /* M */, 0x34 /* 4 */, 0x41 /* A */, 0x20 /*   */}},
 		{ Codec::ALAC } );
 
-const auto da6 = RegisterFormat<Format::OGG>({ "ogg", "oga" },
+	[[maybe_unused]] const auto format_ogg =
+		RegisterFormat<Format::OGG>({ "ogg", "oga" },
 		{0, { 0x4F /* O */, 0x67 /* g */, 0x67 /* g */, 0x53 /* S */}},
 		{ Codec::FLAC } );
 
-const auto da7 = RegisterFormat<Format::WV>({ "wv" },
+	[[maybe_unused]] const auto format_wavpack =
+		RegisterFormat<Format::WV>({ "wv" },
 		{0, { 0x77 /* w */, 0x76 /* v */, 0x70 /* p */, 0x6B /* k */}},
 		{ Codec::WAVPACK} );
 
-const auto da8 = RegisterFormat<Format::AIFF>({ "aiff" },
+	[[maybe_unused]] const auto format_aiff =
+		RegisterFormat<Format::AIFF>({ "aiff" },
 		{0, { 0x46 /* F */, 0x4F /* O */, 0x52 /* R */, 0x4D /* M */,
 			  Bytes::any,   Bytes::any,   Bytes::any,   Bytes::any,
 			  0x41 /* A */, 0x49 /* I */, 0x46 /* F */, 0x46 /* F */}},
@@ -701,6 +812,43 @@ const auto da8 = RegisterFormat<Format::AIFF>({ "aiff" },
 		  Codec::PCM_S16LE, Codec::PCM_S16LE_PLANAR,
 		  Codec::PCM_S32BE, Codec::PCM_S32BE_PLANAR,
 		  Codec::PCM_S32LE, Codec::PCM_S32LE_PLANAR });
+}
+
+// Calls all registering functions and catches their exceptions
+void ensure_initialized_formats() noexcept
+{
+	static std::once_flag init;
+
+	// That's the trick:
+	// call_once runs in normal context, not during static initialization!
+	std::call_once(init, [](){
+		try {
+			register_toc_formats();
+			register_audio_formats();
+		} catch (const std::exception&)
+		{
+			ARCS_LOG_ERROR << "Registration of formats failed";
+		}
+	});
+}
+
+/**
+ * \internal
+ *
+ * \brief Encapsulate the static initialization of the FileFormats catalogue.
+ *
+ * \see SelectionInitializer
+ */
+struct FormatInitializer
+{
+	FormatInitializer() noexcept
+	{
+		ensure_initialized_formats();
+	}
+};
+
+// Does not throw, only triggers ensure_initialized_formats()
+[[maybe_unused]] static const FormatInitializer formats_initializer_;
 
 } // namespace
 

@@ -31,7 +31,6 @@ extern "C"
 #include <string>      // for string
 #include <type_traits> // for true_type, false_type
 #include <utility>     // for pair
-#include <fstream>
 
 #ifndef LIBARCSTK_SAMPLES_HPP_
 #include <arcstk/samples.hpp>   // for SampleSequence
@@ -51,9 +50,7 @@ namespace arcsdec
 inline namespace v_1_0_0
 {
                                                                  /** \endcond */
-namespace read
-{
-namespace details
+namespace read::details // NOLINT(modernize-concat-nested-namespaces)
 {
 
 /**
@@ -86,9 +83,18 @@ using arcstk::SampleSequence;
 #undef av_err2str
 av_always_inline char* av_err2str(int errnum)
 {
-    static char str[AV_ERROR_MAX_STRING_SIZE];
+	// This is C-style with the means of C++
+    static char str[AV_ERROR_MAX_STRING_SIZE]; // NOLINT (*-avoid-c-arrays)
+	// NOLINTBEGIN(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
     memset(str, 0, sizeof(str));
     return av_make_error_string(str, AV_ERROR_MAX_STRING_SIZE, errnum);
+	// NOLINTEND(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
+
+	// Outcommented: a C++ version that is not much clearer.
+	// The static trick remains.
+	//static std::array<char, AV_ERROR_MAX_STRING_SIZE> str {};
+	//str.fill('\0');
+	//return av_make_error_string(str.data(), AV_ERROR_MAX_STRING_SIZE, errnum);
 }
 #endif
 
@@ -165,9 +171,9 @@ private:
 
 	std::string create_message(const int error, const std::string& name) const;
 
-	int error_;
+	int error_ {};
 
-	std::string msg_;
+	std::string msg_ {};
 };
 
 
@@ -295,8 +301,9 @@ uint8_t* ByteBuffer(const T* object, const unsigned i);
 
 // Specialization for ::AVFrame (planar + interleaved)
 template <>
-uint8_t* ByteBuffer(const ::AVFrame* f, const unsigned i)
+inline uint8_t* ByteBuffer(const ::AVFrame* f, const unsigned i)
 {
+	// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
 	return f->data[i];
 }
 
@@ -407,6 +414,7 @@ struct ChannelOrder final
 #else // ffmpeg >= 5.1
 		// Does object specify native ordering and is it FL+FR?
 		return (p->ch_layout.order == ::AV_CHANNEL_ORDER_NATIVE)
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-type-union-access)
 			&& (p->ch_layout.u.mask & AV_CH_LAYOUT_STEREO);
 #endif
 	}
@@ -432,6 +440,7 @@ struct ChannelOrder final
 #else // ffmpeg >= 5.1
 		// Does object either not specify an ordering or has other than FL+FR?
 		return p->ch_layout.order  == ::AV_CHANNEL_ORDER_UNSPEC
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-type-union-access)
 			|| (p->ch_layout.u.mask == 0);
 #endif
 	}
@@ -442,85 +451,6 @@ struct ChannelOrder final
 // it and process everything als FL=0+FR=1.
 
 
-/**
- * \brief A policy to define how to wrap the sample data in \c Container in a
- * SampleSequence.
- *
- * Basically, the WrappingPolicy implements the wrapping of planar and
- * interleaved byte buffers for a given pair of a sample type and frame type.
- *
- * A WrappingPolicy can create a sequence instance of a specified SequenceType
- * from its input or, alternatively, use an existing sequence instance to wrap
- * a sample sequence.
- *
- * \tparam S         The integer type to represent a sample
- * \tparam is_planar \c TRUE indicates planar buffer, \c FALSE indicates
- *                   interleaved buffer
- * \tparam Container The sample object container to wrap
- */
-// template <typename S, bool is_planar, typename Container,
-// 		typename SequenceType = SampleSequence<S, is_planar>>
-// 		//typename = details::IsSampleType<S>, // TODO SFINAE stuff
-// class WrappingPolicy final
-// {
-// 	/* empty */
-// };
-
-
-// TODO Functions of WrappingPolicy may make use of ChannelOrder::isleftright
-
-
-// Specialization for wrapping an ::AVFrame into a byte buffer (planar)
-// template <typename S, typename SequenceType>
-// class WrappingPolicy<S, true, AVFramePtr, SequenceType> final
-// {
-// 	using TotalBytesPerPlane = BytesPerPlane<S, true, ::AVFrame>;
-//
-// public:
-//
-// 	static SequenceType create(const details::ffmpeg::AVFramePtr& f)
-// 	{
-// 		if (!f) { return SequenceType {}; }
-//
-// 		return SequenceType { ByteBuffer(f.get(), 0), ByteBuffer(f.get(), 1),
-// 			TotalBytesPerPlane::get(f.get()) };
-// 	}
-//
-// 	static void wrap(const details::ffmpeg::AVFramePtr& f,
-// 			SequenceType& sequence)
-// 	{
-// 		sequence.wrap_byte_buffer(ByteBuffer(f.get(), 0),
-// 				ByteBuffer(f.get(), 1),
-// 				TotalBytesPerPlane::get(f.get()));
-// 	}
-// };
-
-
-// Specialization for wrapping an ::AVFrame into a byte buffer (interleaved)
-// template <typename S, typename SequenceType>
-// class WrappingPolicy<S, false, details::ffmpeg::AVFramePtr, SequenceType> final
-// {
-// 	using TotalBytesPerPlane = BytesPerPlane<S, false, ::AVFrame>;
-//
-// public:
-//
-// 	static SequenceType create(const details::ffmpeg::AVFramePtr& f)
-// 	{
-// 		if (!f) { return SequenceType {}; }
-//
-// 		return SequenceType { ByteBuffer(f.get(), 0),
-// 			TotalBytesPerPlane::get(f.get()) };
-// 	}
-//
-// 	static void wrap(const details::ffmpeg::AVFramePtr& f,
-// 			SequenceType& sequence)
-// 	{
-// 		sequence.wrap_byte_buffer(ByteBuffer(f.get(), 0),
-// 				TotalBytesPerPlane::get(f.get()));
-// 	}
-// };
-
-
 template <typename S, bool is_planar, typename Container,
 		typename SequenceType = SampleSequence<S, is_planar>>
 		//typename = details::IsSampleType<S>, // TODO SFINAE stuff
@@ -528,6 +458,7 @@ class CreationPolicy final
 {
 	/* empty */
 };
+
 
 // Specialization for creating a planar SampleSequence of an ::AVFrame
 template <typename S, typename SequenceType>
@@ -626,24 +557,6 @@ template<> struct SampleType<4, false> final { using type = uint32_t; };
 
 
 /**
- * \brief Create an empty SampleSequence for a planar or interleaved
- * sample sequence of sample type \c S.
- *
- * \tparam S         Integer type that represents a 16 bit stereo sample
- * \tparam is_planar \c TRUE indicates to use a planar sequence, \c FALSE
- *                   indicates to use an interleaved sequence
- */
-// template <typename S, bool is_planar>
-// struct SequenceInstance final
-// {
-// 	static auto create() -> SampleSequence<S, is_planar>
-// 	{
-// 		return SampleSequence<S, is_planar> {};
-// 	}
-// };
-
-
-/**
  * \brief Wrap an ::AVFrame in a compatible SampleSequence.
  *
  * \tparam F The sample format to handle
@@ -656,13 +569,6 @@ template <::AVSampleFormat F,
 auto sequence_for(const AVFramePtr& frame)
 	-> SampleSequence<S, IsPlanar<F>::value>
 {
-	// auto sequence = SequenceInstance<S, IsPlanar<F>::value>::create();
-	//
-	// using Policy  = WrappingPolicy<S, IsPlanar<F>::value, AVFramePtr>;
-	// Policy::wrap(frame, sequence);
-	//
-	// return sequence;
-
 	using Policy = CreationPolicy<S, IsPlanar<F>::value, AVFramePtr>;
 
 	const auto channels_swapped = !ChannelOrder::is_leftright(frame.get())
@@ -695,7 +601,7 @@ public:
 	 *
 	 * \param[in] capacity Capacity in number of ::AVPacket instances to enqueue
 	 */
-	FrameQueue(const std::size_t capacity);
+	explicit FrameQueue(const std::size_t capacity);
 
 	/**
 	 * \brief Constructor.
@@ -708,9 +614,13 @@ public:
 		/* empty */
 	};
 
-	FrameQueue(const FrameQueue&) = delete;
-
+	// non-copyable
+	FrameQueue(const FrameQueue&)              = delete;
 	FrameQueue& operator = (const FrameQueue&) = delete;
+
+	// movable
+	FrameQueue(FrameQueue&&) noexcept              = default;
+	FrameQueue& operator = (FrameQueue&&) noexcept = default;
 
 	~FrameQueue() noexcept = default;
 
@@ -1087,12 +997,18 @@ class FFmpegAudioStream final
 
 public:
 
-	// make class non-copyable
+	// class is non-copyable
 	FFmpegAudioStream (const FFmpegAudioStream& file) = delete;
 	FFmpegAudioStream& operator = (const FFmpegAudioStream& file) = delete;
 
+	// class is movable
 	FFmpegAudioStream (FFmpegAudioStream&& file) = default;
 	FFmpegAudioStream& operator = (FFmpegAudioStream&& file) = default;
+
+	/**
+	 * \brief Default destructor.
+	 */
+	~FFmpegAudioStream() noexcept = default;
 
 	/**
 	 * \brief Return the sample format of this file.
@@ -1191,58 +1107,58 @@ private:
 	/**
 	 * \brief Internal format context pointer.
 	 */
-	AVFormatContextPtr formatContext_;
+	AVFormatContextPtr formatContext_ {nullptr};
 
 	/**
 	 * \brief Internal codec context pointer.
 	 */
-	AVCodecContextPtr codecContext_;
+	AVCodecContextPtr codecContext_ {nullptr};
 
 	/**
 	 * \brief Index of the ::AVStream to be decoded.
 	 */
-	int stream_index_;
+	int stream_index_ {};
 
 	/**
 	 * \brief Number of planes (1 for interleaved data, 2 for planar data).
 	 */
-	int num_planes_;
+	int num_planes_ {};
 
 	/**
 	 * \brief \c TRUE indicates left0/right1, \c FALSE otherwise.
 	 */
-	bool channels_swapped_;
+	bool channels_swapped_ {false};
 
 	/**
 	 * \brief Total number of 32 bit PCM samples in the file estimated by
 	 * duration.
 	 */
-	AudioSize size_;
+	AudioSize size_ {};
 
 	/**
 	 * \brief Callback for starting input.
 	 */
-	std::function<void()> start_input_;
+	std::function<void()> start_input_ {};
 
 	/**
 	 * \brief Callback for pushing an AVFramePtr
 	 */
-	std::function<void(AVFramePtr frame)> push_frame_;
+	std::function<void(AVFramePtr frame)> push_frame_ {};
 
 	/**
 	 * \brief Callback for notifying outside world about the correct AudioSize.
 	 */
-	std::function<void(const AudioSize& size)> update_audiosize_;
+	std::function<void(const AudioSize& size)> update_audiosize_ {};
 
 	/**
 	 * \brief Callback for ending input.
 	 */
-	std::function<void()> end_input_;
+	std::function<void()> end_input_ {};
 
 	/**
 	 * \brief Constructor.
 	 */
-	FFmpegAudioStream();
+	FFmpegAudioStream() = default;
 };
 
 
@@ -1348,8 +1264,7 @@ void print_stream_info(std::ostream& out, const ::AVStream* stream);
 /// @}
 
 } // namespace ffmpeg
-} // namespace details
-} // namespace read
+} // namespace read::details
                                                   /** \cond NAMESPACE_v_1_0_0 */
 } // namespace v_1_0_0
                                                                  /** \endcond */

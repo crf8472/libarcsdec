@@ -23,6 +23,7 @@
 #include <string>           // for string, to_string
 #include <type_traits>      // for underlying_type_t
 #include <vector>           // for vector
+#include <utility>          // for move
 
 #ifndef LIBARCSTK_LOGGING_HPP_
 #include <arcstk/logging.hpp>      // for ARCS_LOG, _WARNING, _DEBUG
@@ -59,7 +60,8 @@ std::string name(Format format)
 		// ... add more audio formats here
 	};
 
-	return names[std::underlying_type_t<Format>(format)];
+	// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+	return names[static_cast<std::underlying_type_t<Format>>(format)];
 }
 
 
@@ -83,7 +85,8 @@ std::string name(Codec codec)
 		"none" // Allows combination with a non-audio format
 	};
 
-	return names[std::underlying_type_t<Codec>(codec)];
+	// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+	return names[static_cast<std::underlying_type_t<Codec>>(codec)];
 }
 
 
@@ -91,16 +94,13 @@ std::string name(Codec codec)
 
 
 ByteSeq::ByteSeq(ByteSeq::sequence_type::size_type length)
-	: sequence_(length)
-	, wildcards_ { /* empty */ }
+	: sequence_ (length)
 {
 	// empty
 }
 
 
 ByteSeq::ByteSeq(std::initializer_list<unsigned> values)
-	: sequence_  { /* empty */ }
-	, wildcards_ { /* empty */ }
 {
 	if (values.size() == 0) // TODO empty() only since C++17
 	{
@@ -141,7 +141,7 @@ bool ByteSeq::is_wildcard(sequence_type::size_type i) const
 }
 
 
-ByteSeq& ByteSeq::swap(ByteSeq& rhs)
+ByteSeq& ByteSeq::swap(ByteSeq& rhs) noexcept
 {
 	using std::swap;
 	swap(this->sequence_,  rhs.sequence_);
@@ -222,7 +222,7 @@ bool operator == (const ByteSeq& lhs, const ByteSeq& rhs)
 }
 
 
-void swap(ByteSeq& lhs, ByteSeq& rhs)
+void swap(ByteSeq& lhs, ByteSeq& rhs) noexcept
 {
 	lhs.swap(rhs);
 }
@@ -240,17 +240,9 @@ bool operator == (const Bytes& lhs, const Bytes& rhs)
 constexpr unsigned int Bytes::any;
 
 
-Bytes::Bytes()
-	: offset_ { 0 }
-	, seq_    { /* empty */ }
-{
-	// empty
-}
-
-
-Bytes::Bytes(const uint32_t offset, const ByteSequence& bytes)
+Bytes::Bytes(const uint32_t offset, ByteSequence bytes)
 	: offset_ { offset }
-	, seq_    { bytes }
+	, seq_    { std::move(bytes) }
 {
 	// empty
 }
@@ -304,16 +296,16 @@ bool Bytes::match(const ByteSequence& bytes, const uint32_t& ioffset) const
 	const bool longer_input = bytes.size() > ref_size;
 
 	const auto in_stop  = longer_input
-		? bytes.begin() + static_cast<long>(ref_size) + 1 /* past-the-end */
+		? bytes.begin() + static_cast<int64_t>(ref_size) + 1 /*past-the-end*/
 		: bytes.end();
 
 	const auto ref_stop = longer_input
 		? ref_bytes().end()
-		: ref_current + static_cast<long>(bytes.size()) + 1 /* past-the-end */;
+		: ref_current + static_cast<int64_t>(bytes.size()) + 1 /*past-the-end*/;
 
 	auto on_wildcard = bool { false };
 
-	do
+	do // NOLINT(cppcoreguidelines-avoid-do-while)
 	{
 		const auto m = std::mismatch(in_current, in_stop,
 				ref_current, ref_stop);
@@ -384,7 +376,7 @@ ByteSequence::const_reference Bytes::operator[](
 }
 
 
-Bytes& Bytes::swap(Bytes& b) // noexcept
+Bytes& Bytes::swap(Bytes& b) noexcept
 {
 	using std::swap;
 	swap(this->seq_,    b.seq_); // noexcept only since C++17
@@ -447,7 +439,7 @@ Bytes read_bytes(const std::string& filename,
 {
 	// Read a specified number of bytes from a file offset
 
-	ByteSequence bytes(length);
+	ByteSequence bytes(length); // intentionally parentheses
 	const auto byte_size = sizeof(bytes[0]);
 
 	std::ifstream in;
@@ -455,7 +447,7 @@ Bytes read_bytes(const std::string& filename,
 	// Do not consume new lines in binary mode
 	in.unsetf(std::ios::skipws);
 
-	std::ios_base::iostate exception_mask = in.exceptions()
+	const std::ios_base::iostate exception_mask = in.exceptions()
 		| std::ios::failbit | std::ios::badbit | std::ios::eofbit;
 
 	in.exceptions(exception_mask);
@@ -483,11 +475,14 @@ Bytes read_bytes(const std::string& filename,
 
 		in.ignore(offset);
 
-		in.read(reinterpret_cast<char*>(&bytes[0]), length * byte_size);
+		const auto str_size = std::streamsize {
+			static_cast<int64_t>(length) * static_cast<int>(byte_size) };
+
+		in.read(reinterpret_cast<char*>(&bytes[0]), str_size);
 	}
 	catch (const std::ios_base::failure& f)
 	{
-		int64_t total_bytes_read = 1 + in.gcount();
+		const int64_t total_bytes_read = 1 + in.gcount();
 
 		in.close();
 
@@ -503,12 +498,14 @@ Bytes read_bytes(const std::string& filename,
 			throw FileReadException(msg, total_bytes_read);
 		} else
 		{
+			using std::to_string;
+
 			auto msg = std::string { "Content failure on file: " };
 			msg += filename;
 			msg += ", message: ";
 			msg += f.what();
 			msg += ", read ";
-			msg += total_bytes_read;
+			msg += to_string(total_bytes_read);
 			msg += " bytes";
 
 			throw InputFormatException(msg);
@@ -634,7 +631,7 @@ int64_t FileReadException::byte_pos() const
 FileReaderDescriptor::~FileReaderDescriptor() noexcept = default;
 
 
-std::string FileReaderDescriptor::id() const
+std::string FileReaderDescriptor::id() const noexcept
 {
 	return this->do_id();
 }
@@ -767,7 +764,7 @@ bool operator == (const FileReaderDescriptor& lhs,
 }
 
 
-void swap(Bytes& lhs, Bytes& rhs)
+void swap(Bytes& lhs, Bytes& rhs) noexcept
 {
 	lhs.swap(rhs);
 }

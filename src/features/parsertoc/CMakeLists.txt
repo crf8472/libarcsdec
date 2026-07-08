@@ -17,6 +17,7 @@ set (CDRTOC_TAB_HPP ${CMAKE_CURRENT_BINARY_DIR}/cdrtoc.tab.hpp )
 set (CDRTOC_YY_CPP  ${CMAKE_CURRENT_BINARY_DIR}/cdrtoc.yy.cpp  )
 
 add_bison_command (
+	NAME        "Cdrtoc"
 	OUTPUT_CPP  ${CDRTOC_TAB_CPP}
 	OUTPUT_HPP  ${CDRTOC_TAB_HPP}
 	Y_FILE      ${CDRTOC_Y}
@@ -27,6 +28,7 @@ add_bison_command (
 ## FLAGS "--verbose --debug -Wconflicts-sr -Wconflicts-rr -Wcounterexamples"
 
 add_flex_command (
+	NAME        "Cdrtoc"
 	OUTPUT_CPP    ${CDRTOC_YY_CPP}
 	L_FILE        ${CDRTOC_L}
 	INPUT_HEADERS ${CDRTOC_TAB_HPP}
@@ -44,7 +46,8 @@ add_library (libarcsdec_parsertoc OBJECT
 )
 
 set_property (TARGET libarcsdec_parsertoc
-	PROPERTY POSITION_INDEPENDENT_CODE ON )
+	PROPERTY POSITION_INDEPENDENT_CODE ON
+)
 
 target_sources (libarcsdec_parsertoc
 	PRIVATE ${CDRTOC_TAB_CPP}
