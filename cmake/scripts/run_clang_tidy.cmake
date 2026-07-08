@@ -13,7 +13,7 @@ list (FILTER ALL_SOURCES EXCLUDE REGEX ".*/test/.*" ) # do not clean tests
 execute_process(
 	COMMAND ${CLANG_TIDY_BINARY} ${ALL_SOURCES}
 		--config-file=${CLANG_TIDY_CONFIG}
-		#-p ${BUILD_DIR}
+		-p ${BUILD_DIR}
 		--
 		-I${INCLUDE_DIR}
 		-I${SOURCES_DIR}

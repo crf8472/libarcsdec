@@ -50,5 +50,5 @@ jobs:
             -DWITH_EXAMPLES=ON
 
       - name: Create clang-tidy report
-        run: cmake --build build --target libarcstk_clang-tidy-workflow
+        run: cmake --build build --target libarcsdec_clang-tidy-workflow
 
