@@ -77,6 +77,8 @@ public:
 
 	CalculationHandler(CalculationHandler&&) noexcept = default;
 	CalculationHandler& operator = (CalculationHandler&&) noexcept = default;
+
+	~CalculationHandler() noexcept final = default;
 };
 
 } // namespace calc::details
