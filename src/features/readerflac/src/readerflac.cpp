@@ -18,12 +18,14 @@
 #include <string>      // for string
 #include <utility>     // for make_unique, move
 
+#include <FLAC/format.h>        // for FLAC__Frame
+#include <FLAC/ordinals.h>      // for FLAC__int32
+#include <FLAC/stream_decoder.h>// for FLAC__StreamDecoderErrorStatus,
+								//     FLAC__StreamDecoderWriteStatus
+
 #include <FLAC++/decoder.h>		// for FLAC::Decoder::File,
-								// FLAC__StreamDecoderWriteStatus,
-								// FLAC__StreamDecoderErrorStatus
 #include <FLAC++/metadata.h>	// for FLAC::Metadata::StreamInfo,
 								// FLAC__StreamMetadata
-								// for FLAC__Frame
 
 #ifndef LIBARCSTK_METADATA_HPP_
 #include <arcstk/metadata.hpp>  // for AudioSize, UNIT
@@ -31,12 +33,15 @@
 #ifndef LIBARCSTK_LOGGING_HPP_
 #include <arcstk/logging.hpp>   // for ARCS_LOG_ERROR,...
 #endif
+#ifndef LIBARCSTK_SAMPLES_HPP_
+#include <arcstk/samples.hpp>   // for PlanarSamples
+#endif
 
 #ifndef LIBARCSDEC_AUDIOREADER_HPP_
 #include "audioreader.hpp"      // for AudioReaderImpl, InvalidAudioException
 #endif
-#ifndef LIBARCSDEC_LIBINSPECT_HPP_
-#include "libinspect.hpp"       // for libinfo_entry_filepath
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP_
+#include "descriptor.hpp"       // for Codec
 #endif
 #ifndef LIBARCSDEC_SELECTION_HPP_
 #include "selection.hpp"        // for RegisterDescriptor
