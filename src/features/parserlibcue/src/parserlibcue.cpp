@@ -17,20 +17,29 @@ extern "C" {
 
 #include <cstdio>    // for fopen, fclose, FILE
 #include <iomanip>   // for setw
+#include <ios>       // for right
 #include <memory>    // for unique_ptr
 #include <set>       // for set
 #include <sstream>   // for ostringstream
 #include <stdexcept> // for invalid_argument
 #include <string>    // for string
+#include <tuple>     // for make_tuple
 #include <vector>    // for vector
+#include <utility>   // for move
 
 #ifndef LIBARCSTK_METADATA_HPP_
 #include <arcstk/metadata.hpp>    // for ToC, make_toc
+#endif
+#ifndef LIBARCSTK_LOGLEVEL_HPP_
+#include <arcstk/loglevel.hpp>
 #endif
 #ifndef LIBARCSTK_LOGGING_HPP_
 #include <arcstk/logging.hpp>
 #endif
 
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP_
+#include "descriptor.hpp"         // for Codec, Format
+#endif
 #ifndef LIBARCSDEC_METAPARSER_HPP_
 #include "metaparser.hpp"         // for MetadataParseException
 #endif
