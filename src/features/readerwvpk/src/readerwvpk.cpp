@@ -17,6 +17,7 @@ extern "C" {
 
 #include <cstdint>   // for uint8_t, uint64_t, int32_t, int64_t
 #include <cstdlib>   // for size_t, free
+#include <limits>    // for numeric_limits
 #include <memory>    // for unique_ptr
 #include <set>       // for set
 #include <sstream>   // for ostringstream
@@ -41,8 +42,8 @@ extern "C" {
 #ifndef LIBARCSDEC_AUDIOREADER_HPP_
 #include "audioreader.hpp"  // for AudioReaderImpl, InvalidAudioException
 #endif
-#ifndef LIBARCSDEC_LIBINSPECT_HPP_
-#include "libinspect.hpp"   // for first_libname_match
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP_
+#include "descriptor.hpp"   // for Codec, Format
 #endif
 #ifndef LIBARCSDEC_SELECTION_HPP_
 #include "selection.hpp"    // for RegisterDescriptor
