@@ -22,7 +22,7 @@
 #include "descriptor.hpp"        // for Codec, FileReaderDescriptor, ...
 #endif
 #ifndef LIBARCSDEC_SAMPLEPROC_HPP_
-#include "sampleproc.hpp"        // for SampleProcessor, AudioEventHandler
+#include "sampleproc.hpp"        // for CalculationProcessor
 #endif
 
 
@@ -124,6 +124,57 @@ struct BLOCKSIZE final
 	 * minimal size.
 	 */
 	constexpr static unsigned MIN     = 65536; // == 256 * 1024 / 4
+};
+
+
+/**
+ * \brief Interface: event handler for audio read events.
+ */
+class AudioEventHandler // TODO Should be MetadataHandler
+{
+public:
+
+	/**
+	 * \brief Virtual default destructor.
+	 */
+	virtual ~AudioEventHandler() noexcept = default;
+
+	/**
+	 * \brief Call on signal start_input.
+	 */
+	void start_input()
+	{
+		return do_start_input();
+	}
+
+	/**
+	 * \brief Call on signal size.
+	 *
+	 * \param[in] size Updated audio size
+	 */
+	void audiosize(const arcstk::AudioSize& size)
+	{
+		return do_audiosize(size);
+	}
+
+	/**
+	 * \brief Call on signal end_input.
+	 */
+	void end_input()
+	{
+		return do_end_input();
+	}
+
+private:
+
+	virtual void do_start_input()
+	= 0;
+
+	virtual void do_audiosize(const arcstk::AudioSize& size)
+	= 0;
+
+	virtual void do_end_input()
+	= 0;
 };
 
 

@@ -36,6 +36,7 @@ inline namespace v_1_0_0
                                                                  /** \endcond */
 namespace read // forward declarations
 {
+class AudioEventHandler;
 class AudioReader;
 class MetadataParser;
 } // namespace read

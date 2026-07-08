@@ -10,7 +10,7 @@
 #include "calculators.hpp"
 #endif
 #ifndef LIBARCSDEC_CALCULATORS_DETAILS_HPP_
-#include "calculators_details.hpp"
+#include "calculators_details.hpp"  // for CalculationHandler
 #endif
 
 #include <cstdint>       // for uint16_t, int64_t
@@ -63,35 +63,6 @@ using arcstk::Points;
 using arcstk::Settings;
 using arcstk::ToC;
 using arcstk::make_arid;
-
-
-// calculate_details.hpp
-
-// namespace read
-// {
-// namespace details
-// {
-//
-// // ensure_leadout
-//
-//
-// AudioSize ensure_leadout(const AudioSize& leadout,
-// 		const AudioReader& reader, const std::string& audiofilename)
-// {
-// 	if (!leadout.zero())
-// 	{
-// 		return leadout;
-// 	}
-//
-// 	ARCS_LOG_DEBUG <<
-// 		"Empty leadout passed, acquire size from audio file";
-//
-// 	return reader.acquire_size(audiofilename);
-// }
-//
-// } // namespace details
-// } // namespace read
-
 
 // calculate.hpp
 
@@ -294,8 +265,9 @@ std::pair<Checksums, AudioSize> ARCSCalculator::calculate(
 	}
 
 	auto processor = CalculationProcessor { types, settings, offsets, leadout };
+	auto handler   = details::CalculationHandler { &processor };
 
-	reader->set_handler(&processor);
+	reader->set_handler(&handler);
 	reader->set_processor(&processor);
 
 	// Perform

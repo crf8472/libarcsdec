@@ -537,6 +537,7 @@ public:
 	 * \param[in] processor  The SampleProcessor to use
 	 */
 	Impl(std::unique_ptr<AudioReaderImpl> readerimpl,
+			AudioEventHandler* handler,
 			SampleProcessor* processor);
 
 	/**
@@ -641,9 +642,10 @@ private:
 
 
 AudioReader::Impl::Impl(std::unique_ptr<AudioReaderImpl> readerimpl,
+		AudioEventHandler* handler,
 		SampleProcessor* processor)
 	: readerimpl_ { std::move(readerimpl) }
-	, handler_    { processor }
+	, handler_    { handler }
 	, processor_  { processor }
 {
 	if (readerimpl_)
@@ -651,7 +653,11 @@ AudioReader::Impl::Impl(std::unique_ptr<AudioReaderImpl> readerimpl,
 		if (processor_)
 		{
 			register_processor(processor_);
-			register_handler(handler_);
+
+			if (handler_)
+			{
+				register_handler(handler_);
+			}
 		}
 	}
 }
