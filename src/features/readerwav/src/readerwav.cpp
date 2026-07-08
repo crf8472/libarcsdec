@@ -11,27 +11,28 @@
 #include "readerwav_details.hpp" // for WavAudioHandler, RIFFWAV_PCM_CDDA_t
 #endif
 
-extern "C" {
-#include <assert.h>   // for assert
-#include <sys/stat.h> // for ::stat
-}
-
 #include <array>      // for array
+#include <cstddef>    // for size_t
 #include <cstdint>    // for uint8_t, uint16_t, uint32_t, int32_t, int64_t
+#include <filesystem> // for file_size, path
 #include <fstream>    // for ifstream
 #include <ios>        // for streamsize
 #include <limits>     // for numeric_limits
 #include <memory>     // for unique_ptr
 #include <set>        // for set
+#include <stdexcept>  // for runtime_error
 #include <sstream>    // for ostringstream
 #include <string>     // for string, to_string
 #include <utility>    // for make_unique, move
 #include <vector>     // for vector
 
-#if __cplusplus >= 201703L
-#include <filesystem>
-#endif
 
+#ifndef LIBARCSTK_ALGORITHM_HPP_
+#include <arcstk/algorithm.hpp> // for ChecksumtypeSet
+#endif
+#ifndef LIBARCSTK_CALCULATE_HPP_
+#include <arcstk/calculate.hpp> // for Settings
+#endif
 #ifndef LIBARCSTK_METADATA_HPP_
 #include <arcstk/metadata.hpp>  // for AudioSize, UNIT, CDDA
 #endif
@@ -41,6 +42,9 @@ extern "C" {
 
 #ifndef LIBARCSDEC_AUDIOREADER_HPP_
 #include "audioreader.hpp"  // for AudioReaderImpl, *EndianBytes,
+#endif
+#ifndef LIBARCSDEC_DESCRIPTOR_HPP_
+#include "descriptor.hpp"   // for Codec, Format, LibInfo, LibInfoEntry...
 #endif
 #ifndef LIBARCSDEC_LIBINSPECT_HPP_
 #include "libinspect.hpp"   // for first_libname_match
@@ -1155,8 +1159,6 @@ int64_t wav_read_bytes(std::ifstream& in, const int32_t amount,
 
 int64_t retrieve_file_size_bytes(const std::string& filename)
 {
-#if __cplusplus >= 201703L
-
 	namespace fs = std::filesystem;
 
 	const auto path = fs::path { filename };
@@ -1171,23 +1173,6 @@ int64_t retrieve_file_size_bytes(const std::string& filename)
 	}
 
 	return static_cast<int64_t>(file_size);
-
-#else
-
-	struct ::stat stat_buf;
-	{
-		int rc = ::stat(filename.c_str(), &stat_buf);
-		assert (rc != -1);
-
-		// Avoid Warning about Unused Variable rc (ugly, but, well...)
-		static_cast<void>(rc);
-	}
-
-	ARCS_LOG(DEBUG3) << "File size in bytes: " << stat_buf.st_size;
-
-	return stat_buf.st_size;
-
-#endif
 }
 
 } // namespace wave
