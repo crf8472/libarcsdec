@@ -6,7 +6,8 @@ cmake_minimum_required (VERSION 3.15.0 )
 project (libarcsdec VERSION 0.3.0 LANGUAGES CXX )
 
 set (LIBARCSDEC_VERSION_SUFFIX "alpha.1" )
-set (LIBARCSDEC_VERSION_STRING "${PROJECT_VERSION}-${LIBARCSDEC_VERSION_SUFFIX}" )
+set (LIBARCSDEC_VERSION_STRING
+	"${PROJECT_VERSION}-${LIBARCSDEC_VERSION_SUFFIX}" )
 
 set (PROJECT_DESCRIPTION "Audio decoder and TOC parser adapters for libarcstk" )
 
@@ -38,7 +39,7 @@ message (STATUS "Build type: ${CMAKE_BUILD_TYPE}" )
 set (CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE ) ## since CMake 3.15
 
 ## Search path for cmake modules
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
+list (APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules" )
 
 # 2}}}
 ## 1}}}
@@ -137,7 +138,7 @@ libarcsdec_apply_compiler_flags (MAIN TARGET ${PROJECT_NAME} )
 get_target_property (LIBARCSDEC_CXX_FLAGS ${PROJECT_NAME} COMPILE_OPTIONS )
 message (STATUS "Compile flags: ${LIBARCSDEC_CXX_FLAGS}" )
 
-## --- Setup default dependencies {{{1
+## --- Setup required dependencies {{{1
 
 option (WITH_SUBMODULES "Compile libarcstk as a submodule" OFF )
 

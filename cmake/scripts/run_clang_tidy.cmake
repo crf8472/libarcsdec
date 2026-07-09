@@ -8,7 +8,7 @@
 file (WRITE "${REPORT_FILE}" "")
 
 file (GLOB_RECURSE ALL_SOURCES "${SOURCES_DIR}/*.cpp" )
-list (FILTER ALL_SOURCES EXCLUDE REGEX ".*/test/.*" ) # do not clean tests
+list (FILTER ALL_SOURCES EXCLUDE REGEX ".*/test/.*" ) # do not tidy up tests
 
 execute_process(
 	COMMAND ${CLANG_TIDY_BINARY} ${ALL_SOURCES}
