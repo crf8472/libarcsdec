@@ -101,15 +101,17 @@ const std::string& first_libname_match(const std::vector<std::string>& list,
 }
 
 
-std::vector<std::string> runtime_deps(const std::string& object_name)
-{
 #ifdef LIBARCSDEC_MACOS_BUILD
+std::vector<std::string> runtime_deps(const std::string&)
+{
 
 	// no link_map available on macos
 
 	return std::vector<std::string>{}; // empty SO list on MacOS
 
 #else
+std::vector<std::string> runtime_deps(const std::string& object_name)
+{
 
 	//std::cerr << "Runtime deps of " << object_name << '\n';
 
