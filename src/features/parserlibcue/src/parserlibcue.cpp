@@ -108,7 +108,7 @@ CdPtr Make_CdPtr::operator()(const std::string& filename) const
 
 	// Close file
 
-	if (!cd_ptr.get())
+	if (!cd_ptr)
 	{
 		auto message = std::ostringstream{};
 		message << "Failed to parse Cuesheet file: " << filename;
