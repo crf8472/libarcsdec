@@ -227,5 +227,5 @@ libarcsdec_enable_target_dep_graph_by_dot (LIBARCSDEC_TARGET_DEPS_GRAPH_ENABLED 
 ## 1}}}
 
 banner (END
-	"Configuration completed ${PROJECT_NAME} ${LIBARCSDEC_VERSION_STRING}" )
+	"Configuration completed: ${PROJECT_NAME} ${LIBARCSDEC_VERSION_STRING}" )
 
