@@ -53,6 +53,11 @@ jobs:
           cmake -B build \
             -G Ninja \
             -DCMAKE_BUILD_TYPE=Debug \
+            -DWITH_FLAC=ON       \
+            -DWITH_FFMPEG=ON     \
+            -DWITH_WAVPACK=ON    \
+            -DWITH_LIBSNDFILE=ON \
+            -DWITH_LIBCUE=ON     \
             -DWITH_SUBMODULES=ON \
             -DWITH_TESTS=ON      \
             -DWITH_EXAMPLES=OFF  \
@@ -107,6 +112,11 @@ jobs:
           cmake -B build \
             -G Ninja \
             -DCMAKE_BUILD_TYPE=Debug \
+            -DWITH_FLAC=ON       \
+            -DWITH_FFMPEG=ON     \
+            -DWITH_WAVPACK=ON    \
+            -DWITH_LIBSNDFILE=ON \
+            -DWITH_LIBCUE=ON     \
             -DWITH_SUBMODULES=ON \
             -DWITH_TESTS=ON      \
             -DWITH_EXAMPLES=OFF  \
