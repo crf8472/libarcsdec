@@ -3,11 +3,15 @@
 
 cmake_minimum_required (VERSION 3.14.0 )
 
-message (STATUS "Build with libcue parsing capability for cuesheets" )
-
 function (parserlibcue_pkg DEPS )
 	set  (${DEPS} "libcue >= 2.0.0" PARENT_SCOPE )
 endfunction()
+
+## TODO Remove this once libcue #78 is fixed
+message (WARNING "-DWITH_LIBCUE is currently ignored due to libcue issue #78." )
+return()
+
+message (STATUS "Build with libcue parsing capability for cuesheets" )
 
 find_package (libcue 2.0.0 REQUIRED )
 
