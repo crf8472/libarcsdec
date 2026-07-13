@@ -18,6 +18,7 @@ extern "C" {
 
 #include <cstdint>  // for uint16_t, int32_t
 #include <memory>   // for unique_ptr
+#include <optional> // for optional
 #include <string>   // for string
 #include <tuple>    // for tuple
 #include <vector>   // for vector
@@ -61,23 +62,6 @@ using arcstk::ToC;
  */
 
 /**
- * \brief Type for amounts of lba frames.
- *
- * This type is a signed integral type.
- */
-using lba_type = int32_t;
-
-
-/**
- * \brief Type for raw Cue data.
- */
-using CueInfo = std::tuple<uint16_t, // track count
-	std::vector<std::string>,        // filenames
-	std::vector<lba_type>,           // offsets
-	std::vector<lba_type>>;          // lengths
-
-
-/**
  * \brief Functor for freeing Cd* instances.
  */
 struct Free_Cd final
@@ -95,25 +79,25 @@ using CdPtr = std::unique_ptr<::Cd, Free_Cd>;
 /**
  * \brief Construction functor for CdPtr instances.
  */
-struct Make_CdPtr final
-{
-	CdPtr operator()(const std::string& filename) const;
-};
+// struct Make_CdPtr final
+// {
+// 	CdPtr operator()(const std::string& filename) const;
+// };
 
 
 /**
  * \brief Close FILE instances.
  */
-struct Close_FILEPtr final
-{
-	void operator()(FILE* f) const;
-};
+// struct Close_FILEPtr final
+// {
+// 	void operator()(FILE* f) const;
+// };
 
 
 /**
  * \brief A unique_ptr for FILE using Close_FILEPtr as a custom deleter.
  */
-using FILEPtr = std::unique_ptr<FILE, Close_FILEPtr>;
+//using FILEPtr = std::unique_ptr<FILE, Close_FILEPtr>;
 
 
 /**
@@ -123,51 +107,31 @@ using FILEPtr = std::unique_ptr<FILE, Close_FILEPtr>;
  *
  * \return Handle to \c filename
  */
-FILEPtr safe_open_for_read(const std::string& filename);
+//FILEPtr safe_open_for_read(const std::string& filename);
 
 
 /**
- * \brief Represents an opened Cuesheet file.
+ * \brief Convert a CdPtr (libcue) to a ToC (libarcstk).
  *
- * Instances of this class are non-copyable but movable.
+ * \param[in] cd CdPtr to convert
+ *
+ * \return ToC representing information from CdPtr
  */
-class CueOpenFile final
-{
-public:
+ToC convert(const CdPtr& cd);
 
-	/**
-	 * \brief Open Cuesheet with the given name.
-	 *
-	 * \param[in] filename The Cuesheet file to read
-	 *
-	 * \throw FileReadException      If the CueSheet file could not be read
-	 * \throw MetadataParseException If the Cue data could not be parsed
-	 */
-	explicit CueOpenFile(const std::string& filename);
 
-	// non-copyable
-	CueOpenFile(const CueOpenFile& file) noexcept              = delete;
-	CueOpenFile& operator = (const CueOpenFile& file) noexcept = delete;
-
-	CueOpenFile(CueOpenFile&& file) noexcept;
-	CueOpenFile& operator = (CueOpenFile&& file) noexcept;
-
-	~CueOpenFile() noexcept = default;
-
-	/**
-	 * \brief Returns all ToC information from the file.
-	 *
-	 * \return CueInfo representing the ToC information
-	 */
-	CueInfo info() const;
-
-private:
-
-	/**
-	 * \brief Internal libcue-based representation.
-	 */
-	CdPtr cd_info_ {};
-};
+/**
+ * \brief Load a file in text mode that is not bigger than \c max_size.
+ *
+ * \param[in] filepath Filepath to load
+ * \param[in] max_size Maximal file size in bytes
+ *
+ * \return Content of the file on success
+ *
+ * \throws runtime_error On failure
+ */
+std::optional<std::vector<char>> file_content(const std::string &filepath,
+		const std::uintmax_t max_size);
 
 
 /**
@@ -175,18 +139,19 @@ private:
  */
 class LibcueParserImpl final : public MetadataParserImpl
 {
-private:
-
 	/**
-	 * \brief Return Cue data.
+	 * \brief Parse Cuesheet file to a ToC using libcue.
 	 *
 	 * \param[in] filename Name of the file to read.
 	 *
-	 * \return The CueInfo of the parsed Cuesheet
+	 * \return ToC of the parsed Cuesheet
 	 *
-	 * \throw FileReadException If the file could not be read
+	 * \throw runtime_error          If the file could not be read
+	 * \throw MetadataParseException If the file is zero or parsing failed
 	 */
-	CueInfo parse_worker(const std::string& filename) const;
+	ToC parse_worker(const std::string& filename) const;
+
+	// MetadataParserImpl
 
 	ToC do_parse(const std::string& filename) final;
 
