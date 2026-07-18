@@ -16,11 +16,10 @@ extern "C" {
 #include <libcue/libcue.h>  // for Cd
 }
 
-#include <cstdint>  // for uint16_t, int32_t
+#include <cstdint>  // for uintmax_t
 #include <memory>   // for unique_ptr
 #include <optional> // for optional
 #include <string>   // for string
-#include <tuple>    // for tuple
 #include <vector>   // for vector
 
 #ifndef LIBARCSDEC_DESCRIPTOR_HPP_
@@ -77,40 +76,6 @@ using CdPtr = std::unique_ptr<::Cd, Free_Cd>;
 
 
 /**
- * \brief Construction functor for CdPtr instances.
- */
-// struct Make_CdPtr final
-// {
-// 	CdPtr operator()(const std::string& filename) const;
-// };
-
-
-/**
- * \brief Close FILE instances.
- */
-// struct Close_FILEPtr final
-// {
-// 	void operator()(FILE* f) const;
-// };
-
-
-/**
- * \brief A unique_ptr for FILE using Close_FILEPtr as a custom deleter.
- */
-//using FILEPtr = std::unique_ptr<FILE, Close_FILEPtr>;
-
-
-/**
- * \brief Open \c filename and return a handle.
- *
- * \param[in] filename Name of the file to open
- *
- * \return Handle to \c filename
- */
-//FILEPtr safe_open_for_read(const std::string& filename);
-
-
-/**
  * \brief Convert a CdPtr (libcue) to a ToC (libarcstk).
  *
  * \param[in] cd CdPtr to convert
@@ -118,6 +83,16 @@ using CdPtr = std::unique_ptr<::Cd, Free_Cd>;
  * \return ToC representing information from CdPtr
  */
 ToC convert(const CdPtr& cd);
+
+/**
+ * \brief Get file size of a file.
+ *
+ * \param[in] filepath Filepath of the file
+ *
+ * \return Size of the file
+ */
+std::uintmax_t file_size_or_throw(const std::string &filepath);
+// TODO This may be provided for other features
 
 
 /**
@@ -132,6 +107,7 @@ ToC convert(const CdPtr& cd);
  */
 std::optional<std::vector<char>> file_content(const std::string &filepath,
 		const std::uintmax_t max_size);
+// TODO This may be provided for other features
 
 
 /**
