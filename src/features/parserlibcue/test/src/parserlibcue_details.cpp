@@ -28,7 +28,7 @@ TEST_CASE ("LibcueParserImpl", "[parserlibcue]" )
 
 		auto v = cue_toc_05.value();
 
-		CHECK ( v.size() == 535 ); // +1 for \0
+		CHECK ( v.size() == 534 );
 
 		CHECK ( v[0]   == 'C' );
 		CHECK ( v[1]   == 'A' );
@@ -62,7 +62,7 @@ TEST_CASE ("LibcueParserImpl", "[parserlibcue]" )
 		CHECK ( !cue.complete() ); // since leadout is 0
 	}
 
-	// XXX This section succeeds only with libcue >= 2.3 and fails otherwise!
+	// XXX This section fails with libcue < 2.3 for incorrect trailing newlines
 	SECTION ("ok02.cue: Parses a syntactically intact input correctly")
 	{
 		using arcstk::AudioSize;

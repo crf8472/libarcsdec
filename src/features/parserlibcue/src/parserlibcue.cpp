@@ -218,7 +218,7 @@ std::uintmax_t file_size_or_throw(const std::string &filepath)
 
 		msg << "Unable to determine file size for file '"
 			<< filepath
-			<< "'";/* + "', error was: " + rc */
+			<< "'. Original error message: '" << rc.message() << "'";
 
 		throw std::runtime_error(msg.str());
 	}
@@ -227,7 +227,7 @@ std::uintmax_t file_size_or_throw(const std::string &filepath)
 }
 
 
-std::optional<std::vector<char>> file_content(const std::string &filepath,
+std::optional<std::string> file_content(const std::string &filepath,
 		const std::uintmax_t max_size)
 {
 	// Get file size
@@ -251,6 +251,8 @@ std::optional<std::vector<char>> file_content(const std::string &filepath,
 	}
 
 	// Check before casting to signed type when passing it to ifstream::read()
+	// Note that this also covers the necessary check for:
+	// if (file_size == std::numeric_limits<std::uintmax_t>::max()) throw;
 	if (file_size > static_cast<std::uintmax_t>(
 				std::numeric_limits<std::streamsize>::max()))
 	{
@@ -277,11 +279,10 @@ std::optional<std::vector<char>> file_content(const std::string &filepath,
 
 	// Load file content into vector
 
-	auto chars = std::vector<char>(file_size + 1); // parenthesis
-	input.read(chars.data(), static_cast<std::streamsize>(file_size));
-	chars.back() = '\0';
+	std::string content (file_size, '\0'); // parentheses
+	input.read(content.data(), static_cast<std::streamsize>(file_size));
 
-    return chars;
+    return content;
 }
 
 

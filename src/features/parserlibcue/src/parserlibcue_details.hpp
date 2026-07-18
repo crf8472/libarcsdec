@@ -20,7 +20,6 @@ extern "C" {
 #include <memory>   // for unique_ptr
 #include <optional> // for optional
 #include <string>   // for string
-#include <vector>   // for vector
 
 #ifndef LIBARCSDEC_DESCRIPTOR_HPP_
 #include "descriptor.hpp"       // for FileReaderDescriptor
@@ -68,12 +67,10 @@ struct Free_Cd final
 	void operator()(::Cd* cd) const;
 };
 
-
 /**
  * \brief A unique_ptr for Cd using Free_Cd as a custom deleter.
  */
 using CdPtr = std::unique_ptr<::Cd, Free_Cd>;
-
 
 /**
  * \brief Convert a CdPtr (libcue) to a ToC (libarcstk).
@@ -94,7 +91,6 @@ ToC convert(const CdPtr& cd);
 std::uintmax_t file_size_or_throw(const std::string &filepath);
 // TODO This may be provided for other features
 
-
 /**
  * \brief Load a file in text mode that is not bigger than \c max_size.
  *
@@ -105,10 +101,9 @@ std::uintmax_t file_size_or_throw(const std::string &filepath);
  *
  * \throws runtime_error On failure
  */
-std::optional<std::vector<char>> file_content(const std::string &filepath,
+std::optional<std::string> file_content(const std::string &filepath,
 		const std::uintmax_t max_size);
 // TODO This may be provided for other features
-
 
 /**
  * \brief Implementation for libcue-based reading of CueSheets.
