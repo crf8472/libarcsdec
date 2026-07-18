@@ -111,13 +111,6 @@ void Free_Cd::operator()(::Cd* cd) const
 
 ToC convert(const CdPtr& cd)
 {
-	if (!cd)
-	{
-		// TODO
-		return ToC{};
-	}
-
-
 	// Signed integral type for amounts of lba frames.
 	using lba_type = int32_t;
 
@@ -139,7 +132,7 @@ ToC convert(const CdPtr& cd)
 	auto trk_offset = long { 0 }; // NOLINT(google-runtime-int)
 	using cstring = const char*;
 	auto filename = cstring { nullptr };
-	const ::Track* trk = nullptr;
+	const ::Track* trk = nullptr; // non-owning, destroyed with cd
 
 	// Read offset, length + filename for each track in Cue file
 
@@ -161,6 +154,12 @@ ToC convert(const CdPtr& cd)
 				<< " is not expected to be negative: " << trk_offset;
 		}
 
+		if (trk_offset > arcstk::CDDA::MAX_BLOCK_ADDRESS)
+		{
+			ARCS_LOG_WARNING  << "Offset for track "   << i
+				<< " exceeds maximal block address: " << trk_offset;
+		}
+
 		filename = ::track_get_filename(trk);
 
 		// Log the contents
@@ -173,11 +172,6 @@ ToC convert(const CdPtr& cd)
 			<< std::setw(6)
 			<< trk_offset
 			<< ", file: " << (filename ? filename : "<null>");
-
-		// NOTE that the length the last track cannot be calculated from
-		// the Cuesheet which only contains the start offsets. To get the length
-		// of the last track, you would have to subtract its offset from the
-		// offset of the non-existent following track.
 
 		try
 		{
