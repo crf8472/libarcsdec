@@ -325,7 +325,7 @@ class BisonParser
 	/**
 	 * \brief Debug wrapper.
 	 */
-	IsDebugEnabled<PARSER>  debug_ {};
+	IsDebugEnabled<PARSER> debug_ {};
 
 public:
 
@@ -352,7 +352,7 @@ public:
 	 */
 	bool debug_enabled() const
 	{
-		return IsDebugEnabled<PARSER>::value;
+		return decltype( debug_ )::value;
 	}
 
 
@@ -429,7 +429,12 @@ public:
 		, parser_      { std::make_unique<PARSER>(
 								&current_loc_, lexer_.get(), p_handler_) }
 	{
-		// empty
+		// If parser was compiled to debug, turn debugging on
+		if (parser_.debug_enabled())
+		{
+			this->set_parser_debug_level(1);
+			this->set_lexer_debug_level(1);
+		}
 	}
 
 	/**
