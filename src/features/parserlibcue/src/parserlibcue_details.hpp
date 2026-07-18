@@ -13,7 +13,7 @@
  */
 
 extern "C" {
-#include <libcue/libcue.h>  // for Cd
+#include <libcue/libcue.h>  // for Cd, cd_delete
 }
 
 #include <cstdint>  // for uintmax_t
@@ -22,7 +22,7 @@ extern "C" {
 #include <string>   // for string
 
 #ifndef LIBARCSDEC_DESCRIPTOR_HPP_
-#include "descriptor.hpp"       // for FileReaderDescriptor
+#include "descriptor.hpp"        // for FileReaderDescriptor
 #endif
 #ifndef LIBARCSDEC_METAPARSER_HPP_
 #include "metaparser.hpp"        // for MetaparserImpl
@@ -60,28 +60,6 @@ using arcstk::ToC;
  */
 
 /**
- * \brief Functor for freeing Cd* instances.
- */
-struct Free_Cd final
-{
-	void operator()(::Cd* cd) const;
-};
-
-/**
- * \brief A unique_ptr for Cd using Free_Cd as a custom deleter.
- */
-using CdPtr = std::unique_ptr<::Cd, Free_Cd>;
-
-/**
- * \brief Convert a CdPtr (libcue) to a ToC (libarcstk).
- *
- * \param[in] cd CdPtr to convert
- *
- * \return ToC representing information from CdPtr
- */
-ToC convert(const CdPtr& cd);
-
-/**
  * \brief Get file size of a file.
  *
  * \param[in] filepath Filepath of the file
@@ -104,6 +82,35 @@ std::uintmax_t file_size_or_throw(const std::string &filepath);
 std::optional<std::string> file_content(const std::string &filepath,
 		const std::uintmax_t max_size);
 // TODO This may be provided for other features
+
+/**
+ * \brief Functor for freeing Cd* instances.
+ */
+struct Free_Cd final
+{
+	void operator()(::Cd* cd) const
+	{
+		if (cd)
+		{
+			::cd_delete(cd);
+			cd = nullptr;
+		}
+	}
+};
+
+/**
+ * \brief A unique_ptr for Cd using Free_Cd as a custom deleter.
+ */
+using CdPtr = std::unique_ptr<::Cd, Free_Cd>;
+
+/**
+ * \brief Convert a CdPtr (libcue) to a ToC (libarcstk).
+ *
+ * \param[in] cd CdPtr to convert
+ *
+ * \return ToC representing information from CdPtr
+ */
+ToC convert(const CdPtr& cd);
 
 /**
  * \brief Implementation for libcue-based reading of CueSheets.

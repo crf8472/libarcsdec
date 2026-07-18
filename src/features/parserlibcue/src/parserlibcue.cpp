@@ -93,16 +93,93 @@ using arcstk::ToC;
 using arcstk::make_toc;
 
 
-// FreeCd
-
-
-void Free_Cd::operator()(::Cd* cd) const
+std::uintmax_t file_size_or_throw(const std::string &filepath)
 {
-	if (cd)
+	namespace fs = std::filesystem;
+
+	// Check existence
+
+	if (!fs::exists(filepath))
 	{
-		::cd_delete(cd);
-		cd = nullptr;
+        throw std::runtime_error("File not found");
+    }
+
+	// Check file size
+
+	std::error_code rc;
+    const auto file_size { fs::file_size(filepath, rc) };
+
+	if (rc)
+	{
+		auto msg = std::ostringstream{};
+
+		msg << "Unable to determine file size for file '"
+			<< filepath
+			<< "'. Original error message: '" << rc.message() << "'";
+
+		throw std::runtime_error(msg.str());
 	}
+
+	return file_size;
+}
+
+
+std::optional<std::string> file_content(const std::string &filepath,
+		const std::uintmax_t max_size)
+{
+	// Get file size
+
+	auto file_size = file_size_or_throw(filepath);
+
+	if (file_size == 0)
+	{
+		return std::nullopt;
+	}
+
+	if (file_size > max_size)
+	{
+		auto msg = std::ostringstream{};
+
+		msg << "File too large, more than maximum of "
+			<< max_size
+			<< " bytes";
+
+		throw std::runtime_error(msg.str());
+	}
+
+	// Check before casting to signed type when passing it to ifstream::read()
+	// Note that this also covers the necessary check for:
+	// if (file_size == std::numeric_limits<std::uintmax_t>::max()) throw;
+	if (file_size > static_cast<std::uintmax_t>(
+				std::numeric_limits<std::streamsize>::max()))
+	{
+		throw std::runtime_error(
+				"File too large, is not readable in a single read operation");
+	}
+
+	// Open file
+
+    auto input = std::ifstream { filepath };
+
+    if (!input)
+	{
+		auto msg = std::ostringstream{};
+
+		msg << "Unable to correctly open file '"
+			<< filepath
+			<< "'";
+
+		throw std::runtime_error(msg.str());
+    }
+
+	input.exceptions(std::ios::failbit | std::ios::badbit);
+
+	// Load file content into vector
+
+	std::string content (file_size, '\0'); // parentheses
+	input.read(content.data(), static_cast<std::streamsize>(file_size));
+
+    return content;
 }
 
 
@@ -193,96 +270,6 @@ ToC convert(const CdPtr& cd)
 	}
 
 	return make_toc(offsets, filenames);
-}
-
-
-std::uintmax_t file_size_or_throw(const std::string &filepath)
-{
-	namespace fs = std::filesystem;
-
-	// Check existence
-
-	if (!fs::exists(filepath))
-	{
-        throw std::runtime_error("File not found");
-    }
-
-	// Check file size
-
-	std::error_code rc;
-    const auto file_size { fs::file_size(filepath, rc) };
-
-	if (rc)
-	{
-		auto msg = std::ostringstream{};
-
-		msg << "Unable to determine file size for file '"
-			<< filepath
-			<< "'. Original error message: '" << rc.message() << "'";
-
-		throw std::runtime_error(msg.str());
-	}
-
-	return file_size;
-}
-
-
-std::optional<std::string> file_content(const std::string &filepath,
-		const std::uintmax_t max_size)
-{
-	// Get file size
-
-	auto file_size = file_size_or_throw(filepath);
-
-	if (file_size == 0)
-	{
-		return std::nullopt;
-	}
-
-	if (file_size > max_size)
-	{
-		auto msg = std::ostringstream{};
-
-		msg << "File too large, more than maximum of "
-			<< max_size
-			<< " bytes";
-
-		throw std::runtime_error(msg.str());
-	}
-
-	// Check before casting to signed type when passing it to ifstream::read()
-	// Note that this also covers the necessary check for:
-	// if (file_size == std::numeric_limits<std::uintmax_t>::max()) throw;
-	if (file_size > static_cast<std::uintmax_t>(
-				std::numeric_limits<std::streamsize>::max()))
-	{
-		throw std::runtime_error(
-				"File too large, is not readable in a single read operation");
-	}
-
-	// Open file
-
-    auto input = std::ifstream { filepath };
-
-    if (!input)
-	{
-		auto msg = std::ostringstream{};
-
-		msg << "Unable to correctly open file '"
-			<< filepath
-			<< "'";
-
-		throw std::runtime_error(msg.str());
-    }
-
-	input.exceptions(std::ios::failbit | std::ios::badbit);
-
-	// Load file content into vector
-
-	std::string content (file_size, '\0'); // parentheses
-	input.read(content.data(), static_cast<std::streamsize>(file_size));
-
-    return content;
 }
 
 
