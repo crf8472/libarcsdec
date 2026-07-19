@@ -29,9 +29,9 @@ TEST_CASE ("cuesheet", "[yycuesheet]" )
 	using arcsdec::read::details::ParserToCHandler;
 	using arcsdec::read::details::cuesheet::Driver;
 
-	auto l_hdler = DefaultLexerHandler { /* default */ } ;
-	auto handler = ParserToCHandler {};
-	auto driver  = Driver{&l_hdler, &handler};
+	auto lexer_handler  = DefaultLexerHandler { /* default */ } ;
+	auto parser_handler = ParserToCHandler {};
+	auto driver  = Driver { &lexer_handler, &parser_handler };
 
 	/* Activate debugging for flex-generated scanner */
 	//driver.set_lexer_debug_level(0);
@@ -107,10 +107,10 @@ TEST_CASE ("cuesheet", "[yycuesheet]" )
 		driver.set_input(file);
 		const int result { driver.parse() };
 
-		const auto toc { handler.get_toc() };
+		const auto toc { parser_handler.get_toc() };
 
 		CHECK ( result == 0 );
-		CHECK ( handler.current_track() == 16 );
+		CHECK ( parser_handler.current_track() == 16 );
 
 		// CHECK ( toc->offsets() == std::vector<int32_t>{
 		// 			  33,
@@ -129,8 +129,8 @@ TEST_CASE ("cuesheet", "[yycuesheet]" )
 		// 		  225320,
 		// 		  234103
 		// 		});
-		// CHECK ( handler.lengths().size() == 15 );
-		// CHECK ( handler.lengths() == std::vector<int32_t>{
+		// CHECK ( parser_handler.lengths().size() == 15 );
+		// CHECK ( parser_handler.lengths() == std::vector<int32_t>{
 		// 			5192,
 		// 			2165,
 		// 		   15990,
