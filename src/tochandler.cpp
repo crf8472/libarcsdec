@@ -291,6 +291,12 @@ int32_t ParserToCHandler::offset(const std::size_t t) const
 }
 
 
+std::vector<int32_t> ParserToCHandler::offsets() const
+{
+	return offsets_;
+}
+
+
 void ParserToCHandler::append_filename(const std::string& filename)
 {
 	filenames_.push_back(filename);
@@ -323,6 +329,12 @@ std::size_t ParserToCHandler::current_track() const
 ToC ParserToCHandler::get_toc() const
 {
 	return arcstk::make_toc(offsets_, filenames_);
+}
+
+
+ToCData ParserToCHandler::get_toc_data() const
+{
+	return arcstk::toc::construct(0, offsets_);
 }
 
 

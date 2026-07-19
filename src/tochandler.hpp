@@ -180,6 +180,13 @@ public:
 	int32_t offset(const std::size_t t) const;
 
 	/**
+	 * \brief Parsed offsets (in total LBA frames).
+	 *
+	 * \return Parsed offsets
+	 */
+	std::vector<int32_t> offsets() const;
+
+	/**
 	 * \brief Append filename for current track.
 	 *
 	 * \param[in] filename Filename for current track
@@ -211,6 +218,13 @@ public:
 	 * \return ToC instance representing the input file
 	 */
 	ToC get_toc() const;
+
+	/**
+	 * \brief Get ToC data of parsed values.
+	 *
+	 * \return ToC data representing the input file
+	 */
+	ToCData get_toc_data() const;
 
 	/**
 	 * \brief Append a track's ISRC.

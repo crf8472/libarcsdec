@@ -23,7 +23,31 @@
 #endif
 
 
-TEST_CASE ("cuesheet", "[yycuesheet]" )
+std::ifstream open_file(const std::string& filepath)
+{
+	std::ifstream file;
+	file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+
+	try
+	{
+		file.open(filepath, std::ifstream::in);
+	}
+	catch (const std::ifstream::failure& f)
+	{
+		throw std::runtime_error(
+			std::string { "Failed to open file '" }
+			+ filepath
+			+ std::string { "', got: " }
+			+ typeid(f).name()
+			+ ", message: "
+			+ f.what());
+	}
+
+	return file;
+}
+
+
+TEST_CASE ("cuesheet/Driver", "[yycuesheet]" )
 {
 	// generated yy parts
 
@@ -44,6 +68,20 @@ TEST_CASE ("cuesheet", "[yycuesheet]" )
 	auto parser_handler = ParserToCHandler {};
 	auto driver = Driver { &lexer_handler, &parser_handler };
 
+
+	SECTION ("Driver is instantiated correctly")
+	{
+		if (driver.debug_enabled())
+		{
+			CHECK (driver.lexer_debug_level()  == 1);
+			CHECK (driver.parser_debug_level() == 1);
+		} else
+		{
+			CHECK (driver.lexer_debug_level()  == 0);
+			CHECK (driver.parser_debug_level() == 0);
+		}
+
+	}
 
 	SECTION ("Lexer instantiates with default TokenLocation and LexerHandler")
 	{
@@ -81,140 +119,83 @@ TEST_CASE ("cuesheet", "[yycuesheet]" )
 		CHECK (&parser);
 	}
 
-	SECTION ("Driver instantiates with default LexerHandler and ParserHandler")
+	// SECTION ("Driver instantiates with default LexerHandler and ParserHandler")
+	// {
+	// 	auto lh = DefaultLexerHandler {};
+	// 	auto ph = ParserToCHandler {};
+	//
+	// 	auto driver = Driver { &lh, &ph };
+	//
+	// 	CHECK (&driver);
+	// }
+
+	SECTION ("Cuesheet without syntax errors and trailing REM is OK")
 	{
-		auto lh = DefaultLexerHandler {};
-		auto ph = ParserToCHandler {};
-
-		auto driver = Driver { &lh, &ph };
-
-		CHECK (&driver);
-	}
-
-	SECTION ("Cuesheet without syntax errors and trailing newline is OK")
-	{
-		std::ifstream file;
-		file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-		try
-		{
-			file.open("data/ok01.cue", std::ifstream::in);
-		}
-		catch (const std::ifstream::failure& f)
-		{
-			throw std::runtime_error(
-				std::string { "Failed to open file "
-					"'data/ok01.cue', got: " }
-				+ typeid(f).name()
-				+ ", message: " + f.what());
-		}
+		auto file = open_file("data/ok01.cue");
 
 		driver.set_input(file);
 		const int result { driver.parse() };
 
 		CHECK ( result == 0 );
+
+		CHECK ( parser_handler.current_track() == 3 );
+
+		CHECK ( parser_handler.offsets() == std::vector<int32_t> {
+					  150,
+					25072,
+				});
 	}
 
-	SECTION ("Cuesheet without syntax errors and no newline is OK")
+	SECTION ("Cuesheet without syntax errors is OK")
 	{
-		std::ifstream file;
-		file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-		try
-		{
-			file.open("data/ok02.cue", std::ifstream::in);
-		}
-		catch (const std::ifstream::failure& f)
-		{
-			throw std::runtime_error(
-				std::string { "Failed to open file "
-					"'data/ok02.cue', got: " }
-				+ typeid(f).name()
-				+ ", message: " + f.what());
-		}
+		auto file = open_file("data/ok02.cue");
 
 		driver.set_input(file);
 		const int result { driver.parse() };
 
 		CHECK ( result == 0 );
+
+		CHECK ( parser_handler.current_track() == 3 );
+
+		CHECK ( parser_handler.offsets() == std::vector<int32_t> {
+					  150,
+					25072,
+				});
 	}
 
-	SECTION ("Cuesheet without syntax errors and no newline is OK")
+	SECTION ("Cuesheet without syntax errors and 15 tracks is OK")
 	{
-		std::ifstream file;
-		file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-		try
-		{
-			file.open("data/ok03.cue", std::ifstream::in);
-		}
-		catch (const std::ifstream::failure& f)
-		{
-			throw std::runtime_error(
-				std::string { "Failed to open file "
-					"'data/ok03.cue', got: " }
-				+ typeid(f).name()
-				+ ", message: " + f.what());
-		}
+		auto file = open_file("data/ok03.cue");
 
 		driver.set_input(file);
 		const int result { driver.parse() };
 
-		const auto toc { parser_handler.get_toc() };
-
 		CHECK ( result == 0 );
+
 		CHECK ( parser_handler.current_track() == 16 );
 
-		// CHECK ( toc->offsets() == std::vector<int32_t>{
-		// 			  33,
-		// 			5225,
-		// 			7390,
-		// 		   23380,
-		// 		   35608,
-		// 		   49820,
-		// 		   69508,
-		// 		   87733,
-		// 		  106333,
-		// 		  139495,
-		// 		  157863,
-		// 		  198495,
-		// 		  213368,
-		// 		  225320,
-		// 		  234103
-		// 		});
-		// CHECK ( parser_handler.lengths().size() == 15 );
-		// CHECK ( parser_handler.lengths() == std::vector<int32_t>{
-		// 			5192,
-		// 			2165,
-		// 		   15990,
-		// 		   12228,
-		// 		   14212,
-		// 		   19688,
-		// 		   18225,
-		// 		   18600,
-		// 		   33162,
-		// 		   18368,
-		// 		   40632,
-		// 		   14873,
-		// 		   11952,
-		// 			8783,
-		// 		      -1 //18935 // not from Cuesheet
-		// 		});
+		CHECK ( parser_handler.offsets() == std::vector<int32_t> {
+					  33,
+					5225,
+					7390,
+				   23380,
+				   35608,
+				   49820,
+				   69508,
+				   87733,
+				  106333,
+				  139495,
+				  157863,
+				  198495,
+				  213368,
+				  225320,
+				  234103
+				});
 	}
 
 	SECTION ("Cuesheet with trailing chars in FILE statement fails")
 	{
-		std::ifstream file;
-		file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-		try
-		{
-			file.open("data/error01.cue", std::ifstream::in);
-		}
-		catch (const std::ifstream::failure& f)
-		{
-			throw std::runtime_error(
-				std::string { "Failed to open file "
-					"'data/error01.cue', got: " }
-				+ typeid(f).name()
-				+ ", message: " + f.what());
-		}
+		auto file = open_file("data/error01.cue");
 
 		driver.set_input(file);
 		const int result { driver.parse() };
@@ -224,20 +205,7 @@ TEST_CASE ("cuesheet", "[yycuesheet]" )
 
 	SECTION ("Cuesheet with trailing chars in TRACK statement fails")
 	{
-		std::ifstream file;
-		file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-		try
-		{
-			file.open("data/error02.cue", std::ifstream::in);
-		}
-		catch (const std::ifstream::failure& f)
-		{
-			throw std::runtime_error(
-				std::string { "Failed to open file "
-					"'data/error02.cue', got: " }
-				+ typeid(f).name()
-				+ ", message: " + f.what());
-		}
+		auto file = open_file("data/error02.cue");
 
 		driver.set_input(file);
 		const int result { driver.parse() };
@@ -247,20 +215,7 @@ TEST_CASE ("cuesheet", "[yycuesheet]" )
 
 	SECTION ("Cuesheet with trailing chars in INDEX statement fails")
 	{
-		std::ifstream file;
-		file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-		try
-		{
-			file.open("data/error03.cue", std::ifstream::in);
-		}
-		catch (const std::ifstream::failure& f)
-		{
-			throw std::runtime_error(
-				std::string { "Failed to open file "
-					"'data/error03.cue', got: " }
-				+ typeid(f).name()
-				+ ", message: " + f.what());
-		}
+		auto file = open_file("data/error03.cue");
 
 		driver.set_input(file);
 		const int result { driver.parse() };
@@ -270,20 +225,7 @@ TEST_CASE ("cuesheet", "[yycuesheet]" )
 
 	SECTION ("Cuesheet erroneous leading characters in CDTEXTFILE fails")
 	{
-		std::ifstream file;
-		file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-		try
-		{
-			file.open("data/error04.cue", std::ifstream::in);
-		}
-		catch (const std::ifstream::failure& f)
-		{
-			throw std::runtime_error(
-				std::string { "Failed to open file "
-					"'data/error04.cue', got: " }
-				+ typeid(f).name()
-				+ ", message: " + f.what());
-		}
+		auto file = open_file("data/error04.cue");
 
 		driver.set_input(file);
 		const int result { driver.parse() };
@@ -293,20 +235,7 @@ TEST_CASE ("cuesheet", "[yycuesheet]" )
 
 	SECTION ("Cuesheet with unknown global statement tag fails")
 	{
-		std::ifstream file;
-		file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-		try
-		{
-			file.open("data/error05.cue", std::ifstream::in);
-		}
-		catch (const std::ifstream::failure& f)
-		{
-			throw std::runtime_error(
-				std::string { "Failed to open file "
-					"'data/error05.cue', got: " }
-				+ typeid(f).name()
-				+ ", message: " + f.what());
-		}
+		auto file = open_file("data/error05.cue");
 
 		driver.set_input(file);
 		const int result { driver.parse() };
