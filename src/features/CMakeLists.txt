@@ -8,6 +8,7 @@ cmake_minimum_required (VERSION 3.10 )
 find_package (BISON ) # 3.8.2
 find_package (FLEX  ) # 2.6.4
 
+## add_custom_command for bison
 function (add_bison_command )
 
 	## Arguments
@@ -23,14 +24,24 @@ function (add_bison_command )
 	)
 endfunction()
 
+## provide bison flags (depends on CMAKE_BUILD_TYPE)
 function (get_bison_flags OUT_VAR )
 
-## for analysis use:
-## FLAGS "--verbose --debug -Wconflicts-sr -Wconflicts-rr -Wcounterexamples"
-	set (${OUT_VAR} "--verbose" PARENT_SCOPE )
+	message (STATUS "Use bison flags for build type '${CMAKE_BUILD_TYPE}'" )
+
+	set (flags_ "--verbose" )
+
+	if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+
+        list (APPEND flags_
+			"--debug" "-Wconflicts-sr" "-Wconflicts-rr" "-Wcounterexamples" )
+    endif()
+
+	set (${OUT_VAR} "${flags_}" PARENT_SCOPE )
 endfunction()
 
 
+## add_custom_command for flex
 function (add_flex_command )
 
 	## Arguments
@@ -47,11 +58,19 @@ function (add_flex_command )
 	)
 endfunction()
 
+## provide flex flags (depends on CMAKE_BUILD_TYPE)
 function (get_flex_flags OUT_VAR )
 
-## for analysis use:
-## FLAGS "--verbose --debug"
-	set (${OUT_VAR} "--verbose" PARENT_SCOPE )
+	message (STATUS "Use flex flags for build type '${CMAKE_BUILD_TYPE}'" )
+
+	set (flags_ "--verbose" )
+
+	if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+
+        list (APPEND flags_ "--debug" )
+    endif()
+
+	set (${OUT_VAR} "${flags_}" PARENT_SCOPE )
 endfunction()
 
 # 1}}}
