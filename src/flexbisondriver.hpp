@@ -350,8 +350,9 @@ public:
 	 *
 	 * \return TRUE iff debug capability is enabled
 	 */
-	bool debug_enabled() const
+	constexpr bool debug_enabled()
 	{
+		//return IsDebugEnabled<PARSER>::value;
 		return decltype( debug_ )::value;
 	}
 
@@ -391,19 +392,19 @@ template<class LEXER, class PARSER, class LOCATION, class POSITION,
 class FlexBisonDriver final
 {
 	/**
+	 * \brief Internal token location.
+	 */
+	TokenLocation<POSITION, LOCATION> current_loc_ {};
+
+	/**
 	 * \brief Internal pointer to LexerHandler.
 	 */
-	LexerHandler* l_handler_ {};
+	LexerHandler* lexer_handler_ {};
 
 	/**
 	 * \brief Internal pointer to ParserHandler.
 	 */
-	HANDLER* p_handler_ {};
-
-	/**
-	 * \brief Internal token location.
-	 */
-	TokenLocation<POSITION, LOCATION> current_loc_ {};
+	HANDLER* parser_handler_ {};
 
 	/**
 	 * \brief Internal lexer instance.
@@ -420,17 +421,19 @@ public:
 	/**
 	 * \brief Constructor.
 	 *
-	 * \param[in] handler Parse handler
+	 * \param[in] l_handler Lexer handler
+	 * \param[in] p_handler Parser handler
 	 */
-	explicit FlexBisonDriver(LexerHandler* l_handler, HANDLER* p_handler)
-		: l_handler_   { l_handler }
-		, p_handler_   { p_handler }
-		, lexer_       { std::make_unique<LEXER>(&current_loc_, l_handler_) }
-		, parser_      { std::make_unique<PARSER>(
-								&current_loc_, lexer_.get(), p_handler_) }
+	FlexBisonDriver(LexerHandler* l_handler, HANDLER* p_handler)
+		: lexer_handler_  { l_handler }
+		, parser_handler_ { p_handler }
+		, lexer_  { std::make_unique<LEXER>(&current_loc_, lexer_handler_) }
+		, parser_ { BisonParser<PARSER>(
+						std::make_unique<PARSER>(
+							&current_loc_, lexer_.get(), parser_handler_)) }
 	{
 		// If parser was compiled to debug, turn debugging on
-		if (parser_.debug_enabled())
+		if constexpr (parser_.debug_enabled())
 		{
 			this->set_parser_debug_level(1);
 			this->set_lexer_debug_level(1);
@@ -533,7 +536,7 @@ public:
 	 */
 	const LexerHandler* lexer_handler()
 	{
-		return this->l_handler_;
+		return this->lexer_handler_;
 	}
 
 	/**
@@ -541,14 +544,14 @@ public:
 	 */
 	const HANDLER* parser_handler()
 	{
-		return this->p_handler_;
+		return this->parser_handler_;
 	}
 
 	// lexer callback
 
 	void notify(const std::string& token_name, const std::string& chars)
 	{
-		this->l_handler_->notify(token_name, chars);
+		this->lexer_handler_->notify(token_name, chars);
 	}
 };
 
