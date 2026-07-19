@@ -219,7 +219,7 @@ class TokenLocation
 	/**
 	 * \brief Internal location.
 	 */
-	LOCATION current_token_location_ {};
+	LOCATION current_token_location_ { nullptr, 1, 1 };
 
 	/**
 	 * \brief Create an initial location.
@@ -274,12 +274,12 @@ struct IsDebugEnabled : std::false_type
 {
 	using debug_level_type = int;
 
-	debug_level_type debug_level(std::unique_ptr<PARSER>&) const
+	debug_level_type debug_level(const PARSER&) const
 	{
 		return 0;
 	}
 
-	void set_debug_level(std::unique_ptr<PARSER>&, const debug_level_type) const
+	void set_debug_level(PARSER&, const debug_level_type)
 	{
 		// do nothing
 	}
@@ -295,15 +295,14 @@ struct IsDebugEnabled <PARSER,
 {
 	using debug_level_type = typename PARSER::debug_level_type;
 
-	debug_level_type debug_level(std::unique_ptr<PARSER>& p) const
+	debug_level_type debug_level(const PARSER& p) const
 	{
-		return p->debug_level();
+		return p.debug_level();
 	}
 
-	void set_debug_level(std::unique_ptr<PARSER>& p, const debug_level_type l)
-		const
+	void set_debug_level(PARSER& p, const debug_level_type l)
 	{
-		p->set_debug_level(l);
+		p.set_debug_level(l);
 	}
 };
 
@@ -320,7 +319,7 @@ class BisonParser
 	/**
 	 * \brief Internal bison parser instance.
 	 */
-	std::unique_ptr<PARSER> parser_ {};
+	PARSER parser_ {};
 
 	/**
 	 * \brief Debug wrapper.
@@ -339,8 +338,9 @@ public:
 	 *
 	 * \param[in] parser Parser to wrap
 	 */
-	explicit BisonParser(std::unique_ptr<PARSER> parser)
-		: parser_ { std::move(parser) }
+	template <typename... Args>
+	explicit BisonParser(Args&&... args)
+		: parser_ { std::forward<Args>(args)... }
 	{
 		// empty
 	}
@@ -356,30 +356,41 @@ public:
 		return decltype( debug_ )::value;
 	}
 
-
-	// pass-through functions
-
+	/**
+	 * \brief Set debug level of bison parser.
+	 *
+	 * If the instance is not debug_enabled(), this will not change anything.
+	 *
+	 * \param[in] lvl The debug level to set
+	 */
 	void set_debug_level(const debug_level_type lvl)
 	{
 		this->debug_.set_debug_level(parser_, lvl);
 	}
 
+	/**
+	 * \brief Get debug level of bison parser.
+	 *
+	 * If the level is 0 the instance may or may not be debug_enabled().
+	 *
+	 * \return Debug level
+	 */
 	debug_level_type debug_level() const
 	{
 		return this->debug_.debug_level(parser_);
 	}
 
+	/**
+	 * \brief Parse the configured input.
+	 *
+	 * \return Return code from bison parser
+	 */
 	int parse()
 	{
-		return this->parser_->parse();
+		return this->parser_.parse();
 	}
 };
 
-
-#if defined(__GNUG__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Weffc++"
-#endif
 
 /**
  * \brief Driver for a flex-bison lexer-parser combination.
@@ -387,7 +398,7 @@ public:
  * This class ties the auto-generated classes together and provides a unified
  * public interface for their management.
  */
-template<class LEXER, class PARSER, class LOCATION, class POSITION,
+template <class LEXER, class PARSER, class LOCATION, class POSITION,
 	class HANDLER>
 class FlexBisonDriver final
 {
@@ -414,7 +425,7 @@ class FlexBisonDriver final
 	/**
 	 * \brief Internal parser instance.
 	 */
-	BisonParser<PARSER> parser_ {};
+	BisonParser<PARSER> parser_;
 
 public:
 
@@ -427,10 +438,9 @@ public:
 	FlexBisonDriver(LexerHandler* l_handler, HANDLER* p_handler)
 		: lexer_handler_  { l_handler }
 		, parser_handler_ { p_handler }
-		, lexer_  { std::make_unique<LEXER>(&current_loc_, lexer_handler_) }
-		, parser_ { BisonParser<PARSER>(
-						std::make_unique<PARSER>(
-							&current_loc_, lexer_.get(), parser_handler_)) }
+		, lexer_          { std::make_unique<LEXER>(
+										&current_loc_, lexer_handler_) }
+		, parser_         { &current_loc_, lexer_.get(), parser_handler_ }
 	{
 		// If parser was compiled to debug, turn debugging on
 		if constexpr (debug_enabled())
@@ -461,6 +471,16 @@ public:
 	}
 
 	/**
+	 * \brief Lexer debug level.
+	 *
+	 * \return Lexer debug level
+	 */
+	int lexer_debug_level() const
+	{
+		return this->lexer_->debug();
+	}
+
+	/**
 	 * \brief Set parser debug level
 	 *
 	 * Passing '0' deactivates debug output, any other value sets the level.
@@ -468,6 +488,16 @@ public:
 	void set_parser_debug_level(const int lvl)
 	{
 		this->parser_.set_debug_level(lvl);
+	}
+
+	/**
+	 * \brief Parser debug level.
+	 *
+	 * \return Parser debug level
+	 */
+	int parser_debug_level() const
+	{
+		return this->parser_.debug_level();
 	}
 
 	/**
@@ -564,10 +594,6 @@ public:
 		this->lexer_handler_->notify(token_name, chars);
 	}
 };
-
-#if defined(__GNUG__)
-#pragma GCC diagnostic pop
-#endif
 
 } // namespace read::details
                                                   /** \cond NAMESPACE_v_1_0_0 */
