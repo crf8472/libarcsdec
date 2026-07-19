@@ -420,7 +420,7 @@ class FlexBisonDriver final
 	/**
 	 * \brief Internal lexer instance.
 	 */
-	std::unique_ptr<LEXER> lexer_ {};
+	LEXER lexer_ {};
 
 	/**
 	 * \brief Internal parser instance.
@@ -438,9 +438,8 @@ public:
 	FlexBisonDriver(LexerHandler* l_handler, HANDLER* p_handler)
 		: lexer_handler_  { l_handler }
 		, parser_handler_ { p_handler }
-		, lexer_          { std::make_unique<LEXER>(
-										&current_loc_, lexer_handler_) }
-		, parser_         { &current_loc_, lexer_.get(), parser_handler_ }
+		, lexer_          { &current_loc_, lexer_handler_ }
+		, parser_         { &current_loc_, &lexer_, parser_handler_ }
 	{
 		// If parser was compiled to debug, turn debugging on
 		if constexpr (debug_enabled())
@@ -467,7 +466,7 @@ public:
 	 */
 	void set_lexer_debug_level(const int lvl)
 	{
-		this->lexer_->set_debug(lvl);
+		this->lexer_.set_debug(lvl);
 	}
 
 	/**
@@ -477,7 +476,7 @@ public:
 	 */
 	int lexer_debug_level() const
 	{
-		return this->lexer_->debug();
+		return this->lexer_.debug();
 	}
 
 	/**
@@ -513,7 +512,7 @@ public:
 	void set_input(std::istream& is)
 	{
 		this->reset();
-		this->lexer_->switch_streams(&is, nullptr);
+		this->lexer_.switch_streams(&is, nullptr);
 	}
 
 	/**
