@@ -433,11 +433,21 @@ public:
 							&current_loc_, lexer_.get(), parser_handler_)) }
 	{
 		// If parser was compiled to debug, turn debugging on
-		if constexpr (parser_.debug_enabled())
+		if constexpr (debug_enabled())
 		{
-			this->set_parser_debug_level(1);
-			this->set_lexer_debug_level(1);
+			set_parser_debug_level(1);
+			set_lexer_debug_level(1);
 		}
+	}
+
+	/**
+	 * \brief TRUE iff debug capability is enabled, otherwise FALSE.
+	 *
+	 * \return TRUE iff debug capability is enabled
+	 */
+	constexpr bool debug_enabled()
+	{
+		return parser_.debug_enabled();
 	}
 
 	/**
