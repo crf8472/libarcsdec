@@ -13,6 +13,8 @@
 #include "parsertoc_details.hpp"         // TO BE TESTED
 #endif
 
+#include <fstream>                       // for ifstream
+
 #ifndef LIBARCSDEC_CUESHEET_DRIVER_HPP_
 #include "cdrtoc/driver.hpp"             // for Driver
 #endif
@@ -21,26 +23,16 @@
 #endif
 
 
-TEST_CASE ("TocParserImpl", "[parsertoc]" )
+TEST_CASE ("cdrtoc", "[yycdrtoc]" )
 {
-	using arcsdec::read::details::cdrtoc::TocParserImpl;
-	//using arcsdec::read::DescriptorToc;
-
-	auto d = TocParserImpl{}.descriptor();
-
 	using arcsdec::read::details::DefaultLexerHandler;
 	using arcsdec::read::details::ParserToCHandler;
 	using arcsdec::read::details::cdrtoc::Driver;
 
-	auto lexer_handler  = DefaultLexerHandler { /* default */ } ;
+	auto lexer_handler  = DefaultLexerHandler {};
 	auto parser_handler = ParserToCHandler {};
-	auto driver  = Driver { &lexer_handler, &parser_handler };
-	// SECTION ("Parser implementation returns correct descriptor type")
-	// {
-	// 	CHECK ( d );
-	// 	auto p = d.get();
-	//
-	// 	CHECK ( dynamic_cast<const DescriptorToc*>(p) != nullptr );
-	// }
+	auto driver = Driver { &lexer_handler, &parser_handler };
+
+	// TODO
 }
 

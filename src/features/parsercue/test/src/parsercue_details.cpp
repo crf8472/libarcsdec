@@ -29,17 +29,9 @@ TEST_CASE ("cuesheet", "[yycuesheet]" )
 	using arcsdec::read::details::ParserToCHandler;
 	using arcsdec::read::details::cuesheet::Driver;
 
-	auto lexer_handler  = DefaultLexerHandler { /* default */ } ;
+	auto lexer_handler  = DefaultLexerHandler {} ;
 	auto parser_handler = ParserToCHandler {};
-	auto driver  = Driver { &lexer_handler, &parser_handler };
-
-	/* Activate debugging for flex-generated scanner */
-	//driver.set_lexer_debug_level(0);
-	// Note: use --debug when running flex on cuesheet.l to have debug support
-
-	/* Activate debugging for bison-generated parser */
-	//driver.set_parser_debug_level(0);
-	// Note: use --debug when running bison on cuesheet.y to have debug support
+	auto driver = Driver { &lexer_handler, &parser_handler };
 
 	SECTION ("Cuesheet without syntax errors and trailing newline is OK")
 	{
