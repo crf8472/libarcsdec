@@ -3,7 +3,7 @@
 /**
  * \file
  *
- * \brief Fixtures for parsercue_details.hpp.
+ * \brief Testcases for parsercue_details.hpp.
  */
 
 #ifndef LIBARCSDEC_PARSERCUE_HPP_
