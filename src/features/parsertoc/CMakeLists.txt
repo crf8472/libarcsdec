@@ -28,7 +28,7 @@ add_bison_command (
 ## FLAGS "--verbose --debug -Wconflicts-sr -Wconflicts-rr -Wcounterexamples"
 
 add_flex_command (
-	NAME        "Cdrtoc"
+	NAME          "Cdrtoc"
 	OUTPUT_CPP    ${CDRTOC_YY_CPP}
 	L_FILE        ${CDRTOC_L}
 	INPUT_HEADERS ${CDRTOC_TAB_HPP}
@@ -64,6 +64,14 @@ target_include_directories (libarcsdec_parsertoc
 target_link_libraries (libarcsdec_parsertoc
 	PUBLIC libarcstk::libarcstk
 )
+
+if (CMAKE_BUILD_TYPE STREQUAL "Debug" )
+
+	target_compile_definitions (libarcsdec_parsertoc PRIVATE YYDEBUG )
+	## YYDEBUG is a bison macro that affects the parser class interface.
+	## Makes FlexBisonDriver subclasses activate debugging feature.
+endif()
+
 ## 1}}}
 
 ## requires 3.13 for CMP0079 NEW

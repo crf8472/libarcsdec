@@ -23,6 +23,14 @@ function (add_bison_command )
 	)
 endfunction()
 
+function (get_bison_flags OUT_VAR )
+
+## for analysis use:
+## FLAGS "--verbose --debug -Wconflicts-sr -Wconflicts-rr -Wcounterexamples"
+	set (${OUT_VAR} "--verbose" PARENT_SCOPE )
+endfunction()
+
+
 function (add_flex_command )
 
 	## Arguments
@@ -37,6 +45,13 @@ function (add_flex_command )
 		COMMENT "Generating lexer for format ${FLEX_NAME} (via flex)"
 		WORKING_DIRECTORY ${FLEX_WORKING_DIR}
 	)
+endfunction()
+
+function (get_flex_flags OUT_VAR )
+
+## for analysis use:
+## FLAGS "--verbose --debug"
+	set (${OUT_VAR} "--verbose" PARENT_SCOPE )
 endfunction()
 
 # 1}}}
