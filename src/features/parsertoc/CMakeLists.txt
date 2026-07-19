@@ -16,27 +16,26 @@ set (CDRTOC_TAB_CPP ${CMAKE_CURRENT_BINARY_DIR}/cdrtoc.tab.cpp )
 set (CDRTOC_TAB_HPP ${CMAKE_CURRENT_BINARY_DIR}/cdrtoc.tab.hpp )
 set (CDRTOC_YY_CPP  ${CMAKE_CURRENT_BINARY_DIR}/cdrtoc.yy.cpp  )
 
+get_bison_flags (CDRTOC_BISON_FLAGS )
+get_flex_flags  (CDRTOC_FLEX_FLAGS )
+
 add_bison_command (
 	NAME        "Cdrtoc"
 	OUTPUT_CPP  ${CDRTOC_TAB_CPP}
 	OUTPUT_HPP  ${CDRTOC_TAB_HPP}
 	Y_FILE      ${CDRTOC_Y}
-	FLAGS       "--verbose"
+	FLAGS       ${CDRTOC_BISON_FLAGS}
 	WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR}
 )
-## for analysis use:
-## FLAGS "--verbose --debug -Wconflicts-sr -Wconflicts-rr -Wcounterexamples"
 
 add_flex_command (
 	NAME          "Cdrtoc"
 	OUTPUT_CPP    ${CDRTOC_YY_CPP}
 	L_FILE        ${CDRTOC_L}
 	INPUT_HEADERS ${CDRTOC_TAB_HPP}
-	FLAGS         "--verbose"
+	FLAGS         ${CDRTOC_FLEX_FLAGS}
 	WORKING_DIR   ${CMAKE_CURRENT_BINARY_DIR}
 )
-## for analysis use:
-## FLAGS "--verbose --debug"
 
 ## 1}}}
 ## --- Define target libarcsdec_parsertoc {{{1

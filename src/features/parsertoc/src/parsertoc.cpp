@@ -62,31 +62,11 @@ using arcstk::ToC;
 
 ToC TocParserImpl::do_parse(const std::string& filename)
 {
-	auto p_handler = ParserToCHandler{};
+	auto p_handler = ParserToCHandler {};
+	auto l_handler = DefaultLexerHandler {};
+	auto driver    = Driver { &l_handler, &p_handler };
 
-	{
-		auto l_handler = DefaultLexerHandler{} ;
-		auto driver    = Driver { &l_handler, &p_handler };
-
-#ifdef YYDEBUG
-		const auto lexer_level  = 1;
-		ARCS_LOG_DEBUG << "Set lexer debug level: " << lexer_level;
-
-		const auto parser_level = 1;
-		ARCS_LOG_DEBUG << "Set parser debug level: " << parser_level;
-#else
-		const auto lexer_level  = 0;
-		ARCS_LOG_DEBUG << "Lexer debug info is deactivated";
-
-		const auto parser_level = 0;
-		ARCS_LOG_DEBUG << "Parser debug info is deactivated";
-#endif
-
-		driver.set_lexer_debug_level(lexer_level);
-		driver.set_parser_debug_level(parser_level);
-
-		driver.parse(filename);
-	}
+	driver.parse(filename);
 
 	return p_handler.get_toc();
 }

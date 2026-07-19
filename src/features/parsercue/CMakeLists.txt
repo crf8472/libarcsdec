@@ -16,27 +16,26 @@ set (CUESHEET_TAB_CPP ${CMAKE_CURRENT_BINARY_DIR}/cuesheet.tab.cpp )
 set (CUESHEET_TAB_HPP ${CMAKE_CURRENT_BINARY_DIR}/cuesheet.tab.hpp )
 set (CUESHEET_YY_CPP  ${CMAKE_CURRENT_BINARY_DIR}/cuesheet.yy.cpp  )
 
+get_bison_flags (CUESHEET_BISON_FLAGS )
+get_flex_flags  (CUESHEET_FLEX_FLAGS )
+
 add_bison_command (
 	NAME        "Cuesheet"
 	OUTPUT_CPP  ${CUESHEET_TAB_CPP}
 	OUTPUT_HPP  ${CUESHEET_TAB_HPP}
 	Y_FILE      ${CUESHEET_Y}
-	FLAGS       "--verbose"
+	FLAGS       ${CUESHEET_BISON_FLAGS}
 	WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR}
 )
-## for analysis use:
-## FLAGS "--verbose --debug -Wconflicts-sr -Wconflicts-rr -Wcounterexamples"
 
 add_flex_command (
 	NAME          "Cuesheet"
 	OUTPUT_CPP    ${CUESHEET_YY_CPP}
 	L_FILE        ${CUESHEET_L}
 	INPUT_HEADERS ${CUESHEET_TAB_HPP}
-	FLAGS         "--verbose"
+	FLAGS         ${CUESHEET_FLEX_FLAGS}
 	WORKING_DIR   ${CMAKE_CURRENT_BINARY_DIR}
 )
-## for analysis use:
-## FLAGS "--verbose --debug"
 
 ## 1}}}
 ## --- Define target libarcsdec_parsercue {{{1
