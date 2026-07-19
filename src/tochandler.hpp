@@ -156,11 +156,6 @@ class ParserToCHandler final : public ParserHandler
 public:
 
 	/**
-	 * \brief Destructor.
-	 */
-	~ParserToCHandler() noexcept final;
-
-	/**
 	 * \brief Append offset value as offset for current track.
 	 *
 	 * \param[in] frames Offset value (as total LBA frames)

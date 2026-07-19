@@ -184,9 +184,6 @@ void validate_disc_id(const std::string& disc_id)
 // ParserTocHandler
 
 
-ParserToCHandler::~ParserToCHandler() noexcept = default;
-
-
 std::size_t ParserToCHandler::to_index(const std::size_t track) const
 {
 	return track > 0 ? track - 1 : 0;
