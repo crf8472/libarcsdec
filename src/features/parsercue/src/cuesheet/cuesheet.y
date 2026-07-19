@@ -35,6 +35,9 @@
 /* Report unexpected token as well as expected ones. */
 %define parse.error            verbose
 
+/* TODO Make the parser reentrant (C-only) */
+/* %define api.pure               full */
+
 /* Location tracking */
 %locations
 

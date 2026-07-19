@@ -28,6 +28,9 @@
 /* We do not manipulate yytext */
 %option noinput nounput
 
+/* TODO Eliminate global state */
+/* %option reentrant */
+
 /* Write summary to stderr when generating the lexer. */
 /* %option verbose */
 
