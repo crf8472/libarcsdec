@@ -442,7 +442,7 @@ public:
 		, parser_         { &current_loc_, &lexer_, parser_handler_ }
 	{
 		// If parser was compiled to debug, turn debugging on
-		if constexpr (debug_enabled())
+		if (debug_enabled())
 		{
 			set_parser_debug_level(1);
 			set_lexer_debug_level(1);
