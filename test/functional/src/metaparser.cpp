@@ -17,25 +17,29 @@
 
 TEST_CASE ("file_content", "[metaparser]" )
 {
+	using arcsdec::read::details::file_content;
+
 	SECTION ("file_content loads file")
 	{
-		using arcsdec::read::details::file_content;
-
-		auto cue_toc_05 = file_content("data/ok01.cue", 524);
+		const auto cue_toc_05 = file_content("data/ok01.cue", 524);
 
 		CHECK ( cue_toc_05 );
 
-		auto v = cue_toc_05.value();
+		auto s = cue_toc_05.value();
 
-		CHECK ( v.size() == 524 );
+		CHECK ( s.size() == 524 );
 
-		CHECK ( v[0]   == 'C' );
-		CHECK ( v[1]   == 'A' );
+		CHECK ( s[0]   == 'C' );
+		CHECK ( s[1]   == 'A' );
+		CHECK ( s[2]   == 'T' );
+		CHECK ( s[3]   == 'A' );
+		CHECK ( s[4]   == 'L' );
 
-		CHECK ( v[521] == 'X' );
-		CHECK ( v[522] == '\r' );
-		CHECK ( v[523] == '\n' );
-		CHECK ( v[524] == '\0' );
+		CHECK ( s[519] == 'D' );
+		CHECK ( s[520] == 'E' );
+		CHECK ( s[521] == 'X' );
+		CHECK ( s[522] == '\r' );
+		CHECK ( s[523] == '\n' );
 	}
 }
 
