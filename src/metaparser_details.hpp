@@ -15,7 +15,7 @@
 #include <cstdint>      // for uintmax_t
 #include <limits>       // for numeric_limits
 #include <optional>     // for optional
-#include <ostream>      // for ostringstream
+#include <sstream>      // for ostringstream
 #include <stdexcept>    // for out_of_range, runtime_error
 #include <type_traits>  // for is_signed, is_unsigned
 
