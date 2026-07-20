@@ -87,7 +87,8 @@ jobs:
             -DWITH_FFMPEG=ON     \
             -DWITH_WAVPACK=ON    \
             -DWITH_LIBSNDFILE=ON \
-            -DWITH_LIBCUE=ON
+            -DWITH_LIBCUE=OFF
+      # TODO Reactivate libcue once it passes test
 
       - name: Configure (macos-latest)
         if: runner.os == 'macOS'

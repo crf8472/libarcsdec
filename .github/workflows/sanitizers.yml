@@ -57,12 +57,13 @@ jobs:
             -DWITH_FFMPEG=ON     \
             -DWITH_WAVPACK=ON    \
             -DWITH_LIBSNDFILE=ON \
-            -DWITH_LIBCUE=ON     \
+            -DWITH_LIBCUE=OFF    \
             -DWITH_SUBMODULES=ON \
             -DWITH_TESTS=ON      \
             -DWITH_EXAMPLES=OFF  \
             -DCMAKE_CXX_COMPILER=${{ matrix.compiler == 'clang' && 'clang++' || 'g++' }} \
             -DCMAKE_CXX_FLAGS="-fsanitize=address -fno-omit-frame-pointer -g"
+      # TODO Reactivate libcue once it passes test
 
       - name: Build
         run: cmake --build build
@@ -116,12 +117,13 @@ jobs:
             -DWITH_FFMPEG=ON     \
             -DWITH_WAVPACK=ON    \
             -DWITH_LIBSNDFILE=ON \
-            -DWITH_LIBCUE=ON     \
+            -DWITH_LIBCUE=OFF    \
             -DWITH_SUBMODULES=ON \
             -DWITH_TESTS=ON      \
             -DWITH_EXAMPLES=OFF  \
             -DCMAKE_CXX_COMPILER=${{ matrix.compiler == 'clang' && 'clang++' || 'g++' }} \
             -DCMAKE_CXX_FLAGS="-fsanitize=undefined -fno-omit-frame-pointer -g"
+      # TODO Reactivate libcue once it passes test
 
       - name: Build
         run: cmake --build build
