@@ -54,6 +54,9 @@
 #ifndef LIBARCSDEC_SAMPLEPROC_HPP_
 #include "sampleproc.hpp"       // for SampleProcessor, BLOCKSIZE
 #endif
+#ifndef LIBARCSDEC_TOCHANDLER_HPP_
+#include "tochandler.hpp"       // for ParserToCHandler
+#endif
 
 
 namespace arcsdec
@@ -77,6 +80,7 @@ namespace calc
 {
 
 using arcsdec::read::BLOCKSIZE;
+using arcsdec::read::details::ParserToCHandler;
 
 // ToCParser
 
@@ -93,7 +97,12 @@ ToC ToCParser::parse(const std::string& metafilename) const
 				"Requested metadata file parser for empty filename.");
 	}
 
-	return create(metafilename)->parse(metafilename);
+	ParserToCHandler handler {};
+
+	auto parser = create(metafilename);
+	parser->set_handler(&handler);
+
+	return parser->parse(metafilename);
 }
 
 

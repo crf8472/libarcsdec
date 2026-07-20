@@ -17,6 +17,9 @@
 #ifndef LIBARCSDEC_DESCRIPTOR_HPP_
 #include "descriptor.hpp"  // for FileReader, FileReaderDescriptor
 #endif
+#ifndef LIBARCSDEC_TOCHANDLER_HPP_
+#include "tochandler.hpp"  // for ParserToCHandler
+#endif
 
 
 namespace arcsdec
@@ -50,6 +53,7 @@ namespace read
  * @{
  */
 
+using details::ParserToCHandler;
 
 using arcstk::ToC;
 
@@ -65,6 +69,11 @@ using arcstk::ToC;
  */
 class MetadataParserImpl
 {
+	/**
+	 * \brief Internal toc handler.
+	 */
+	ParserToCHandler* handler_ {};
+
 public:
 
 	/**
@@ -99,6 +108,10 @@ public:
 	 * \return Descriptor for this implementation.
 	 */
 	std::unique_ptr<FileReaderDescriptor> descriptor() const;
+
+	void set_handler(ParserToCHandler* handler);
+
+	ParserToCHandler* handler() const;
 
 protected:
 
@@ -167,6 +180,10 @@ public:
 	 * \throw MetadataParseException If the metadata could not be parsed
 	 */
 	ToC parse(const std::string& filename);
+
+	void set_handler(ParserToCHandler* handler);
+
+	ParserToCHandler* handler() const;
 
 private:
 

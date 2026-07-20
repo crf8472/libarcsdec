@@ -62,13 +62,12 @@ using arcstk::ToC;
 
 ToC TocParserImpl::do_parse(const std::string& filename)
 {
-	auto p_handler = ParserToCHandler {};
 	auto l_handler = DefaultLexerHandler {};
-	auto driver    = Driver { &l_handler, &p_handler };
+	auto driver    = Driver { &l_handler, handler() };
 
 	driver.parse(filename);
 
-	return p_handler.get_toc();
+	return handler()->get_toc();
 }
 
 

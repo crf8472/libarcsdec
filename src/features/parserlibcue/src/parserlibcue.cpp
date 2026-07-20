@@ -8,7 +8,7 @@
 #include "parserlibcue.hpp"
 #endif
 #ifndef LIBARCSDEC_PARSERLIBCUE_DETAILS_HPP_
-#include "parserlibcue_details.hpp"  // for LibcueParserImpl, CueOpenFile
+#include "parserlibcue_details.hpp"  // for LibcueParserImpl
 #endif
 
 extern "C" {
@@ -18,17 +18,11 @@ extern "C" {
 #include <cstdint>		// for uintmax_t
 #include <iomanip>		// for setw
 #include <ios>			// for right
-#include <filesystem>	// for file_size
-#include <fstream>		// for ifstream
-#include <limits>		// for numeric_limits
 #include <memory>		// for unique_ptr
-#include <optional>     // for optional
 #include <set>          // for set
 #include <sstream>      // for ostringstream
 #include <stdexcept>    // for invalid_argument
 #include <string>       // for string
-#include <system_error> // for error_code
-#include <vector>       // for vector
 #include <utility>      // for move
 
 #ifndef LIBARCSTK_METADATA_HPP_
@@ -48,7 +42,10 @@ extern "C" {
 #include "metaparser.hpp"         // for MetadataParseException
 #endif
 #ifndef LIBARCSDEC_METAPARSER_DETAILS_HPP_
-#include "metaparser_details.hpp" // for cast_or_throw
+#include "metaparser_details.hpp" // for cast_or_throw, file_content
+#endif
+#ifndef LIBARCSDEC_TOCHANDLER_HPP_
+#include "tochandler.hpp"         // for ParserToCHandler
 #endif
 #ifndef LIBARCSDEC_SELECTION_HPP_
 #include "selection.hpp"          // for RegisterDescriptor
@@ -90,103 +87,12 @@ namespace details::libcue
 {
 
 using arcstk::ToC;
-using arcstk::make_toc;
 
 
-std::uintmax_t file_size_or_throw(const std::string &filepath)
-{
-	namespace fs = std::filesystem;
-
-	// Check existence
-
-	if (!fs::exists(filepath))
-	{
-        throw std::runtime_error("File not found");
-    }
-
-	// Check file size
-
-	std::error_code rc;
-    const auto file_size { fs::file_size(filepath, rc) };
-
-	if (rc)
-	{
-		auto msg = std::ostringstream{};
-
-		msg << "Unable to determine file size for file '"
-			<< filepath
-			<< "'. Original error message: '" << rc.message() << "'";
-
-		throw std::runtime_error(msg.str());
-	}
-
-	return file_size;
-}
+// LibcueParserImpl
 
 
-std::optional<std::string> file_content(const std::string &filepath,
-		const std::uintmax_t max_size)
-{
-	// Get file size
-
-	auto file_size = file_size_or_throw(filepath);
-
-	if (file_size == 0)
-	{
-		return std::nullopt;
-	}
-
-	if (file_size > max_size)
-	{
-		auto msg = std::ostringstream{};
-
-		msg << "File too large, more than maximum of "
-			<< max_size
-			<< " bytes";
-
-		throw std::runtime_error(msg.str());
-	}
-
-	// Check before casting to signed type when passing it to ifstream::read()
-	// Note that this also covers the necessary check for:
-	// if (file_size == std::numeric_limits<std::uintmax_t>::max()) throw;
-	if (file_size > static_cast<std::uintmax_t>(
-				std::numeric_limits<std::streamsize>::max()))
-	{
-		throw std::runtime_error(
-				"File too large, is not readable in a single read operation");
-	}
-
-	// Open file
-
-    auto input = std::ifstream { filepath };
-
-    if (!input)
-	{
-		auto msg = std::ostringstream{};
-
-		msg << "Unable to correctly open file '"
-			<< filepath
-			<< "'";
-
-		throw std::runtime_error(msg.str());
-    }
-
-	input.exceptions(std::ios::failbit | std::ios::badbit);
-
-	// Load file content into vector
-
-	std::string content (file_size, '\0'); // parentheses
-	input.read(content.data(), static_cast<std::streamsize>(file_size));
-
-    return content;
-}
-
-
-// convert
-
-
-ToC convert(const CdPtr& cd)
+ToC LibcueParserImpl::convert(const CdPtr& cd) const
 {
 	// Signed integral type for amounts of lba frames.
 	using lba_type = int32_t;
@@ -194,27 +100,20 @@ ToC convert(const CdPtr& cd)
 	const auto* cd_info   = cd.get();
 	const int track_count = ::cd_get_ntrack(cd_info);
 
-	// offset, lengths, filenames
-
-	auto offsets   = std::vector<lba_type>{};
-	auto filenames = std::vector<std::string>{};
-
-	using offsets_sz   = decltype( offsets )::size_type;
-	using filenames_sz = decltype( filenames )::size_type;
-
-	offsets.reserve(static_cast<offsets_sz>(track_count));
-	filenames.reserve(static_cast<filenames_sz>(track_count));
-
 	// Types according to libcue-API
 	auto trk_offset = long { 0 }; // NOLINT(google-runtime-int)
 	using cstring = const char*;
 	auto filename = cstring { nullptr };
 	const ::Track* trk = nullptr; // non-owning, destroyed with cd
+	// TODO MCN
 
 	// Read offset, length + filename for each track in Cue file
 
 	for (int i = 1; i <= track_count; ++i)
 	{
+		handler()->inc_current_track();
+		// TODO ISRC
+
 		trk = ::cd_get_track(cd_info, i);
 
 		if (!trk)
@@ -248,15 +147,15 @@ ToC convert(const CdPtr& cd)
 			<< ": offset: "
 			<< std::setw(6)
 			<< trk_offset
-			<< ", file: " << (filename ? filename : "<null>");
+			<< ", file: " << (filename ? filename : "<none>");
 
 		try
 		{
-			offsets.emplace_back(cast_or_throw<lba_type>(trk_offset));
+			handler()->append_offset(trk_offset);
 
 			if (filename)
 			{
-				filenames.emplace_back(filename);
+				handler()->append_filename(filename);
 			}
 
 		} catch (const std::invalid_argument& e)
@@ -264,20 +163,17 @@ ToC convert(const CdPtr& cd)
 			auto msg = std::ostringstream{};
 			msg << "Track " << i << ": ";
 			msg << e.what();
-
-			//throw std::invalid_argument(msg.str());
 		}
 	}
 
-	return make_toc(offsets, filenames);
+	return handler()->get_toc();
 }
-
-
-// LibcueParserImpl
 
 
 ToC LibcueParserImpl::parse_worker(const std::string& filename) const
 {
+	handler()->start_input();
+
 	ARCS_LOG(DEBUG1) << "Start reading Cuesheet file with libcue: "
 		<< filename;
 
@@ -304,9 +200,13 @@ ToC LibcueParserImpl::parse_worker(const std::string& filename) const
 		throw MetadataParseException(message.str());
 	}
 
+	auto toc = convert(toc_ptr);
+
+	handler()->end_input();
+
 	ARCS_LOG(DEBUG1) << "Cuesheet file successfully parsed";
 
-	return convert(toc_ptr);
+	return toc;
 }
 
 

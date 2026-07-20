@@ -14,14 +14,22 @@
 #include "metaparser_details.hpp"
 #endif
 
-#include <cstdint>      // for int64_t
+#include <cstdint>      // for int64_t, uintmax_t
+#include <filesystem>   // for file_size
+#include <fstream>      // for ifstream
+#include <limits>       // for numeric_limits
 #include <memory>       // for unique_ptr
 #include <stdexcept>    // for runtime_error
 #include <string>       // for string
+#include <system_error> // for error_code
 #include <utility>      // for move
 
 #ifndef LIBARCSTK_LOGGING_HPP_
 #include <arcstk/logging.hpp>  // for ARCS_LOG_DEBUG
+#endif
+
+#ifndef LIBARCSDEC_TOCHANDLER_HPP_
+#include "tochandler.hpp"      // for ParserToCHandler
 #endif
 
 
@@ -54,6 +62,18 @@ ToC MetadataParserImpl::parse(const std::string& filename)
 std::unique_ptr<FileReaderDescriptor> MetadataParserImpl::descriptor() const
 {
 	return this->do_descriptor();
+}
+
+
+void MetadataParserImpl::set_handler(ParserToCHandler* handler)
+{
+	handler_ = handler;
+}
+
+
+ParserToCHandler* MetadataParserImpl::handler() const
+{
+	return handler_;
 }
 
 
@@ -92,6 +112,18 @@ std::unique_ptr<FileReaderDescriptor> MetadataParser::do_descriptor() const
 }
 
 
+void MetadataParser::set_handler(ParserToCHandler* handler)
+{
+	impl_->set_handler(handler);
+}
+
+
+ParserToCHandler* MetadataParser::handler() const
+{
+	return impl_->handler();
+}
+
+
 // MetadataParseException
 
 
@@ -104,6 +136,97 @@ MetadataParseException::MetadataParseException(const std::string& what_arg)
 
 namespace details
 {
+
+
+std::uintmax_t file_size_or_throw(const std::string &filepath)
+{
+	namespace fs = std::filesystem;
+
+	// Check existence
+
+	if (!fs::exists(filepath))
+	{
+        throw std::runtime_error("File not found");
+    }
+
+	// Check file size
+
+	std::error_code rc;
+    const auto file_size { fs::file_size(filepath, rc) };
+
+	if (rc)
+	{
+		auto msg = std::ostringstream{};
+
+		msg << "Unable to determine file size for file '"
+			<< filepath
+			<< "'. Original error message: '" << rc.message() << "'";
+
+		throw std::runtime_error(msg.str());
+	}
+
+	return file_size;
+}
+
+
+std::optional<std::string> file_content(const std::string &filepath,
+		const std::uintmax_t max_size)
+{
+	// Get file size
+
+	auto file_size = file_size_or_throw(filepath);
+
+	if (file_size == 0)
+	{
+		return std::nullopt;
+	}
+
+	if (file_size > max_size)
+	{
+		auto msg = std::ostringstream{};
+
+		msg << "File too large, more than maximum of "
+			<< max_size
+			<< " bytes";
+
+		throw std::runtime_error(msg.str());
+	}
+
+	// Check before casting to signed type when passing it to ifstream::read()
+	// Note that this also covers the necessary check for:
+	// if (file_size == std::numeric_limits<std::uintmax_t>::max()) throw;
+	if (file_size > static_cast<std::uintmax_t>(
+				std::numeric_limits<std::streamsize>::max()))
+	{
+		throw std::runtime_error(
+				"File too large, is not readable in a single read operation");
+	}
+
+	// Open file
+
+    auto input = std::ifstream { filepath };
+
+    if (!input)
+	{
+		auto msg = std::ostringstream{};
+
+		msg << "Unable to correctly open file '"
+			<< filepath
+			<< "'";
+
+		throw std::runtime_error(msg.str());
+    }
+
+	input.exceptions(std::ios::failbit | std::ios::badbit);
+
+	// Load file content into string
+
+	std::string content (file_size, '\0'); // parentheses
+	input.read(content.data(), static_cast<std::streamsize>(file_size));
+
+    return content;
+}
+
 
 int64_t msf_to_frames(const int m, const int s, const int f)
 {

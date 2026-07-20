@@ -16,9 +16,7 @@ extern "C" {
 #include <libcue/libcue.h>  // for Cd, cd_delete
 }
 
-#include <cstdint>  // for uintmax_t
 #include <memory>   // for unique_ptr
-#include <optional> // for optional
 #include <string>   // for string
 
 #ifndef LIBARCSDEC_DESCRIPTOR_HPP_
@@ -60,30 +58,6 @@ using arcstk::ToC;
  */
 
 /**
- * \brief Get file size of a file.
- *
- * \param[in] filepath Filepath of the file
- *
- * \return Size of the file
- */
-std::uintmax_t file_size_or_throw(const std::string &filepath);
-// TODO This may be provided for other features
-
-/**
- * \brief Load a file in text mode that is not bigger than \c max_size.
- *
- * \param[in] filepath Filepath to load
- * \param[in] max_size Maximal file size in bytes
- *
- * \return Content of the file on success
- *
- * \throws runtime_error On failure
- */
-std::optional<std::string> file_content(const std::string &filepath,
-		const std::uintmax_t max_size);
-// TODO This may be provided for other features
-
-/**
  * \brief Functor for freeing Cd* instances.
  */
 struct Free_Cd final
@@ -104,19 +78,19 @@ struct Free_Cd final
 using CdPtr = std::unique_ptr<::Cd, Free_Cd>;
 
 /**
- * \brief Convert a CdPtr (libcue) to a ToC (libarcstk).
- *
- * \param[in] cd CdPtr to convert
- *
- * \return ToC representing information from CdPtr
- */
-ToC convert(const CdPtr& cd);
-
-/**
  * \brief Implementation for libcue-based reading of CueSheets.
  */
 class LibcueParserImpl final : public MetadataParserImpl
 {
+	/**
+	 * \brief Convert a CdPtr (libcue) to a ToC (libarcstk).
+	 *
+	 * \param[in] cd CdPtr to convert
+	 *
+	 * \return ToC representing information from CdPtr
+	 */
+	ToC convert(const CdPtr& cd) const;
+
 	/**
 	 * \brief Parse Cuesheet file to a ToC using libcue.
 	 *

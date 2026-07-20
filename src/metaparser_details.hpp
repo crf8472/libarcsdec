@@ -12,7 +12,9 @@
  * \brief Implementation details of metaparser.hpp.
  */
 
+#include <cstdint>      // for uintmax_t
 #include <limits>       // for numeric_limits
+#include <optional>     // for optional
 #include <ostream>      // for ostringstream
 #include <stdexcept>    // for out_of_range, runtime_error
 #include <type_traits>  // for is_signed, is_unsigned
@@ -26,6 +28,30 @@ inline namespace v_1_0_0
                                                                  /** \endcond */
 namespace read::details // NOLINT(modernize-concat-nested-namespaces)
 {
+
+/**
+ * \brief Get file size of a file.
+ *
+ * \param[in] filepath Filepath of the file
+ *
+ * \return Size of the file
+ */
+std::uintmax_t file_size_or_throw(const std::string &filepath);
+
+
+/**
+ * \brief Load a file in text mode that is not bigger than \c max_size.
+ *
+ * \param[in] filepath Filepath to load
+ * \param[in] max_size Maximal file size in bytes
+ *
+ * \return Content of the file on success
+ *
+ * \throws runtime_error On failure
+ */
+std::optional<std::string> file_content(const std::string &filepath,
+		const std::uintmax_t max_size);
+
 
 /**
  * \brief Returns TRUE if types S and T are either both signed or both unsigned.
