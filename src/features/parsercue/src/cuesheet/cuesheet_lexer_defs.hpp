@@ -87,9 +87,9 @@ class Lexer final : public Cuesheet_FlexLexer
 public:
 
 	/**
-	 * \brief Constructor for CDRDAO/TOC lexer.
+	 * \brief Constructor for Cuesheet lexer.
 	 *
-	 * \param[in] driver The cdrtoc::Driver that constructed this lexer.
+	 * \param[in] driver The cuesheet::Driver that constructed this lexer.
 	 */
 	explicit Lexer(LocationClass* loc, LexerHandler* handler)
 		: current_loc_   { loc }

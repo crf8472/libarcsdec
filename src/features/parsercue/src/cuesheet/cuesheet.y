@@ -91,7 +91,7 @@
 	#endif
 
 	// Re-declaration of yylex() below requires declaration of class 'Lexer'
-	#ifndef LIBARCSDEC_CDRTOC_LEXER_HPP_
+	#ifndef LIBARCSDEC_CUESHEET_LEXER_HPP_
 	#include "cuesheet_lexer.hpp"            // for Lexer
 	#endif
 
