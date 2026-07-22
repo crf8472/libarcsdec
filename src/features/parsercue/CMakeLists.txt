@@ -64,13 +64,6 @@ target_link_libraries (libarcsdec_parsercue
 	PUBLIC libarcstk::libarcstk
 )
 
-if (CMAKE_BUILD_TYPE STREQUAL "Debug" )
-
-	target_compile_definitions (libarcsdec_parsercue PRIVATE YYDEBUG )
-	## YYDEBUG is a bison macro that affects the parser class interface.
-	## Makes FlexBisonDriver subclasses activate debugging feature.
-endif()
-
 ## 1}}}
 
 ## requires 3.13 for CMP0079 NEW
