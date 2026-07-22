@@ -11,17 +11,17 @@
 ## What libarcsdec does
 
 - Provide a high-level API for sample and metadata input for [libarcstk][1].
-- A bunch of decoder and parser adapters to let you calculate ARCSs on your
-  already archived lossless audio data.
+- Provide a bunch of decoder and parser adapters to let you calculate ARCSs on
+  your already archived lossless audio data.
 - Facility to read virtually any lossless codec from virtually any
   container file (by the use of external dependencies).
 - Simplified API to recalculate ARCSs of a CD image at any time after ripping.
-- You define the task like "Take this audio and this TOC and just give me the
+- You define the task like "Take this audio and this toc and just give me the
   checksums".
 - Hides completely the concrete decoding of audio data.
 - Hides completely the parsing of metadata files.
 
-The following features are planned, but not yet implemented:
+The following features are planned, but not yet fully implemented:
 
 - Metadata parser for cdrdao's .toc file format.
 - Add OGG support to the audio reader for FLAC/FLAC.
@@ -32,27 +32,29 @@ The following features are planned, but not yet implemented:
 Libarcsdec contains:
 
 - Generic parser for Cuesheets (builtin).
-- TOC/Metadata parser for Cuesheets (based on libcue >= 2.0.0).
-- Generic audio reader (based on ffmpeg >= 3.1, for any lossless codec in any
-  container, e.g. ALAC/M4, ALAC/CAF, APE/APE, AIFF/AIFF, FLAC/OGG ... you name
-  it).
-- Audio reader for FLAC/FLAC files (based on flac/libFLAC++).
-- Audio reader for lossless Wavpack/WV files (based on libwavpack).
+- Toc/metadata parser for Cuesheets (based on libcue >= 2.0.0).
+- Generic audio reader (based on ffmpeg for any lossless codec in any container,
+  e.g. alac/M4, alac/CAF, ape/APE, aiff/AIFF, flac/OGG ... you name it).
 - Generic audio reader (based on libsndfile).
+- Audio reader for flac/FLAC files (based on flac/libFLAC++).
+- Audio reader for lossless wavpack/WV files (based on libwavpack).
 - Builtin audio reader for RIFFWAV/PCM files.
 
 
 ## What libarcsdec does not
 
+- Libarcsdec does not rip CDs.
 - Libarcsdec will not alter your files in any way and cannot be used for tagging
   etc.
 - Libarcsdec does not contribute to tasks like verifying/matching, computing of
   the AccurateRip identifier, parsing the AccurateRip response etc. The API for
-  those tasks is already provided by [libarcstk][1].
-- Libarcsdec does not rip CDs.
+  those tasks is already provided by [libarcstk][1]. If you need those functions
+  in an executable for the command line check whether [arcs-tools][2] fits your
+  needs.)
 - Libarcsdec offers no network facilities and is not supposed to do so. The
   actual HTTP request for fetching the reference values from AccurateRip is
   better performed by the HTTP networking client of your choice.
+
 
 
 ## How to Build
@@ -65,7 +67,7 @@ Libarcsdec contains:
 
 ### Mandatory build- and runtime dependencies:
 
-- libarcstk >= 0.3.0-alpha.1
+- libarcstk >= 0.4.0-alpha.1
 
 ### Optional default build- and runtime dependencies:
 
@@ -80,7 +82,7 @@ them off independently from each other:
 
 - build without ffmpeg support by ``-DWITH_FFMPEG=OFF``
 - build without FLAC support by ``-DWITH_FLAC=OFF``
-- build without WavPack support by ``-DWITH_WVPK=OFF``
+- build without WavPack support by ``-DWITH_WAVPACK=OFF``
 
 If you need any of the optional default-off dependencies, you can switch them on
 independently from each other:
@@ -89,17 +91,16 @@ independently from each other:
 - build with libsndfile support by ``-DWITH_LIBSNDFILE=ON``
 
 You can switch off or on each of these dependencies thereby leaving libarcstk as
-the only mandatory dependency. However, this entails that libarcsdec will only
-be able to read Cuesheets and WAVE-files with its respective builtin reading
-capabilities.
+the only mandatory build+runtime dependency. However, this entails that
+libarcsdec will only be able to read Cuesheets and WAVE-files with its
+respective builtin reading capabilities.
 
 ### Configure and start build
 
 Build and install to just use the libarcsdec API:
 
 	$ cd libarcsdec     # your libarcsdec root directory where README.md resides
-	$ mkdir build && cd build
-	$ cmake -DCMAKE_BUILD_TYPE=Release ..  # use any build switches you need
+	$ cmake -B build    # generate directory 'build', configure a release build
 
 If this issues an error that reads
 
@@ -112,12 +113,12 @@ that you have installed libarcstk to a directory that cmake does not respect
 while searching for files, e.g. ``/usr/local``. This can be fixed by giving
 cmake a hint to your install directory like:
 
-	$ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/usr/local ..
+	$ cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/usr/local
 
 Proceed:
 
-	$ cmake --build .
-	$ sudo make install # installs to /usr/local
+	$ cmake --build build
+	$ sudo cmake --install build   # installs to /usr/local
 
 See a [detailed HowTo](BUILD.md) explaining different build scenarios and all
 build switches.
@@ -137,10 +138,6 @@ build switches.
 - No production release yet - will be 1.0.0.
 - API is not considered stable before 1.0.0 (may change any time in any way
   until then).
-- The strategy to select a reader for a given input is rudimentary: just the
-  first reader that passes the format tests is selected. So the reader appearing
-  accepting codec/format X occurring first in the list "shadows" all subsequent
-  readers that would also be able to read the input.
 - The readers try to guess the channel ordering to recognize swapped channels.
   The default channel assignment left/right (with left = channel 0, right =
   channel 1) works well but scenarios with different channel assignment
@@ -151,7 +148,6 @@ build switches.
 - Handling of data tracks is not implemented and data tracks are just processed
   like audio tracks. What happens is completely untested.
 - Untested on big endian plattforms.
-- Never built, installed or tested on Windows or Mac OS X.
 
 
 ## Bugs
@@ -160,4 +156,5 @@ build switches.
 
 
 [1]: https://github.com/crf8472/libarcstk
+[2]: https://github.com/crf8472/arcs-tools
 
