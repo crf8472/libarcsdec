@@ -10,7 +10,6 @@
  */
 
 #include <fstream>     // for ifstream
-#include <memory>      // for unique_ptr
 #include <ostream>     // for ostream
 #include <stdexcept>   // for runtime_error
 #include <string>      // for string
@@ -221,14 +220,6 @@ class TokenLocation
 	 */
 	LOCATION current_token_location_ { nullptr, 1, 1 };
 
-	/**
-	 * \brief Create an initial location.
-	 */
-	LOCATION create_initial_loc() const
-	{
-		return LOCATION( nullptr, 1, 1 );
-	}
-
 public:
 
 	/**
@@ -236,7 +227,7 @@ public:
 	 */
 	void reset()
 	{
-		this->current_token_location_ = this->create_initial_loc();
+		this->current_token_location_ = { nullptr, 1, 1 };
 	}
 
 	/**
@@ -249,9 +240,7 @@ public:
 		return this->current_token_location_;
 	}
 
-
 	// used as lexer callback
-
 
 	/**
 	 * \brief Step to the specified position.
