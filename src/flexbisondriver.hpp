@@ -213,21 +213,48 @@ void parser_error(const LOCATION& loc, const std::string& message,
  * Provides facility to reset() and to step_to() a position.
  */
 template<class POSITION, class LOCATION>
-class TokenLocation
+class TokenLocation final
 {
 	/**
 	 * \brief Internal location.
 	 */
-	LOCATION current_token_location_ { nullptr, 1, 1 };
+	LOCATION current_token_location_;
+
+	/**
+	 * \brief Create an initial location.
+	 *
+	 * \return Initial location
+	 */
+	LOCATION create_initial_loc() const
+	{
+		return LOCATION(nullptr, 1, 1);
+	}
 
 public:
+
+	/**
+	 * \copydoc SNPT_sm_default_ctor
+	 */
+	TokenLocation()
+		: current_token_location_ { create_initial_loc() }
+	{
+		// empty
+	}
+
+	TokenLocation(const TokenLocation&) = default;
+	TokenLocation& operator= (const TokenLocation&) = default;
+
+	TokenLocation(TokenLocation&&) noexcept = default;
+	TokenLocation& operator= (TokenLocation&&) noexcept = default;
+
+	~TokenLocation() noexcept = default;
 
 	/**
 	 * \brief Reset this location to its initial value.
 	 */
 	void reset()
 	{
-		this->current_token_location_ = { nullptr, 1, 1 };
+		this->current_token_location_ = create_initial_loc();
 	}
 
 	/**
@@ -259,7 +286,7 @@ public:
 
 
 template <typename PARSER, typename = std::void_t<>>
-struct IsDebugEnabled : std::false_type
+struct IsDebugEnabled final : std::false_type
 {
 	using debug_level_type = int;
 
@@ -280,7 +307,7 @@ struct IsDebugEnabled : std::false_type
 template <typename PARSER>
 struct IsDebugEnabled <PARSER,
 		std::void_t<decltype(std::declval<PARSER>().set_debug_level(1))>
-	> : std::true_type
+	> final : std::true_type
 {
 	using debug_level_type = typename PARSER::debug_level_type;
 
@@ -303,7 +330,7 @@ struct IsDebugEnabled <PARSER,
  * of the bison parser that are only available when YYDEBUG is set.
  */
 template <class PARSER>
-class BisonParser
+class BisonParser final
 {
 	/**
 	 * \brief Internal bison parser instance.
