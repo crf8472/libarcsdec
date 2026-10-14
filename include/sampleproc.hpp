@@ -189,7 +189,7 @@ public:
 			ARCS_LOG(DEBUG3) << "Reuse calculationset";
 		}
 
-		using updateable_type = arcstk::UpdateableCalculationSet<B, E>;
+		using updateable_type = arcstk::CalculationSetUpdater<B, E>;
 		auto* calc = dynamic_cast<updateable_type*>(calculationset_.get());
 
 		if (calc)
