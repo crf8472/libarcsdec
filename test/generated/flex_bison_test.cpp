@@ -17,8 +17,8 @@
 #include "tochandler.hpp"               // for ParserToCHandler
 #endif
 
-#include <string>      // for vector
-#include <vector>      // for string
+#include <string>      // for string
+#include <vector>      // for vector
 
 #include <cstdlib>    // for EXIT_SUCCESS
 #include <iostream>   // for cout, cerr
@@ -38,20 +38,26 @@ using arcsdec::read::details::DefaultLexerHandler;
 using arcsdec::read::details::ParserToCHandler;
 using arcsdec::read::details::TokenLocation;
 
-int main(int argc, char** argv)
+int main(int /* argc */, char** /* argv */)
 {
+	auto lh  = DefaultLexerHandler {};
+	auto ph  = ParserToCHandler {};
+	auto loc = TokenLocation<position, location> {};
+
 	std::cout << "sizeof(Lexer): " << sizeof(Lexer) << '\n';
 	std::cout << "alignof(Lexer): " << alignof(Lexer) << '\n';
+	std::cout << "Construct lexer:";
+
+	auto lexer  = Lexer  { &loc, &lh };
+
+	std::cout << " done\n";
 
 	std::cout << "sizeof(Parser): " << sizeof(Parser) << '\n';
 	std::cout << "alignof(Parser): " << alignof(Parser) << '\n';
+	std::cout << "Construct parser:\n";
 
-	auto loc = TokenLocation<position, location> {};
+	[[maybe_unused]] auto parser = Parser { &loc, &lexer, &ph };
 
-	auto lh = DefaultLexerHandler {};
-	auto ph = ParserToCHandler {};
-
-	auto lexer = Lexer { &loc, &lh };
-	auto parser = Parser { &loc, &lexer, &ph };
+	std::cout << " done\n";
 }
 
