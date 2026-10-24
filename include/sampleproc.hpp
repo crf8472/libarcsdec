@@ -89,14 +89,24 @@ public:
 	CalculationProcessor& operator = (CalculationProcessor&& rhs) noexcept
 		= default;
 
-	/**
-	 * \brief Total number of tracks to process.
-	 *
-	 * \return Total tracks
-	 */
-	std::size_t total_tracks() const
+	ChecksumtypeSet types() const
 	{
-		return offsets_.size();
+		return types_;
+	}
+
+	void set_types(const ChecksumtypeSet& types)
+	{
+		types_ = types;
+	}
+
+	Settings settings() const
+	{
+		return settings_;
+	}
+
+	void set_settings(const Settings& settings)
+	{
+		settings_ = settings;
 	}
 
 	/**
@@ -109,6 +119,11 @@ public:
 		return offsets_;
 	}
 
+	/**
+	 * \brief Set offsets.
+	 *
+	 * \param[in] offsets Offsets
+	 */
 	void set_offsets(const Points& offsets)
 	{
 		offsets_ = offsets;
@@ -124,11 +139,26 @@ public:
 		return leadout_;
 	}
 
+	/**
+	 * \brief Set leadout.
+	 *
+	 * \param[in] leadout Leadout
+	 */
 	void set_leadout(const AudioSize& leadout)
 	{
 		ARCS_LOG_DEBUG << "Updated leadout: " << leadout;
 
 		leadout_ = leadout;
+	}
+
+	/**
+	 * \brief Total number of tracks to process.
+	 *
+	 * \return Total tracks
+	 */
+	std::size_t total_tracks() const
+	{
+		return offsets_.size();
 	}
 
 	/**
@@ -247,7 +277,7 @@ private:
 	/**
 	 * \brief Internal CalculationSet.
 	 */
-	std::unique_ptr<CalculationSet> calculationset_ {};
+	std::unique_ptr<CalculationSet> calculationset_ {}; // nullptr
 };
 
 #pragma GCC diagnostic pop

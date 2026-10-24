@@ -52,7 +52,7 @@
 #include "selection.hpp"        // for FormatList,FileReaders,FileReaderSelector
 #endif
 #ifndef LIBARCSDEC_SAMPLEPROC_HPP_
-#include "sampleproc.hpp"       // for SampleProcessor, BLOCKSIZE
+#include "sampleproc.hpp"       // for SampleProcessor
 #endif
 #ifndef LIBARCSDEC_TOCHANDLER_HPP_
 #include "tochandler.hpp"       // for ParserToCHandler
@@ -118,11 +118,10 @@ AudioSize AudioInfo::size(const std::string& filename) const
 // ARCSCalculator
 
 
-ARCSCalculator::ARCSCalculator(ChecksumtypeSet typeset)
-	: types_             { std::move(typeset) }
-	, read_buffer_size_  { BLOCKSIZE::DEFAULT }
+ARCSCalculator::ARCSCalculator(const ChecksumtypeSet& typeset)
+	: read_buffer_size_  { BLOCKSIZE::DEFAULT }
 {
-	/* empty */
+	processor_.set_types(typeset);
 }
 
 
@@ -280,16 +279,20 @@ std::pair<Checksums, AudioSize> ARCSCalculator::calculate(
 		reader->set_samples_per_read(buf_size);
 	}
 
-	auto processor = CalculationProcessor { types, settings, offsets, leadout };
-	auto handler   = details::CalculationHandler { &processor };
+	processor_.set_types(types);
+	processor_.set_settings(settings);
+	processor_.set_offsets(offsets);
+	processor_.set_leadout(leadout);
+
+	auto handler = details::CalculationHandler { &processor_ };
 
 	reader->set_handler(&handler);
-	reader->set_processor(&processor);
+	reader->set_processor(&processor_);
 
 	// Perform
 
 	reader->process_file(audiofilename);
-	const auto checksums = processor.result();
+	const auto checksums = processor_.result();
 
 	// Check results
 
@@ -298,19 +301,26 @@ std::pair<Checksums, AudioSize> ARCSCalculator::calculate(
 		ARCS_LOG_ERROR << "Calculations lead to no result, return empty set";
 	}
 
-	return { checksums, processor.leadout()/* updated(!) */ };
+	return { checksums, processor_.leadout()/* updated(!) */ };
+}
+
+
+Checksums ARCSCalculator::apply_offset(const int k) const
+{
+	// TODO Implement
+	return {};
 }
 
 
 void ARCSCalculator::set_types(const ChecksumtypeSet& typeset)
 {
-	types_ = typeset;
+	processor_.set_types(typeset);
 }
 
 
 ChecksumtypeSet ARCSCalculator::types() const
 {
-	return types_;
+	return processor_.types();
 }
 
 
@@ -350,7 +360,7 @@ int64_t ARCSCalculator::get_actual_buffer_size() const
 			<< " samples. Fall back to default size.";
 	}
 
-	return 0;
+	return BLOCKSIZE::DEFAULT;
 }
 
 

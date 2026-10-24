@@ -148,9 +148,9 @@ public:
 	/**
 	 * \brief Constructor
 	 *
-	 * \param[in] type The Checksum type to calculate.
+	 * \param[in] types The Checksum types to calculate.
 	 */
-	explicit ARCSCalculator(ChecksumtypeSet type);
+	explicit ARCSCalculator(const ChecksumtypeSet& types);
 
 	/**
 	 * \brief Constructor.
@@ -240,6 +240,15 @@ public:
 			const AudioSize& leadout, const Points& offsets);
 
 	/**
+	 * \brief Apply offset \c k to previously calculated checksums.
+	 *
+	 * \param[in] k Rip offset to apply
+	 *
+	 * \return Checksums with rip offset \c k
+	 */
+	Checksums apply_offset(const int k) const;
+
+	/**
 	 * \brief Return checksum::types calculated by this instance.
 	 *
 	 * \return The set of checksum::types to calculate
@@ -296,14 +305,14 @@ private:
 		const bool last_file_is_last_track) const;
 
 	/**
-	 * \brief Internal checksum type.
-	 */
-	ChecksumtypeSet types_;
-
-	/**
 	 * \brief Size of the read buffer (in number of samples).
 	 */
-	int64_t read_buffer_size_;
+	int64_t read_buffer_size_ { 0 /* == use BLOCKSIZE::DEFAULT */ };
+
+	/**
+	 * \brief Internal calculation object.
+	 */
+	CalculationProcessor processor_ { /* default */ };
 };
 
 
