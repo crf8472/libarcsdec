@@ -116,7 +116,7 @@ public:
 	 *
 	 * \return The size of the audio data
 	 */
-	arcstk::AudioSize size(const std::string& audiofilename) const;
+	AudioSize size(const std::string& audiofilename) const;
 };
 
 
@@ -279,6 +279,13 @@ public:
 	 * \param[in] total_samples Number of PCM 32 bit samples to read at once
 	 */
 	void set_read_buffer_size(const int64_t total_samples); // TODO AudioSize?
+
+	/**
+	 * \brief Reset instance to its initial state.
+	 *
+	 * \return Inner state with subtotals.
+	 */
+	std::unique_ptr<CalculationSet> reset();
 
 private:
 

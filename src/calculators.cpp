@@ -305,10 +305,9 @@ std::pair<Checksums, AudioSize> ARCSCalculator::calculate(
 }
 
 
-Checksums ARCSCalculator::apply_offset(const int k) const
+ChecksumtypeSet ARCSCalculator::types() const
 {
-	// TODO Implement
-	return {};
+	return processor_.types();
 }
 
 
@@ -318,9 +317,9 @@ void ARCSCalculator::set_types(const ChecksumtypeSet& typeset)
 }
 
 
-ChecksumtypeSet ARCSCalculator::types() const
+int64_t ARCSCalculator::read_buffer_size() const
 {
-	return processor_.types();
+	return read_buffer_size_;
 }
 
 
@@ -330,9 +329,11 @@ void ARCSCalculator::set_read_buffer_size(const int64_t total_samples)
 }
 
 
-int64_t ARCSCalculator::read_buffer_size() const
+std::unique_ptr<CalculationSet> ARCSCalculator::reset()
 {
-	return read_buffer_size_;
+	read_buffer_size_ = BLOCKSIZE::DEFAULT;
+
+	return processor_.reset();
 }
 
 
