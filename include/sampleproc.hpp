@@ -89,21 +89,41 @@ public:
 	CalculationProcessor& operator = (CalculationProcessor&& rhs) noexcept
 		= default;
 
+	/**
+	 * \brief Requested checksum types.
+	 *
+	 * \return Requested checksum types
+	 */
 	ChecksumtypeSet types() const
 	{
 		return types_;
 	}
 
+	/**
+	 * \brief Set requested checksum types.
+	 *
+	 * \param[in] types Requested checksum types
+	 */
 	void set_types(const ChecksumtypeSet& types)
 	{
 		types_ = types;
 	}
 
+	/**
+	 * \brief Get Settings.
+	 *
+	 * \return Settings
+	 */
 	Settings settings() const
 	{
 		return settings_;
 	}
 
+	/**
+	 * \brief Set Settings.
+	 *
+	 * \param[in] settings Settings
+	 */
 	void set_settings(const Settings& settings)
 	{
 		settings_ = settings;
@@ -112,7 +132,7 @@ public:
 	/**
 	 * \brief Offsets.
 	 *
-	 * \return Offsets.
+	 * \return Offsets
 	 */
 	Points offsets() const
 	{
@@ -130,9 +150,9 @@ public:
 	}
 
 	/**
-	 * \brief Leadout frame.
+	 * \brief Leadout.
 	 *
-	 * \return Leadout.
+	 * \return Leadout
 	 */
 	AudioSize leadout() const
 	{
@@ -248,6 +268,24 @@ public:
 		}
 
 		return calculationset_->result();
+	}
+
+	/**
+	 * \brief Reset instance.
+	 *
+	 * \return CalculationSet with current state
+	 */
+	std::unique_ptr<CalculationSet> reset()
+	{
+		auto state = std::move(calculationset_);
+		calculationset_ = {}; // nullptr
+
+		types_    = {};
+		settings_ = {};
+		offsets_  = {};
+		leadout_  = {};
+
+		return state;
 	}
 
 private:
